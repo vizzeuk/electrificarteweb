@@ -32,9 +32,9 @@ const schema = z.object({
   comuna:         z.string().min(2, "Ingresa tu comuna"),
   carSearch:      z.string().min(1, "Selecciona el auto que buscas"),
   paymentMethod:  z.enum(["contado", "credito-convencional", "credito-inteligente", "no-seguro"], {
-    errorMap: () => ({ message: "Selecciona una forma de pago" }),
+    error: "Selecciona una forma de pago",
   }),
-  tradeIn:        z.enum(["si", "no"], { errorMap: () => ({ message: "Indica si tienes un auto en parte de pago" }) }),
+  tradeIn:        z.enum(["si", "no"], { error: "Indica si tienes un auto en parte de pago" }),
   // Trade-in fields (optional, validated conditionally in onSubmit)
   tradeInBrand:       z.string().optional(),
   tradeInModel:       z.string().optional(),
