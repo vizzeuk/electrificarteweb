@@ -277,11 +277,11 @@ function SectionHeading({ icon, title }: { icon: string; title: string }) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 interface LeadFormProps {
-  carOptions: string[];
+  carOptions?: string[];
   carSlug?: string;
 }
 
-export function LeadForm({ carOptions, carSlug }: LeadFormProps) {
+export function LeadForm({ carOptions = [], carSlug }: LeadFormProps) {
   const [status, setStatus]   = useState<"idle" | "loading" | "success" | "error">("idle");
   const [photos, setPhotos]   = useState<string[]>([]);
   const [photoError, setPhotoError] = useState("");
