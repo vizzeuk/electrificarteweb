@@ -1,26 +1,57 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --color-primary: #00E5E5;
+  --color-primary-dark: #00C2C2;
+  --color-primary-deep: #006A61;
+  --color-primary-container: #00E5D1;
+  --color-primary-glow: rgba(0, 229, 209, 0.3);
+
+  --color-surface: #F9FAFB;
+  --color-surface-alt: #F3F4F6;
+  --color-border: #E5E7EB;
+
+  --color-text-main: #111827;
+  --color-text-muted: #4B5563;
+  --color-text-ghost: #9CA3AF;
+
+  --color-amber: #F59E0B;
+  --color-amber-dark: #D97706;
+
+  --font-headline: "Space Grotesk", sans-serif;
+  --font-body: "Inter", sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* Smooth scroll for anchor links */
+html {
+  scroll-behavior: smooth;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Hide scrollbar on horizontal scroll containers */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Infinite marquee animations */
+@keyframes marquee-left {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+@keyframes marquee-right {
+  from { transform: translateX(-50%); }
+  to   { transform: translateX(0); }
+}
+.marquee-left {
+  animation: marquee-left 55s linear infinite;
+}
+.marquee-right {
+  animation: marquee-right 65s linear infinite;
+}
+.marquee-left:hover,
+.marquee-right:hover {
+  animation-play-state: paused;
 }

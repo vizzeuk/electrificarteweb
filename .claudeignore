@@ -1,0 +1,33 @@
+# Dependencias pesadas
+node_modules/
+vendor/
+.venv/
+env/
+
+# Archivos de compilación y caché
+dist/
+build/
+.next/
+.cache/
+*.pyc
+__pycache__/
+
+# Archivos multimedia y binarios
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.pdf
+*.mp4
+*.zip
+*.tar.gz
+
+# Logs y bases de datos locales
+*.log
+*.sqlite
+*.db
+
+# Documentación autogenerada y configs de IDE
+.vscode/
+.idea/
+docs/site/

@@ -36,6 +36,15 @@ yarn-error.log*
 # vercel
 .vercel
 
+# stitch design assets (downloaded from MCP)
+.stitch-assets/
+
+# sanity
+.sanity/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local MCP config (may contain API keys)
+.mcp.json
