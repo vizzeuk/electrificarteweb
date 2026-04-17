@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { formatCLP } from "@/lib/utils";
@@ -54,9 +54,24 @@ interface ElectricoPageContentProps {
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
+const PAGE_SIZE = 9;
+
 export default function ElectricoPageContent({ slug, meta, cars, otherTypes }: ElectricoPageContentProps) {
   const [activeFilters, setActiveFilters] = useState<ActiveFilters>({ brand: "", tipo: "" });
   const [sort, setSort] = useState("default");
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+
+  const banners = [
+    { id: 1, label: "Banner 1", bg: "from-primary/10 to-primary-deep/5" },
+    { id: 2, label: "Banner 2", bg: "from-gray-100 to-gray-50" },
+    { id: 3, label: "Banner 3", bg: "from-primary-deep/10 to-primary/5" },
+  ];
+  const [activeSlide, setActiveSlide] = useState(0);
+  const nextSlide = useCallback(() => setActiveSlide((p) => (p + 1) % banners.length), [banners.length]);
+  useEffect(() => {
+    const t = setInterval(nextSlide, 5000);
+    return () => clearInterval(t);
+  }, [nextSlide]);
 
   const brandOptions = useMemo(() => {
     const vals = [...new Set(cars.map((c) => c.brandSlug))];
@@ -77,6 +92,7 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes }: E
   }, [cars]);
 
   const filteredCars = useMemo(() => {
+    setVisibleCount(PAGE_SIZE);
     let list = [...cars];
     if (activeFilters.brand) list = list.filter((c) => c.brandSlug === activeFilters.brand);
     if (activeFilters.tipo)  list = list.filter((c) => c.tipoSlug === activeFilters.tipo);
@@ -88,6 +104,8 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes }: E
 
   const hotDeals = filteredCars.filter((c) => c.isHotDeal);
   const rest     = filteredCars.filter((c) => !c.isHotDeal);
+  const visibleRest = rest.slice(0, visibleCount);
+  const hasMore = visibleCount < rest.length;
 
   return (
     <>
@@ -117,11 +135,20 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes }: E
           <div className="grid md:grid-cols-2 gap-12 items-center">
             {/* Left */}
             <div>
-              <div className="inline-flex items-center gap-2 border border-white/10 bg-white/5 px-3 py-1.5 rounded-full mb-6">
-                <span className="material-symbols-outlined text-[16px]" style={{ color: meta.color }}>
-                  {meta.icon}
-                </span>
-                <span className="text-white/60 text-xs font-semibold uppercase tracking-wider">{meta.tag}</span>
+              {/* Mini badges */}
+              <div className="flex flex-wrap items-center gap-2 mb-6">
+                {cars.length > 0 && (
+                  <div className="inline-flex items-center gap-1.5 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full">
+                    <span className="material-symbols-outlined text-[14px]" style={{ color: meta.color }}>sell</span>
+                    <span className="text-white/60 text-xs font-semibold">Desde {formatCLP(Math.min(...cars.map((c) => c.discountPrice)))}</span>
+                  </div>
+                )}
+                {hotDeals.length > 0 && (
+                  <div className="inline-flex items-center gap-1.5 bg-amber/10 border border-amber/30 px-3 py-1.5 rounded-full">
+                    <span className="material-symbols-outlined text-amber text-[14px]">local_fire_department</span>
+                    <span className="text-amber text-xs font-bold">{hotDeals.length} Hot Deal{hotDeals.length !== 1 ? "s" : ""}</span>
+                  </div>
+                )}
               </div>
 
               <h1 className="text-5xl md:text-6xl font-headline font-black text-white tracking-tighter leading-[0.92] mb-4">
@@ -134,7 +161,7 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes }: E
                 {meta.description}
               </p>
 
-              <div className="flex flex-wrap gap-3 mb-10">
+              <div className="flex flex-wrap gap-4 mb-10">
                 <div className="flex items-center gap-2 text-white/40 text-sm">
                   <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: meta.color }} />
                   {cars.length} modelo{cars.length !== 1 ? "s" : ""} disponible{cars.length !== 1 ? "s" : ""}
@@ -143,104 +170,117 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes }: E
                   <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: meta.color }} />
                   Ahorro promedio 27%
                 </div>
+                <div className="flex items-center gap-2 text-white/40 text-sm">
+                  <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: meta.color }} />
+                  Respuesta en 24 h
+                </div>
               </div>
 
-              <Link
-                href="/solicitar"
-                className="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-7 py-3.5 rounded-xl transition-colors"
-              >
-                Solicitar oferta {meta.tag}
-                <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
-              </Link>
+              <div className="flex flex-wrap gap-3">
+                <Link
+                  href="/solicitar"
+                  className="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-6 py-3 rounded-xl transition-colors text-sm"
+                >
+                  Solicitar oferta
+                  <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                </Link>
+                <a
+                  href={`#catalogo-${slug}`}
+                  className="inline-flex items-center gap-2 border border-white/20 hover:border-white/40 text-white font-medium px-6 py-3 rounded-xl transition-colors text-sm"
+                >
+                  Ver catálogo
+                </a>
+              </div>
             </div>
 
-            {/* Right – how it works cards */}
-            <div className="grid grid-cols-2 gap-3">
-              {meta.howItWorks.map((h, i) => (
-                <motion.div
-                  key={h.title}
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: i * 0.08 }}
-                  className="bg-white/5 border border-white/10 rounded-2xl p-4"
+            {/* Right – hero image */}
+            <div className="relative hidden md:block">
+              <div className="aspect-[4/3] rounded-2xl overflow-hidden bg-white/5 border border-white/10 flex items-center justify-center">
+                <div className="text-center">
+                  <span className="material-symbols-outlined text-[64px] text-white/10 block mb-3">image</span>
+                  <p className="text-white/20 text-xs uppercase tracking-widest font-semibold">Foto {meta.label}</p>
+                </div>
+              </div>
+              <div
+                className="absolute -bottom-4 -right-4 w-32 h-32 rounded-full blur-3xl pointer-events-none opacity-20"
+                style={{ backgroundColor: meta.color }}
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Info strip (howItWorks) ─────────────────────────────────── */}
+      <section className="py-10 bg-surface border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 md:px-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {meta.howItWorks.map((h, i) => (
+              <motion.div
+                key={h.title}
+                initial={{ opacity: 0, y: 12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.35, delay: i * 0.07 }}
+                className="flex flex-col items-start gap-3 bg-white border border-gray-100 rounded-2xl p-5"
+              >
+                <div
+                  className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ backgroundColor: `${meta.color}18` }}
                 >
-                  <span className="material-symbols-outlined text-[22px] mb-2 block" style={{ color: meta.color }}>
+                  <span className="material-symbols-outlined text-[20px]" style={{ color: meta.color }}>
                     {h.icon}
                   </span>
-                  <p className="text-white font-bold text-sm leading-snug mb-1">{h.title}</p>
-                  <p className="text-white/40 text-[11px] leading-snug">{h.desc}</p>
-                </motion.div>
+                </div>
+                <div>
+                  <p className="font-headline font-bold text-sm leading-snug mb-1 text-text-main">{h.title}</p>
+                  <p className="text-text-ghost text-[12px] leading-snug">{h.desc}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Banner slideshow ───────────────────────────────────────── */}
+      <section className="py-8 bg-surface border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 md:px-8">
+          <div className="relative overflow-hidden rounded-2xl h-40 md:h-56 cursor-pointer" onClick={nextSlide}>
+            {banners.map((b, i) => (
+              <div
+                key={b.id}
+                className={[
+                  "absolute inset-0 bg-gradient-to-r flex items-center justify-center transition-opacity duration-700",
+                  b.bg,
+                  i === activeSlide ? "opacity-100" : "opacity-0 pointer-events-none",
+                ].join(" ")}
+              >
+                <div className="border-2 border-dashed border-gray-200 rounded-xl w-full h-full mx-4 flex flex-col items-center justify-center gap-2">
+                  <span className="material-symbols-outlined text-[36px] text-gray-300">image</span>
+                  <p className="text-gray-400 text-xs uppercase tracking-widest font-semibold">
+                    {b.label} — {meta.label}
+                  </p>
+                </div>
+              </div>
+            ))}
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+              {banners.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={(e) => { e.stopPropagation(); setActiveSlide(i); }}
+                  className={[
+                    "w-1.5 h-1.5 rounded-full transition-all duration-300",
+                    i === activeSlide ? "w-4" : "bg-gray-300",
+                  ].join(" ")}
+                  style={i === activeSlide ? { backgroundColor: meta.color } : {}}
+                />
               ))}
             </div>
           </div>
         </div>
       </section>
 
-      {/* ─── Pros / Cons + Ideal for ─────────────────────────────────── */}
-      <section className="py-14 border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <div className="grid md:grid-cols-3 gap-8">
-            {/* Pros */}
-            <div>
-              <div className="flex items-center gap-2 mb-5">
-                <div className="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center">
-                  <span className="material-symbols-outlined text-green-500 text-[16px]">thumb_up</span>
-                </div>
-                <h3 className="font-headline font-bold">Ventajas</h3>
-              </div>
-              <ul className="space-y-2.5">
-                {meta.pros.map((p) => (
-                  <li key={p} className="flex items-start gap-2.5 text-sm text-text-muted">
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0 mt-1.5" />
-                    {p}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Cons */}
-            <div>
-              <div className="flex items-center gap-2 mb-5">
-                <div className="w-8 h-8 bg-red-50 rounded-lg flex items-center justify-center">
-                  <span className="material-symbols-outlined text-red-400 text-[16px]">thumb_down</span>
-                </div>
-                <h3 className="font-headline font-bold">A tener en cuenta</h3>
-              </div>
-              <ul className="space-y-2.5">
-                {meta.cons.map((c) => (
-                  <li key={c} className="flex items-start gap-2.5 text-sm text-text-muted">
-                    <span className="w-1.5 h-1.5 rounded-full bg-red-300 flex-shrink-0 mt-1.5" />
-                    {c}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Ideal for */}
-            <div className="bg-surface rounded-2xl p-6 border border-gray-100">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
-                  <span className="material-symbols-outlined text-primary-deep text-[16px]">person</span>
-                </div>
-                <h3 className="font-headline font-bold">Ideal para</h3>
-              </div>
-              <p className="text-text-muted text-sm leading-relaxed">{meta.idealFor}</p>
-              <div className="mt-5 pt-4 border-t border-gray-200">
-                <Link
-                  href="/comparador"
-                  className="flex items-center gap-1.5 text-primary-deep text-xs font-semibold hover:text-primary transition-colors"
-                >
-                  <span className="material-symbols-outlined text-[14px]">compare</span>
-                  Comparar con otros tipos
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* ─── All cars ───────────────────────────────────────────────── */}
-      <section className="py-16 md:py-20">
+      <section id={`catalogo-${slug}`} className="py-16 md:py-20">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="mb-8">
             <p className="text-[11px] uppercase tracking-widest text-primary-deep font-bold mb-2">
@@ -271,7 +311,7 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes }: E
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {rest.map((car, i) => {
+              {visibleRest.map((car, i) => {
                 const pct = Math.round(((car.basePrice - car.discountPrice) / car.basePrice) * 100);
                 return (
                   <motion.article
@@ -345,6 +385,18 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes }: E
                   </motion.article>
                 );
               })}
+            </div>
+          )}
+
+          {hasMore && (
+            <div className="mt-10 flex justify-center">
+              <button
+                onClick={() => setVisibleCount((n) => n + PAGE_SIZE)}
+                className="inline-flex items-center gap-2 border border-gray-200 hover:border-primary/40 hover:text-primary-deep text-text-muted font-semibold px-8 py-3 rounded-xl transition-all text-sm"
+              >
+                Ver más autos
+                <span className="material-symbols-outlined text-[18px]">expand_more</span>
+              </button>
             </div>
           )}
         </div>
@@ -434,6 +486,55 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes }: E
           </div>
         </section>
       )}
+
+      {/* ─── Pros / Cons + Ideal for ─────────────────────────────────── */}
+      <section className="py-14 bg-surface border-t border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 md:px-8">
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="bg-white rounded-2xl p-6 border border-gray-100">
+              <div className="flex items-center gap-2 mb-5">
+                <div className="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center">
+                  <span className="material-symbols-outlined text-green-500 text-[16px]">thumb_up</span>
+                </div>
+                <h3 className="font-headline font-bold">Ventajas</h3>
+              </div>
+              <ul className="space-y-2.5">
+                {meta.pros.map((p) => (
+                  <li key={p} className="flex items-start gap-2.5 text-sm text-text-muted">
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0 mt-1.5" />
+                    {p}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="bg-white rounded-2xl p-6 border border-gray-100">
+              <div className="flex items-center gap-2 mb-5">
+                <div className="w-8 h-8 bg-red-50 rounded-lg flex items-center justify-center">
+                  <span className="material-symbols-outlined text-red-400 text-[16px]">thumb_down</span>
+                </div>
+                <h3 className="font-headline font-bold">A tener en cuenta</h3>
+              </div>
+              <ul className="space-y-2.5">
+                {meta.cons.map((c) => (
+                  <li key={c} className="flex items-start gap-2.5 text-sm text-text-muted">
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-300 flex-shrink-0 mt-1.5" />
+                    {c}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="bg-white rounded-2xl p-6 border border-gray-100">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+                  <span className="material-symbols-outlined text-primary-deep text-[16px]">person</span>
+                </div>
+                <h3 className="font-headline font-bold">Ideal para</h3>
+              </div>
+              <p className="text-text-muted text-sm leading-relaxed">{meta.idealFor}</p>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Fallback when no cars */}
       {cars.length === 0 && (

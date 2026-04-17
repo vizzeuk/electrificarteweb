@@ -33,12 +33,13 @@ const electricTypes = [
 type DropdownId = "brands" | "types" | "electric" | null;
 
 export function Navbar() {
-  const [mobileOpen, setMobileOpen]             = useState(false);
-  const [activeDropdown, setActiveDropdown]     = useState<DropdownId>(null);
-  const [mobileBrandsOpen, setMobileBrandsOpen] = useState(false);
-  const [mobileTypesOpen, setMobileTypesOpen]   = useState(false);
-  const [mobileElectricOpen, setMobileElectricOpen] = useState(false);
-  const [scrolled, setScrolled]               = useState(false);
+  const [mobileOpen, setMobileOpen]         = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState<DropdownId>(null);
+  const [mobileSection, setMobileSection]   = useState<DropdownId>(null);
+  const [scrolled, setScrolled]             = useState(false);
+
+  const toggleMobileSection = (id: DropdownId) =>
+    setMobileSection((prev) => (prev === id ? null : id));
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -234,7 +235,7 @@ export function Navbar() {
               "lg:hidden p-2 rounded-lg transition-colors",
               transparent ? "text-white hover:bg-white/10" : "text-text-main hover:bg-surface",
             ].join(" ")}
-            onClick={() => setMobileOpen(!mobileOpen)}
+            onClick={() => { setMobileOpen(!mobileOpen); setMobileSection(null); }}
             aria-label={mobileOpen ? "Cerrar menu" : "Abrir menu"}
             aria-expanded={mobileOpen}
           >
@@ -264,8 +265,8 @@ export function Navbar() {
               {/* Mobile – Marcas accordion */}
               <MobileAccordion
                 label="Buscar por Marca"
-                open={mobileBrandsOpen}
-                onToggle={() => setMobileBrandsOpen(!mobileBrandsOpen)}
+                open={mobileSection === "brands"}
+                onToggle={() => toggleMobileSection("brands")}
               >
                 {testBrands.map((b) => (
                   <Link
@@ -290,8 +291,8 @@ export function Navbar() {
               {/* Mobile – Tipo accordion */}
               <MobileAccordion
                 label="Tipo de Vehículo"
-                open={mobileTypesOpen}
-                onToggle={() => setMobileTypesOpen(!mobileTypesOpen)}
+                open={mobileSection === "types"}
+                onToggle={() => toggleMobileSection("types")}
               >
                 {vehicleTypes.map((t) => (
                   <Link
@@ -309,8 +310,8 @@ export function Navbar() {
               {/* Mobile – Tipo de Eléctrico accordion */}
               <MobileAccordion
                 label="Tipo de Eléctrico"
-                open={mobileElectricOpen}
-                onToggle={() => setMobileElectricOpen(!mobileElectricOpen)}
+                open={mobileSection === "electric"}
+                onToggle={() => toggleMobileSection("electric")}
               >
                 {electricTypes.map((t) => (
                   <Link

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { formatCLP } from "@/lib/utils";
@@ -77,9 +77,12 @@ interface BrandPageContentProps {
   brand: BrandData;
 }
 
+const PAGE_SIZE = 9;
+
 export default function BrandPageContent({ slug, brand }: BrandPageContentProps) {
   const [activeFilters, setActiveFilters] = useState<ActiveFilters>({ tipo: "", electric: "" });
   const [sort, setSort] = useState("default");
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   const tipoOptions = useMemo(() => {
     const vals = [...new Set(brand.cars.map((c) => c.tipoSlug))].filter(Boolean);
@@ -92,6 +95,7 @@ export default function BrandPageContent({ slug, brand }: BrandPageContentProps)
   }, [brand.cars]);
 
   const filteredCars = useMemo(() => {
+    setVisibleCount(PAGE_SIZE);
     let cars = [...brand.cars];
     if (activeFilters.tipo)     cars = cars.filter((c) => c.tipoSlug === activeFilters.tipo);
     if (activeFilters.electric) cars = cars.filter((c) => c.electricType === activeFilters.electric);
@@ -100,6 +104,21 @@ export default function BrandPageContent({ slug, brand }: BrandPageContentProps)
     if (sort === "range-desc")  cars.sort((a, b) => b.range - a.range);
     return cars;
   }, [brand.cars, activeFilters, sort]);
+
+  const visibleCars = filteredCars.slice(0, visibleCount);
+  const hasMore = visibleCount < filteredCars.length;
+
+  const banners = [
+    { id: 1, label: "Banner 1", bg: "from-primary/10 to-primary-deep/5" },
+    { id: 2, label: "Banner 2", bg: "from-gray-100 to-gray-50" },
+    { id: 3, label: "Banner 3", bg: "from-primary-deep/10 to-primary/5" },
+  ];
+  const [activeSlide, setActiveSlide] = useState(0);
+  const nextSlide = useCallback(() => setActiveSlide((p) => (p + 1) % banners.length), [banners.length]);
+  useEffect(() => {
+    const t = setInterval(nextSlide, 5000);
+    return () => clearInterval(t);
+  }, [nextSlide]);
 
   const hotDeal = brand.hotDeal;
   const discountPct = hotDeal ? Math.round(((hotDeal.basePrice - hotDeal.discountPrice) / hotDeal.basePrice) * 100) : 0;
@@ -159,6 +178,43 @@ export default function BrandPageContent({ slug, brand }: BrandPageContentProps)
         </div>
       </section>
 
+      {/* ─── Banner slideshow ───────────────────────────────────────── */}
+      <section className="py-8 bg-surface border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 md:px-8">
+          <div className="relative overflow-hidden rounded-2xl h-40 md:h-56 cursor-pointer" onClick={nextSlide}>
+            {banners.map((b, i) => (
+              <div
+                key={b.id}
+                className={[
+                  "absolute inset-0 bg-gradient-to-r flex items-center justify-center transition-opacity duration-700",
+                  b.bg,
+                  i === activeSlide ? "opacity-100" : "opacity-0 pointer-events-none",
+                ].join(" ")}
+              >
+                <div className="border-2 border-dashed border-gray-200 rounded-xl w-full h-full mx-4 flex flex-col items-center justify-center gap-2">
+                  <span className="material-symbols-outlined text-[36px] text-gray-300">image</span>
+                  <p className="text-gray-400 text-xs uppercase tracking-widest font-semibold">
+                    {b.label} — {brand.name}
+                  </p>
+                </div>
+              </div>
+            ))}
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+              {banners.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={(e) => { e.stopPropagation(); setActiveSlide(i); }}
+                  className={[
+                    "w-1.5 h-1.5 rounded-full transition-all duration-300",
+                    i === activeSlide ? "w-4 bg-primary" : "bg-gray-300",
+                  ].join(" ")}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ─── AUTOS ────────────────────────────────────────────────── */}
       <section id={`autos-${slug}`} className="py-20 md:py-24">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
@@ -182,7 +238,7 @@ export default function BrandPageContent({ slug, brand }: BrandPageContentProps)
                 <span className="material-symbols-outlined text-[40px] text-gray-200 block mb-3">search_off</span>
                 <p className="text-text-muted font-medium">No hay autos con estos filtros.</p>
               </div>
-            ) : filteredCars.map((car, i) => {
+            ) : visibleCars.map((car, i) => {
               const pct = Math.round(((car.basePrice - car.discountPrice) / car.basePrice) * 100);
               return (
                 <motion.article key={car.slug} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.1 }}
@@ -225,6 +281,18 @@ export default function BrandPageContent({ slug, brand }: BrandPageContentProps)
               );
             })}
           </div>
+
+          {hasMore && (
+            <div className="mt-10 flex justify-center">
+              <button
+                onClick={() => setVisibleCount((n) => n + PAGE_SIZE)}
+                className="inline-flex items-center gap-2 border border-gray-200 hover:border-primary/40 hover:text-primary-deep text-text-muted font-semibold px-8 py-3 rounded-xl transition-all text-sm"
+              >
+                Ver más autos
+                <span className="material-symbols-outlined text-[18px]">expand_more</span>
+              </button>
+            </div>
+          )}
         </div>
       </section>
 

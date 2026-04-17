@@ -48,9 +48,12 @@ interface TipoPageContentProps {
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
+const PAGE_SIZE = 9;
+
 export default function TipoPageContent({ slug, meta, cars, otherTypes }: TipoPageContentProps) {
   const [activeFilters, setActiveFilters] = useState<ActiveFilters>({ brand: "", electric: "" });
   const [sort, setSort] = useState("default");
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   const brandOptions = useMemo(() => {
     const vals = [...new Set(cars.map((c) => c.brandSlug))];
@@ -71,6 +74,7 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes }: TipoPa
   }, [cars]);
 
   const filteredCars = useMemo(() => {
+    setVisibleCount(PAGE_SIZE);
     let list = [...cars];
     if (activeFilters.brand)   list = list.filter((c) => c.brandSlug === activeFilters.brand);
     if (activeFilters.electric) list = list.filter((c) => c.electricTypeSlug === activeFilters.electric);
@@ -82,6 +86,8 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes }: TipoPa
 
   const hotDeals = filteredCars.filter((c) => c.isHotDeal);
   const rest = filteredCars.filter((c) => !c.isHotDeal);
+  const visibleRest = rest.slice(0, visibleCount);
+  const hasMore = visibleCount < rest.length;
 
   // Banner slideshow
   const banners = [
@@ -255,7 +261,7 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes }: TipoPa
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {rest.map((car, i) => {
+              {visibleRest.map((car, i) => {
                 const pct = Math.round(((car.basePrice - car.discountPrice) / car.basePrice) * 100);
                 return (
                   <motion.article
@@ -324,6 +330,18 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes }: TipoPa
                   </motion.article>
                 );
               })}
+            </div>
+          )}
+
+          {hasMore && (
+            <div className="mt-10 flex justify-center">
+              <button
+                onClick={() => setVisibleCount((n) => n + PAGE_SIZE)}
+                className="inline-flex items-center gap-2 border border-gray-200 hover:border-primary/40 hover:text-primary-deep text-text-muted font-semibold px-8 py-3 rounded-xl transition-all text-sm"
+              >
+                Ver más autos
+                <span className="material-symbols-outlined text-[18px]">expand_more</span>
+              </button>
             </div>
           )}
         </div>
