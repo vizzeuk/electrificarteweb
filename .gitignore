@@ -48,3 +48,8 @@ next-env.d.ts
 
 # local MCP config (may contain API keys)
 .mcp.json
+
+# logos temporales (se suben a Sanity, no al repo)
+/public/brand-logos/
+/public/logos_electrificarte/
+/public/logos_electrificarte.zip

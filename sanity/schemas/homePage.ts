@@ -98,15 +98,32 @@ export const homePage = defineType({
       description: "El auto que aparece en la sección Hot Deal del home. Idealmente activa el flag 'HOT DEAL' en el auto también.",
     }),
     defineField({
-      name: "opportunitiesTitle", title: "Título 'Oportunidades'", type: "string",
-      group: "catalog", initialValue: "Oportunidades del momento",
+      name: "opportunitiesTitle", title: "Título 'Destacados'", type: "string",
+      group: "catalog", initialValue: "Destacados Electrificarte",
     }),
     defineField({
-      name: "opportunitiesCars", title: "Autos en 'Oportunidades'", type: "array",
+      name: "opportunitiesCars", title: "Autos en 'Destacados'", type: "array",
       group: "catalog",
-      description: "Autos con descuento para la sección 'Oportunidades'. Máximo 4.",
+      description: "Autos que aparecen en el carrusel de Destacados. Puedes agregar todos los que quieras.",
       of: [defineArrayMember({ type: "reference", to: [{ type: "car" }] })],
-      validation: (r) => r.max(4),
+    }),
+    defineField({
+      name: "serviciosExtras", title: "Servicios adicionales (Wallbox · Seguros)", type: "array",
+      group: "catalog",
+      description: "Las dos cards de servicios adicionales que aparecen bajo Oportunidades. Máximo 2.",
+      of: [defineArrayMember({
+        type: "object", name: "servicioExtra", title: "Servicio",
+        fields: [
+          defineField({ name: "badge",       title: "Badge (ej: OFERTA, NUEVO)",   type: "string" }),
+          defineField({ name: "title",       title: "Título de la card",           type: "string" }),
+          defineField({ name: "description", title: "Descripción / subtítulo",     type: "text", rows: 2 }),
+          defineField({ name: "ctaText",     title: "Texto del botón",             type: "string", initialValue: "Cotiza aquí" }),
+          defineField({ name: "ctaHref",     title: "Enlace del botón",            type: "string" }),
+          defineField({ name: "image",       title: "Imagen de fondo",             type: "image", options: { hotspot: true } }),
+        ],
+        preview: { select: { title: "title", media: "image" } },
+      })],
+      validation: (r) => r.max(2),
     }),
 
     // ════════════════════════════════════════════════════════════════════════

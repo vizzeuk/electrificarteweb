@@ -3,18 +3,20 @@ import { client } from "@/lib/sanity/client";
 import { homePageQuery } from "@/lib/queries/pages";
 import { latestBlogPostsQuery } from "@/lib/queries/blog";
 import { allBrandsStripQuery } from "@/lib/queries/car";
-import { Hero }            from "@/components/layout/Hero";
-import { BrandStrip }      from "@/components/layout/BrandStrip";
-import { LatestLaunches }  from "@/components/layout/LatestLaunches";
-import { CategoryBanners } from "@/components/layout/CategoryBanners";
-import { HotDeal }         from "@/components/layout/HotDeal";
-import { Opportunities }   from "@/components/layout/Opportunities";
-import { HowItWorks }      from "@/components/layout/HowItWorks";
-import { TrustBadges }     from "@/components/layout/TrustBadges";
-import { Testimonials }    from "@/components/layout/Testimonials";
-import { BlogPreview }     from "@/components/layout/BlogPreview";
-import { FAQ }             from "@/components/layout/FAQ";
-import { StickyCTA }       from "@/components/layout/StickyCTA";
+import { collectionsForHomeQuery } from "@/lib/queries/collections";
+import { Hero }             from "@/components/layout/Hero";
+import { BrandStrip }       from "@/components/layout/BrandStrip";
+import { LatestLaunches }   from "@/components/layout/LatestLaunches";
+import { CollectionsSlideshow } from "@/components/layout/CollectionsSlideshow";
+import { HotDeal }          from "@/components/layout/HotDeal";
+import { Opportunities }    from "@/components/layout/Opportunities";
+import { ServiciosExtras }  from "@/components/layout/ServiciosExtras";
+import { HowItWorks }       from "@/components/layout/HowItWorks";
+import { TrustBadges }      from "@/components/layout/TrustBadges";
+import { Testimonials }     from "@/components/layout/Testimonials";
+import { BlogPreview }      from "@/components/layout/BlogPreview";
+import { FAQ }              from "@/components/layout/FAQ";
+import { StickyCTA }        from "@/components/layout/StickyCTA";
 import { HomeStructuredData } from "@/components/layout/StructuredData";
 
 // ISR: revalidar cada 60 segundos cuando haya cambios en Sanity
@@ -22,10 +24,11 @@ export const revalidate = 60;
 
 export default async function HomePage() {
   // Fetch all home page content from Sanity (falls back gracefully if no data yet)
-  const [page, blogPosts, brands] = await Promise.all([
+  const [page, blogPosts, brands, collections] = await Promise.all([
     client.fetch(homePageQuery).catch(() => null),
     client.fetch(latestBlogPostsQuery, { count: 3 }).catch(() => []),
     client.fetch(allBrandsStripQuery).catch(() => []),
+    client.fetch(collectionsForHomeQuery).catch(() => []),
   ]);
 
   return (
@@ -71,7 +74,7 @@ export default async function HomePage() {
         }))}
       />
 
-      <CategoryBanners />
+      <CollectionsSlideshow collections={collections} />
 
       <HotDeal car={page?.hotDealCar ?? null} />
 
@@ -90,6 +93,8 @@ export default async function HomePage() {
           isHotDeal:     c.isHotDeal,
         }))}
       />
+
+      <ServiciosExtras items={page?.serviciosExtras} />
 
       <HowItWorks
         title={page?.howItWorksTitle}

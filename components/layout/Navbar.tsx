@@ -14,11 +14,12 @@ const testBrands = [
 ];
 
 const vehicleTypes = [
-  { label: "SUV",       icon: "directions_car",  href: "/tipo/suv",      desc: "Espaciosos y versátiles" },
-  { label: "Sedán",     icon: "airport_shuttle", href: "/tipo/sedan",    desc: "Elegante y aerodinámico" },
-  { label: "City Car",  icon: "local_taxi",      href: "/tipo/city-car", desc: "Ideal para ciudad" },
-  { label: "Pickup",    icon: "agriculture",     href: "/tipo/pickup",   desc: "Potencia y carga" },
-  { label: "Hatchback", icon: "commute",         href: "/tipo/hatchback",desc: "Práctico y ágil" },
+  { label: "SUV",        icon: "directions_car",  href: "/tipo/suv",        desc: "Espaciosos y versátiles" },
+  { label: "Sedán",      icon: "airport_shuttle", href: "/tipo/sedan",      desc: "Elegante y aerodinámico" },
+  { label: "City Car",   icon: "local_taxi",      href: "/tipo/city-car",   desc: "Ideal para ciudad" },
+  { label: "Pickup",     icon: "agriculture",     href: "/tipo/pickup",     desc: "Potencia y carga" },
+  { label: "Hatchback",  icon: "commute",         href: "/tipo/hatchback",  desc: "Práctico y ágil" },
+  { label: "Cabriolet",  icon: "wb_sunny",        href: "/tipo/cabriolet",  desc: "Cielo abierto, sin emisiones" },
 ];
 
 const electricTypes = [

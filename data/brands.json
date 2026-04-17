@@ -1,0 +1,902 @@
+[
+  {
+    "slug": "audi",
+    "name": "Audi",
+    "logoUrl": "https://logo.clearbit.com/audi.com",
+    "country": "Alemania",
+    "foundedYear": "1909",
+    "website": "https://www.audi.cl",
+    "isFeatured": false,
+    "accentColor": "#bb0a21",
+    "description": "Audi electrifica el lujo con su gama e-tron, donde la elegancia alemana se funde con la tecnología eléctrica más avanzada. Cada detalle del interior y la sofisticación de la conducción elevan la experiencia del EV a un nivel premium.",
+    "heroTagline": "Vorsprung durch Technik — eléctrico",
+    "stats": [
+      { "label": "Modelos e-tron", "value": "4+" },
+      { "label": "Autonomía e-tron GT", "value": "488 km" },
+      { "label": "Potencia máx.", "value": "646 hp" }
+    ],
+    "videos": []
+  },
+  {
+    "slug": "bmw",
+    "name": "BMW",
+    "logoUrl": "https://logo.clearbit.com/bmw.com",
+    "country": "Alemania",
+    "foundedYear": "1916",
+    "website": "https://www.bmw.cl",
+    "isFeatured": false,
+    "accentColor": "#0066b2",
+    "description": "BMW lleva la experiencia de conducción definitiva al mundo eléctrico con su línea 'i'. Desde el icónico i4 hasta el imponente iX, cada modelo combina el placer de conducción característico de la marca con tecnología eléctrica de primer nivel.",
+    "heroTagline": "El placer de conducir, en eléctrico",
+    "stats": [
+      { "label": "Años de excelencia", "value": "108+" },
+      { "label": "Autonomía iX", "value": "630 km" },
+      { "label": "0-100 km/h iX M60", "value": "3.8 seg" }
+    ],
+    "videos": []
+  },
+  {
+    "slug": "byd",
+    "name": "BYD",
+    "logoUrl": "https://logo.clearbit.com/byd.com",
+    "country": "China",
+    "foundedYear": "1995",
+    "website": "https://www.byd.com/cl",
+    "isFeatured": true,
+    "accentColor": "#1db3e8",
+    "description": "BYD (Build Your Dreams) es el fabricante de vehículos eléctricos más grande del mundo, con más de 30 años de experiencia en tecnología de baterías. En Chile lidera el mercado EV con una amplia gama que abarca desde sedanes hasta SUVs premium.",
+    "heroTagline": "El eléctrico más vendido de Chile",
+    "stats": [
+      { "label": "Años de experiencia", "value": "30+" },
+      { "label": "Modelos disponibles", "value": "6+" },
+      { "label": "Autonomía máx.", "value": "520 km" }
+    ],
+    "videos": []
+  },
+  {
+    "slug": "changan",
+    "name": "Changan",
+    "logoUrl": "https://logo.clearbit.com/changan-auto.com",
+    "country": "China",
+    "foundedYear": "1862",
+    "website": "https://www.changan.cl",
+    "isFeatured": false,
+    "accentColor": "#003087",
+    "description": "Changan es uno de los cuatro grandes fabricantes automotrices de China, con más de 160 años de historia industrial. En Chile sus modelos eléctricos e híbridos combinan tecnología avanzada de baterías con diseño contemporáneo y precios competitivos.",
+    "heroTagline": "160 años de ingeniería, ahora eléctrica",
+    "stats": [
+      { "label": "Años de historia", "value": "160+" },
+      { "label": "Ventas globales 2023", "value": "2.5M+" },
+      { "label": "Inversión en I+D", "value": "5% anual" }
+    ],
+    "videos": []
+  },
+  {
+    "slug": "chery",
+    "name": "Chery",
+    "logoUrl": "https://logo.clearbit.com/chery.com",
+    "country": "China",
+    "foundedYear": "1997",
+    "website": "https://www.chery.cl",
+    "isFeatured": false,
+    "accentColor": "#e30613",
+    "description": "Chery es uno de los exportadores de automóviles más grandes de China, con presencia en más de 80 países. En Chile ofrece alternativas eléctricas de alta tecnología con excelente relación precio-equipamiento para el mercado masivo.",
+    "heroTagline": "Tecnología china de talla mundial",
+    "stats": [
+      { "label": "Países con presencia", "value": "80+" },
+      { "label": "Años de experiencia", "value": "27+" },
+      { "label": "Modelos eléctricos", "value": "3+" }
+    ],
+    "videos": []
+  },
+  {
+    "slug": "chevrolet",
+    "name": "Chevrolet",
+    "logoUrl": "https://logo.clearbit.com/chevrolet.com",
+    "country": "Estados Unidos",
+    "foundedYear": "1911",
+    "website": "https://www.chevrolet.cl",
+    "isFeatured": false,
+    "accentColor": "#f9a825",
+    "description": "Chevrolet trae la tradición americana al mundo eléctrico con el Bolt EV, uno de los vehículos eléctricos de mayor autonomía por precio en el mercado. La marca más vendida de GM lleva su legado de más de 110 años hacia un futuro sin emisiones.",
+    "heroTagline": "Más de un siglo de innovación, ahora eléctrica",
+    "stats": [
+      { "label": "Años de historia", "value": "113+" },
+      { "label": "Autonomía Bolt EV", "value": "416 km" },
+      { "label": "Tiempo de carga rápida", "value": "60 min" }
+    ],
+    "videos": []
+  },
+  {
+    "slug": "cupra",
+    "name": "Cupra",
+    "logoUrl": "https://logo.clearbit.com/cupraofficial.com",
+    "country": "España",
+    "foundedYear": "2018",
+    "website": "https://www.cupra.cl",
+    "isFeatured": false,
+    "accentColor": "#c8a96e",
+    "description": "Cupra nació como la división de alto rendimiento de Seat y hoy es una marca independiente que define el segmento del EV deportivo accesible. Con el Born y el Tavascan, Cupra ofrece emociones auténticas en versión 100% eléctrica.",
+    "heroTagline": "Rebelde por naturaleza, eléctrico por convicción",
+    "stats": [
+      { "label": "Años de identidad propia", "value": "6+" },
+      { "label": "Autonomía Born", "value": "548 km" },
+      { "label": "0-100 km/h Tavascan VZ", "value": "5.6 seg" }
+    ],
+    "videos": []
+  },
+  {
+    "slug": "deepal",
+    "name": "Deepal",
+    "logoUrl": "https://logo.clearbit.com/deepal-auto.com",
+    "country": "China",
+    "foundedYear": "2021",
+    "website": "https://www.deepal.cl",
+    "isFeatured": false,
+    "accentColor": "#0050a0",
+    "description": "Deepal es la marca premium de electromovilidad del Grupo Changan, diseñada para liderar el segmento de SUVs eléctricos inteligentes. Con inteligencia artificial integrada y autonomía de largo alcance, Deepal representa la próxima generación del EV chino.",
+    "heroTagline": "Inteligencia eléctrica de nueva generación",
+    "stats": [
+      { "label": "Grupo automotriz", "value": "Changan" },
+      { "label": "Autonomía S07", "value": "520 km" },
+      { "label": "Carga rápida", "value": "30 min" }
+    ],
+    "videos": []
+  },
+  {
+    "slug": "dfsk",
+    "name": "DFSK",
+    "logoUrl": "https://logo.clearbit.com/dfsk.com",
+    "country": "China",
+    "foundedYear": "2003",
+    "website": "https://www.dfsk.cl",
+    "isFeatured": false,
+    "accentColor": "#1e3a8a",
+    "description": "DFSK (Dongfeng Sokon) es la división de vehículos de pasajeros del Grupo Dongfeng, uno de los mayores fabricantes automotrices de China. En Chile ofrece SUVs eléctricos con excelente equipamiento de serie y garantías extendidas.",
+    "heroTagline": "Tecnología Dongfeng para Chile",
+    "stats": [
+      { "label": "Grupo automotriz", "value": "Dongfeng" },
+      { "label": "Años en Chile", "value": "5+" },
+      { "label": "Garantía", "value": "5 años" }
+    ],
+    "videos": []
+  },
+  {
+    "slug": "dongfeng",
+    "name": "Dongfeng",
+    "logoUrl": "https://logo.clearbit.com/dongfeng.com",
+    "country": "China",
+    "foundedYear": "1969",
+    "website": "https://www.dongfeng.cl",
+    "isFeatured": false,
+    "accentColor": "#c8102e",
+    "description": "Dongfeng es uno de los cuatro grandes grupos automotrices de China, con más de 55 años de historia. Con acuerdos con Nissan, Honda y PSA, su experiencia internacional respalda una gama de vehículos eléctricos robustos y bien equipados para el mercado chileno.",
+    "heroTagline": "Experiencia china con visión global",
+    "stats": [
+      { "label": "Años de trayectoria", "value": "55+" },
+      { "label": "Alianzas internacionales", "value": "Nissan, Honda, PSA" },
+      { "label": "Producción anual", "value": "3M+ unidades" }
+    ],
+    "videos": []
+  },
+  {
+    "slug": "ds",
+    "name": "DS",
+    "logoUrl": "https://logo.clearbit.com/ds-automobiles.com",
+    "country": "Francia",
+    "foundedYear": "2015",
+    "website": "https://www.ds-automobiles.cl",
+    "isFeatured": false,
+    "accentColor": "#b8a060",
+    "description": "DS Automobiles es la marca de lujo francesa del Grupo Stellantis, inspirada en el legendario Citroën DS. Con una filosofía de savoir-faire parisino, sus modelos eléctricos e híbridos combinan artesanía premium con tecnología de vanguardia.",
+    "heroTagline": "El lujo francés en versión eléctrica",
+    "stats": [
+      { "label": "Grupo automotriz", "value": "Stellantis" },
+      { "label": "Autonomía DS 4 E-Tense", "value": "400 km" },
+      { "label": "Filosofía", "value": "Savoir-faire parisino" }
+    ],
+    "videos": []
+  },
+  {
+    "slug": "fiat",
+    "name": "Fiat",
+    "logoUrl": "https://logo.clearbit.com/fiat.com",
+    "country": "Italia",
+    "foundedYear": "1899",
+    "website": "https://www.fiat.cl",
+    "isFeatured": false,
+    "accentColor": "#8b1a1a",
+    "description": "Fiat lleva más de 125 años fabricando automóviles y ahora electrifica su icónico 500 en una versión 100% eléctrica que conserva todo el encanto italiano. El Fiat 500e es el EV urbano más adorable del mercado, perfecto para la vida en la ciudad.",
+    "heroTagline": "El italiano icónico, ahora eléctrico",
+    "stats": [
+      { "label": "Años de historia", "value": "125+" },
+      { "label": "Autonomía 500e", "value": "321 km" },
+      { "label": "Potencia 500e", "value": "118 hp" }
+    ],
+    "videos": []
+  },
+  {
+    "slug": "ford",
+    "name": "Ford",
+    "logoUrl": "https://logo.clearbit.com/ford.com",
+    "country": "Estados Unidos",
+    "foundedYear": "1903",
+    "website": "https://www.ford.cl",
+    "isFeatured": false,
+    "accentColor": "#003478",
+    "description": "Ford lleva 120 años democratizando la movilidad y ahora lidera la electrificación americana con el Mustang Mach-E y la F-150 Lightning. La marca del óvalo azul fusiona su legado de potencia e innovación con la tecnología eléctrica del siglo XXI.",
+    "heroTagline": "El legado americano se electrifica",
+    "stats": [
+      { "label": "Años de historia", "value": "121+" },
+      { "label": "Autonomía Mustang Mach-E", "value": "490 km" },
+      { "label": "0-100 km/h Mach-E GT", "value": "3.7 seg" }
+    ],
+    "videos": []
+  },
+  {
+    "slug": "gac",
+    "name": "GAC",
+    "logoUrl": "https://logo.clearbit.com/gac-motor.com",
+    "country": "China",
+    "foundedYear": "1997",
+    "website": "https://www.gac.cl",
+    "isFeatured": false,
+    "accentColor": "#004b87",
+    "description": "GAC (Guangzhou Automobile Corporation) es uno de los grupos automotrices más importantes de China, conocido por sus modelos Aion de alta tecnología. Sus vehículos eléctricos destacan por la carga ultrarrápida y rangos de autonomía entre los más altos del segmento.",
+    "heroTagline": "Vanguardia eléctrica desde Guangzhou",
+    "stats": [
+      { "label": "Años de trayectoria", "value": "27+" },
+      { "label": "Autonomía Aion V", "value": "600 km" },
+      { "label": "Carga rápida Aion S", "value": "8 min" }
+    ],
+    "videos": []
+  },
+  {
+    "slug": "geely",
+    "name": "Geely",
+    "logoUrl": "https://logo.clearbit.com/geely.com",
+    "country": "China",
+    "foundedYear": "1986",
+    "website": "https://www.geely.cl",
+    "isFeatured": false,
+    "accentColor": "#005596",
+    "description": "Geely es uno de los grupos automotrices más grandes del mundo, propietario de Volvo, Polestar y Lotus. En Chile, sus modelos eléctricos e híbridos combinan la experiencia tecnológica de las marcas europeas de su grupo con precios competitivos.",
+    "heroTagline": "El grupo chino que compró Volvo",
+    "stats": [
+      { "label": "Años de historia", "value": "38+" },
+      { "label": "Marcas del grupo", "value": "10+" },
+      { "label": "Ventas globales 2023", "value": "2.7M+" }
+    ],
+    "videos": []
+  },
+  {
+    "slug": "gwm",
+    "name": "GWM",
+    "logoUrl": "https://logo.clearbit.com/gwm.com",
+    "country": "China",
+    "foundedYear": "1984",
+    "website": "https://www.gwm.cl",
+    "isFeatured": false,
+    "accentColor": "#e63312",
+    "description": "Great Wall Motors (GWM) es el mayor fabricante de SUVs de China y uno de los líderes mundiales en tecnología híbrida y eléctrica. Sus marcas Haval y Ora ofrecen vehículos con equipamiento premium a precios competitivos en el mercado chileno.",
+    "heroTagline": "El SUV chino más vendido del mundo",
+    "stats": [
+      { "label": "Años de experiencia", "value": "40+" },
+      { "label": "Países con presencia", "value": "60+" },
+      { "label": "Modelos eléctricos e híbridos", "value": "5+" }
+    ],
+    "videos": []
+  },
+  {
+    "slug": "haval",
+    "name": "Haval",
+    "logoUrl": "https://logo.clearbit.com/haval.com",
+    "country": "China",
+    "foundedYear": "2013",
+    "website": "https://www.haval.cl",
+    "isFeatured": false,
+    "accentColor": "#c00000",
+    "description": "Haval es la submarca de SUVs de Great Wall Motors y la marca de SUVs más vendida de China. Con versiones híbridas enchufables PHEV y totalmente eléctricas, Haval ofrece la practicidad de un SUV familiar con la eficiencia de la electromovilidad.",
+    "heroTagline": "El SUV más vendido de China",
+    "stats": [
+      { "label": "Grupo automotriz", "value": "GWM" },
+      { "label": "Autonomía H6 PHEV", "value": "100 km eléctrico" },
+      { "label": "SUV más vendido China", "value": "12 años consecutivos" }
+    ],
+    "videos": []
+  },
+  {
+    "slug": "honda",
+    "name": "Honda",
+    "logoUrl": "https://logo.clearbit.com/honda.com",
+    "country": "Japón",
+    "foundedYear": "1948",
+    "website": "https://www.honda.cl",
+    "isFeatured": false,
+    "accentColor": "#cc0000",
+    "description": "Honda, fundada en 1948, es sinónimo de confiabilidad e innovación japonesa. Con su nueva familia e:N de vehículos eléctricos y la tecnología híbrida e:HEV, Honda transiciona elegantemente hacia un futuro de movilidad limpia con la calidad que la caracteriza.",
+    "heroTagline": "El poder de los sueños, en eléctrico",
+    "stats": [
+      { "label": "Años de confiabilidad", "value": "76+" },
+      { "label": "Meta 100% EV", "value": "2040" },
+      { "label": "Modelos electrificados", "value": "3+" }
+    ],
+    "videos": []
+  },
+  {
+    "slug": "hyundai",
+    "name": "Hyundai",
+    "logoUrl": "https://logo.clearbit.com/hyundai.com",
+    "country": "Corea del Sur",
+    "foundedYear": "1967",
+    "website": "https://www.hyundai.com/cl",
+    "isFeatured": true,
+    "accentColor": "#002c5f",
+    "description": "Hyundai es pionero en movilidad eléctrica con su gama IONIQ, diseñada exclusivamente para vehículos eléctricos. Con plataforma E-GMP de última generación y carga ultrarrápida de 800V, Hyundai define el estándar premium del segmento en Chile.",
+    "heroTagline": "Innovación coreana en electromovilidad",
+    "stats": [
+      { "label": "Años en el mercado", "value": "57+" },
+      { "label": "Autonomía máx. IONIQ 6", "value": "614 km" },
+      { "label": "Carga 800V", "value": "18 min" }
+    ],
+    "videos": []
+  },
+  {
+    "slug": "jac",
+    "name": "JAC",
+    "logoUrl": "https://logo.clearbit.com/jac-auto.com",
+    "country": "China",
+    "foundedYear": "1964",
+    "website": "https://www.jac.cl",
+    "isFeatured": false,
+    "accentColor": "#0071bc",
+    "description": "JAC Motors es uno de los fabricantes de vehículos comerciales y de pasajeros más importantes de China, con 60 años de historia. En Chile, sus modelos eléctricos destacan por su equipamiento completo y precio accesible para el segmento de entrada al mundo EV.",
+    "heroTagline": "60 años de ingeniería al servicio del EV",
+    "stats": [
+      { "label": "Años de trayectoria", "value": "60+" },
+      { "label": "Países exportadores", "value": "140+" },
+      { "label": "Autonomía máx.", "value": "400 km" }
+    ],
+    "videos": []
+  },
+  {
+    "slug": "jaecoo",
+    "name": "Jaecoo",
+    "logoUrl": "https://logo.clearbit.com/jaecoo.com",
+    "country": "China",
+    "foundedYear": "2023",
+    "website": "https://www.jaecoo.cl",
+    "isFeatured": false,
+    "accentColor": "#2d6a4f",
+    "description": "Jaecoo es la nueva marca de aventura todoterreno del Grupo Chery, diseñada para conquistar cualquier terreno. Con un diseño robusto e inspirado en la naturaleza y versiones PHEV de largo alcance, Jaecoo posiciona al Grupo Chery en el segmento off-road premium.",
+    "heroTagline": "Domina cualquier terreno, sin límites",
+    "stats": [
+      { "label": "Grupo automotriz", "value": "Chery" },
+      { "label": "Autonomía PHEV", "value": "800+ km" },
+      { "label": "Capacidad todoterreno", "value": "4WD inteligente" }
+    ],
+    "videos": []
+  },
+  {
+    "slug": "jeep",
+    "name": "Jeep",
+    "logoUrl": "https://logo.clearbit.com/jeep.com",
+    "country": "Estados Unidos",
+    "foundedYear": "1943",
+    "website": "https://www.jeep.cl",
+    "isFeatured": false,
+    "accentColor": "#2e7d32",
+    "description": "Jeep, la marca que inventó el concepto de 4x4, ahora electrifica la aventura con versiones PHEV de sus icónicos Wrangler y Grand Cherokee. La libertad sin límites ahora tiene una huella de carbono menor sin sacrificar la capacidad off-road legendaria de la marca.",
+    "heroTagline": "La aventura icónica, ahora electrificada",
+    "stats": [
+      { "label": "Años de historia", "value": "81+" },
+      { "label": "Autonomía eléctrica Wrangler 4xe", "value": "40 km" },
+      { "label": "Ángulo de rampa", "value": "27.8°" }
+    ],
+    "videos": []
+  },
+  {
+    "slug": "jetour",
+    "name": "Jetour",
+    "logoUrl": "https://logo.clearbit.com/jetour.com",
+    "country": "China",
+    "foundedYear": "2018",
+    "website": "https://www.jetour.cl",
+    "isFeatured": false,
+    "accentColor": "#005baa",
+    "description": "Jetour es la marca de SUVs del Grupo Chery especializada en aventura y lifestyle. Presente en Chile desde hace pocos años, ha ganado reconocimiento por el diseño llamativo y las versiones híbridas enchufables PHEV de sus populares modelos Dashing y X70.",
+    "heroTagline": "SUVs para vivir la aventura",
+    "stats": [
+      { "label": "Mercados globales", "value": "60+" },
+      { "label": "Ventas globales 2023", "value": "400.000+" },
+      { "label": "Versión PHEV", "value": "Disponible" }
+    ],
+    "videos": []
+  },
+  {
+    "slug": "jmc",
+    "name": "JMC",
+    "logoUrl": "https://logo.clearbit.com/jmcauto.com",
+    "country": "China",
+    "foundedYear": "1968",
+    "website": "https://www.jmc.cl",
+    "isFeatured": false,
+    "accentColor": "#004b9b",
+    "description": "JMC (Jiangling Motors Corporation) es un fabricante chino con más de 55 años de historia especializado en vehículos comerciales y utilitarios. Con alianza histórica con Ford, sus pickups y vans eléctricas combinan robustez comprobada con tecnología de nueva generación.",
+    "heroTagline": "Fuerza de trabajo, ahora eléctrica",
+    "stats": [
+      { "label": "Alianza estratégica", "value": "Ford" },
+      { "label": "Años de trayectoria", "value": "55+" },
+      { "label": "Especialidad", "value": "Vehículos comerciales EV" }
+    ],
+    "videos": []
+  },
+  {
+    "slug": "kia",
+    "name": "Kia",
+    "logoUrl": "https://logo.clearbit.com/kia.com",
+    "country": "Corea del Sur",
+    "foundedYear": "1944",
+    "website": "https://www.kia.com/cl",
+    "isFeatured": true,
+    "accentColor": "#05141f",
+    "description": "Kia ha transformado su imagen para convertirse en referente del diseño y tecnología eléctrica. Con la plataforma E-GMP compartida con Hyundai, modelos como el EV6 y EV9 son considerados entre los mejores vehículos eléctricos del mundo.",
+    "heroTagline": "Diseño audaz, cero emisiones",
+    "stats": [
+      { "label": "Años de historia", "value": "80+" },
+      { "label": "Autonomía EV6", "value": "528 km" },
+      { "label": "Premios internacionales", "value": "10+" }
+    ],
+    "videos": []
+  },
+  {
+    "slug": "leapmotor",
+    "name": "Leapmotor",
+    "logoUrl": "https://logo.clearbit.com/leapmotor.com",
+    "country": "China",
+    "foundedYear": "2015",
+    "website": "https://www.leapmotor.cl",
+    "isFeatured": false,
+    "accentColor": "#00aeef",
+    "description": "Leapmotor es una de las startups de EVs más prometedoras de China, respaldada hoy por el Grupo Stellantis. Con el C10 y modelos compactos de alto valor, Leapmotor democratiza la tecnología eléctrica avanzada con precios sorprendentemente accesibles.",
+    "heroTagline": "La startup eléctrica respaldada por Stellantis",
+    "stats": [
+      { "label": "Respaldo corporativo", "value": "Stellantis" },
+      { "label": "Autonomía C10", "value": "420 km" },
+      { "label": "Tecnología", "value": "Integración total in-house" }
+    ],
+    "videos": []
+  },
+  {
+    "slug": "lexus",
+    "name": "Lexus",
+    "logoUrl": "https://logo.clearbit.com/lexus.com",
+    "country": "Japón",
+    "foundedYear": "1989",
+    "website": "https://www.lexus.cl",
+    "isFeatured": false,
+    "accentColor": "#1a1a1a",
+    "description": "Lexus, la división de lujo de Toyota, redefine la experiencia premium con su filosofía Omotenashi. Con el RZ 450e totalmente eléctrico y una amplia gama de híbridos, Lexus combina la artesanía japonesa más refinada con la electromovilidad de vanguardia.",
+    "heroTagline": "El lujo japonés electrificado",
+    "stats": [
+      { "label": "Años de excelencia", "value": "35+" },
+      { "label": "Autonomía RZ 450e", "value": "440 km" },
+      { "label": "Calidad", "value": "J.D. Power Premium #1" }
+    ],
+    "videos": []
+  },
+  {
+    "slug": "lynk-co",
+    "name": "Lynk & Co",
+    "logoUrl": "https://logo.clearbit.com/lynkco.com",
+    "country": "China / Suecia",
+    "foundedYear": "2016",
+    "website": "https://www.lynkco.com",
+    "isFeatured": false,
+    "accentColor": "#000000",
+    "description": "Lynk & Co es la marca global de Geely que fusiona diseño sueco con ingeniería china. Con un concepto de propiedad compartida y conectividad total, sus modelos híbridos enchufables ofrecen una propuesta única de movilidad moderna y sostenible.",
+    "heroTagline": "Diseño sueco, alma china, espíritu global",
+    "stats": [
+      { "label": "Grupo automotriz", "value": "Geely / Volvo" },
+      { "label": "Autonomía eléctrica 01 PHEV", "value": "85 km" },
+      { "label": "Mercados activos", "value": "15+" }
+    ],
+    "videos": []
+  },
+  {
+    "slug": "maxus",
+    "name": "Maxus",
+    "logoUrl": "https://logo.clearbit.com/maxus-global.com",
+    "country": "China",
+    "foundedYear": "2011",
+    "website": "https://www.maxus.cl",
+    "isFeatured": false,
+    "accentColor": "#1a3a6b",
+    "description": "Maxus, parte del Grupo SAIC, es líder mundial en vehículos comerciales eléctricos y vans. En Chile ha ganado terreno con su furgoneta eléctrica Mifa y SUVs familiares como el Mifa 9, combinando practicidad, espacio y cero emisiones en un solo vehículo.",
+    "heroTagline": "Movilidad eléctrica para la familia y el negocio",
+    "stats": [
+      { "label": "Grupo automotriz", "value": "SAIC" },
+      { "label": "Autonomía Mifa 9", "value": "440 km" },
+      { "label": "Capacidad Mifa 9", "value": "7 pasajeros" }
+    ],
+    "videos": []
+  },
+  {
+    "slug": "mazda",
+    "name": "Mazda",
+    "logoUrl": "https://logo.clearbit.com/mazda.com",
+    "country": "Japón",
+    "foundedYear": "1920",
+    "website": "https://www.mazda.cl",
+    "isFeatured": false,
+    "accentColor": "#1a1a1a",
+    "description": "Mazda, creadora de la filosofía Jinba Ittai (unión entre coche y conductor), transita hacia la electrificación con el MX-30 eléctrico y una amplia gama de híbridos. La marca japonesa mantiene su ADN de conducción apasionante en cada versión electrificada.",
+    "heroTagline": "Conducción apasionante, emisiones mínimas",
+    "stats": [
+      { "label": "Años de historia", "value": "104+" },
+      { "label": "Filosofía", "value": "Jinba Ittai" },
+      { "label": "Autonomía MX-30", "value": "200 km" }
+    ],
+    "videos": []
+  },
+  {
+    "slug": "mercedes-benz",
+    "name": "Mercedes-Benz",
+    "logoUrl": "https://logo.clearbit.com/mercedes-benz.com",
+    "country": "Alemania",
+    "foundedYear": "1926",
+    "website": "https://www.mercedes-benz.cl",
+    "isFeatured": false,
+    "accentColor": "#111111",
+    "description": "Mercedes-Benz redefine el lujo eléctrico con su familia EQ. Desde la berlina EQS hasta el SUV EQS, cada vehículo es una obra maestra tecnológica con el famoso Hyperscreen de 141 cm y la autonomía más alta del segmento premium.",
+    "heroTagline": "Lo mejor o nada — en eléctrico",
+    "stats": [
+      { "label": "Autonomía EQS", "value": "770 km" },
+      { "label": "Hyperscreen", "value": "141 cm" },
+      { "label": "Carga rápida", "value": "200 kW" }
+    ],
+    "videos": []
+  },
+  {
+    "slug": "mg",
+    "name": "MG",
+    "logoUrl": "https://logo.clearbit.com/mgmotor.com",
+    "country": "Reino Unido / China",
+    "foundedYear": "1924",
+    "website": "https://www.mg.cl",
+    "isFeatured": true,
+    "accentColor": "#cc0000",
+    "description": "MG es una marca centenaria británica, hoy parte de SAIC Motor, que ha revolucionado el mercado eléctrico en Chile con una relación calidad-precio difícil de igualar. Sus modelos eléctricos ofrecen tecnología de vanguardia a precios accesibles.",
+    "heroTagline": "Tecnología británica, precio imbatible",
+    "stats": [
+      { "label": "Años de historia", "value": "100+" },
+      { "label": "Países con presencia", "value": "80+" },
+      { "label": "Autonomía máx.", "value": "440 km" }
+    ],
+    "videos": []
+  },
+  {
+    "slug": "mini",
+    "name": "MINI",
+    "logoUrl": "https://logo.clearbit.com/mini.com",
+    "country": "Reino Unido / Alemania",
+    "foundedYear": "1959",
+    "website": "https://www.mini.cl",
+    "isFeatured": false,
+    "accentColor": "#1b1b1b",
+    "description": "MINI electrifica su icónico carácter con el Cooper SE y el nuevo MINI Electric. Con un diseño inconfundible y una experiencia de conducción divertida y ágil, el MINI eléctrico es perfecto para la ciudad moderna.",
+    "heroTagline": "Icónico desde 1959, eléctrico desde hoy",
+    "stats": [
+      { "label": "Años de historia", "value": "65+" },
+      { "label": "Autonomía Cooper SE", "value": "402 km" },
+      { "label": "Diseño", "value": "Intemporal" }
+    ],
+    "videos": []
+  },
+  {
+    "slug": "nammi",
+    "name": "Nammi",
+    "logoUrl": "https://logo.clearbit.com/nammi.cl",
+    "country": "China",
+    "foundedYear": "2023",
+    "website": "https://www.nammi.cl",
+    "isFeatured": false,
+    "accentColor": "#ff6b35",
+    "description": "Nammi es la submarca urbana de BYD diseñada para el segmento joven y accesible del mercado eléctrico. Con el Nammi 01, BYD ofrece un hatchback eléctrico compacto con estilo fresco, conectividad avanzada y un precio que democratiza la electromovilidad.",
+    "heroTagline": "El eléctrico joven y accesible de BYD",
+    "stats": [
+      { "label": "Grupo automotriz", "value": "BYD" },
+      { "label": "Autonomía Nammi 01", "value": "401 km" },
+      { "label": "Segmento", "value": "Urbano / Entry EV" }
+    ],
+    "videos": []
+  },
+  {
+    "slug": "nissan",
+    "name": "Nissan",
+    "logoUrl": "https://logo.clearbit.com/nissan.com",
+    "country": "Japón",
+    "foundedYear": "1933",
+    "website": "https://www.nissan.cl",
+    "isFeatured": false,
+    "accentColor": "#c3002f",
+    "description": "Nissan es el pionero de los vehículos eléctricos de masa con el Leaf, el EV más vendido de la historia. Su herencia de más de una década en electromovilidad respalda una red de servicio y soporte sin igual en Chile.",
+    "heroTagline": "Los pioneros del eléctrico accesible",
+    "stats": [
+      { "label": "Años con EV", "value": "14+" },
+      { "label": "Leaf vendidos en el mundo", "value": "650.000+" },
+      { "label": "Autonomía Leaf e+", "value": "385 km" }
+    ],
+    "videos": []
+  },
+  {
+    "slug": "omoda",
+    "name": "Omoda",
+    "logoUrl": "https://logo.clearbit.com/omoda.com",
+    "country": "China",
+    "foundedYear": "2022",
+    "website": "https://www.omoda.cl",
+    "isFeatured": false,
+    "accentColor": "#ff4500",
+    "description": "Omoda es la marca premium global del Grupo Chery, diseñada para competir en el segmento de SUVs urbanos con estilo europeo y tecnología china. Con el Omoda 5 y versiones eléctricas en camino, la marca apuesta por el diseño atrevido y la conectividad total.",
+    "heroTagline": "El SUV premium del Grupo Chery",
+    "stats": [
+      { "label": "Grupo automotriz", "value": "Chery" },
+      { "label": "Mercados activos", "value": "50+" },
+      { "label": "Versión EV", "value": "Disponible" }
+    ],
+    "videos": []
+  },
+  {
+    "slug": "ora",
+    "name": "Ora",
+    "logoUrl": "https://logo.clearbit.com/oraev.com",
+    "country": "China",
+    "foundedYear": "2018",
+    "website": "https://www.ora.cl",
+    "isFeatured": false,
+    "accentColor": "#7b2d8b",
+    "description": "Ora es la submarca eléctrica de Great Wall Motors especializada en autos eléctricos compactos y estilizados. Con diseños retro-futuristas como el Funky Cat y el Good Cat, Ora se dirige a un público joven que busca personalidad y sostenibilidad en su primer EV.",
+    "heroTagline": "El EV compacto más estilizado del mercado",
+    "stats": [
+      { "label": "Grupo automotriz", "value": "GWM" },
+      { "label": "Autonomía Funky Cat", "value": "310 km" },
+      { "label": "Segmento", "value": "EV compacto / lifestyle" }
+    ],
+    "videos": []
+  },
+  {
+    "slug": "peugeot",
+    "name": "Peugeot",
+    "logoUrl": "https://logo.clearbit.com/peugeot.com",
+    "country": "Francia",
+    "foundedYear": "1882",
+    "website": "https://www.peugeot.cl",
+    "isFeatured": false,
+    "accentColor": "#003189",
+    "description": "Peugeot trae el estilo y dinamismo francés al mundo eléctrico con el e-208 y e-2008. Con una historia de más de 140 años fabricando automóviles, la marca del León ofrece EVs con diseño premiado y conducción ágil en entornos urbanos.",
+    "heroTagline": "El espíritu francés, sin emisiones",
+    "stats": [
+      { "label": "Años de historia", "value": "142+" },
+      { "label": "Autonomía e-208", "value": "400 km" },
+      { "label": "Diseño premiado", "value": "Red Dot 2023" }
+    ],
+    "videos": []
+  },
+  {
+    "slug": "porsche",
+    "name": "Porsche",
+    "logoUrl": "https://logo.clearbit.com/porsche.com",
+    "country": "Alemania",
+    "foundedYear": "1931",
+    "website": "https://www.porsche.com/chile",
+    "isFeatured": false,
+    "accentColor": "#c0a060",
+    "description": "Porsche lleva su ADN deportivo al mundo eléctrico con el Taycan, el primer Porsche 100% eléctrico. Con carga ultrarrápida de 800V, el Taycan redefine lo que un auto eléctrico puede ser: emociones puras sin compromisos en rendimiento.",
+    "heroTagline": "La emoción de conducir, sin emisiones",
+    "stats": [
+      { "label": "0-100 km/h Taycan Turbo S", "value": "2.8 seg" },
+      { "label": "Carga máxima", "value": "320 kW" },
+      { "label": "Autonomía Taycan", "value": "484 km" }
+    ],
+    "videos": []
+  },
+  {
+    "slug": "renault",
+    "name": "Renault",
+    "logoUrl": "https://logo.clearbit.com/renault.com",
+    "country": "Francia",
+    "foundedYear": "1899",
+    "website": "https://www.renault.cl",
+    "isFeatured": false,
+    "accentColor": "#efdf00",
+    "description": "Renault ha sido el fabricante europeo más comprometido con la electrificación desde el Zoe. Con el Megane E-Tech Electric la marca francesa lleva el segmento compacto a una nueva dimensión en eficiencia, tecnología y diseño.",
+    "heroTagline": "125 años de innovación, ahora eléctrica",
+    "stats": [
+      { "label": "Años fabricando EVs", "value": "14+" },
+      { "label": "Autonomía Megane E-Tech", "value": "450 km" },
+      { "label": "Carga bidireccional V2G", "value": "Disponible" }
+    ],
+    "videos": []
+  },
+  {
+    "slug": "riddara",
+    "name": "Riddara",
+    "logoUrl": "https://logo.clearbit.com/riddara.com",
+    "country": "China",
+    "foundedYear": "2022",
+    "website": "https://www.riddara.cl",
+    "isFeatured": false,
+    "accentColor": "#2c2c2c",
+    "description": "Riddara es una marca emergente de pickups eléctricas premium del mercado chino, diseñada para liderar el segmento de trabajo pesado cero emisiones. Con el RP6, Riddara apuesta por la doble cabina eléctrica con gran capacidad de carga y autonomía extendida para uso profesional.",
+    "heroTagline": "La pickup eléctrica premium para el trabajo duro",
+    "stats": [
+      { "label": "Autonomía RP6", "value": "350 km" },
+      { "label": "Capacidad de carga", "value": "1.000 kg" },
+      { "label": "Tracción", "value": "4WD eléctrico" }
+    ],
+    "videos": []
+  },
+  {
+    "slug": "skoda",
+    "name": "Skoda",
+    "logoUrl": "https://logo.clearbit.com/skoda-auto.com",
+    "country": "República Checa",
+    "foundedYear": "1895",
+    "website": "https://www.skoda.cl",
+    "isFeatured": false,
+    "accentColor": "#4caf50",
+    "description": "Skoda, parte del Grupo Volkswagen, combina 130 años de tradición automotriz checa con la plataforma MEB eléctrica del grupo. Sus modelos Enyaq y Elroq ofrecen el espacio y practicidad típicos de la marca con la eficiencia de la tracción eléctrica.",
+    "heroTagline": "Tradición checa, futuro eléctrico VW Group",
+    "stats": [
+      { "label": "Años de historia", "value": "129+" },
+      { "label": "Grupo automotriz", "value": "Volkswagen" },
+      { "label": "Autonomía Enyaq", "value": "580 km" }
+    ],
+    "videos": []
+  },
+  {
+    "slug": "smart",
+    "name": "Smart",
+    "logoUrl": "https://logo.clearbit.com/smart.com",
+    "country": "Alemania / China",
+    "foundedYear": "1994",
+    "website": "https://www.smart.cl",
+    "isFeatured": false,
+    "accentColor": "#00adef",
+    "description": "Smart renace como marca 100% eléctrica en una joint venture entre Mercedes-Benz y Geely. El nuevo Smart #1 y #3 son SUVs compactos premium diseñados en Europa y fabricados en China, que mezclan tecnología de ambas potencias automotrices.",
+    "heroTagline": "Renacido como 100% eléctrico",
+    "stats": [
+      { "label": "Joint venture", "value": "Mercedes-Benz + Geely" },
+      { "label": "Autonomía Smart #1", "value": "440 km" },
+      { "label": "0-100 km/h Smart #1 Brabus", "value": "3.9 seg" }
+    ],
+    "videos": []
+  },
+  {
+    "slug": "ssangyong",
+    "name": "Ssangyong",
+    "logoUrl": "https://logo.clearbit.com/kg-mobility.com",
+    "country": "Corea del Sur",
+    "foundedYear": "1954",
+    "website": "https://www.ssangyong.cl",
+    "isFeatured": false,
+    "accentColor": "#003366",
+    "description": "Ssangyong, ahora conocida como KG Mobility, es la marca coreana especialista en SUVs con 70 años de historia. Con el Torres EVX totalmente eléctrico, la marca da un salto al futuro manteniendo su propuesta de espacio, robustez y valor por dinero.",
+    "heroTagline": "70 años de SUVs, ahora eléctricos",
+    "stats": [
+      { "label": "Años de historia", "value": "70+" },
+      { "label": "Autonomía Torres EVX", "value": "462 km" },
+      { "label": "Batería CATL", "value": "73.4 kWh" }
+    ],
+    "videos": []
+  },
+  {
+    "slug": "subaru",
+    "name": "Subaru",
+    "logoUrl": "https://logo.clearbit.com/subaru.com",
+    "country": "Japón",
+    "foundedYear": "1953",
+    "website": "https://www.subaru.cl",
+    "isFeatured": false,
+    "accentColor": "#003087",
+    "description": "Subaru es sinónimo de tracción total simétrica y confiabilidad en cualquier terreno. Con el Solterra, su primer SUV 100% eléctrico desarrollado en alianza con Toyota, Subaru lleva su legendario AWD al mundo de la electromovilidad sin renunciar a sus valores.",
+    "heroTagline": "AWD simétrico, ahora 100% eléctrico",
+    "stats": [
+      { "label": "Años de historia", "value": "71+" },
+      { "label": "Autonomía Solterra", "value": "466 km" },
+      { "label": "Desarrollado con", "value": "Toyota" }
+    ],
+    "videos": []
+  },
+  {
+    "slug": "suzuki",
+    "name": "Suzuki",
+    "logoUrl": "https://logo.clearbit.com/suzuki.com",
+    "country": "Japón",
+    "foundedYear": "1909",
+    "website": "https://www.suzuki.cl",
+    "isFeatured": false,
+    "accentColor": "#003087",
+    "description": "Suzuki lleva más de 115 años fabricando vehículos eficientes y confiables. Con su tecnología mild hybrid SHVS en modelos como el Vitara y Swift, Suzuki avanza hacia la electrificación ofreciendo mayor eficiencia de combustible y emisiones reducidas.",
+    "heroTagline": "Eficiencia japonesa, ahora electrificada",
+    "stats": [
+      { "label": "Años de historia", "value": "115+" },
+      { "label": "Tecnología", "value": "Mild Hybrid SHVS" },
+      { "label": "Mercados globales", "value": "190+" }
+    ],
+    "videos": []
+  },
+  {
+    "slug": "tesla",
+    "name": "Tesla",
+    "logoUrl": "https://logo.clearbit.com/tesla.com",
+    "country": "Estados Unidos",
+    "foundedYear": "2003",
+    "website": "https://www.tesla.com/es_CL",
+    "isFeatured": false,
+    "accentColor": "#cc0000",
+    "description": "Tesla es la marca que cambió la industria automotriz para siempre. Con la red Supercharger más extensa del mundo y actualizaciones OTA constantes, sus modelos definen el estándar tecnológico al que aspiran todos los fabricantes de EVs.",
+    "heroTagline": "La marca que aceleró la transición eléctrica",
+    "stats": [
+      { "label": "Autonomía Model S", "value": "651 km" },
+      { "label": "Superchargers en Chile", "value": "4+" },
+      { "label": "0-100 km/h Model S Plaid", "value": "2.1 seg" }
+    ],
+    "videos": []
+  },
+  {
+    "slug": "toyota",
+    "name": "Toyota",
+    "logoUrl": "https://logo.clearbit.com/toyota.com",
+    "country": "Japón",
+    "foundedYear": "1937",
+    "website": "https://www.toyota.cl",
+    "isFeatured": false,
+    "accentColor": "#eb0a1e",
+    "description": "Toyota, el fabricante de automóviles más grande del mundo, lidera la electrificación con su tecnología híbrida de referencia y el bZ4X 100% eléctrico. Pioneros del híbrido con el Prius desde 1997, Toyota construye el camino hacia la neutralidad de carbono a su propio ritmo.",
+    "heroTagline": "El fabricante más grande, liderando la transición",
+    "stats": [
+      { "label": "Años de historia", "value": "87+" },
+      { "label": "Autonomía bZ4X", "value": "516 km" },
+      { "label": "Vehículos electrificados vendidos", "value": "20M+" }
+    ],
+    "videos": []
+  },
+  {
+    "slug": "volkswagen",
+    "name": "Volkswagen",
+    "logoUrl": "https://logo.clearbit.com/volkswagen.com",
+    "country": "Alemania",
+    "foundedYear": "1937",
+    "website": "https://www.volkswagen.cl",
+    "isFeatured": false,
+    "accentColor": "#001e50",
+    "description": "Volkswagen apuesta todo al eléctrico con su plataforma MEB y la familia ID. Con el ID.4 como buque insignia y el ID.3 redefiniendo el hatchback, VW democratiza la tecnología eléctrica manteniendo la calidad y practicidad alemana que lo caracteriza.",
+    "heroTagline": "El auto del pueblo, ahora eléctrico",
+    "stats": [
+      { "label": "Años de historia", "value": "87+" },
+      { "label": "Autonomía ID.4", "value": "520 km" },
+      { "label": "Inversión en EV 2025", "value": "€35B" }
+    ],
+    "videos": []
+  },
+  {
+    "slug": "volvo",
+    "name": "Volvo",
+    "logoUrl": "https://logo.clearbit.com/volvocars.com",
+    "country": "Suecia",
+    "foundedYear": "1927",
+    "website": "https://www.volvocars.com/cl",
+    "isFeatured": false,
+    "accentColor": "#003057",
+    "description": "Volvo Cars se ha comprometido a ser una marca 100% eléctrica. Con una filosofía centrada en la seguridad y el bienestar, sus SUVs eléctricos como el EX40 y EX90 combinan la esencia escandinava con una autonomía sobresaliente.",
+    "heroTagline": "Seguridad escandinava, futuro eléctrico",
+    "stats": [
+      { "label": "Años de innovación", "value": "97+" },
+      { "label": "Autonomía EX40", "value": "533 km" },
+      { "label": "Meta carbono neutro", "value": "2040" }
+    ],
+    "videos": []
+  }
+]

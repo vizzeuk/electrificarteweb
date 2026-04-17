@@ -5,6 +5,7 @@ import { vehicleType }  from "./vehicleType";
 import { electricType } from "./electricType";
 import { siteSettings } from "./siteSettings";
 import { homePage }     from "./homePage";
+import { collection }   from "./collection";
 import { blockContent } from "./blockContent";
 import { blogPost }     from "./blogPost";
 
@@ -15,6 +16,9 @@ export const schemaTypes = [
 
   // ─── Blog ────────────────────────────────────────────────────────────────
   blogPost,
+
+  // ─── Colecciones (secciones vendibles / temáticas) ───────────────────────
+  collection,
 
   // ─── Contenido del catálogo ──────────────────────────────────────────────
   brand,

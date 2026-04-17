@@ -68,6 +68,11 @@ export const homePageQuery = groq`
       "category": category->{ name }
     },
 
+    serviciosExtras[]{
+      badge, title, description, ctaText, ctaHref,
+      "imageUrl": image.asset->url
+    },
+
     howItWorksTitle,
     howItWorksSubtitle,
     howItWorksSteps[]{number, icon, title, description},

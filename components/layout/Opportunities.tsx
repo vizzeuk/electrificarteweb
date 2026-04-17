@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
 import { formatCLP } from "@/lib/utils";
@@ -24,85 +24,215 @@ interface OpportunitiesProps {
 }
 
 const FALLBACK: OpportunityCarData[] = [
-  { name: "MG Marvel R",   slug: "mg-marvel-r",   brand: "MG",      category: "SUV",          basePrice: 40500000, discountPrice: 29390000, range: 402 },
-  { name: "JAC E30X",      slug: "jac-e30x",       brand: "JAC",     category: "City Car",     basePrice: 22990000, discountPrice: 19590000, range: 322 },
-  { name: "BYD Yuan Plus", slug: "byd-yuan-plus",  brand: "BYD",     category: "SUV Compacto", basePrice: 32500000, discountPrice: 22890000, range: 410 },
-  { name: "Tesla Model 3", slug: "tesla-model-3",  brand: "Tesla",   category: "Sedán",        basePrice: 48590000, discountPrice: 39990000, range: 513 },
+  { name: "MG Marvel R",      slug: "mg-marvel-r",      brand: "MG",    category: "SUV",          basePrice: 40500000, discountPrice: 29390000, range: 402 },
+  { name: "JAC E30X",         slug: "jac-e30x",         brand: "JAC",   category: "City Car",     basePrice: 22990000, discountPrice: 19590000, range: 322 },
+  { name: "BYD Yuan Plus",    slug: "byd-yuan-plus",    brand: "BYD",   category: "SUV Compacto", basePrice: 32500000, discountPrice: 22890000, range: 410 },
+  { name: "Tesla Model 3",    slug: "tesla-model-3",    brand: "Tesla", category: "Sedán",        basePrice: 48590000, discountPrice: 39990000, range: 513 },
+  { name: "Hyundai IONIQ 5",  slug: "hyundai-ioniq-5",  brand: "Hyundai", category: "SUV",        basePrice: 55990000, discountPrice: 44990000, range: 481 },
+  { name: "BYD Seal",         slug: "byd-seal",         brand: "BYD",   category: "Sedán",        basePrice: 42990000, discountPrice: 35990000, range: 570 },
 ];
 
-export function Opportunities({ title = "Oportunidades del momento", cars }: OpportunitiesProps) {
+const CARD_W = 280; // px — card width
+const GAP    = 16;  // px — gap between cards
+
+export function Opportunities({ title = "Destacados Electrificarte", cars }: OpportunitiesProps) {
   const displayCars = cars && cars.length > 0 ? cars : FALLBACK;
+  const trackRef    = useRef<HTMLDivElement>(null);
+  const [canLeft,  setCanLeft]  = useState(false);
+  const [canRight, setCanRight] = useState(true);
+
+  function updateArrows() {
+    const el = trackRef.current;
+    if (!el) return;
+    setCanLeft(el.scrollLeft > 8);
+    setCanRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 8);
+  }
+
+  useEffect(() => {
+    const el = trackRef.current;
+    if (!el) return;
+    updateArrows();
+    el.addEventListener("scroll", updateArrows, { passive: true });
+    return () => el.removeEventListener("scroll", updateArrows);
+  }, [displayCars]);
+
+  function scroll(dir: "left" | "right") {
+    trackRef.current?.scrollBy({
+      left: dir === "right" ? (CARD_W + GAP) * 2 : -(CARD_W + GAP) * 2,
+      behavior: "smooth",
+    });
+  }
 
   return (
-    <section className="py-20 md:py-24" aria-labelledby="opportunities-title">
-      <div className="max-w-7xl mx-auto px-4 md:px-8">
-        <div className="text-center mb-14">
-          <p className="text-[11px] uppercase tracking-widest text-primary-deep font-bold mb-2">Ofertas activas</p>
-          <h2 id="opportunities-title" className="text-3xl md:text-4xl font-headline font-black uppercase tracking-tighter mb-4">
-            {title}
-          </h2>
-          <div className="w-16 h-1 bg-primary mx-auto rounded-full" />
-        </div>
+    <section className="py-20 md:py-24 overflow-hidden" aria-labelledby="opportunities-title">
+      {/* Header */}
+      <div className="max-w-7xl mx-auto px-4 md:px-8 mb-10">
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <p className="text-[11px] uppercase tracking-widest text-primary-deep font-bold mb-2">
+              Ofertas activas
+            </p>
+            <h2
+              id="opportunities-title"
+              className="text-3xl md:text-4xl font-headline font-black uppercase tracking-tighter"
+            >
+              {title}
+            </h2>
+          </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {displayCars.map((deal, i) => {
-            const brandName    = deal.brand ? (typeof deal.brand === "string" ? deal.brand : deal.brand.name) : "";
+          {/* Desktop nav arrows */}
+          <div className="hidden md:flex gap-2 shrink-0">
+            <button
+              onClick={() => scroll("left")}
+              disabled={!canLeft}
+              aria-label="Anterior"
+              className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-text-muted hover:border-primary hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            >
+              <span className="material-symbols-outlined text-[20px]">chevron_left</span>
+            </button>
+            <button
+              onClick={() => scroll("right")}
+              disabled={!canRight}
+              aria-label="Siguiente"
+              className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-text-muted hover:border-primary hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            >
+              <span className="material-symbols-outlined text-[20px]">chevron_right</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Carousel track — full width, overflows viewport */}
+      <div className="relative">
+        {/* Left fade */}
+        <div
+          className="pointer-events-none absolute left-0 top-0 bottom-0 w-16 z-10 transition-opacity duration-200"
+          style={{
+            background: "linear-gradient(to right, white, transparent)",
+            opacity: canLeft ? 1 : 0,
+          }}
+        />
+        {/* Right fade */}
+        <div
+          className="pointer-events-none absolute right-0 top-0 bottom-0 w-16 z-10 transition-opacity duration-200"
+          style={{
+            background: "linear-gradient(to left, white, transparent)",
+            opacity: canRight ? 1 : 0,
+          }}
+        />
+
+        <div
+          ref={trackRef}
+          className="flex gap-4 overflow-x-auto pb-4 scroll-smooth"
+          style={{
+            scrollSnapType: "x mandatory",
+            WebkitOverflowScrolling: "touch",
+            paddingLeft: "max(1rem, calc((100vw - 1280px) / 2 + 2rem))",
+            paddingRight: "max(1rem, calc((100vw - 1280px) / 2 + 2rem))",
+            msOverflowStyle: "none",
+            scrollbarWidth: "none",
+          }}
+        >
+          {displayCars.map((deal) => {
+            const brandName    = deal.brand    ? (typeof deal.brand    === "string" ? deal.brand    : deal.brand.name)    : "";
             const categoryName = deal.category ? (typeof deal.category === "string" ? deal.category : deal.category.name) : "";
+            const hasDiscount  = deal.discountPrice && deal.discountPrice < deal.basePrice;
+            const discountPct  = hasDiscount
+              ? Math.round(((deal.basePrice - deal.discountPrice!) / deal.basePrice) * 100)
+              : 0;
+
             return (
-              <motion.article
+              <article
                 key={deal._id ?? deal.slug}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: i * 0.08 }}
-                className="group border border-gray-100 bg-white rounded-xl p-5 flex flex-col hover:border-primary/40 hover:shadow-md transition-all duration-300"
+                style={{ minWidth: CARD_W, scrollSnapAlign: "start" }}
+                className="group border border-gray-100 bg-white rounded-xl flex flex-col hover:border-primary/40 hover:shadow-md transition-all duration-300"
               >
-                <div className="aspect-[4/3] bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg mb-4 flex flex-col items-center justify-center overflow-hidden">
+                {/* Image */}
+                <div className="aspect-[4/3] bg-gradient-to-br from-gray-50 to-gray-100 rounded-t-xl overflow-hidden relative">
                   {deal.imageUrl ? (
-                    <img src={deal.imageUrl} alt={deal.name} className="w-full h-full object-contain" />
+                    <img
+                      src={deal.imageUrl}
+                      alt={`${brandName} ${deal.name}`}
+                      className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
+                      loading="lazy"
+                    />
                   ) : (
-                    <>
+                    <div className="w-full h-full flex flex-col items-center justify-center">
                       <Icon name="electric_car" className="text-gray-200 mb-2" size="xl" />
-                      <span className="text-[10px] uppercase tracking-widest text-text-ghost font-bold">{categoryName}</span>
-                    </>
+                      <span className="text-[10px] uppercase tracking-widest text-text-ghost font-bold">
+                        {categoryName}
+                      </span>
+                    </div>
+                  )}
+                  {hasDiscount && (
+                    <span className="absolute top-3 right-3 bg-red-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full">
+                      -{discountPct}%
+                    </span>
                   )}
                 </div>
 
-                <h3 className="font-headline font-bold text-center mb-1">{brandName} {deal.name}</h3>
-                <p className="text-xs text-text-ghost text-center mb-4">{deal.range} km autonomía</p>
+                {/* Body */}
+                <div className="p-4 flex flex-col flex-1">
+                  <h3 className="font-headline font-bold text-center text-sm mb-0.5">
+                    {brandName} {deal.name}
+                  </h3>
+                  <p className="text-xs text-text-ghost text-center mb-3">{deal.range} km autonomía</p>
 
-                <div className="space-y-1.5 mb-5 px-1">
-                  <div className="flex justify-between text-xs text-text-ghost">
-                    <span>Precio lista</span>
-                    <span className="line-through">{formatCLP(deal.basePrice)}</span>
+                  <div className="space-y-1 mb-4 px-1">
+                    {hasDiscount && (
+                      <div className="flex justify-between text-xs text-text-ghost">
+                        <span>Precio lista</span>
+                        <span className="line-through">{formatCLP(deal.basePrice)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-baseline">
+                      <span className="text-xs font-bold">{hasDiscount ? "Con descuento" : "Precio"}</span>
+                      <span className="text-base font-headline font-black text-primary-deep">
+                        {formatCLP(deal.discountPrice ?? deal.basePrice)}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex justify-between items-baseline">
-                    <span className="text-xs font-bold">Con descuento</span>
-                    <span className="text-lg font-headline font-black text-primary-deep">
-                      {formatCLP(deal.discountPrice ?? deal.basePrice)}
-                    </span>
+
+                  <div className="mt-auto flex gap-2">
+                    <Link
+                      href={`/auto/${deal.slug}`}
+                      className="flex-1 py-2.5 bg-primary hover:bg-primary-dark font-bold text-xs rounded-lg text-center transition-colors text-black"
+                    >
+                      Ver detalle
+                    </Link>
+                    <Link
+                      href={`/comparador?add=${deal.slug}`}
+                      title="Comparar"
+                      className="px-3 border border-gray-200 hover:border-primary/40 text-text-muted hover:text-primary-deep rounded-lg flex items-center transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">compare</span>
+                    </Link>
                   </div>
                 </div>
-
-                <div className="mt-auto flex gap-2">
-                  <Link
-                    href={`/auto/${deal.slug}`}
-                    className="flex-1 py-2.5 bg-primary hover:bg-primary-dark font-bold text-sm rounded-lg text-center transition-colors text-black"
-                  >
-                    Ver detalle
-                  </Link>
-                  <Link
-                    href="/comparador"
-                    title="Comparar"
-                    className="px-3 border border-gray-200 hover:border-primary/40 text-text-muted hover:text-primary-deep rounded-lg flex items-center transition-colors"
-                  >
-                    <span className="material-symbols-outlined text-[18px]">compare</span>
-                  </Link>
-                </div>
-              </motion.article>
+              </article>
             );
           })}
         </div>
+      </div>
+
+      {/* Mobile nav arrows */}
+      <div className="flex md:hidden justify-center gap-3 mt-4 px-4">
+        <button
+          onClick={() => scroll("left")}
+          disabled={!canLeft}
+          aria-label="Anterior"
+          className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-text-muted disabled:opacity-30 disabled:cursor-not-allowed"
+        >
+          <span className="material-symbols-outlined text-[20px]">chevron_left</span>
+        </button>
+        <button
+          onClick={() => scroll("right")}
+          disabled={!canRight}
+          aria-label="Siguiente"
+          className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-text-muted disabled:opacity-30 disabled:cursor-not-allowed"
+        >
+          <span className="material-symbols-outlined text-[20px]">chevron_right</span>
+        </button>
       </div>
     </section>
   );

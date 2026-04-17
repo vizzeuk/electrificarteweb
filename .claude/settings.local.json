@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsx --env-file=.env.local -e ':*)"
+    ]
+  }
+}

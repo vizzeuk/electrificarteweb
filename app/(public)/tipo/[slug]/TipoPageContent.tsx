@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { formatCLP } from "@/lib/utils";
@@ -83,6 +83,19 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes }: TipoPa
   const hotDeals = filteredCars.filter((c) => c.isHotDeal);
   const rest = filteredCars.filter((c) => !c.isHotDeal);
 
+  // Banner slideshow
+  const banners = [
+    { id: 1, label: "Banner 1", bg: "from-primary/10 to-primary-deep/5" },
+    { id: 2, label: "Banner 2", bg: "from-gray-100 to-gray-50" },
+    { id: 3, label: "Banner 3", bg: "from-primary-deep/10 to-primary/5" },
+  ];
+  const [activeSlide, setActiveSlide] = useState(0);
+  const nextSlide = useCallback(() => setActiveSlide((p) => (p + 1) % banners.length), [banners.length]);
+  useEffect(() => {
+    const t = setInterval(nextSlide, 5000);
+    return () => clearInterval(t);
+  }, [nextSlide]);
+
   return (
     <>
       {/* ─── Hero ─────────────────────────────────────────────────── */}
@@ -101,13 +114,20 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes }: TipoPa
           <div className="grid md:grid-cols-2 gap-12 items-center">
             {/* Left */}
             <div>
-              <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full mb-6">
-                <span className="material-symbols-outlined text-primary text-[16px]">
-                  {meta.icon}
-                </span>
-                <span className="text-white/60 text-xs font-semibold uppercase tracking-wider">
-                  {meta.label}
-                </span>
+              {/* Mini badges */}
+              <div className="flex flex-wrap items-center gap-2 mb-6">
+                {cars.length > 0 && (
+                  <div className="inline-flex items-center gap-1.5 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full">
+                    <span className="material-symbols-outlined text-primary text-[14px]">sell</span>
+                    <span className="text-white/60 text-xs font-semibold">Desde {formatCLP(Math.min(...cars.map((c) => c.discountPrice)))}</span>
+                  </div>
+                )}
+                {hotDeals.length > 0 && (
+                  <div className="inline-flex items-center gap-1.5 bg-amber/10 border border-amber/30 px-3 py-1.5 rounded-full">
+                    <span className="material-symbols-outlined text-amber text-[14px]">local_fire_department</span>
+                    <span className="text-amber text-xs font-bold">{hotDeals.length} Hot Deal{hotDeals.length !== 1 ? "s" : ""}</span>
+                  </div>
+                )}
               </div>
 
               <h1 className="text-5xl md:text-6xl font-headline font-black text-white tracking-tighter leading-[0.95] mb-5">
@@ -134,37 +154,77 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes }: TipoPa
                 </div>
               </div>
 
-              <Link
-                href="/solicitar"
-                className="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-7 py-3.5 rounded-xl transition-colors"
-              >
-                Solicitar oferta en {meta.label}
-                <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
-              </Link>
+              <div className="flex flex-wrap gap-3">
+                <Link
+                  href="/solicitar"
+                  className="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-6 py-3 rounded-xl transition-colors text-sm"
+                >
+                  Solicitar oferta
+                  <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                </Link>
+                <a
+                  href={`#catalogo-${slug}`}
+                  className="inline-flex items-center gap-2 border border-white/20 hover:border-white/40 text-white font-medium px-6 py-3 rounded-xl transition-colors text-sm"
+                >
+                  Ver catálogo
+                </a>
+              </div>
             </div>
 
-            {/* Right – stat cards */}
-            {cars.length > 0 && (
-              <div className="grid grid-cols-2 gap-4">
-                {[
-                  { label: "Autonomía máx.", value: `${Math.max(...cars.map((c) => c.range))} km` },
-                  { label: "Precio desde", value: formatCLP(Math.min(...cars.map((c) => c.discountPrice))) },
-                  { label: "Potencia máx.", value: `${Math.max(...cars.map((c) => c.power))} CV` },
-                  { label: "Hot Deals activos", value: `${hotDeals.length}` },
-                ].map((s) => (
-                  <div key={s.label} className="bg-white/5 border border-white/10 rounded-2xl p-5 text-center">
-                    <p className="text-2xl font-headline font-black text-primary">{s.value}</p>
-                    <p className="text-white/40 text-[11px] uppercase tracking-wide mt-1 leading-snug">{s.label}</p>
-                  </div>
-                ))}
+            {/* Right – hero image area */}
+            <div className="relative hidden md:block">
+              <div className="aspect-[4/3] rounded-2xl overflow-hidden bg-white/5 border border-white/10 flex items-center justify-center">
+                <div className="text-center">
+                  <span className="material-symbols-outlined text-[64px] text-white/10 block mb-3">image</span>
+                  <p className="text-white/20 text-xs uppercase tracking-widest font-semibold">Foto del tipo {meta.label}</p>
+                </div>
               </div>
-            )}
+              <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Banner slideshow ───────────────────────────────────────── */}
+      <section className="py-8 bg-surface border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 md:px-8">
+          <div className="relative overflow-hidden rounded-2xl h-40 md:h-56 cursor-pointer" onClick={nextSlide}>
+            {banners.map((b, i) => (
+              <div
+                key={b.id}
+                className={[
+                  "absolute inset-0 bg-gradient-to-r flex items-center justify-center transition-opacity duration-700",
+                  b.bg,
+                  i === activeSlide ? "opacity-100" : "opacity-0 pointer-events-none",
+                ].join(" ")}
+              >
+                <div className="border-2 border-dashed border-gray-200 rounded-xl w-full h-full mx-4 flex flex-col items-center justify-center gap-2">
+                  <span className="material-symbols-outlined text-[36px] text-gray-300">image</span>
+                  <p className="text-gray-400 text-xs uppercase tracking-widest font-semibold">
+                    {b.label} — {meta.label}
+                  </p>
+                </div>
+              </div>
+            ))}
+            {/* Dots */}
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+              {banners.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={(e) => { e.stopPropagation(); setActiveSlide(i); }}
+                  className={[
+                    "w-1.5 h-1.5 rounded-full transition-all duration-300",
+                    i === activeSlide ? "bg-primary w-4" : "bg-gray-300",
+                  ].join(" ")}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
       {/* ─── All cars in type ────────────────────────────────────────── */}
-      <section className="py-16 md:py-20">
+      <section id={`catalogo-${slug}`} className="py-16 md:py-20">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="mb-8">
             <p className="text-[11px] uppercase tracking-widest text-primary-deep font-bold mb-2">

@@ -12,6 +12,7 @@ interface Brand {
   _id: string;
   name: string;
   slug: string;
+  logoUrl?: string;
   description?: string;
   country?: string;
   foundedYear?: number;
@@ -157,7 +158,7 @@ export default function MarcasPage() {
           {loading ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
               {Array.from({ length: 24 }).map((_, i) => (
-                <div key={i} className="h-32 bg-gray-100 rounded-2xl animate-pulse" />
+                <div key={i} className="h-48 bg-gray-100 rounded-2xl animate-pulse" />
               ))}
             </div>
           ) : filtered.length === 0 ? (
@@ -183,14 +184,24 @@ export default function MarcasPage() {
                   >
                     <Link
                       href={`/marcas/${brand.slug}`}
-                      className="group flex flex-col items-center p-5 bg-white border border-gray-100 rounded-2xl hover:border-primary/40 hover:shadow-lg hover:shadow-black/5 transition-all duration-300 h-full text-center"
+                      className="group flex flex-col items-center p-4 bg-white border border-gray-100 rounded-2xl hover:border-primary/40 hover:shadow-lg hover:shadow-black/5 transition-all duration-300 h-full text-center"
                     >
-                      {/* Logo circle */}
-                      <div
-                        className="w-14 h-14 rounded-2xl flex items-center justify-center text-white text-xl font-headline font-black mb-3 transition-transform duration-300 group-hover:scale-110 flex-shrink-0"
-                        style={{ backgroundColor: color }}
-                      >
-                        {brand.name.charAt(0).toUpperCase()}
+                      {/* Logo */}
+                      <div className="w-full h-28 flex items-center justify-center mb-3 transition-transform duration-300 group-hover:scale-105 flex-shrink-0">
+                        {brand.logoUrl ? (
+                          <img
+                            src={brand.logoUrl}
+                            alt={`${brand.name} logo`}
+                            className="max-h-24 max-w-full object-contain"
+                          />
+                        ) : (
+                          <div
+                            className="w-16 h-16 rounded-2xl flex items-center justify-center text-white text-2xl font-headline font-black"
+                            style={{ backgroundColor: color }}
+                          >
+                            {brand.name.charAt(0).toUpperCase()}
+                          </div>
+                        )}
                       </div>
 
                       <p className="font-headline font-black text-sm text-text-main group-hover:text-primary-deep transition-colors leading-tight mb-1">

@@ -182,10 +182,10 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
 
               <div className="grid grid-cols-4 gap-3 mb-8">
                 {[
-                  { label: "Autonomía", value: `${ver.range} km` },
-                  { label: "Potencia",  value: `${ver.power} CV` },
-                  { label: "0–100",     value: `${ver.acceleration}s` },
-                  { label: "Carga",     value: ver.chargeTimeDC.split(" ")[0] || "–" },
+                  { label: "Autonomía",   value: `${ver.range} km` },
+                  { label: "Potencia",    value: `${ver.power} CV` },
+                  { label: "0–100",       value: `${ver.acceleration}s` },
+                  { label: "Asistentes",  value: car.safetyFeatures.length > 0 ? `${car.safetyFeatures.length} ADAS` : `${car.seats} plz` },
                 ].map((s) => (
                   <div key={s.label} className="bg-white/5 border border-white/10 rounded-xl p-3 text-center">
                     <p className="text-primary font-headline font-black text-lg leading-none">{s.value}</p>
@@ -308,7 +308,7 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
                   { icon: "bolt",            text: `${car.chargeType} · carga en ${car.chargeTimeDC}` },
                   { icon: "electric_car",    text: `Hasta ${ver.range} km de autonomía real` },
                   { icon: "airline_seat_recline_extra", text: `${car.seats} plazas · maletero ${car.cargo} L` },
-                  { icon: "star",            text: "Garantía de precio más bajo del mercado" },
+                  { icon: "shield",          text: car.safetyFeatures[0] ?? "Garantía de precio más bajo del mercado" },
                 ].map((h) => (
                   <div key={h.icon} className="flex items-center gap-3">
                     <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -343,62 +343,6 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
                 </div>
               )}
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ─── Ficha técnica ────────────────────────────────────────────── */}
-      <section className="py-14 bg-surface border-y border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-            <div>
-              <p className="text-[11px] uppercase tracking-widest text-primary-deep font-bold mb-1">Datos técnicos</p>
-              <h2 className="text-2xl md:text-3xl font-headline font-black tracking-tighter uppercase">
-                Ficha técnica — {ver.name}
-              </h2>
-            </div>
-            {car.fichaUrl && car.fichaUrl !== "#" && (
-              <a href={car.fichaUrl} target="_blank" rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 border border-gray-200 hover:border-primary/40 text-text-muted hover:text-primary-deep font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors flex-shrink-0">
-                <span className="material-symbols-outlined text-[16px]">open_in_new</span>
-                Ver ficha oficial {car.brand}
-              </a>
-            )}
-          </div>
-          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-            {[
-              { section: "Batería y Autonomía", rows: [
-                { label: "Batería",          value: `${ver.battery} kWh` },
-                { label: "Autonomía WLTP",   value: `${ver.range} km` },
-                { label: "Carga rápida DC",  value: ver.chargeTimeDC },
-                { label: "Carga AC",         value: ver.chargeTimeAC },
-                { label: "Tipo de conector", value: car.chargeType },
-              ]},
-              { section: "Motor y Rendimiento", rows: [
-                { label: "Potencia",           value: `${ver.power} CV (${Math.round(ver.power * 0.7355)} kW)` },
-                { label: "Torque",             value: `${ver.torque} Nm` },
-                { label: "Tracción",           value: ver.traction },
-                { label: "Aceleración 0–100",  value: `${ver.acceleration} segundos` },
-                { label: "Velocidad máxima",   value: `${ver.topSpeed} km/h` },
-              ]},
-              { section: "Dimensiones y Capacidad", rows: [
-                { label: "Plazas",    value: String(car.seats) },
-                { label: "Maletero", value: `${car.cargo} litros` },
-                ...(car.warranty ? [{ label: "Garantía", value: car.warranty }] : []),
-              ]},
-            ].map((group) => (
-              <div key={group.section}>
-                <div className="bg-surface px-6 py-3 border-b border-gray-100">
-                  <p className="text-[11px] uppercase tracking-widest font-bold text-primary-deep">{group.section}</p>
-                </div>
-                {group.rows.map((row, ri) => (
-                  <div key={row.label} className={["grid grid-cols-2 px-6 py-3.5 text-sm", ri < group.rows.length - 1 ? "border-b border-gray-50" : "border-b border-gray-100"].join(" ")}>
-                    <span className="text-text-muted font-medium">{row.label}</span>
-                    <span className="font-semibold text-text-main">{row.value}</span>
-                  </div>
-                ))}
-              </div>
-            ))}
           </div>
         </div>
       </section>
@@ -470,6 +414,62 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
           </div>
         </section>
       )}
+
+      {/* ─── Ficha técnica ────────────────────────────────────────────── */}
+      <section className="py-14 bg-surface border-y border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 md:px-8">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+            <div>
+              <p className="text-[11px] uppercase tracking-widest text-primary-deep font-bold mb-1">Datos técnicos</p>
+              <h2 className="text-2xl md:text-3xl font-headline font-black tracking-tighter uppercase">
+                Ficha técnica — {ver.name}
+              </h2>
+            </div>
+            {car.fichaUrl && car.fichaUrl !== "#" && (
+              <a href={car.fichaUrl} target="_blank" rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 border border-gray-200 hover:border-primary/40 text-text-muted hover:text-primary-deep font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors flex-shrink-0">
+                <span className="material-symbols-outlined text-[16px]">open_in_new</span>
+                Ver ficha oficial {car.brand}
+              </a>
+            )}
+          </div>
+          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+            {[
+              { section: "Batería y Autonomía", rows: [
+                { label: "Batería",          value: `${ver.battery} kWh` },
+                { label: "Autonomía WLTP",   value: `${ver.range} km` },
+                { label: "Carga rápida DC",  value: ver.chargeTimeDC },
+                { label: "Carga AC",         value: ver.chargeTimeAC },
+                { label: "Tipo de conector", value: car.chargeType },
+              ]},
+              { section: "Motor y Rendimiento", rows: [
+                { label: "Potencia",           value: `${ver.power} CV (${Math.round(ver.power * 0.7355)} kW)` },
+                { label: "Torque",             value: `${ver.torque} Nm` },
+                { label: "Tracción",           value: ver.traction },
+                { label: "Aceleración 0–100",  value: `${ver.acceleration} segundos` },
+                { label: "Velocidad máxima",   value: `${ver.topSpeed} km/h` },
+              ]},
+              { section: "Dimensiones y Capacidad", rows: [
+                { label: "Plazas",    value: String(car.seats) },
+                { label: "Maletero", value: `${car.cargo} litros` },
+                ...(car.warranty ? [{ label: "Garantía", value: car.warranty }] : []),
+              ]},
+            ].map((group) => (
+              <div key={group.section}>
+                <div className="bg-surface px-6 py-3 border-b border-gray-100">
+                  <p className="text-[11px] uppercase tracking-widest font-bold text-primary-deep">{group.section}</p>
+                </div>
+                {group.rows.map((row, ri) => (
+                  <div key={row.label} className={["grid grid-cols-2 px-6 py-3.5 text-sm", ri < group.rows.length - 1 ? "border-b border-gray-50" : "border-b border-gray-100"].join(" ")}>
+                    <span className="text-text-muted font-medium">{row.label}</span>
+                    <span className="font-semibold text-text-main">{row.value}</span>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* ─── Gallery ──────────────────────────────────────────────────── */}
       <section className="py-14 bg-black">

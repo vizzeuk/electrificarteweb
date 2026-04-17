@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { formatCLP } from "@/lib/utils";
@@ -55,6 +55,7 @@ export interface BrandData {
   heroTagline?: string;
   logoLetter: string;
   logoColor: string;
+  logoUrl?: string;
   accentColor: string;
   stats: { label: string; value: string }[];
   cars: BrandCarData[];
@@ -119,9 +120,17 @@ export default function BrandPageContent({ slug, brand }: BrandPageContentProps)
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
               <div className="flex items-center gap-4 mb-6">
-                <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-white text-3xl font-headline font-black shadow-lg" style={{ backgroundColor: brand.logoColor }}>
-                  {brand.logoLetter}
-                </div>
+                {brand.logoUrl ? (
+                  <img
+                    src={brand.logoUrl}
+                    alt={`${brand.name} logo`}
+                    className="h-16 w-auto max-w-[180px] object-contain flex-shrink-0"
+                  />
+                ) : (
+                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-white text-3xl font-headline font-black shadow-lg flex-shrink-0" style={{ backgroundColor: brand.logoColor }}>
+                    {brand.logoLetter}
+                  </div>
+                )}
                 <p className="text-white/40 text-xs uppercase tracking-widest">{brand.country}{brand.foundedYear ? ` · Est. ${brand.foundedYear}` : ""}</p>
               </div>
               <h1 className="text-5xl md:text-7xl font-headline font-black text-white tracking-tighter leading-[0.9] mb-4">{brand.name}<span className="text-primary">.</span></h1>

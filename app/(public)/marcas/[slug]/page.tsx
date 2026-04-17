@@ -102,6 +102,7 @@ export default async function BrandPage({ params }: PageProps) {
     heroTagline: sanityBrand.heroTagline,
     logoLetter:  sanityBrand.name.charAt(0).toUpperCase(),
     logoColor:   accentColor,
+    logoUrl:     sanityBrand.logoUrl ?? undefined,
     accentColor: accentColor,
     stats:       sanityBrand.stats ?? [],
     cars,

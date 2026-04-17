@@ -36,9 +36,9 @@ const footerSections = [
   {
     title: "Nosotros",
     links: [
-      { label: "Quiénes somos",   href: "/nosotros" },
+      { label: "Quiénes somos",    href: "/nosotros" },
       { label: "Nuestro servicio", href: "/#como-funciona" },
-      { label: "Alianzas",         href: "/marcas" },
+      { label: "Blog",             href: "/blog" },
     ],
   },
   {
@@ -46,7 +46,7 @@ const footerSections = [
     links: [
       { label: "Términos y condiciones", href: "/terminos" },
       { label: "Privacidad",             href: "/privacidad" },
-      { label: "Solicitar oferta",       href: "/solicitar" },
+      { label: "Contacto",               href: "/contacto" },
     ],
   },
 ];
