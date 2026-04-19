@@ -6,21 +6,21 @@ import { Icon } from "@/components/ui/Icon";
 const features = [
   {
     icon: "search_insights",
-    title: "Base de Datos Exclusiva",
+    title: "Precios que el público no ve",
     description:
-      "Accedemos a inventarios y precios preferenciales que no estan disponibles para el publico general.",
+      "Accedemos a inventarios y bonos que los concesionarios no publican. Solo disponibles a través de nuestra red exclusiva.",
   },
   {
     icon: "bolt",
-    title: "Velocidad Kinetica",
+    title: "Oferta en 24 horas, garantizado",
     description:
-      "Nuestro sistema procesa miles de variables en segundos para entregarte resultados en menos de 24 horas.",
+      "Desde que activas el servicio, tienes tu mejor opción del mercado en menos de 24 horas.",
   },
   {
     icon: "handshake",
-    title: "Negociacion Directa",
+    title: "Tú no negocies. Nosotros lo hacemos.",
     description:
-      "Eliminamos intermediarios innecesarios para que el ahorro se traduzca directamente en tu bolsillo.",
+      "Eliminamos la incomodidad de negociar con un vendedor. El ahorro llega directamente a tu bolsillo.",
   },
 ];
 

@@ -29,33 +29,20 @@ export function StickyCTA() {
           <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
             <div className="hidden sm:block">
               <p className="text-white text-sm font-medium">
-                Asesoria por solo{" "}
-                <span className="text-primary font-headline font-bold">
-                  $19.990
-                </span>
+                Conseguimos el mejor precio del mercado
               </p>
               <p className="text-white/40 text-xs">
-                Garantizamos el mejor precio o te devolvemos tu dinero
+                $19.990 único · Si no ahorras, te devolvemos todo
               </p>
             </div>
             <div className="flex gap-3 w-full sm:w-auto">
               <Link
                 href="/solicitar"
-                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-6 py-3 rounded-lg transition-all text-sm"
+                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-8 py-3 rounded-xl transition-all text-sm shadow-[0_4px_20px_rgba(0,229,229,0.25)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.38)] hover:scale-[1.02] active:scale-[0.99]"
               >
                 Solicitar oferta
                 <Icon name="arrow_forward" size="sm" />
               </Link>
-              <a
-                href="https://wa.me/56912345678?text=Hola%2C%20quiero%20asesor%C3%ADa"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold px-4 py-3 rounded-lg transition-all text-sm"
-                aria-label="Contactar por WhatsApp"
-              >
-                <Icon name="chat_bubble" size="sm" />
-                <span className="hidden sm:inline">WhatsApp</span>
-              </a>
             </div>
           </div>
         </motion.div>

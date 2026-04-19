@@ -36,11 +36,11 @@ function SolicitarInner({ carOptions }: SolicitarContentProps) {
           {/* Title block — full width */}
           <div className="pb-8">
             <p className="text-primary text-[10px] uppercase tracking-widest font-bold mb-3">
-              Negociación exclusiva
+              Paso final
             </p>
             <h1 className="text-3xl sm:text-4xl font-headline font-black text-white leading-tight tracking-tighter mb-5">
-              Solicita tu oferta{" "}
-              <span className="text-primary">al mejor precio</span>
+              Conseguimos el mejor precio{" "}
+              <span className="text-primary">o te devolvemos el dinero</span>
             </h1>
             <div className="flex flex-wrap gap-x-6 gap-y-2">
               {[
@@ -60,7 +60,7 @@ function SolicitarInner({ carOptions }: SolicitarContentProps) {
           <div className="border-t border-white/10 py-5 grid grid-cols-1 sm:grid-cols-3 gap-4">
             {[
               { n: "01", icon: "edit_note",        title: "Completa tu solicitud",      desc: "Cuéntanos qué auto te interesa y tu presupuesto." },
-              { n: "02", icon: "payments",          title: "Paga tu asesoría ($19.990)", desc: "Activamos la búsqueda exclusiva al instante por WebPay." },
+              { n: "02", icon: "payments",          title: "Activa tu búsqueda",         desc: "Un pago único de $19.990 por WebPay activa la búsqueda exclusiva." },
               { n: "03", icon: "mark_email_read",   title: "Recibe tu oferta en 24h",   desc: "La mejor oferta con bonos y financiamiento incluido." },
             ].map((s, i, arr) => (
               <div key={s.n} className="flex items-start gap-3 relative">

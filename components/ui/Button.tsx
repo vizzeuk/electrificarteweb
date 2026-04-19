@@ -15,9 +15,9 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles: Record<Variant, string> = {
   primary:
-    "bg-primary hover:bg-primary-dark text-black font-bold rounded-xl transition-all",
+    "bg-primary hover:bg-primary-dark text-black font-bold rounded-xl transition-all shadow-[0_4px_20px_rgba(0,229,229,0.22)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.35)] hover:scale-[1.02] active:scale-[0.99]",
   secondary:
-    "bg-gray-100 hover:bg-primary text-black font-bold rounded-lg transition-colors",
+    "bg-gray-100 hover:bg-primary text-black font-bold rounded-xl transition-all",
   card: "bg-primary hover:bg-black hover:text-white font-bold rounded-lg uppercase tracking-widest text-xs transition-colors",
   pill: "bg-black text-white font-bold rounded-full",
   ghost:

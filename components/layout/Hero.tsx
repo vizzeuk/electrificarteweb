@@ -27,12 +27,12 @@ interface HeroProps {
 }
 
 export function Hero({ data }: HeroProps) {
-  const badge         = data?.badge         ?? "Marketplace #1 en Chile";
-  const title         = data?.title         ?? "Ahorra millones en tu próximo";
-  const highlight     = data?.titleHighlight ?? "auto electrificado";
-  const subtitle      = data?.subtitle      ?? "Negociamos con nuestra red exclusiva de concesionarios para garantizarte el mejor precio del mercado. Sin letra chica.";
-  const cta1Text      = data?.cta1Text      ?? "Solicitar mi oferta";
-  const cta1Href      = data?.cta1Href      ?? "/solicitar";
+  const badge         = data?.badge         ?? "Más de 500 compras negociadas en Chile";
+  const title         = data?.title         ?? "Paga menos por tu próximo";
+  const highlight     = data?.titleHighlight ?? "auto eléctrico";
+  const subtitle      = data?.subtitle      ?? "Negociamos con nuestra red de concesionarios y te traemos la mejor oferta del mercado en 24 horas. Si no ahorras, te devolvemos el dinero.";
+  const cta1Text      = data?.cta1Text      ?? "Ver autos disponibles";
+  const cta1Href      = data?.cta1Href      ?? "/marcas";
   const cta2Text      = data?.cta2Text      ?? "Cómo funciona";
   const statSavings   = data?.statSavings   ?? "$4.200.000 CLP";
   const statCars      = data?.statCars      ?? "500+";
@@ -82,14 +82,14 @@ export function Hero({ data }: HeroProps) {
             <div className="flex flex-col sm:flex-row gap-4">
               <Link
                 href={cta1Href}
-                className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-8 py-4 rounded-xl transition-all text-lg"
+                className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-8 py-4 rounded-xl transition-all text-lg shadow-[0_6px_32px_rgba(0,229,229,0.30)] hover:shadow-[0_8px_40px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]"
               >
                 {cta1Text}
                 <Icon name="arrow_forward" size="sm" />
               </Link>
               <a
                 href="#como-funciona"
-                className="inline-flex items-center justify-center gap-2 border border-white/20 hover:border-primary/50 text-white font-medium px-8 py-4 rounded-xl transition-all"
+                className="inline-flex items-center justify-center gap-2 border border-white/20 hover:border-white/50 hover:bg-white/5 text-white font-medium px-8 py-4 rounded-xl transition-all"
               >
                 {cta2Text}
                 <Icon name="expand_more" size="sm" />

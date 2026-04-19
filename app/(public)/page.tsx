@@ -17,6 +17,7 @@ import { Testimonials }     from "@/components/layout/Testimonials";
 import { BlogPreview }      from "@/components/layout/BlogPreview";
 import { FAQ }              from "@/components/layout/FAQ";
 import { StickyCTA }        from "@/components/layout/StickyCTA";
+import { PromoPopup }       from "@/components/layout/PromoPopup";
 import { HomeStructuredData } from "@/components/layout/StructuredData";
 
 // ISR: revalidar cada 60 segundos cuando haya cambios en Sanity
@@ -117,6 +118,7 @@ export default async function HomePage() {
       />
 
       <StickyCTA />
+      <PromoPopup car={page?.hotDealCar ?? null} />
     </>
   );
 }

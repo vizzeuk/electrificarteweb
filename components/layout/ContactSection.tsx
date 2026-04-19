@@ -1,14 +1,11 @@
+import Link from "next/link";
+
 interface ContactSectionProps {
-  phone?:     string | null;
-  email?:     string | null;
-  whatsapp?:  string | null;
+  phone?: string | null;
+  email?: string | null;
 }
 
-export function ContactSection({ phone, email, whatsapp }: ContactSectionProps) {
-  const waNumber  = whatsapp || "56912345678";
-  const waMessage = encodeURIComponent("Hola Electrificarte, tengo una consulta sobre autos eléctricos.");
-  const waHref    = `https://wa.me/${waNumber}?text=${waMessage}`;
-
+export function ContactSection({ phone, email }: ContactSectionProps) {
   return (
     <section
       id="contacto"
@@ -32,21 +29,14 @@ export function ContactSection({ phone, email, whatsapp }: ContactSectionProps) 
 
           {/* Channels */}
           <div className="flex flex-col sm:flex-row gap-3">
-            {/* WhatsApp */}
-            <a
-              href={waHref}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2.5 bg-[#25D366] hover:bg-[#1ebe5a] text-white font-bold text-sm px-6 py-3.5 rounded-xl transition-colors duration-200"
+            <Link
+              href="/contacto"
+              className="inline-flex items-center gap-2.5 bg-primary hover:bg-primary-dark text-black font-bold text-sm px-6 py-3.5 rounded-xl transition-all shadow-[0_4px_20px_rgba(0,229,229,0.22)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.35)] hover:scale-[1.02] active:scale-[0.99]"
             >
-              <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18" aria-hidden="true">
-                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
-                <path d="M12 2a10 10 0 0 0-8.593 15.044L2 22l5.116-1.382A10 10 0 1 0 12 2zm0 18.182a8.182 8.182 0 1 1 0-16.364 8.182 8.182 0 0 1 0 16.364z"/>
-              </svg>
-              WhatsApp
-            </a>
+              <span className="material-symbols-outlined text-[18px]">mail</span>
+              Enviar mensaje
+            </Link>
 
-            {/* Email */}
             {email && (
               <a
                 href={`mailto:${email}`}
@@ -57,7 +47,6 @@ export function ContactSection({ phone, email, whatsapp }: ContactSectionProps) 
               </a>
             )}
 
-            {/* Phone */}
             {phone && (
               <a
                 href={`tel:${phone.replace(/\s/g, "")}`}

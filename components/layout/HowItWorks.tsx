@@ -18,15 +18,15 @@ interface HowItWorksProps {
 }
 
 const DEFAULT_STEPS: HowItWorksStep[] = [
-  { number: "01", icon: "search",      title: "Elige tu auto",             description: "Explora nuestro catálogo o dinos qué modelo te interesa. Tenemos acceso a todas las marcas eléctricas en Chile." },
-  { number: "02", icon: "payments",    title: "Paga tu asesoría ($19.990)", description: "Con un pago único activas nuestro servicio. Negociamos con nuestra red exclusiva de concesionarios para conseguirte el mejor precio." },
-  { number: "03", icon: "handshake",   title: "Recibe tu oferta en 24h",   description: "Te presentamos la mejor oferta del mercado con todos los bonos y financiamiento incluido. Tú decides si la tomas." },
-  { number: "04", icon: "celebration", title: "Estrena tu auto",            description: "Te acompañamos en todo el proceso de compra hasta que retires tu vehículo nuevo con total tranquilidad." },
+  { number: "01", icon: "search",      title: "Cuéntanos qué buscas",       description: "Explora el catálogo o dinos el modelo que te interesa. Si no estás seguro, te ayudamos a decidir." },
+  { number: "02", icon: "payments",    title: "Activamos tu búsqueda",      description: "Con un pago único de $19.990 negociamos en tu nombre con nuestra red exclusiva de concesionarios." },
+  { number: "03", icon: "handshake",   title: "Recibe la mejor oferta en 24h", description: "Comparamos precios, bonos y financiamiento disponible. Tú decides si la tomas." },
+  { number: "04", icon: "celebration", title: "Estrena tu auto",             description: "Coordinas directamente con el concesionario los últimos detalles y retiras tu vehículo nuevo." },
 ];
 
 export function HowItWorks({ title = "Cómo funciona Electrificarte", subtitle, steps }: HowItWorksProps) {
   const displaySteps = steps && steps.length > 0 ? steps : DEFAULT_STEPS;
-  const displaySubtitle = subtitle ?? "En 4 simples pasos pasas de buscar a estrenar tu auto eléctrico al mejor precio de Chile.";
+  const displaySubtitle = subtitle ?? "En 4 pasos pasas de buscar a estrenar tu auto eléctrico al mejor precio de Chile.";
 
   return (
     <section id="como-funciona" className="py-20 md:py-24" aria-labelledby="howitworks-title">

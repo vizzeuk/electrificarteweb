@@ -84,7 +84,7 @@ export function HotDeal({ car }: HotDealProps) {
             <div className="flex flex-col sm:flex-row gap-3">
               <Link
                 href={`/solicitar?auto=${c.slug}`}
-                className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-8 py-4 rounded-xl transition-all"
+                className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-8 py-4 rounded-xl transition-all shadow-[0_4px_20px_rgba(0,229,229,0.25)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.38)] hover:scale-[1.02] active:scale-[0.99]"
               >
                 Quiero esta oferta
                 <Icon name="arrow_forward" size="sm" />

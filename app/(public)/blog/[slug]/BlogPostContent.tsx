@@ -437,14 +437,6 @@ export function BlogPostContent({ post }: { post: BlogPost }) {
                 <div>
                   <p className="text-[11px] uppercase tracking-widest text-text-ghost font-bold mb-3">Compartir</p>
                   <div className="flex gap-2">
-                    <a
-                      href={`https://wa.me/?text=${encodeURIComponent(post.title + " - Electrificarte")}`}
-                      target="_blank" rel="noopener noreferrer"
-                      className="flex-1 flex items-center justify-center gap-1.5 border border-gray-200 hover:border-green-400 hover:text-green-600 rounded-xl py-2 text-xs font-semibold transition-all"
-                    >
-                      <span className="material-symbols-outlined text-[15px]">chat</span>
-                      WhatsApp
-                    </a>
                     <button
                       onClick={() => navigator.clipboard.writeText(window.location.href)}
                       className="flex-1 flex items-center justify-center gap-1.5 border border-gray-200 hover:border-primary/40 hover:text-primary-deep rounded-xl py-2 text-xs font-semibold transition-all"

@@ -209,25 +209,11 @@ export function Navbar() {
         <div className="flex items-center gap-2.5">
           <Link
             href="/solicitar"
-            className="hidden sm:inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-5 py-2.5 rounded-xl text-sm transition-colors"
+            className="hidden sm:inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-5 py-2.5 rounded-xl text-sm transition-all shadow-[0_4px_16px_rgba(0,229,229,0.22)] hover:shadow-[0_6px_24px_rgba(0,229,229,0.35)] hover:scale-[1.02] active:scale-[0.99]"
           >
             Solicitar oferta
+            <Icon name="arrow_forward" size="sm" />
           </Link>
-          <a
-            href="https://wa.me/56912345678?text=Hola%2C%20quiero%20asesor%C3%ADa"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Contactar por WhatsApp"
-            className={[
-              "hidden sm:inline-flex items-center gap-2 font-bold px-4 py-2.5 rounded-xl text-sm transition-colors",
-              transparent
-                ? "bg-white/10 hover:bg-white/20 text-white border border-white/20"
-                : "bg-black hover:bg-gray-900 text-white",
-            ].join(" ")}
-          >
-            <Icon name="chat_bubble" size="sm" />
-            WhatsApp
-          </a>
 
           {/* Hamburger */}
           <button
@@ -329,7 +315,7 @@ export function Navbar() {
                 ))}
               </MobileAccordion>
 
-              <div className="pt-4 space-y-3 border-t border-gray-100">
+              <div className="pt-4 border-t border-gray-100">
                 <Link
                   href="/solicitar"
                   className="block w-full text-center bg-primary hover:bg-primary-dark text-black font-bold py-3 rounded-xl transition-colors"

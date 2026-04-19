@@ -33,7 +33,7 @@ export function HomeStructuredData() {
       "@type": "ContactPoint",
       contactType: "sales",
       availableLanguage: "Spanish",
-      url: "https://wa.me/56912345678",
+      url: "https://electrificarte.cl/contacto",
     },
     hasOfferCatalog: {
       "@type": "OfferCatalog",
