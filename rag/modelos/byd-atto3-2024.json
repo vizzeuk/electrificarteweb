@@ -1,0 +1,20 @@
+{
+  "id": "byd-atto3-2024",
+  "nombre": "BYD Atto 3",
+  "marca": "BYD",
+  "tipo": "SUV",
+  "año": 2024,
+  "precio_clp": 24990000,
+  "autonomia_km": 480,
+  "bateria_kwh": 60.48,
+  "potencia_cv": 204,
+  "carga_rapida_kw": 88,
+  "tiempo_carga_ac_h": 9,
+  "pasajeros": 5,
+  "maletero_l": 440,
+  "traccion": "FWD",
+  "beneficio_principal": "SUV familiar con excelente autonomía y precio accesible",
+  "ideal_para": ["familia", "ciudad", "interurbano"],
+  "disponible": true,
+  "imagen_url": ""
+}

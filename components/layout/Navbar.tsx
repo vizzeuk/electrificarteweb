@@ -323,14 +323,6 @@ export function Navbar() {
                 >
                   Solicitar oferta
                 </Link>
-                <a
-                  href="https://wa.me/56912345678?text=Hola%2C%20quiero%20asesor%C3%ADa"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block w-full text-center bg-black text-white font-bold py-3 rounded-xl"
-                >
-                  WhatsApp
-                </a>
               </div>
             </div>
           </motion.div>

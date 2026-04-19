@@ -1,0 +1,20 @@
+{
+  "id": "byd-dolphin-2024",
+  "nombre": "BYD Dolphin",
+  "marca": "BYD",
+  "tipo": "hatchback",
+  "año": 2024,
+  "precio_clp": 18990000,
+  "autonomia_km": 427,
+  "bateria_kwh": 60.48,
+  "potencia_cv": 177,
+  "carga_rapida_kw": 88,
+  "tiempo_carga_ac_h": 9,
+  "pasajeros": 5,
+  "maletero_l": 345,
+  "traccion": "FWD",
+  "beneficio_principal": "El EV más accesible para conducción urbana diaria",
+  "ideal_para": ["ciudad", "primer-ev", "pareja"],
+  "disponible": true,
+  "imagen_url": ""
+}

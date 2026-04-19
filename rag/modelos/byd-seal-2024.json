@@ -1,0 +1,20 @@
+{
+  "id": "byd-seal-2024",
+  "nombre": "BYD Seal",
+  "marca": "BYD",
+  "tipo": "sedán",
+  "año": 2024,
+  "precio_clp": 29990000,
+  "autonomia_km": 570,
+  "bateria_kwh": 82.56,
+  "potencia_cv": 313,
+  "carga_rapida_kw": 150,
+  "tiempo_carga_ac_h": 10,
+  "pasajeros": 5,
+  "maletero_l": 402,
+  "traccion": "AWD",
+  "beneficio_principal": "Máxima autonomía y rendimiento deportivo en un sedán premium",
+  "ideal_para": ["interurbano", "empresa", "ciudad"],
+  "disponible": true,
+  "imagen_url": ""
+}

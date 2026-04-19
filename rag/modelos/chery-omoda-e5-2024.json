@@ -1,0 +1,20 @@
+{
+  "id": "chery-omoda-e5-2024",
+  "nombre": "Chery Omoda E5",
+  "marca": "Chery",
+  "tipo": "SUV",
+  "año": 2024,
+  "precio_clp": 22490000,
+  "autonomia_km": 450,
+  "bateria_kwh": 61.0,
+  "potencia_cv": 218,
+  "carga_rapida_kw": 80,
+  "tiempo_carga_ac_h": 10,
+  "pasajeros": 5,
+  "maletero_l": 380,
+  "traccion": "FWD",
+  "beneficio_principal": "SUV eléctrico de diseño moderno con gran equipamiento de serie",
+  "ideal_para": ["ciudad", "familia", "primer-ev"],
+  "disponible": true,
+  "imagen_url": ""
+}
