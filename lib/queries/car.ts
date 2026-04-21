@@ -380,6 +380,7 @@ export const allCarsForComparadorQuery = groq`
     _id,
     name,
     "slug": slug.current,
+    "imageUrl": mainImage.asset->url,
     basePrice,
     discountPrice,
     batteryCapacity,
@@ -399,7 +400,23 @@ export const allCarsForComparadorQuery = groq`
     highlight,
     "brand": brand->{ name, "slug": slug.current },
     "vehicleType": vehicleType->{ label },
-    "electricType": electricType->{ tag }
+    "electricType": electricType->{ tag },
+    "versions": versions[]{
+      name,
+      price,
+      discountPrice,
+      batteryCapacity,
+      range,
+      power,
+      traction,
+      acceleration,
+      topSpeed,
+      chargeTimeDC,
+      chargeTimeAC,
+      seats,
+      "cargo": trunkCapacity,
+      "chargeType": connectorType
+    }
   }
 `;
 

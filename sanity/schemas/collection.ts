@@ -49,6 +49,21 @@ export const collection = defineType({
       name: "ctaText", title: "Texto del botón", type: "string",
       group: "content", initialValue: "Ver colección",
     }),
+    defineField({
+      name: "highlights", title: "Mini boxes de información", type: "array",
+      group: "content",
+      description: "Aparecen entre el hero y el catálogo. Máximo 4. Ej: Por qué esta colección, Ideal para quién, etc.",
+      of: [defineArrayMember({
+        type: "object", name: "highlight", title: "Box",
+        fields: [
+          defineField({ name: "icon",        title: "Ícono (Material Symbol)", type: "string", description: 'Ej: "check_circle", "family_restroom", "bolt", "savings"' }),
+          defineField({ name: "title",       title: "Título",                  type: "string" }),
+          defineField({ name: "description", title: "Descripción corta",       type: "string" }),
+        ],
+        preview: { select: { title: "title", subtitle: "description" } },
+      })],
+      validation: r => r.max(4),
+    }),
 
     // ════════════════════════════════════════════════════════════════
     // CONFIGURACIÓN DEL HOME
@@ -97,9 +112,16 @@ export const collection = defineType({
       description: "Solo cuando el modo es Automático. Deja vacío para todas las marcas.",
     }),
     defineField({
-      name: "filterCategory", title: "Filtrar por categoría", type: "string",
+      name: "filterVehicleType", title: "Filtrar por tipo de vehículo", type: "reference",
+      to: [{ type: "vehicleType" }],
       group: "cars",
-      description: 'Ej: "SUV", "Sedán", "City Car". Vacío = todas las categorías.',
+      description: "Ej: SUV, Sedán, Hatchback. Vacío = todos los tipos.",
+    }),
+    defineField({
+      name: "filterElectricType", title: "Filtrar por tecnología eléctrica", type: "reference",
+      to: [{ type: "electricType" }],
+      group: "cars",
+      description: "Ej: BEV (100% eléctrico), PHEV, HEV. Vacío = todas las tecnologías.",
     }),
     defineField({
       name: "filterMaxPrice", title: "Precio máximo (millones CLP)", type: "number",
@@ -107,9 +129,36 @@ export const collection = defineType({
       description: 'Ej: 20 = autos hasta $20.000.000. Deja vacío para sin límite.',
     }),
     defineField({
+      name: "filterMinPrice", title: "Precio mínimo (millones CLP)", type: "number",
+      group: "cars",
+      description: 'Ej: 30 = autos desde $30.000.000. Deja vacío para sin límite.',
+    }),
+    defineField({
       name: "filterMinSeats", title: "Mínimo de asientos", type: "number",
       group: "cars",
       description: 'Ej: 7 = solo autos con 7+ asientos.',
+    }),
+    defineField({
+      name: "filterIsNew", title: "Solo autos nuevos (isNew)", type: "boolean",
+      group: "cars", initialValue: false,
+      description: "Activa para mostrar solo los autos marcados como 'Nuevo'.",
+    }),
+    defineField({
+      name: "filterIsHotDeal", title: "Solo Hot Deals", type: "boolean",
+      group: "cars", initialValue: false,
+      description: "Activa para mostrar solo los autos marcados como 'Hot Deal'.",
+    }),
+
+    // ─── SEO ────────────────────────────────────────────────────────
+    defineField({
+      name: "metaTitle", title: "Meta título (SEO)", type: "string",
+      group: "content",
+      description: "Deja vacío para usar el título automático.",
+    }),
+    defineField({
+      name: "metaDescription", title: "Meta descripción (SEO)", type: "text", rows: 2,
+      group: "content",
+      description: "Descripción para Google. ~155 caracteres.",
     }),
   ],
   preview: {

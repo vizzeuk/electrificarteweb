@@ -21,7 +21,7 @@ const DEFAULTS: ServicioExtra[] = [
     description: "Cotiza e instala tu cargador en casa con los mejores precios del mercado y técnicos certificados.",
     ctaText:     "Cotiza aquí",
     ctaHref:     "/solicitar?servicio=wallbox",
-    imageUrl:    null,
+    imageUrl:    "/images/cargadores.webp",
   },
   {
     badge:       "Preferencial",
@@ -29,7 +29,7 @@ const DEFAULTS: ServicioExtra[] = [
     description: "Seguros especializados para vehículos eléctricos con coberturas exclusivas y precios únicos en Chile.",
     ctaText:     "Cotiza aquí",
     ctaHref:     "/solicitar?servicio=seguro",
-    imageUrl:    null,
+    imageUrl:    "/images/seguros.webp",
   },
 ];
 

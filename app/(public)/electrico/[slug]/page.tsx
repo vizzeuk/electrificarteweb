@@ -2,6 +2,7 @@ import React from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { client } from "@/lib/sanity/client";
+import { urlFor } from "@/lib/sanity/image";
 import {
   electricTypeBySlugQuery,
   carsByElectricTypeQuery,
@@ -83,7 +84,7 @@ export default async function ElectricoPage({ params }: PageProps) {
     battery:      c.batteryCapacity ?? 0,
     isHotDeal:    c.isHotDeal ?? false,
     tagline:      c.tagline ?? "",
-    imageUrl:     undefined, // TODO: urlFor(c.mainImage) once images uploaded
+    imageUrl:     c.mainImage ? urlFor(c.mainImage).width(800).auto("format").url() : undefined,
   }));
 
   const otherTypes: OtherElectricType[] = (allTypes ?? []).map((t: any) => ({

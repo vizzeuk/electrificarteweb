@@ -24,12 +24,19 @@ export const collectionBySlugQuery = groq`
     subtitle,
     description,
     ctaText,
+    metaTitle,
+    metaDescription,
     "heroImageUrl": heroImage.asset->url,
+    highlights[]{ icon, title, description },
     filterMode,
-    filterCategory,
     filterMaxPrice,
-    "filterBrandRef": filterBrand._ref,
+    filterMinPrice,
     filterMinSeats,
+    filterIsNew,
+    filterIsHotDeal,
+    "filterBrandRef":       filterBrand._ref,
+    "filterVehicleTypeRef": filterVehicleType._ref,
+    "filterElectricTypeRef": filterElectricType._ref,
 
     // Autos manuales (cuando filterMode == "manual")
     "manualCars": manualCars[]->{
@@ -41,23 +48,28 @@ export const collectionBySlugQuery = groq`
       discountPrice,
       range,
       batteryCapacity,
+      power,
       isNew,
       isHotDeal,
-      "brand":    brand->{ name, "slug": slug.current },
-      "category": category->{ name }
+      "brand":        brand->{ name, "slug": slug.current },
+      "vehicleType":  vehicleType->{ label, "slug": slug.current },
+      "electricType": electricType->{ tag, label, "slug": slug.current },
     },
   }
 `;
 
 // ─── Autos por filtros automáticos ───────────────────────────────────────────
-// Se llama desde la page pasando los filtros de la colección
 export const carsByFiltersQuery = groq`
   *[
     _type == "car"
-    && ($brandRef == null  || brand._ref == $brandRef)
-    && ($category == ""    || category->name == $category)
-    && ($maxPrice == 0     || basePrice <= $maxPrice)
-    && ($minSeats == 0     || versions[0].seats >= $minSeats || seats >= $minSeats)
+    && ($brandRef        == null  || brand._ref        == $brandRef)
+    && ($vehicleTypeRef  == null  || vehicleType._ref  == $vehicleTypeRef)
+    && ($electricTypeRef == null  || electricType._ref == $electricTypeRef)
+    && ($maxPrice        == 0     || basePrice         <= $maxPrice)
+    && ($minPrice        == 0     || basePrice         >= $minPrice)
+    && ($minSeats        == 0     || seats             >= $minSeats)
+    && ($isNew           == false || isNew             == true)
+    && ($isHotDeal       == false || isHotDeal         == true)
   ] | order(discountPrice asc, basePrice asc) {
     _id,
     name,
@@ -67,9 +79,11 @@ export const carsByFiltersQuery = groq`
     discountPrice,
     range,
     batteryCapacity,
+    power,
     isNew,
     isHotDeal,
-    "brand":    brand->{ name, "slug": slug.current },
-    "category": category->{ name }
+    "brand":        brand->{ name, "slug": slug.current },
+    "vehicleType":  vehicleType->{ label, "slug": slug.current },
+    "electricType": electricType->{ tag, label, "slug": slug.current },
   }
 `;

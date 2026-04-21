@@ -156,7 +156,7 @@ export default function BrandPageContent({ slug, brand }: BrandPageContentProps)
               {brand.heroTagline && <p className="text-white/40 text-sm uppercase tracking-widest mb-3">{brand.heroTagline}</p>}
               <p className="text-white/60 text-base leading-relaxed max-w-md mb-8">{brand.description}</p>
               <div className="flex flex-wrap gap-3">
-                <Link href="/solicitar" className="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-6 py-3 rounded-xl transition-colors text-sm">
+                <Link href="/solicitar" className="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-6 py-3 rounded-xl transition-all text-sm shadow-[0_4px_20px_rgba(0,229,229,0.30)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]">
                   Cotizar un {brand.name} <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
                 </Link>
                 <a href={`#autos-${slug}`} className="inline-flex items-center gap-2 border border-white/20 hover:border-white/40 text-white font-medium px-6 py-3 rounded-xl transition-colors text-sm">
@@ -242,7 +242,7 @@ export default function BrandPageContent({ slug, brand }: BrandPageContentProps)
               const pct = Math.round(((car.basePrice - car.discountPrice) / car.basePrice) * 100);
               return (
                 <motion.article key={car.slug} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.1 }}
-                  className="group flex flex-col border border-gray-100 bg-white rounded-2xl overflow-hidden hover:border-primary/40 hover:shadow-lg transition-all duration-300">
+                  className="group relative flex flex-col border border-gray-100 bg-white rounded-2xl overflow-hidden hover:border-primary/40 hover:shadow-lg transition-all duration-300">
                   <div className="aspect-[16/9] bg-gradient-to-br from-gray-50 to-gray-100 relative flex flex-col items-center justify-center overflow-hidden">
                     {car.isHotDeal && <span className="absolute top-3 left-3 bg-amber text-black text-[10px] font-black uppercase tracking-wide px-2.5 py-1 rounded-full z-10">HOT DEAL</span>}
                     <span className="absolute top-3 right-3 text-[10px] font-black text-white px-2 py-1 rounded-full z-10" style={{ backgroundColor: brand.accentColor }}>-{pct}%</span>
@@ -268,11 +268,11 @@ export default function BrandPageContent({ slug, brand }: BrandPageContentProps)
                       <span className="text-xl font-headline font-black text-primary-deep">{formatCLP(car.discountPrice)}</span>
                     </div>
                     <div className="flex gap-2 mt-auto">
-                      <Link href={`/auto/${car.slug}`} className="flex-1 text-center bg-primary hover:bg-primary-dark text-black font-bold py-2.5 rounded-xl text-sm transition-colors">
+                      <Link href={`/auto/${car.slug}`} className="flex-1 text-center bg-primary hover:bg-primary-dark text-black font-bold py-2.5 rounded-xl text-sm transition-colors after:absolute after:inset-0">
                         Ver auto
                       </Link>
                       <Link href={`/comparador?add=${car.slug}`} title="Comparar"
-                        className="px-3 border border-gray-200 hover:border-primary/40 text-text-muted hover:text-primary-deep rounded-xl flex items-center transition-colors">
+                        className="relative z-[1] px-3 border border-gray-200 hover:border-primary/40 text-text-muted hover:text-primary-deep rounded-xl flex items-center transition-colors">
                         <span className="material-symbols-outlined text-[18px]">compare</span>
                       </Link>
                     </div>
@@ -322,7 +322,7 @@ export default function BrandPageContent({ slug, brand }: BrandPageContentProps)
                   <p className="text-white/30 text-xs pt-2 border-t border-white/10">Ahorra {discountPct}% · Incluye bono concesionario + Electrificarte</p>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3">
-                  <Link href={`/solicitar?auto=${hotDeal.carSlug}`} className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-8 py-4 rounded-xl transition-all">
+                  <Link href={`/solicitar?auto=${hotDeal.carSlug}`} className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-8 py-4 rounded-xl transition-all shadow-[0_4px_20px_rgba(0,229,229,0.30)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]">
                     Quiero esta oferta <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
                   </Link>
                   <Link href={`/auto/${hotDeal.carSlug}`} className="inline-flex items-center justify-center gap-2 border border-white/20 hover:border-white/40 text-white font-medium px-8 py-4 rounded-xl transition-all">
@@ -386,9 +386,9 @@ export default function BrandPageContent({ slug, brand }: BrandPageContentProps)
               <div>
                 <p className="text-primary text-xs uppercase tracking-widest font-bold mb-2">¿Te convenció?</p>
                 <h3 className="text-white font-headline font-black text-2xl md:text-3xl tracking-tight">Consigue el mejor precio en tu {brand.name}</h3>
-                <p className="text-white/50 text-sm mt-1">Negociamos por ti. Ahorro promedio de 27% sobre precio lista.</p>
+                <p className="text-white/50 text-sm mt-1">Negociamos por ti con nuestra red exclusiva de concesionarios en Chile.</p>
               </div>
-              <Link href="/solicitar" className="flex-shrink-0 inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-black px-8 py-4 rounded-xl transition-colors text-sm whitespace-nowrap">
+              <Link href="/solicitar" className="flex-shrink-0 inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-black px-8 py-4 rounded-xl transition-all text-sm whitespace-nowrap shadow-[0_4px_20px_rgba(0,229,229,0.30)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]">
                 Solicitar oferta ahora <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
               </Link>
             </div>

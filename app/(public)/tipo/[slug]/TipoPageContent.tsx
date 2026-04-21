@@ -163,14 +163,14 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes }: TipoPa
               <div className="flex flex-wrap gap-3">
                 <Link
                   href="/solicitar"
-                  className="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-6 py-3 rounded-xl transition-colors text-sm"
+                  className="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-6 py-3 rounded-xl transition-all text-sm shadow-[0_4px_20px_rgba(0,229,229,0.30)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]"
                 >
                   Solicitar oferta
                   <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
                 </Link>
                 <a
                   href={`#catalogo-${slug}`}
-                  className="inline-flex items-center gap-2 border border-white/20 hover:border-white/40 text-white font-medium px-6 py-3 rounded-xl transition-colors text-sm"
+                  className="inline-flex items-center gap-2 border border-white/20 hover:border-white/50 hover:bg-white/5 text-white font-medium px-6 py-3 rounded-xl transition-all text-sm"
                 >
                   Ver catálogo
                 </a>
@@ -270,7 +270,7 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes }: TipoPa
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.4, delay: i * 0.08 }}
-                    className="group flex flex-col border border-gray-100 bg-white rounded-2xl overflow-hidden hover:border-primary/40 hover:shadow-md transition-all duration-300"
+                    className="group relative flex flex-col border border-gray-100 bg-white rounded-2xl overflow-hidden hover:border-primary/40 hover:shadow-md transition-all duration-300"
                   >
                     {/* Image */}
                     <div className="aspect-[16/9] bg-gradient-to-br from-gray-50 to-gray-100 relative flex flex-col items-center justify-center overflow-hidden">
@@ -314,13 +314,13 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes }: TipoPa
                       <div className="flex gap-2 mt-auto">
                         <Link
                           href={`/auto/${car.slug}`}
-                          className="flex-1 text-center bg-primary hover:bg-primary-dark text-black font-bold py-2.5 rounded-xl text-sm transition-colors"
+                          className="flex-1 text-center bg-primary hover:bg-primary-dark text-black font-bold py-2.5 rounded-xl text-sm transition-colors after:absolute after:inset-0"
                         >
                           Ver auto
                         </Link>
                         <Link
                           href={`/comparador?add=${car.slug}`}
-                          className="px-3 border border-gray-200 hover:border-primary/40 text-text-muted hover:text-primary-deep rounded-xl flex items-center transition-colors"
+                          className="relative z-[1] px-3 border border-gray-200 hover:border-primary/40 text-text-muted hover:text-primary-deep rounded-xl flex items-center transition-colors"
                           title="Comparar"
                         >
                           <span className="material-symbols-outlined text-[18px]">compare</span>
@@ -476,12 +476,12 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes }: TipoPa
                 Consigue el mejor precio en tu {meta.label} eléctrico
               </h2>
               <p className="text-white/50 text-sm mt-1">
-                Negociamos por ti. Ahorro promedio de 27% sobre precio lista.
+                Negociamos por ti con nuestra red exclusiva de concesionarios en Chile.
               </p>
             </div>
             <Link
               href="/solicitar"
-              className="flex-shrink-0 inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-black px-8 py-4 rounded-xl transition-colors text-sm whitespace-nowrap"
+              className="flex-shrink-0 inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-black px-8 py-4 rounded-xl transition-all text-sm whitespace-nowrap shadow-[0_4px_20px_rgba(0,229,229,0.30)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]"
             >
               Solicitar oferta ahora
               <span className="material-symbols-outlined text-[18px]">arrow_forward</span>

@@ -18,14 +18,17 @@ const client = createClient({
   useCdn:    false,
 });
 
-const LOGOS_DIR = path.resolve(
-  process.cwd(),
-  "public/logos_electrificarte/logos_electrificarte"
-);
+const LOGOS_DIR = path.resolve(process.cwd(), "public/logos");
 
-// Nombres de archivo que difieren del slug en Sanity
+// Nombres de archivo (sin extensión) → slug en Sanity
 const FILENAME_TO_SLUG: Record<string, string> = {
-  "lynk-and-co": "lynk-co",
+  "Ora-Logo-Grid-Web-Res-PNG": "ora",
+  "DEEPAL":               "deepal",
+  "DFSK-Logo":            "dfsk",
+  "Jaecoo_wordmark.svg":  "jaecoo",   // archivo .svg.png: ext=.png, basename=Jaecoo_wordmark.svg
+  "Jetour_logo":          "jetour",
+  "Omoda_wordmark.svg":   "omoda",    // archivo .svg.png
+  "lynk-and-co":          "lynk-co",
 };
 
 async function main() {

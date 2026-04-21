@@ -208,6 +208,18 @@ export function Navbar() {
         {/* ── Right CTAs ───────────────────────────────────── */}
         <div className="flex items-center gap-2.5">
           <Link
+            href="/calculadora"
+            className={[
+              "hidden lg:inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all",
+              transparent
+                ? "text-white/80 hover:text-white border border-white/20 hover:border-white/50 hover:bg-white/5"
+                : "text-text-main border border-gray-200 hover:border-primary/40 hover:text-primary hover:bg-surface",
+            ].join(" ")}
+          >
+            <Icon name="calculate" size="sm" />
+            Calcula tu ahorro
+          </Link>
+          <Link
             href="/solicitar"
             className="hidden sm:inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-5 py-2.5 rounded-xl text-sm transition-all shadow-[0_4px_16px_rgba(0,229,229,0.22)] hover:shadow-[0_6px_24px_rgba(0,229,229,0.35)] hover:scale-[1.02] active:scale-[0.99]"
           >
@@ -315,7 +327,15 @@ export function Navbar() {
                 ))}
               </MobileAccordion>
 
-              <div className="pt-4 border-t border-gray-100">
+              <div className="pt-4 border-t border-gray-100 space-y-2">
+                <Link
+                  href="/calculadora"
+                  className="flex items-center justify-center gap-2 w-full text-center border border-gray-200 hover:border-primary/40 hover:text-primary text-text-main font-semibold py-3 rounded-xl transition-colors"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <span className="material-symbols-outlined text-[18px]">calculate</span>
+                  Calcula tu ahorro
+                </Link>
                 <Link
                   href="/solicitar"
                   className="block w-full text-center bg-primary hover:bg-primary-dark text-black font-bold py-3 rounded-xl transition-colors"

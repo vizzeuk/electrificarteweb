@@ -2,6 +2,7 @@ import React from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { client } from "@/lib/sanity/client";
+import { urlFor } from "@/lib/sanity/image";
 import { brandBySlugQuery, carsByBrandQuery } from "@/lib/queries/car";
 import BrandPageContent from "./BrandPageContent";
 
@@ -59,7 +60,7 @@ export default async function BrandPage({ params }: PageProps) {
     electricType: c.electricType?.slug ?? "",
     isHotDeal:    c.isHotDeal ?? false,
     isTopSeller:  c.isTopSeller ?? false,
-    imageUrl:     undefined as string | undefined, // TODO: use urlFor(c.mainImage) when images are uploaded
+    imageUrl:     c.mainImage ? urlFor(c.mainImage).width(800).auto("format").url() : undefined,
     specs: {
       battery:     `${c.batteryCapacity} kWh`,
       charge0to80: c.chargeTimeDC ?? "–",

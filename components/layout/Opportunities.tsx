@@ -145,7 +145,7 @@ export function Opportunities({ title = "Destacados Electrificarte", cars }: Opp
               <article
                 key={deal._id ?? deal.slug}
                 style={{ minWidth: CARD_W, scrollSnapAlign: "start" }}
-                className="group border border-gray-100 bg-white rounded-xl flex flex-col hover:border-primary/40 hover:shadow-md transition-all duration-300"
+                className="group relative border border-gray-100 bg-white rounded-xl flex flex-col hover:border-primary/40 hover:shadow-md transition-all duration-300"
               >
                 {/* Image */}
                 <div className="aspect-[4/3] bg-gradient-to-br from-gray-50 to-gray-100 rounded-t-xl overflow-hidden relative">
@@ -196,14 +196,14 @@ export function Opportunities({ title = "Destacados Electrificarte", cars }: Opp
                   <div className="mt-auto flex gap-2">
                     <Link
                       href={`/auto/${deal.slug}`}
-                      className="flex-1 py-2.5 bg-primary hover:bg-primary-dark font-bold text-xs rounded-lg text-center transition-colors text-black"
+                      className="flex-1 py-2.5 bg-primary hover:bg-primary-dark font-bold text-xs rounded-lg text-center transition-colors text-black after:absolute after:inset-0"
                     >
                       Ver detalle
                     </Link>
                     <Link
                       href={`/comparador?add=${deal.slug}`}
                       title="Comparar"
-                      className="px-3 border border-gray-200 hover:border-primary/40 text-text-muted hover:text-primary-deep rounded-lg flex items-center transition-colors"
+                      className="relative z-[1] px-3 border border-gray-200 hover:border-primary/40 text-text-muted hover:text-primary-deep rounded-lg flex items-center transition-colors"
                     >
                       <span className="material-symbols-outlined text-[18px]">compare</span>
                     </Link>
