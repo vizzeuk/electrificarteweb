@@ -57,7 +57,8 @@ function Slider({
               onChange={e => setDraft(e.target.value)}
               onBlur={e => commitDraft(e.target.value)}
               onKeyDown={e => e.key === "Enter" && commitDraft((e.target as HTMLInputElement).value)}
-              className="font-headline font-black text-white text-lg bg-white/10 border border-white/20 rounded-lg px-2 py-0.5 focus:border-primary focus:bg-white/15 outline-none w-20 text-right transition-colors"
+              className="font-headline font-black text-white text-lg bg-white/10 border border-white/20 rounded-lg px-2 py-0.5 focus:border-primary focus:bg-white/15 outline-none text-right transition-colors"
+              style={{ width: "6ch" }}
             />
             <span className="text-white/50 text-sm">km</span>
           </div>

@@ -1,4 +1,5 @@
 import { defineField, defineType, defineArrayMember } from "sanity";
+import { CoverImageInput } from "../components/CoverImageInput";
 
 const connectorList = [
   { title: "CCS2",     value: "CCS2" },
@@ -248,6 +249,7 @@ export const car = defineType({
     defineField({
       name: "mainImage", title: "Imagen principal", type: "image", group: "media",
       options: { hotspot: true }, validation: (r) => r.required(),
+      components: { input: CoverImageInput },
     }),
     defineField({
       name: "gallery", title: "Galería de fotos", type: "array", group: "media",
