@@ -86,7 +86,8 @@ function SolicitarInner({ carOptions }: SolicitarContentProps) {
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="grid lg:grid-cols-12 gap-12 lg:gap-16 lg:items-start">
             {/* Sidebar */}
-            <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-28 lg:self-start">
+            <div className="lg:col-span-4">
+              <div className="space-y-6 lg:sticky lg:top-28">
               <div className="bg-surface rounded-2xl p-6 border border-gray-100">
                 <h3 className="font-headline font-bold mb-4 flex items-center gap-2">
                   <Icon name="verified" className="text-primary" size="sm" />
@@ -130,6 +131,7 @@ function SolicitarInner({ carOptions }: SolicitarContentProps) {
                     </span>
                   ))}
                 </div>
+              </div>
               </div>
             </div>
 

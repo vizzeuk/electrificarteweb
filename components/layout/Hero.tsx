@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { Icon } from "@/components/ui/Icon";
-import { HeroAnimatedPlayer } from "@/components/layout/HeroAnimatedPlayer";
+import { HeroVideoPlayer } from "@/components/layout/HeroVideoPlayer";
 
 export interface HeroData {
   badge?: string;
@@ -150,7 +150,7 @@ export function Hero({ data }: HeroProps) {
               {videoUrl ? (
                 <HeroVideo url={videoUrl} />
               ) : (
-                <HeroAnimatedPlayer src="/hero-video/Electrificarte_Video_16x9.html" />
+                <HeroVideoPlayer />
               )}
             </div>
           </motion.div>

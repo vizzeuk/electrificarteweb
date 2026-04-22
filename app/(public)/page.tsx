@@ -81,7 +81,7 @@ export default async function HomePage() {
       <HotDeal car={page?.hotDealCar ?? null} />
 
       <Opportunities
-        title={page?.opportunitiesTitle}
+        title="Destacados Electrificarte"
         cars={page?.opportunitiesCars?.map((c: any) => ({
           _id:             c._id,
           name:            c.name,

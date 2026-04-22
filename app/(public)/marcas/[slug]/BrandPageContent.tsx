@@ -126,7 +126,7 @@ export default function BrandPageContent({ slug, brand }: BrandPageContentProps)
   return (
     <>
       {/* ─── HERO ─────────────────────────────────────────────────── */}
-      <section className="bg-black pt-16 pb-20 md:pt-20 md:pb-28 overflow-hidden relative">
+      <section className="bg-black pt-24 pb-20 md:pt-28 md:pb-28 overflow-hidden relative">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] rounded-full blur-[120px] opacity-20 pointer-events-none" style={{ backgroundColor: brand.logoColor }} />
         <div className="max-w-7xl mx-auto px-4 md:px-8 relative z-10">
           <nav className="flex items-center gap-2 text-white/30 text-xs mb-10">
@@ -245,7 +245,7 @@ export default function BrandPageContent({ slug, brand }: BrandPageContentProps)
                   className="group relative flex flex-col border border-gray-100 bg-white rounded-2xl overflow-hidden hover:border-primary/40 hover:shadow-lg transition-all duration-300">
                   <div className="aspect-[16/9] bg-gradient-to-br from-gray-50 to-gray-100 relative flex flex-col items-center justify-center overflow-hidden">
                     {car.isHotDeal && <span className="absolute top-3 left-3 bg-amber text-black text-[10px] font-black uppercase tracking-wide px-2.5 py-1 rounded-full z-10">HOT DEAL</span>}
-                    <span className="absolute top-3 right-3 text-[10px] font-black text-white px-2 py-1 rounded-full z-10" style={{ backgroundColor: brand.accentColor }}>-{pct}%</span>
+                    {pct > 0 && <span className="absolute top-3 right-3 text-[10px] font-black text-white px-2 py-1 rounded-full z-10" style={{ backgroundColor: brand.accentColor }}>-{pct}%</span>}
                     {car.imageUrl ? (
                       <img src={car.imageUrl} alt={`${brand.name} ${car.name}`} className="w-full h-full object-contain" />
                     ) : (

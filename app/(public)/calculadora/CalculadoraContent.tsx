@@ -24,14 +24,23 @@ function formatNum(n: number) {
 
 // ─── Slider ──────────────────────────────────────────────────────────────────
 function Slider({
-  label, icon, value, min, max, step, format, onChange,
+  label, icon, value, min, max, step, format, onChange, editable = false,
 }: {
   label: string; icon: string; value: number;
   min: number; max: number; step: number;
   format: (v: number) => string;
   onChange: (v: number) => void;
+  editable?: boolean;
 }) {
+  const [draft, setDraft] = useState<string | null>(null);
   const pct = ((value - min) / (max - min)) * 100;
+
+  function commitDraft(raw: string) {
+    const n = parseInt(raw.replace(/\D/g, ""), 10);
+    onChange(isNaN(n) ? value : Math.min(max, Math.max(min, n)));
+    setDraft(null);
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
@@ -39,7 +48,22 @@ function Slider({
           <span className="material-symbols-outlined text-primary text-[18px]">{icon}</span>
           <span className="text-white/80 text-sm font-semibold">{label}</span>
         </div>
-        <span className="font-headline font-black text-white text-lg">{format(value)}</span>
+        {editable ? (
+          <div className="flex items-baseline gap-1">
+            <input
+              type="text"
+              inputMode="numeric"
+              value={draft ?? value}
+              onChange={e => setDraft(e.target.value)}
+              onBlur={e => commitDraft(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && commitDraft((e.target as HTMLInputElement).value)}
+              className="font-headline font-black text-white text-lg bg-white/10 border border-white/20 rounded-lg px-2 py-0.5 focus:border-primary focus:bg-white/15 outline-none w-20 text-right transition-colors"
+            />
+            <span className="text-white/50 text-sm">km</span>
+          </div>
+        ) : (
+          <span className="font-headline font-black text-white text-lg">{format(value)}</span>
+        )}
       </div>
       <input
         type="range" min={min} max={max} step={step} value={value}
@@ -249,7 +273,7 @@ function CarPickerModal({
 interface Props { cars: CalcCar[] }
 
 export default function CalculadoraContent({ cars }: Props) {
-  const [kmPerMonth,   setKmPerMonth]   = useState(1200);
+  const [kmPerMonth,   setKmPerMonth]   = useState(500);
   const [gasCostMonth, setGasCostMonth] = useState(150000);
   const [selectedCar,  setSelectedCar]  = useState<CalcCar | null>(null);
   const [pickerOpen,   setPickerOpen]   = useState(false);
@@ -414,9 +438,10 @@ export default function CalculadoraContent({ cars }: Props) {
                   label="Kilómetros por mes"
                   icon="route"
                   value={kmPerMonth}
-                  min={300} max={5000} step={100}
+                  min={100} max={2500} step={50}
                   format={v => `${formatNum(v)} km`}
                   onChange={setKmPerMonth}
+                  editable
                 />
                 <Slider
                   label="Gasto mensual en bencina"

@@ -323,9 +323,7 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes }: E
                     className="group relative flex flex-col border border-gray-100 bg-white rounded-2xl overflow-hidden hover:border-primary/40 hover:shadow-md transition-all duration-300"
                   >
                     <div className="aspect-[16/9] bg-gradient-to-br from-gray-50 to-gray-100 relative flex flex-col items-center justify-center overflow-hidden">
-                      <span className="absolute top-3 right-3 bg-black text-white text-[10px] font-black px-2 py-0.5 rounded-full">
-                        -{pct}%
-                      </span>
+                      {pct > 0 && <span className="absolute top-3 right-3 bg-black text-white text-[10px] font-black px-2 py-0.5 rounded-full">-{pct}%</span>}
                       <span
                         className="absolute top-3 left-3 text-[9px] font-black px-2 py-0.5 rounded-full text-white"
                         style={{ backgroundColor: meta.color === "#00E5E5" ? "#006A61" : meta.color }}
@@ -436,9 +434,7 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes }: E
                           <span className="material-symbols-outlined text-[80px] text-white/10 relative z-10">electric_car</span>
                         </>
                       )}
-                      <span className="absolute top-3 left-3 bg-amber text-black text-[9px] font-black uppercase tracking-wide px-2.5 py-1 rounded-full z-10">
-                        -{pct}% ahorro
-                      </span>
+                      {pct > 0 && <span className="absolute top-3 left-3 bg-amber text-black text-[9px] font-black uppercase tracking-wide px-2.5 py-1 rounded-full z-10">-{pct}% ahorro</span>}
                     </div>
 
                     <div className="p-6">
