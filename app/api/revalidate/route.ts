@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
 
   if (type === "blogPost") {
     // Invalidate the fetch data cache for all blogPost queries
-    revalidateTag("blogPost");
+    revalidateTag("blogPost", "default");
     revalidatePath("/");
     revalidatePath("/blog");
     const slug: string | undefined = body.slug?.current;
@@ -27,12 +27,12 @@ export async function POST(req: NextRequest) {
   }
 
   if (type === "homePage") {
-    revalidateTag("homePage");
+    revalidateTag("homePage", "default");
     revalidatePath("/", "page");
   }
 
   if (type === "car") {
-    revalidateTag("car");
+    revalidateTag("car", "default");
     revalidatePath("/");
     revalidatePath("/marcas");
     revalidatePath("/comparador");
@@ -41,18 +41,18 @@ export async function POST(req: NextRequest) {
   }
 
   if (type === "brand") {
-    revalidateTag("brand");
+    revalidateTag("brand", "default");
     revalidatePath("/");
     revalidatePath("/marcas");
   }
 
   // Generic fallback: if called without a type, revalidate everything
   if (!type) {
-    revalidateTag("blogPost");
-    revalidateTag("homePage");
-    revalidateTag("car");
-    revalidateTag("brand");
-    revalidateTag("collection");
+    revalidateTag("blogPost", "default");
+    revalidateTag("homePage", "default");
+    revalidateTag("car", "default");
+    revalidateTag("brand", "default");
+    revalidateTag("collection", "default");
     revalidatePath("/");
     revalidatePath("/blog");
   }
