@@ -73,13 +73,13 @@ export function Opportunities({ title = "Destacados Electrificarte", cars }: Opp
         <div className="flex items-end justify-between gap-4">
           <div>
             <p className="text-[11px] uppercase tracking-widest text-primary-deep font-bold mb-2">
-              Ofertas activas
+              Selección exclusiva
             </p>
             <h2
               id="opportunities-title"
               className="text-3xl md:text-4xl font-headline font-black uppercase tracking-tighter"
             >
-              {title}
+              {title ?? "Destacados Electrificarte"}
             </h2>
           </div>
 

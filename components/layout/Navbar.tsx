@@ -56,7 +56,7 @@ export function Navbar() {
       className={[
         "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
         transparent
-          ? "bg-transparent border-b border-transparent"
+          ? "bg-transparent border-b border-white/12"
           : "bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm shadow-black/5",
       ].join(" ")}
       role="banner"

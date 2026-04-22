@@ -84,7 +84,7 @@ function SolicitarInner({ carOptions }: SolicitarContentProps) {
       {/* Form + Sidebar */}
       <section className="py-16 md:py-20">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <div className="grid lg:grid-cols-12 gap-12 lg:gap-16">
+          <div className="grid lg:grid-cols-12 gap-12 lg:gap-16 lg:items-start">
             {/* Sidebar */}
             <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-28 lg:self-start">
               <div className="bg-surface rounded-2xl p-6 border border-gray-100">

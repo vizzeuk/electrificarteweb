@@ -39,7 +39,7 @@ export function PromoPopup({ car }: PromoPopupProps) {
 
     const onScroll = () => {
       const ratio = window.scrollY / (document.body.scrollHeight - window.innerHeight);
-      if (ratio >= 0.8) {
+      if (ratio >= 0.6) {
         setOpen(true);
         window.removeEventListener("scroll", onScroll);
       }
