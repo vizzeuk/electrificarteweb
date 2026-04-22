@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Icon } from "@/components/ui/Icon";
 
 // ─── Social SVG icons (brand-accurate) ───────────────────────────────────────
 function IconInstagram() {
@@ -127,13 +126,14 @@ export function Footer() {
           <div>
             <Link
               href="/"
-              className="text-2xl font-headline font-extrabold tracking-tighter flex items-center gap-2 mb-6"
+              className="inline-block mb-6"
               aria-label="Electrificarte - Inicio"
             >
-              <span className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <Icon name="bolt" className="text-black" size="sm" />
-              </span>
-              <span>Electrificarte</span>
+              <img
+                src="/logos-electrificarte/logo-elec-sin auto.png"
+                alt="Electrificarte"
+                className="h-8 w-auto object-contain brightness-0 invert"
+              />
             </Link>
             <p className="text-white/50 text-sm mb-6 leading-relaxed">
               Marketplace de autos eléctricos en Chile. Conectamos compradores

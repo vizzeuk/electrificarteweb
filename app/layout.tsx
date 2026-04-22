@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     template: "%s | Electrificarte",
   },
   description:
-    "Marketplace #1 de autos electricos en Chile. Conectamos compradores con la mejor red de concesionarios para garantizarte el precio mas bajo del mercado. Ahorra hasta un 27% en tu proximo vehiculo electrico.",
+    "Marketplace #1 de autos electricos en Chile. Conectamos compradores con la mejor red de concesionarios para garantizarte el precio mas bajo del mercado. Encuentra el mejor precio disponible en tu próximo vehículo eléctrico.",
   keywords: [
     "autos electricos chile",
     "vehiculos electricos chile",
@@ -55,7 +55,7 @@ export const metadata: Metadata = {
     siteName: "Electrificarte",
     title: "Electrificarte | Ahorra millones en tu auto electrificado en Chile",
     description:
-      "Marketplace #1 de autos electricos en Chile. Conectamos compradores con concesionarios para el mejor precio. Ahorra hasta 27%.",
+      "Marketplace #1 de autos electricos en Chile. Conectamos compradores con la mejor red de concesionarios para negociar el precio más competitivo del mercado.",
     images: [
       {
         url: "https://electrificarte.cl/og-image.jpg",

@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { Icon } from "@/components/ui/Icon";
+import { HeroAnimatedPlayer } from "@/components/layout/HeroAnimatedPlayer";
 
 export interface HeroData {
   badge?: string;
@@ -20,6 +21,46 @@ export interface HeroData {
   offerOldPrice?: string;
   offerNewPrice?: string;
   offerBadge?: string;
+  videoUrl?: string;
+}
+
+function getYouTubeId(url: string): string | null {
+  const patterns = [
+    /youtu\.be\/([^?&]+)/,
+    /youtube\.com\/watch\?v=([^&]+)/,
+    /youtube\.com\/embed\/([^?&]+)/,
+  ];
+  for (const p of patterns) {
+    const m = url.match(p);
+    if (m) return m[1];
+  }
+  return null;
+}
+
+function HeroVideo({ url }: { url: string }) {
+  const ytId = getYouTubeId(url);
+  if (ytId) {
+    return (
+      <iframe
+        src={`https://www.youtube.com/embed/${ytId}?autoplay=1&mute=1&loop=1&playlist=${ytId}&controls=1&rel=0&modestbranding=1`}
+        title="Video Electrificarte"
+        allow="autoplay; encrypted-media"
+        allowFullScreen
+        className="absolute inset-0 w-full h-full"
+      />
+    );
+  }
+  return (
+    <video
+      src={url}
+      autoPlay
+      muted
+      loop
+      playsInline
+      controls
+      className="absolute inset-0 w-full h-full object-cover"
+    />
+  );
 }
 
 interface HeroProps {
@@ -41,10 +82,11 @@ export function Hero({ data }: HeroProps) {
   const offerOld      = data?.offerOldPrice ?? "$29.990";
   const offerNew      = data?.offerNewPrice ?? "$19.990";
   const offerBadge    = data?.offerBadge    ?? "33% dcto Electric Sale";
+  const videoUrl      = data?.videoUrl;
 
   return (
     <section
-      className="relative min-h-[90vh] flex items-center overflow-hidden bg-black"
+      className="relative min-h-[90vh] flex items-center overflow-hidden bg-black pt-16 md:pt-20"
       aria-label="Bienvenida"
     >
       <div className="absolute inset-0 z-0">
@@ -60,7 +102,7 @@ export function Hero({ data }: HeroProps) {
         <div className="absolute bottom-0 left-0 w-[500px] h-[400px] bg-primary/5 rounded-full blur-[140px]" />
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 py-20 md:py-32 w-full">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 py-12 md:py-24 lg:py-32 w-full">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           {/* Left: Copy */}
           <motion.div
@@ -97,77 +139,23 @@ export function Hero({ data }: HeroProps) {
             </div>
           </motion.div>
 
-          {/* Right: Stats/Trust card */}
+          {/* Right: Sanity video > animated demo */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="hidden lg:block"
+            className="w-full"
           >
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 space-y-6">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center">
-                  <Icon name="trending_down" className="text-primary" size="sm" />
-                </div>
-                <div>
-                  <p className="text-white/40 text-xs uppercase tracking-widest">Ahorro promedio</p>
-                  <p className="text-white text-2xl font-headline font-bold">{statSavings}</p>
-                </div>
-              </div>
-
-              <div className="h-px bg-white/10" />
-
-              <div className="grid grid-cols-3 gap-4">
-                <div className="text-center">
-                  <p className="text-primary text-2xl font-headline font-bold">{statCars}</p>
-                  <p className="text-white/40 text-xs mt-1">Autos vendidos</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-primary text-2xl font-headline font-bold">{statDiscount}</p>
-                  <p className="text-white/40 text-xs mt-1">Dcto promedio</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-primary text-2xl font-headline font-bold">{statResponse}</p>
-                  <p className="text-white/40 text-xs mt-1">Respuesta</p>
-                </div>
-              </div>
-
-              <div className="h-px bg-white/10" />
-
-              <div className="bg-white/5 rounded-xl p-4">
-                <p className="text-white/80 text-sm mb-3 font-medium">Oferta activa ahora:</p>
-                <div className="flex justify-between items-baseline">
-                  <span className="text-white/40 text-sm line-through">{offerOld}</span>
-                  <div className="text-right">
-                    <p className="text-primary text-2xl font-headline font-extrabold">{offerNew}</p>
-                    <p className="text-amber text-[10px] uppercase tracking-widest font-bold">{offerBadge}</p>
-                  </div>
-                </div>
-              </div>
+            <div className="relative w-full aspect-[16/9] rounded-2xl overflow-hidden border border-white/10 shadow-[0_8px_48px_rgba(0,229,229,0.12)] bg-black">
+              {videoUrl ? (
+                <HeroVideo url={videoUrl} />
+              ) : (
+                <HeroAnimatedPlayer src="/hero-video/Electrificarte_Video_16x9.html" />
+              )}
             </div>
           </motion.div>
         </div>
 
-        {/* Mobile stats bar */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.5 }}
-          className="lg:hidden mt-10 bg-white/5 backdrop-blur border border-white/10 rounded-xl p-4 grid grid-cols-3 gap-4"
-        >
-          <div className="text-center">
-            <p className="text-primary text-xl font-headline font-bold">{statCars}</p>
-            <p className="text-white/40 text-[10px]">Autos vendidos</p>
-          </div>
-          <div className="text-center">
-            <p className="text-primary text-xl font-headline font-bold">{statDiscount}</p>
-            <p className="text-white/40 text-[10px]">Dcto promedio</p>
-          </div>
-          <div className="text-center">
-            <p className="text-primary text-xl font-headline font-bold">{statResponse}</p>
-            <p className="text-white/40 text-[10px]">Respuesta</p>
-          </div>
-        </motion.div>
       </div>
     </section>
   );

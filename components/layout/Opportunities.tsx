@@ -14,7 +14,10 @@ export interface OpportunityCarData {
   imageUrl?: string;
   basePrice: number;
   discountPrice?: number;
-  range: number;
+  range?: number;
+  batteryCapacity?: number;
+  power?: number;
+  isNew?: boolean;
   isHotDeal?: boolean;
 }
 
@@ -24,12 +27,12 @@ interface OpportunitiesProps {
 }
 
 const FALLBACK: OpportunityCarData[] = [
-  { name: "MG Marvel R",      slug: "mg-marvel-r",      brand: "MG",    category: "SUV",          basePrice: 40500000, discountPrice: 29390000, range: 402 },
-  { name: "JAC E30X",         slug: "jac-e30x",         brand: "JAC",   category: "City Car",     basePrice: 22990000, discountPrice: 19590000, range: 322 },
-  { name: "BYD Yuan Plus",    slug: "byd-yuan-plus",    brand: "BYD",   category: "SUV Compacto", basePrice: 32500000, discountPrice: 22890000, range: 410 },
-  { name: "Tesla Model 3",    slug: "tesla-model-3",    brand: "Tesla", category: "Sedán",        basePrice: 48590000, discountPrice: 39990000, range: 513 },
-  { name: "Hyundai IONIQ 5",  slug: "hyundai-ioniq-5",  brand: "Hyundai", category: "SUV",        basePrice: 55990000, discountPrice: 44990000, range: 481 },
-  { name: "BYD Seal",         slug: "byd-seal",         brand: "BYD",   category: "Sedán",        basePrice: 42990000, discountPrice: 35990000, range: 570 },
+  { name: "MG Marvel R",      slug: "mg-marvel-r",      brand: "MG",    category: "SUV",          basePrice: 40500000, discountPrice: 29390000, range: 402, batteryCapacity: 70,  power: 288 },
+  { name: "JAC E30X",         slug: "jac-e30x",         brand: "JAC",   category: "City Car",     basePrice: 22990000, discountPrice: 19590000, range: 322, batteryCapacity: 42,  power: 150 },
+  { name: "BYD Yuan Plus",    slug: "byd-yuan-plus",    brand: "BYD",   category: "SUV Compacto", basePrice: 32500000, discountPrice: 22890000, range: 410, batteryCapacity: 60,  power: 204 },
+  { name: "Tesla Model 3",    slug: "tesla-model-3",    brand: "Tesla", category: "Sedán",        basePrice: 48590000, discountPrice: 39990000, range: 513, batteryCapacity: 75,  power: 283 },
+  { name: "Hyundai IONIQ 5",  slug: "hyundai-ioniq-5",  brand: "Hyundai", category: "SUV",        basePrice: 55990000, discountPrice: 44990000, range: 481, batteryCapacity: 77,  power: 225 },
+  { name: "BYD Seal",         slug: "byd-seal",         brand: "BYD",   category: "Sedán",        basePrice: 42990000, discountPrice: 35990000, range: 570, batteryCapacity: 82,  power: 313 },
 ];
 
 const CARD_W = 280; // px — card width
@@ -148,7 +151,7 @@ export function Opportunities({ title = "Destacados Electrificarte", cars }: Opp
                 className="group relative border border-gray-100 bg-white rounded-xl flex flex-col hover:border-primary/40 hover:shadow-md transition-all duration-300"
               >
                 {/* Image */}
-                <div className="aspect-[4/3] bg-gradient-to-br from-gray-50 to-gray-100 rounded-t-xl overflow-hidden relative">
+                <div className="aspect-[16/9] bg-gradient-to-br from-gray-50 to-gray-100 rounded-t-xl overflow-hidden relative">
                   {deal.imageUrl ? (
                     <img
                       src={deal.imageUrl}
@@ -164,6 +167,11 @@ export function Opportunities({ title = "Destacados Electrificarte", cars }: Opp
                       </span>
                     </div>
                   )}
+                  {deal.isNew && (
+                    <span className="absolute top-3 left-3 bg-primary text-black text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wide">
+                      Nuevo
+                    </span>
+                  )}
                   {hasDiscount && (
                     <span className="absolute top-3 right-3 bg-red-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full">
                       -{discountPct}%
@@ -173,12 +181,34 @@ export function Opportunities({ title = "Destacados Electrificarte", cars }: Opp
 
                 {/* Body */}
                 <div className="p-4 flex flex-col flex-1">
-                  <h3 className="font-headline font-bold text-center text-sm mb-0.5">
-                    {brandName} {deal.name}
+                  <p className="text-[10px] uppercase tracking-widest text-text-ghost font-bold mb-0.5">{brandName}</p>
+                  <h3 className="font-headline font-bold text-sm mb-3 leading-tight">
+                    {deal.name}
                   </h3>
-                  <p className="text-xs text-text-ghost text-center mb-3">{deal.range} km autonomía</p>
 
-                  <div className="space-y-1 mb-4 px-1">
+                  {/* Spec strip */}
+                  <div className="flex gap-2 mb-3">
+                    {deal.range && (
+                      <div className="flex-1 bg-gray-50 rounded-lg px-2 py-1.5 text-center">
+                        <p className="text-[10px] text-text-ghost leading-none mb-0.5">Autonomía</p>
+                        <p className="text-xs font-bold text-text leading-none">{deal.range} km</p>
+                      </div>
+                    )}
+                    {deal.batteryCapacity && (
+                      <div className="flex-1 bg-gray-50 rounded-lg px-2 py-1.5 text-center">
+                        <p className="text-[10px] text-text-ghost leading-none mb-0.5">Batería</p>
+                        <p className="text-xs font-bold text-text leading-none">{deal.batteryCapacity} kWh</p>
+                      </div>
+                    )}
+                    {deal.power && (
+                      <div className="flex-1 bg-gray-50 rounded-lg px-2 py-1.5 text-center">
+                        <p className="text-[10px] text-text-ghost leading-none mb-0.5">Potencia</p>
+                        <p className="text-xs font-bold text-text leading-none">{deal.power} CV</p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-1 mb-4">
                     {hasDiscount && (
                       <div className="flex justify-between text-xs text-text-ghost">
                         <span>Precio lista</span>

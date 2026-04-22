@@ -77,6 +77,11 @@ export const homePage = defineType({
       name: "heroOfferBadge", title: "Oferta activa – badge (texto)", type: "string",
       group: "hero", initialValue: "33% dcto Electric Sale",
     }),
+    defineField({
+      name: "heroVideoUrl", title: "Video del hero (URL)", type: "url",
+      group: "hero",
+      description: "URL del video para mostrar en el hero. Acepta YouTube (https://youtu.be/xxx o https://www.youtube.com/watch?v=xxx) o MP4 directo. Reemplaza la card de estadísticas.",
+    }),
 
     // ════════════════════════════════════════════════════════════════════════
     // CATÁLOGO

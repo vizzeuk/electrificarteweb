@@ -302,7 +302,7 @@ export function BlogListingContent({ posts }: { posts: BlogPreviewPost[] }) {
               <h2 className="text-white font-headline font-black text-2xl md:text-3xl tracking-tight">
                 Encuentra el mejor precio en tu eléctrico
               </h2>
-              <p className="text-white/50 text-sm mt-1">Negociamos por ti. Ahorro promedio de 27% sobre precio lista.</p>
+              <p className="text-white/50 text-sm mt-1">Negociamos con toda la red de concesionarios para darte el mejor precio disponible.</p>
             </div>
             <Link
               href="/solicitar"

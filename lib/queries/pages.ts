@@ -17,6 +17,7 @@ export const homePageQuery = groq`
     heroOfferOldPrice,
     heroOfferNewPrice,
     heroOfferBadge,
+    heroVideoUrl,
 
     latestLaunchesTitle,
     "latestLaunchesCars": latestLaunchesCars[]->{
@@ -63,6 +64,9 @@ export const homePageQuery = groq`
       basePrice,
       discountPrice,
       range,
+      batteryCapacity,
+      power,
+      isNew,
       isHotDeal,
       "brand": brand->{ name },
       "category": category->{ name }

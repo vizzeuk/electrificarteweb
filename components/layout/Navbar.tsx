@@ -69,20 +69,16 @@ export function Navbar() {
         <div className="flex items-center gap-6 md:gap-8">
           <Link
             href="/"
-            className="text-xl md:text-2xl font-headline font-extrabold tracking-tighter flex items-center gap-2"
             aria-label="Electrificarte - Inicio"
           >
-            <span
+            <img
+              src="/logos-electrificarte/logo-elec-sin auto.png"
+              alt="Electrificarte"
               className={[
-                "w-7 h-7 md:w-8 md:h-8 rounded-lg flex items-center justify-center transition-colors duration-300",
-                transparent ? "bg-primary" : "bg-black",
+                "h-7 md:h-8 w-auto object-contain transition-all duration-300",
+                transparent ? "" : "brightness-0",
               ].join(" ")}
-            >
-              <Icon name="bolt" className={transparent ? "text-black" : "text-white"} size="sm" />
-            </span>
-            <span className={transparent ? "text-white" : "text-text-main"}>
-              Electrificarte
-            </span>
+            />
           </Link>
 
           {/* ── Desktop links ─────────────────────────────── */}

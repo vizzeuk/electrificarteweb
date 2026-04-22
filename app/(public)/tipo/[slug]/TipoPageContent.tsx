@@ -152,7 +152,7 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes }: TipoPa
                 </div>
                 <div className="flex items-center gap-2 text-white/40 text-sm">
                   <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                  Ahorro promedio 27%
+                  Precios negociados al mejor valor
                 </div>
                 <div className="flex items-center gap-2 text-white/40 text-sm">
                   <span className="w-1.5 h-1.5 rounded-full bg-primary" />

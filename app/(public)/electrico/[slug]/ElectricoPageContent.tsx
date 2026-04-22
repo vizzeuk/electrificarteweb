@@ -168,7 +168,7 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes }: E
                 </div>
                 <div className="flex items-center gap-2 text-white/40 text-sm">
                   <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: meta.color }} />
-                  Ahorro promedio 27%
+                  Precios negociados al mejor valor
                 </div>
                 <div className="flex items-center gap-2 text-white/40 text-sm">
                   <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: meta.color }} />

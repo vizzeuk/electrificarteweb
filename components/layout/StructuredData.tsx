@@ -80,7 +80,7 @@ export function HomeStructuredData() {
         name: "Como puedo obtener un descuento en un auto electrico en Chile?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Al registrarte en Electrificarte y pagar $19.990 CLP, activamos nuestro servicio de busqueda exclusiva. Nuestro equipo negocia directamente con concesionarios para conseguirte el mejor precio posible, con ahorros promedio de 27%.",
+          text: "Al registrarte en Electrificarte y pagar $19.990 CLP, activamos nuestro servicio de busqueda exclusiva. Nuestro equipo negocia directamente con concesionarios para conseguirte el mejor precio posible, con los mejores descuentos disponibles del mercado.",
         },
       },
       {

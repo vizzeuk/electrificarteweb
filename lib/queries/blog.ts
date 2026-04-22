@@ -16,21 +16,21 @@ const BLOG_CARD_FIELDS = groq`
 
 // ─── Últimos N artículos (home carrusel) ──────────────────────────────────────
 export const latestBlogPostsQuery = groq`
-  *[_type == "blogPost" && !noIndex] | order(publishedAt desc)[0...$count] {
+  *[_type == "blogPost" && noIndex != true] | order(publishedAt desc)[0...$count] {
     ${BLOG_CARD_FIELDS}
   }
 `;
 
 // ─── Listado completo (página /blog) ─────────────────────────────────────────
 export const allBlogPostsQuery = groq`
-  *[_type == "blogPost" && !noIndex] | order(publishedAt desc) {
+  *[_type == "blogPost" && noIndex != true] | order(publishedAt desc) {
     ${BLOG_CARD_FIELDS}
   }
 `;
 
 // ─── Listado por categoría ────────────────────────────────────────────────────
 export const blogPostsByCategoryQuery = groq`
-  *[_type == "blogPost" && !noIndex && category == $category] | order(publishedAt desc) {
+  *[_type == "blogPost" && noIndex != true && category == $category] | order(publishedAt desc) {
     ${BLOG_CARD_FIELDS}
   }
 `;

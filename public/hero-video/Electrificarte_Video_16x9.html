@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Electrificarte — ¿Cómo funciona? (16:9)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; background: #000; overflow: hidden; font-family: 'Inter', sans-serif; }
+  #root { position: absolute; inset: 0; }
+  * { box-sizing: border-box; }
+</style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <audio id="tts-audio" preload="auto">
+    <source src="AUDIO_BACAN.mp3" type="audio/mpeg">
+  </audio>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <script type="text/babel" src="animations.jsx"></script>
+  <script type="text/babel" src="scenes_16x9.jsx"></script>
+  <script type="text/babel" src="scenes2_16x9.jsx"></script>
+  <script type="text/babel" src="scenes3_16x9.jsx"></script>
+
+  <script type="text/babel">
+    const TTS_START_OFFSET = 0.0;
+    const TTS_VOLUME = 0.75;
+    const SFX_VOLUME = 0.35;
+    const DURATION = 48.25;
+
+    const SFX_FILES = {
+      whoosh:'sfx_whoosh.wav', card:'sfx_card.wav', click:'sfx_click.wav',
+      coins:'sfx_coins.wav', dismiss:'sfx_dismiss.wav', hover:'sfx_hover.wav',
+      modal:'sfx_modal.wav', notification:'sfx_notification.wav', ping:'sfx_ping.wav',
+      scan:'sfx_scan.wav', sting:'sfx_sting.wav', success:'sfx_success.wav', buzz:'sfx_buzz.wav',
+    };
+
+    function playSFX(key, volume = SFX_VOLUME) {
+      const src = SFX_FILES[key]; if (!src) return;
+      const a = new Audio(src); a.volume = Math.min(1, volume); a.play().catch(() => {});
+    }
+
+    const SFX_CUES = [
+      // ── SCENE 1 — Apertura ─────────────────────────────────────────────────────
+      // Auto entra desde la derecha (t=0.3s con fade-in)
+      { at:  0.30, label:'whoosh_entrada',    fn: () => playSFX('whoosh', 0.50) },
+
+      // ── SCENE 2 — Catálogo ─────────────────────────────────────────────────────
+      // 6 cards caen escalonadas: delay 0.3, 0.4, 0.5, 0.6, 0.7, 0.8 (local)
+      // Sprite start 5.4 → abs = 5.4 + delay + 0.05 (easeOutBack peak)
+      { at:  5.75, label:'card_1',            fn: () => playSFX('card', 0.40) },
+      { at:  5.85, label:'card_2',            fn: () => playSFX('card', 0.36) },
+      { at:  5.95, label:'card_3',            fn: () => playSFX('card', 0.38) },
+      { at:  6.05, label:'card_4',            fn: () => playSFX('card', 0.34) },
+      { at:  6.15, label:'card_5',            fn: () => playSFX('card', 0.36) },
+      { at:  6.25, label:'card_6',            fn: () => playSFX('card', 0.32) },
+      // Cursor recorre filtros: empieza en abs=7.40, cada ~0.27s
+      { at:  7.40, label:'hover_filter_0',    fn: () => playSFX('hover', 0.28) },
+      { at:  7.67, label:'hover_filter_1',    fn: () => playSFX('hover', 0.24) },
+      { at:  7.93, label:'hover_filter_2',    fn: () => playSFX('hover', 0.26) },
+      { at:  8.20, label:'hover_filter_3',    fn: () => playSFX('hover', 0.22) },
+      { at:  8.47, label:'hover_filter_4',    fn: () => playSFX('hover', 0.24) },
+      { at:  8.73, label:'hover_filter_5',    fn: () => playSFX('hover', 0.22) },
+      // Cursor llega a card BYD y hace click (localTime 4.35 → abs 9.75)
+      { at:  9.75, label:'click_card',        fn: () => playSFX('click', 0.50) },
+
+      // ── SCENE 3 — Cotización ───────────────────────────────────────────────────
+      // Cursor llega al botón y clickea (local 1.95 → abs 15.45)
+      { at: 15.45, label:'click_cotiza',      fn: () => playSFX('click', 0.55) },
+      // Modal glassmorphism aparece (local 2.20 → abs 15.70)
+      { at: 15.70, label:'modal_aparece',     fn: () => playSFX('modal', 0.45) },
+      // Barra de progreso se llena con 3 pulsos de scan (local 4.5, 5.0, 5.5 → abs 18.0, 18.5, 19.0)
+      { at: 18.00, label:'scan_1',            fn: () => playSFX('scan',  0.28) },
+      { at: 18.50, label:'scan_2',            fn: () => playSFX('scan',  0.28) },
+      { at: 19.00, label:'scan_3',            fn: () => playSFX('scan',  0.26) },
+
+      // ── SCENE 4 — Mapa Chile ───────────────────────────────────────────────────
+      // Hub/Santiago aparece (delay 0.4 → abs 21.90)
+      { at: 21.90, label:'ping_hub',          fn: () => playSFX('ping',  0.35) },
+      // Nodos satélites aparecen por orden de delay:
+      { at: 22.30, label:'ping_arica',        fn: () => playSFX('ping',  0.28) },
+      { at: 22.40, label:'ping_concepcion',   fn: () => playSFX('ping',  0.26) },
+      { at: 22.50, label:'ping_antofagasta',  fn: () => playSFX('ping',  0.28) },
+      { at: 22.60, label:'ping_pto_montt',    fn: () => playSFX('ping',  0.26) },
+      { at: 22.70, label:'ping_la_serena',    fn: () => playSFX('ping',  0.28) },
+      { at: 23.00, label:'ping_p_arenas',     fn: () => playSFX('ping',  0.26) },
+
+      // ── SCENE 5 — WhatsApp ─────────────────────────────────────────────────────
+      // Notificación aparece en pantalla (local 1.80 → abs 29.80)
+      { at: 29.80, label:'notification',      fn: () => playSFX('notification', 0.55) },
+      // Teléfono vibra/shakes (local 2.40 → abs 30.40)
+      { at: 30.40, label:'buzz',              fn: () => playSFX('buzz',  0.45) },
+
+      // ── SCENE 6 — Desenlace ────────────────────────────────────────────────────
+      // Divisor parte pantalla en 2 (local 0.30 → abs 33.90)
+      { at: 33.90, label:'whoosh_split',      fn: () => playSFX('whoosh', 0.35) },
+      // Lado izquierdo (acepta): checkmark aparece (local 1.00 → abs 34.60)
+      { at: 34.60, label:'success',           fn: () => playSFX('success', 0.55) },
+      // Lado derecho (rechaza): X aparece (local 1.50 → abs 35.10)
+      { at: 35.10, label:'dismiss',           fn: () => playSFX('dismiss', 0.35) },
+      // Monedas/coins animación (local 3.00 → abs 36.60)
+      { at: 36.60, label:'coins',             fn: () => playSFX('coins',  0.50) },
+
+      // ── SCENE 7 — Cierre ───────────────────────────────────────────────────────
+      // Logo PNG aparece con glow (local 0.30 → abs 41.90)
+      { at: 41.90, label:'sting',             fn: () => playSFX('sting',  0.65) },
+    ];
+
+    function useAudioController(time, playing, duration) {
+      const ttsRef = React.useRef(null);
+      const firedCuesRef = React.useRef(new Set());
+      const prevTimeRef = React.useRef(time);
+      React.useEffect(() => { ttsRef.current = document.getElementById('tts-audio'); if (ttsRef.current) ttsRef.current.volume = TTS_VOLUME; }, []);
+      React.useEffect(() => {
+        const audio = ttsRef.current; if (!audio) return;
+        if (playing && time <= 48.25) {
+          const exp = time - TTS_START_OFFSET;
+          if (Math.abs(audio.currentTime - exp) > 0.3) audio.currentTime = Math.max(0, exp);
+          const p = audio.play(); if (p && p.catch) p.catch(() => {});
+        } else { audio.pause(); }
+      }, [playing, time]);
+      React.useEffect(() => {
+        const prev = prevTimeRef.current; prevTimeRef.current = time;
+        if (time < prev - 0.5) firedCuesRef.current.clear();
+        if (!playing) return;
+        SFX_CUES.forEach(cue => {
+          if (!firedCuesRef.current.has(cue.label) && time >= cue.at && prev < cue.at) {
+            firedCuesRef.current.add(cue.label); try { cue.fn(); } catch(e) {}
+          }
+        });
+      }, [time, playing]);
+      React.useEffect(() => {
+        if (time < 0.5 && prevTimeRef.current > duration - 1) {
+          firedCuesRef.current.clear();
+          const a = ttsRef.current; if (a) a.currentTime = 0;
+        }
+      }, [time, duration]);
+    }
+
+    function CaptionBar() {
+      const t = useTime();
+      const captions = [
+        { start: 0.6,  end: 5.2,  text: '"¿Buscas tu próximo auto eléctrico… pero no sabes por dónde empezar?"' },
+        { start: 6.0,  end: 9.7,  text: '"Encuentra el catálogo más completo de eléctricos e híbridos nuevos en Chile."' },
+        { start: 9.9,  end: 13.3, text: '"Filtra por marca, tipo de cabina, o tecnología — tú decides."' },
+        { start: 14.3, end: 17.7, text: '"Cuando encuentres el auto que quieres, solicita tu oferta por solo $19.990."' },
+        { start: 17.9, end: 21.3, text: '"Sin visitar concesionarios. Sin negociar. Sin perder tiempo."' },
+        { start: 22.1, end: 24.9, text: '"Nuestro equipo contacta a concesionarios verificados y negocia por ti."' },
+        { start: 25.2, end: 27.8, text: '"En 48 a 96 horas, tenemos una respuesta."' },
+        { start: 28.6, end: 33.4, text: '"Te avisamos directo por WhatsApp cuando tu oferta esté lista."' },
+        { start: 34.2, end: 37.4, text: '"Si la oferta te convence, te devolvemos tus $19.990."' },
+        { start: 37.6, end: 40.2, text: '"Solo te pedimos que compartas tu experiencia en video."' },
+        { start: 40.4, end: 41.8, text: '"¿No era lo que esperabas? Puedes volver a cotizar cuando quieras."' },
+        { start: 42.6, end: 46.7, text: '"Electrificarte. El precio que mereces, sin negociar solo."' },
+      ];
+      const active = captions.find(c => t >= c.start && t <= c.end);
+      if (!active) return null;
+      const localT = t - active.start;
+      const op = Math.min(Math.min(1, localT / 0.25), Math.min(1, (active.end - t) / 0.3));
+      return (
+        <div style={{
+          position: 'absolute', left: '20%', right: '20%', bottom: 32,
+          textAlign: 'center', fontFamily: 'Inter, sans-serif', fontSize: 16, fontWeight: 500,
+          color: 'rgba(255,255,255,0.85)', lineHeight: 1.35, opacity: op,
+          textShadow: '0 2px 8px rgba(0,0,0,0.9)', zIndex: 100, pointerEvents: 'none',
+        }}>
+          {active.text}
+        </div>
+      );
+    }
+
+    function SceneLabelBar() {
+      const t = useTime();
+      const scenes = [
+        { start: 0,    end: 5.6,   num: 1, title: 'Apertura' },
+        { start: 5.6,  end: 13.7,  num: 2, title: 'Catálogo' },
+        { start: 13.7, end: 21.7,  num: 3, title: 'Cotización' },
+        { start: 21.7, end: 28.2,  num: 4, title: 'Red nacional' },
+        { start: 28.2, end: 33.8,  num: 5, title: 'WhatsApp' },
+        { start: 33.8, end: 41.8,  num: 6, title: 'Desenlace' },
+        { start: 41.8, end: 48.25, num: 7, title: 'Cierre' },
+      ];
+      const idx = scenes.findIndex(s => t >= s.start && t < s.end);
+      const current = scenes[idx] || scenes[scenes.length - 1];
+      return (
+        <>
+          <SceneLabel num={current.num} title={current.title} />
+          <ProgressTick currentScene={Math.max(0, idx)} />
+        </>
+      );
+    }
+
+    function AudioBridge() {
+      const { time, playing } = useTimeline();
+      useAudioController(time, playing, DURATION);
+      return null;
+    }
+
+    function Video() {
+      return (
+        <Stage width={W} height={H} duration={DURATION} background="#000" persistKey="electrificarte-16x9" autoplay={false}>
+          <AudioBridge />
+          <Sprite start={0}    end={5.7}>  <Scene1 /></Sprite>
+          <Sprite start={5.4}  end={13.8}><Scene2 /></Sprite>
+          <Sprite start={13.5} end={21.8}><Scene3 /></Sprite>
+          <Sprite start={21.5} end={28.3}><Scene4 /></Sprite>
+          <Sprite start={28.0} end={33.9}><Scene5 /></Sprite>
+          <Sprite start={33.6} end={41.9}><Scene6 /></Sprite>
+          <Sprite start={41.6} end={48.25}><Scene7 /></Sprite>
+          <SceneLabelBar />
+          <CaptionBar />
+        </Stage>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<Video />);
+  </script>
+</body>
+</html>

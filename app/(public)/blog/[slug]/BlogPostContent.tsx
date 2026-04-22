@@ -389,7 +389,7 @@ export function BlogPostContent({ post }: { post: BlogPost }) {
                     Solicita tu oferta personalizada
                   </p>
                   <p className="text-white/50 text-xs mb-5">
-                    Negociamos por ti. Ahorro promedio 27%.
+                    Negociamos con toda la red de concesionarios para darte el mejor precio disponible.
                   </p>
                   <Link
                     href="/solicitar"

@@ -26,10 +26,10 @@ export const revalidate = 60;
 export default async function HomePage() {
   // Fetch all home page content from Sanity (falls back gracefully if no data yet)
   const [page, blogPosts, brands, collections] = await Promise.all([
-    client.fetch(homePageQuery).catch(() => null),
-    client.fetch(latestBlogPostsQuery, { count: 3 }).catch(() => []),
-    client.fetch(allBrandsStripQuery).catch(() => []),
-    client.fetch(collectionsForHomeQuery).catch(() => []),
+    client.fetch(homePageQuery, {}, { next: { tags: ["homePage"] } }).catch(() => null),
+    client.fetch(latestBlogPostsQuery, { count: 3 }, { next: { tags: ["blogPost"] } }).catch(() => []),
+    client.fetch(allBrandsStripQuery, {}, { next: { tags: ["brand"] } }).catch(() => []),
+    client.fetch(collectionsForHomeQuery, {}, { next: { tags: ["collection"] } }).catch(() => []),
   ]);
 
   return (
@@ -53,6 +53,7 @@ export default async function HomePage() {
           offerOldPrice:   page.heroOfferOldPrice,
           offerNewPrice:   page.heroOfferNewPrice,
           offerBadge:      page.heroOfferBadge,
+          videoUrl:        page.heroVideoUrl,
         } : undefined}
       />
 
@@ -82,16 +83,19 @@ export default async function HomePage() {
       <Opportunities
         title={page?.opportunitiesTitle}
         cars={page?.opportunitiesCars?.map((c: any) => ({
-          _id:           c._id,
-          name:          c.name,
-          slug:          c.slug,
-          brand:         c.brand,
-          category:      c.category,
-          imageUrl:      c.imageUrl,
-          basePrice:     c.basePrice,
-          discountPrice: c.discountPrice,
-          range:         c.range,
-          isHotDeal:     c.isHotDeal,
+          _id:             c._id,
+          name:            c.name,
+          slug:            c.slug,
+          brand:           c.brand,
+          category:        c.category,
+          imageUrl:        c.imageUrl,
+          basePrice:       c.basePrice,
+          discountPrice:   c.discountPrice,
+          range:           c.range,
+          batteryCapacity: c.batteryCapacity,
+          power:           c.power,
+          isNew:           c.isNew,
+          isHotDeal:       c.isHotDeal,
         }))}
       />
 

@@ -44,7 +44,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function BlogPostPage({ params }: PageProps) {
   const { slug } = await params;
-  const post = await client.fetch(blogPostBySlugQuery, { slug }).catch(() => null);
+  const post = await client.fetch(blogPostBySlugQuery, { slug }, { next: { tags: ["blogPost"] } }).catch(() => null);
   if (!post) notFound();
   return <BlogPostContent post={post} />;
 }
