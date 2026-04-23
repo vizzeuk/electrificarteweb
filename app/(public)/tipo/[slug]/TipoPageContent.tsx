@@ -276,7 +276,7 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes }: TipoPa
                     <div className="aspect-[16/9] bg-gradient-to-br from-gray-50 to-gray-100 relative flex flex-col items-center justify-center overflow-hidden">
                       {pct > 0 && <span className="absolute top-3 right-3 bg-black text-white text-[10px] font-black px-2 py-0.5 rounded-full">-{pct}%</span>}
                       {car.imageUrl ? (
-                        <img src={car.imageUrl} alt={`${car.brand} ${car.name}`} className="object-contain w-full h-full" />
+                        <img src={car.imageUrl} alt={`${car.brand} ${car.name}`} className="object-cover w-full h-full" />
                       ) : (
                         <>
                           <span className="material-symbols-outlined text-[64px] text-gray-200">electric_car</span>
@@ -371,7 +371,7 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes }: TipoPa
                     {/* Image area */}
                     <div className="aspect-[16/7] bg-gradient-to-br from-white/5 to-transparent relative flex items-center justify-center overflow-hidden">
                       {car.imageUrl ? (
-                        <img src={car.imageUrl} alt={`${car.brand} ${car.name}`} className="object-contain w-full h-full" />
+                        <img src={car.imageUrl} alt={`${car.brand} ${car.name}`} className="object-cover w-full h-full" />
                       ) : (
                         <>
                           <div className="absolute inset-0 flex items-center justify-center">

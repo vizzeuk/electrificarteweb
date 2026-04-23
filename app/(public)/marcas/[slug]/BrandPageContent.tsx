@@ -247,7 +247,7 @@ export default function BrandPageContent({ slug, brand }: BrandPageContentProps)
                     {car.isHotDeal && <span className="absolute top-3 left-3 bg-amber text-black text-[10px] font-black uppercase tracking-wide px-2.5 py-1 rounded-full z-10">HOT DEAL</span>}
                     {pct > 0 && <span className="absolute top-3 right-3 text-[10px] font-black text-white px-2 py-1 rounded-full z-10" style={{ backgroundColor: brand.accentColor }}>-{pct}%</span>}
                     {car.imageUrl ? (
-                      <img src={car.imageUrl} alt={`${brand.name} ${car.name}`} className="w-full h-full object-contain" />
+                      <img src={car.imageUrl} alt={`${brand.name} ${car.name}`} className="w-full h-full object-cover" />
                     ) : (
                       <>
                         <span className="material-symbols-outlined text-[72px] text-gray-200">electric_car</span>

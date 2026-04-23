@@ -331,7 +331,7 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes }: E
                         {meta.tag}
                       </span>
                       {car.imageUrl ? (
-                        <img src={car.imageUrl} alt={`${car.brand} ${car.name}`} className="object-contain w-full h-full" />
+                        <img src={car.imageUrl} alt={`${car.brand} ${car.name}`} className="object-cover w-full h-full" />
                       ) : (
                         <>
                           <span className="material-symbols-outlined text-[64px] text-gray-200">electric_car</span>
@@ -425,7 +425,7 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes }: E
                   >
                     <div className="aspect-[16/7] bg-gradient-to-br from-white/5 to-transparent relative flex items-center justify-center overflow-hidden">
                       {car.imageUrl ? (
-                        <img src={car.imageUrl} alt={`${car.brand} ${car.name}`} className="object-contain w-full h-full" />
+                        <img src={car.imageUrl} alt={`${car.brand} ${car.name}`} className="object-cover w-full h-full" />
                       ) : (
                         <>
                           <div className="absolute inset-0 flex items-center justify-center">
