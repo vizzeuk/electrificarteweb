@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { formatCLP } from "@/lib/utils";
@@ -45,6 +45,7 @@ interface HotDealData {
   power: string;
   traction: string;
   acceleration: string;
+  imageUrl?: string;
 }
 
 export interface BrandData {
@@ -58,8 +59,9 @@ export interface BrandData {
   logoUrl?: string;
   accentColor: string;
   stats: { label: string; value: string }[];
+  heroFeaturedCar?: { name: string; slug: string; basePrice: number; discountPrice: number; imageUrl?: string } | null;
   cars: BrandCarData[];
-  hotDeal: HotDealData | null;
+  hotDeals: HotDealData[];
   videos: VideoData[];
 }
 
@@ -108,6 +110,39 @@ export default function BrandPageContent({ slug, brand }: BrandPageContentProps)
   const visibleCars = filteredCars.slice(0, visibleCount);
   const hasMore = visibleCount < filteredCars.length;
 
+  // Hot deal carousel
+  const hotDeals = brand.hotDeals;
+  const hotTrackRef = useRef<HTMLDivElement>(null);
+  const [hotCanLeft,  setHotCanLeft]  = useState(false);
+  const [hotCanRight, setHotCanRight] = useState(false);
+  useEffect(() => {
+    const el = hotTrackRef.current;
+    if (!el) return;
+    function upd() {
+      setHotCanLeft(el!.scrollLeft > 8);
+      setHotCanRight(el!.scrollLeft < el!.scrollWidth - el!.clientWidth - 8);
+    }
+    upd();
+    el.addEventListener("scroll", upd, { passive: true });
+    return () => el.removeEventListener("scroll", upd);
+  }, [hotDeals]);
+
+  // Featured car for hero — Sanity override > hot deal > top seller > first with image
+  const featuredCarForHero = useMemo(() => {
+    if (brand.heroFeaturedCar) {
+      const fc = brand.heroFeaturedCar;
+      return { name: fc.name, slug: fc.slug, imageUrl: fc.imageUrl, discountPrice: fc.discountPrice, basePrice: fc.basePrice, isHotDeal: false, isSponsored: true };
+    }
+    if (brand.hotDeals.length > 0) {
+      const hd = brand.hotDeals[0];
+      return { name: hd.carName, slug: hd.carSlug, imageUrl: hd.imageUrl, discountPrice: hd.discountPrice, basePrice: hd.basePrice, isHotDeal: true, isSponsored: false };
+    }
+    const topSeller = brand.cars.find((c) => c.isTopSeller && c.imageUrl);
+    const withImg   = topSeller ?? brand.cars.find((c) => c.imageUrl);
+    if (withImg) return { name: withImg.name, slug: withImg.slug, imageUrl: withImg.imageUrl, discountPrice: withImg.discountPrice, basePrice: withImg.basePrice, isHotDeal: false, isSponsored: false };
+    return null;
+  }, [brand.heroFeaturedCar, brand.hotDeals, brand.cars]);
+
   const banners = [
     { id: 1, label: "Banner 1", bg: "from-primary/10 to-primary-deep/5" },
     { id: 2, label: "Banner 2", bg: "from-gray-100 to-gray-50" },
@@ -120,8 +155,6 @@ export default function BrandPageContent({ slug, brand }: BrandPageContentProps)
     return () => clearInterval(t);
   }, [nextSlide]);
 
-  const hotDeal = brand.hotDeal;
-  const discountPct = hotDeal ? Math.round(((hotDeal.basePrice - hotDeal.discountPrice) / hotDeal.basePrice) * 100) : 0;
 
   return (
     <>
@@ -164,19 +197,74 @@ export default function BrandPageContent({ slug, brand }: BrandPageContentProps)
                 </a>
               </div>
             </motion.div>
-            {brand.stats.length > 0 && (
-              <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.15 }} className="grid grid-cols-3 gap-4">
-                {brand.stats.map((stat) => (
-                  <div key={stat.label} className="bg-white/5 border border-white/10 rounded-2xl p-5 text-center">
-                    <p className="text-2xl md:text-3xl font-headline font-black mb-1 text-primary">{stat.value}</p>
-                    <p className="text-white/40 text-[11px] uppercase tracking-wide leading-snug">{stat.label}</p>
+            {featuredCarForHero && (
+              <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.15 }}>
+
+                {/* Label publicidad — encima de la card */}
+                {featuredCarForHero.isSponsored && (
+                  <p className="text-[11px] uppercase tracking-widest text-primary/70 font-semibold mb-3 text-right">
+                    · Publicidad
+                  </p>
+                )}
+
+                <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-white/5 hover:border-primary/40 transition-all duration-300 shadow-[0_8px_40px_rgba(0,0,0,0.4)]">
+
+                  {/* Imagen clicable */}
+                  <Link href={`/auto/${featuredCarForHero.slug}`} className="block group overflow-hidden">
+                    {featuredCarForHero.imageUrl ? (
+                      <img
+                        src={featuredCarForHero.imageUrl}
+                        alt={`${brand.name} ${featuredCarForHero.name}`}
+                        className="w-full aspect-[16/10] object-cover group-hover:scale-[1.03] transition-transform duration-500"
+                      />
+                    ) : (
+                      <div className="w-full aspect-[16/10] flex items-center justify-center">
+                        <span className="material-symbols-outlined text-[80px] text-white/10">electric_car</span>
+                      </div>
+                    )}
+                  </Link>
+
+                  {/* Footer */}
+                  <div className="p-5 flex items-center justify-between gap-4">
+                    <div>
+                      {featuredCarForHero.isHotDeal && (
+                        <span className="inline-block bg-amber text-black text-[9px] font-black uppercase tracking-wide px-2 py-0.5 rounded-full mb-1.5">HOT DEAL</span>
+                      )}
+                      <p className="text-white font-headline font-bold text-base leading-tight">{brand.name} {featuredCarForHero.name}</p>
+                      <p className="text-white/40 text-xs line-through mt-0.5">{formatCLP(featuredCarForHero.basePrice)}</p>
+                      <p className="text-primary font-headline font-black text-xl">{formatCLP(featuredCarForHero.discountPrice)}</p>
+                    </div>
+                    <Link
+                      href={`/auto/${featuredCarForHero.slug}`}
+                      className="shrink-0 inline-flex items-center gap-1.5 bg-primary hover:bg-primary-dark text-black font-bold px-5 py-2.5 rounded-xl text-sm transition-all hover:scale-[1.02] active:scale-[0.99]"
+                    >
+                      Ver modelo
+                      <span className="material-symbols-outlined text-[15px]">arrow_forward</span>
+                    </Link>
                   </div>
-                ))}
+
+                </div>
               </motion.div>
             )}
           </div>
         </div>
       </section>
+
+      {/* ─── Stats strip ────────────────────────────────────────────── */}
+      {brand.stats.length > 0 && (
+        <section className="bg-black border-t border-white/[0.07]">
+          <div className="max-w-7xl mx-auto px-4 md:px-8 py-10">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              {brand.stats.map((stat) => (
+                <div key={stat.label} className="bg-white/5 border border-white/10 rounded-2xl p-5 text-center">
+                  <p className="text-2xl md:text-3xl font-headline font-black mb-1 text-primary">{stat.value}</p>
+                  <p className="text-white/40 text-[11px] uppercase tracking-wide leading-snug">{stat.label}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ─── Banner slideshow ───────────────────────────────────────── */}
       <section className="py-8 bg-surface border-b border-gray-100">
@@ -214,6 +302,107 @@ export default function BrandPageContent({ slug, brand }: BrandPageContentProps)
           </div>
         </div>
       </section>
+
+      {/* ─── HOT DEAL ─────────────────────────────────────────────── */}
+      {hotDeals.length > 0 && (
+        <section className="bg-black py-10 md:py-14 overflow-hidden">
+          {/* Nav arrows — solo si hay más de 1 */}
+          {hotDeals.length > 1 && (
+            <div className="max-w-7xl mx-auto px-4 md:px-8 mb-6 flex justify-end gap-2">
+              <button onClick={() => hotTrackRef.current?.scrollBy({ left: -hotTrackRef.current.offsetWidth, behavior: "smooth" })} disabled={!hotCanLeft}
+                className="w-9 h-9 rounded-full border border-white/20 flex items-center justify-center text-white/50 hover:border-primary hover:text-primary disabled:opacity-25 transition-all">
+                <span className="material-symbols-outlined text-[18px]">chevron_left</span>
+              </button>
+              <button onClick={() => hotTrackRef.current?.scrollBy({ left: hotTrackRef.current.offsetWidth, behavior: "smooth" })} disabled={!hotCanRight}
+                className="w-9 h-9 rounded-full border border-white/20 flex items-center justify-center text-white/50 hover:border-primary hover:text-primary disabled:opacity-25 transition-all">
+                <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+              </button>
+            </div>
+          )}
+
+          <div
+            ref={hotTrackRef}
+            className="flex overflow-x-auto"
+            style={{
+              scrollSnapType: "x mandatory",
+              WebkitOverflowScrolling: "touch",
+              scrollbarWidth: "none",
+              msOverflowStyle: "none",
+            }}
+          >
+            {hotDeals.map((deal) => {
+              const discountPct = Math.round(((deal.basePrice - deal.discountPrice) / deal.basePrice) * 100);
+              return (
+                <div
+                  key={deal.carSlug}
+                  style={{ minWidth: "100%" }}
+                  className="flex-shrink-0 scroll-snap-align-start"
+                >
+                  <div className="max-w-7xl mx-auto px-4 md:px-8">
+                    <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+                      <motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
+                        <div className="flex items-center gap-3 mb-6">
+                          <span className="bg-amber text-black text-[10px] font-black uppercase tracking-wide px-3 py-1 rounded-full">HOT DEAL</span>
+                          <span className="text-white/50 text-sm">Oferta limitada</span>
+                        </div>
+                        <h2 className="text-2xl sm:text-3xl md:text-4xl font-headline font-black text-white mb-4 uppercase leading-tight">
+                          {brand.name} {deal.carName} con bonos de hasta{" "}
+                          <span className="text-primary">{formatCLP(deal.bonus > 0 ? deal.bonus : deal.basePrice - deal.discountPrice)}</span>
+                        </h2>
+                        <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-5 space-y-2">
+                          <div className="flex justify-between items-baseline">
+                            <span className="text-white/40 text-sm">Precio lista</span>
+                            <span className="text-white/40 line-through">{formatCLP(deal.basePrice)}</span>
+                          </div>
+                          <div className="flex justify-between items-baseline">
+                            <span className="text-white text-sm font-medium">Con bono Electrificarte</span>
+                            <span className="text-primary text-3xl font-headline font-black">{formatCLP(deal.discountPrice)}</span>
+                          </div>
+                          <p className="text-white/30 text-xs pt-2 border-t border-white/10">Ahorra {discountPct}% · Incluye bono concesionario + Electrificarte</p>
+                        </div>
+                        <div className="flex flex-col sm:flex-row gap-3">
+                          <Link href={`/solicitar?auto=${deal.carSlug}`} className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-6 py-3 rounded-xl transition-all shadow-[0_4px_20px_rgba(0,229,229,0.30)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]">
+                            Quiero esta oferta <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                          </Link>
+                          <Link href={`/auto/${deal.carSlug}`} className="inline-flex items-center justify-center gap-2 border border-white/20 hover:border-white/40 text-white font-medium px-6 py-3 rounded-xl transition-all">
+                            Ver especificaciones
+                          </Link>
+                        </div>
+                      </motion.div>
+
+                      <motion.div initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.15 }} className="relative">
+                        <div className="absolute -top-6 -right-6 w-40 h-40 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
+                        <div className="relative bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 rounded-2xl overflow-hidden">
+                          {deal.imageUrl ? (
+                            <img src={deal.imageUrl} alt={`${brand.name} ${deal.carName}`} className="w-full aspect-[16/10] object-cover" />
+                          ) : (
+                            <div className="p-8 md:p-10">
+                              <div className="text-center mb-6">
+                                <span className="material-symbols-outlined text-[80px] text-primary/30">electric_car</span>
+                                <p className="text-white/40 text-sm mt-1">{brand.name} {deal.carName}</p>
+                              </div>
+                            </div>
+                          )}
+                          <div className="p-4 md:p-5">
+                            <div className="grid grid-cols-2 gap-2">
+                              {[{label:"Autonomía",value:`${deal.range} km`},{label:"Potencia",value:deal.power},{label:"Tracción",value:deal.traction},{label:"0-100 km/h",value:deal.acceleration}].map((s) => (
+                                <div key={s.label} className="bg-white/5 rounded-xl p-3">
+                                  <p className="text-primary text-base font-headline font-bold">{s.value}</p>
+                                  <p className="text-white/40 text-xs">{s.label}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* ─── AUTOS ────────────────────────────────────────────────── */}
       <section id={`autos-${slug}`} className="py-20 md:py-24">
@@ -295,62 +484,6 @@ export default function BrandPageContent({ slug, brand }: BrandPageContentProps)
           )}
         </div>
       </section>
-
-      {/* ─── HOT DEAL ─────────────────────────────────────────────── */}
-      {hotDeal && (
-        <section className="bg-black py-16 md:py-24 overflow-hidden">
-          <div className="max-w-7xl mx-auto px-4 md:px-8">
-            <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-              <motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
-                <div className="flex items-center gap-3 mb-6">
-                  <span className="bg-amber text-black text-[10px] font-black uppercase tracking-wide px-3 py-1 rounded-full">HOT DEAL</span>
-                  <span className="text-white/50 text-sm">Oferta limitada</span>
-                </div>
-                <h2 className="text-3xl sm:text-4xl md:text-5xl font-headline font-black text-white mb-6 uppercase leading-tight">
-                  {brand.name} {hotDeal.carName} con bonos de hasta{" "}
-                  <span className="text-primary">{formatCLP(hotDeal.bonus > 0 ? hotDeal.bonus : hotDeal.basePrice - hotDeal.discountPrice)}</span>
-                </h2>
-                <div className="bg-white/5 border border-white/10 rounded-xl p-6 mb-8 space-y-3">
-                  <div className="flex justify-between items-baseline">
-                    <span className="text-white/40 text-sm">Precio lista</span>
-                    <span className="text-white/40 line-through">{formatCLP(hotDeal.basePrice)}</span>
-                  </div>
-                  <div className="flex justify-between items-baseline">
-                    <span className="text-white text-sm font-medium">Con bono Electrificarte</span>
-                    <span className="text-primary text-3xl font-headline font-black">{formatCLP(hotDeal.discountPrice)}</span>
-                  </div>
-                  <p className="text-white/30 text-xs pt-2 border-t border-white/10">Ahorra {discountPct}% · Incluye bono concesionario + Electrificarte</p>
-                </div>
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <Link href={`/solicitar?auto=${hotDeal.carSlug}`} className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-8 py-4 rounded-xl transition-all shadow-[0_4px_20px_rgba(0,229,229,0.30)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]">
-                    Quiero esta oferta <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
-                  </Link>
-                  <Link href={`/auto/${hotDeal.carSlug}`} className="inline-flex items-center justify-center gap-2 border border-white/20 hover:border-white/40 text-white font-medium px-8 py-4 rounded-xl transition-all">
-                    Ver especificaciones
-                  </Link>
-                </div>
-              </motion.div>
-              <motion.div initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.15 }} className="relative">
-                <div className="absolute -top-6 -right-6 w-40 h-40 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
-                <div className="relative bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 rounded-2xl p-8 md:p-10">
-                  <div className="text-center mb-6">
-                    <span className="material-symbols-outlined text-[80px] text-primary/30">electric_car</span>
-                    <p className="text-white/40 text-sm mt-1">{brand.name} {hotDeal.carName}</p>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    {[{label:"Autonomía",value:`${hotDeal.range} km`},{label:"Potencia",value:hotDeal.power},{label:"Tracción",value:hotDeal.traction},{label:"0-100 km/h",value:hotDeal.acceleration}].map((s) => (
-                      <div key={s.label} className="bg-white/5 rounded-xl p-4">
-                        <p className="text-primary text-lg font-headline font-bold">{s.value}</p>
-                        <p className="text-white/40 text-xs">{s.label}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </motion.div>
-            </div>
-          </div>
-        </section>
-      )}
 
       {/* ─── VIDEOS ───────────────────────────────────────────────── */}
       {brand.videos.length > 0 && (

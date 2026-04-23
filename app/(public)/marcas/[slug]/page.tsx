@@ -68,21 +68,26 @@ export default async function BrandPage({ params }: PageProps) {
     },
   }));
 
-  // Derive hotDeal from cars
-  const hotDealCar = cars.find((c: any) => c.isHotDeal);
-  const sanityHotDeal = hotDealCar ? sanityCars.find((c: any) => c.slug === hotDealCar.slug) : null;
-
-  const hotDeal = sanityHotDeal ? {
-    carName:       sanityHotDeal.name,
-    carSlug:       sanityHotDeal.slug,
-    basePrice:     sanityHotDeal.basePrice,
-    discountPrice: sanityHotDeal.discountPrice ?? sanityHotDeal.basePrice,
-    bonus:         sanityHotDeal.hotDealBonusAmount ?? 0,
-    range:         sanityHotDeal.range,
-    power:         `${sanityHotDeal.power} CV`,
-    traction:      sanityHotDeal.traction,
-    acceleration:  sanityHotDeal.acceleration ? `${sanityHotDeal.acceleration} seg` : "–",
-  } : null;
+  // Derive hotDeals from cars (supports multiple)
+  const hotDeals = cars
+    .filter((c: any) => c.isHotDeal)
+    .map((hotCar: any) => {
+      const s = sanityCars.find((c: any) => c.slug === hotCar.slug);
+      if (!s) return null;
+      return {
+        carName:       s.name,
+        carSlug:       s.slug,
+        basePrice:     s.basePrice,
+        discountPrice: s.discountPrice ?? s.basePrice,
+        bonus:         s.hotDealBonusAmount ?? 0,
+        range:         s.range,
+        power:         `${s.power} CV`,
+        traction:      s.traction ?? "–",
+        acceleration:  s.acceleration ? `${s.acceleration} seg` : "–",
+        imageUrl:      s.mainImage ? urlFor(s.mainImage).width(800).auto("format").url() : undefined,
+      };
+    })
+    .filter(Boolean);
 
   // Map videos
   const videos = (sanityBrand.videos ?? []).map((v: any, i: number) => ({
@@ -95,19 +100,29 @@ export default async function BrandPage({ params }: PageProps) {
     videoUrl:  v.videoUrl ?? null,
   }));
 
+  const fc = sanityBrand.heroFeaturedCar;
+  const heroFeaturedCar = fc ? {
+    name:          fc.name,
+    slug:          fc.slug,
+    basePrice:     fc.basePrice,
+    discountPrice: fc.discountPrice ?? fc.basePrice,
+    imageUrl:      fc.mainImage ? urlFor(fc.mainImage).width(900).auto("format").url() : undefined,
+  } : null;
+
   const brand = {
-    name:        sanityBrand.name,
-    country:     sanityBrand.country ?? "",
-    foundedYear: sanityBrand.foundedYear ?? "",
-    description: sanityBrand.description ?? "",
-    heroTagline: sanityBrand.heroTagline,
-    logoLetter:  sanityBrand.name.charAt(0).toUpperCase(),
-    logoColor:   accentColor,
-    logoUrl:     sanityBrand.logoUrl ?? undefined,
-    accentColor: accentColor,
-    stats:       sanityBrand.stats ?? [],
+    name:             sanityBrand.name,
+    country:          sanityBrand.country ?? "",
+    foundedYear:      sanityBrand.foundedYear ?? "",
+    description:      sanityBrand.description ?? "",
+    heroTagline:      sanityBrand.heroTagline,
+    logoLetter:       sanityBrand.name.charAt(0).toUpperCase(),
+    logoColor:        accentColor,
+    logoUrl:          sanityBrand.logoUrl ?? undefined,
+    accentColor:      accentColor,
+    stats:            sanityBrand.stats ?? [],
+    heroFeaturedCar,
     cars,
-    hotDeal,
+    hotDeals,
     videos,
   };
 

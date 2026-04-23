@@ -66,6 +66,14 @@ export const brand = defineType({
       description: 'Texto corto complementario. Ej: "Liderando la electromovilidad en Chile"',
     }),
     defineField({
+      name: "heroFeaturedCar",
+      title: "🚗 Auto destacado en hero",
+      type: "reference",
+      to: [{ type: "car" }],
+      group: "content",
+      description: "Auto que aparece en el panel derecho del hero. Si no se configura, se usa el hot deal o el primer auto con foto.",
+    }),
+    defineField({
       name: "stats", title: "Estadísticas destacadas", type: "array", group: "content",
       description: "Aparecen en el panel derecho del hero. Máximo 3 estadísticas.",
       of: [defineArrayMember({

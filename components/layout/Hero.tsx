@@ -69,7 +69,7 @@ interface HeroProps {
 
 export function Hero({ data }: HeroProps) {
   const badge         = data?.badge         ?? "Más de 500 compras negociadas en Chile";
-  const title         = data?.title         ?? "Paga menos por tu próximo";
+  const title         = data?.title         ?? "Ahorra millones en tu próximo";
   const highlight     = data?.titleHighlight ?? "auto eléctrico";
   const subtitle      = data?.subtitle      ?? "Negociamos con nuestra red de concesionarios y te traemos la mejor oferta del mercado en 24 horas. Si no ahorras, te devolvemos el dinero.";
   const cta1Text      = data?.cta1Text      ?? "Ver autos disponibles";
@@ -90,7 +90,19 @@ export function Hero({ data }: HeroProps) {
       aria-label="Bienvenida"
     >
       <div className="absolute inset-0 z-0">
-        <div className="absolute inset-0 bg-black" />
+        {/* Background video — decorative, plays silently */}
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          className="absolute inset-0 w-full h-full object-cover"
+        >
+          <source src="/images/video-fondo-hero.mp4" type="video/mp4" />
+        </video>
+        {/* Dark overlay keeps text readable */}
+        <div className="absolute inset-0 bg-black/78" />
         <div
           className="absolute inset-0 opacity-[0.03]"
           style={{
@@ -103,7 +115,7 @@ export function Hero({ data }: HeroProps) {
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 py-12 md:py-24 lg:py-32 w-full">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+        <div className="grid gap-12 items-center max-w-3xl">
           {/* Left: Copy */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -139,7 +151,8 @@ export function Hero({ data }: HeroProps) {
             </div>
           </motion.div>
 
-          {/* Right: Sanity video > animated demo */}
+          {/* Right: Sanity video > animated demo — temporalmente deshabilitado */}
+          {false && (
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -154,6 +167,7 @@ export function Hero({ data }: HeroProps) {
               )}
             </div>
           </motion.div>
+          )}
         </div>
 
       </div>

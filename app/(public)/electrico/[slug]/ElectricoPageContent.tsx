@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect, useCallback } from "react";
+import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { formatCLP } from "@/lib/utils";
@@ -104,6 +104,22 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes }: E
 
   const hotDeals = filteredCars.filter((c) => c.isHotDeal);
   const rest     = filteredCars.filter((c) => !c.isHotDeal);
+
+  // Hot deal carousel
+  const hotTrackRef = useRef<HTMLDivElement>(null);
+  const [hotCanLeft,  setHotCanLeft]  = useState(false);
+  const [hotCanRight, setHotCanRight] = useState(false);
+  useEffect(() => {
+    const el = hotTrackRef.current;
+    if (!el) return;
+    function upd() {
+      setHotCanLeft(el!.scrollLeft > 8);
+      setHotCanRight(el!.scrollLeft < el!.scrollWidth - el!.clientWidth - 8);
+    }
+    upd();
+    el.addEventListener("scroll", upd, { passive: true });
+    return () => el.removeEventListener("scroll", upd);
+  }, [hotDeals]);
   const visibleRest = rest.slice(0, visibleCount);
   const hasMore = visibleCount < rest.length;
 
@@ -279,6 +295,99 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes }: E
         </div>
       </section>
 
+      {/* ─── Hot Deals ──────────────────────────────────────────────── */}
+      {hotDeals.length > 0 && (
+        <section className="py-10 md:py-14 bg-black overflow-hidden">
+          {hotDeals.length > 1 && (
+            <div className="max-w-7xl mx-auto px-4 md:px-8 mb-6 flex justify-end gap-2">
+              <button onClick={() => hotTrackRef.current?.scrollBy({ left: -(hotTrackRef.current?.offsetWidth ?? 0), behavior: "smooth" })} disabled={!hotCanLeft}
+                className="w-9 h-9 rounded-full border border-white/20 flex items-center justify-center text-white/50 hover:border-primary hover:text-primary disabled:opacity-25 transition-all">
+                <span className="material-symbols-outlined text-[18px]">chevron_left</span>
+              </button>
+              <button onClick={() => hotTrackRef.current?.scrollBy({ left: hotTrackRef.current?.offsetWidth ?? 0, behavior: "smooth" })} disabled={!hotCanRight}
+                className="w-9 h-9 rounded-full border border-white/20 flex items-center justify-center text-white/50 hover:border-primary hover:text-primary disabled:opacity-25 transition-all">
+                <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+              </button>
+            </div>
+          )}
+
+          <div
+            ref={hotTrackRef}
+            className="flex overflow-x-auto"
+            style={{ scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch", scrollbarWidth: "none", msOverflowStyle: "none" }}
+          >
+            {hotDeals.map((car) => {
+              const discountPct = Math.round(((car.basePrice - car.discountPrice) / car.basePrice) * 100);
+              return (
+                <div key={car.slug} style={{ minWidth: "100%" }} className="flex-shrink-0">
+                  <div className="max-w-7xl mx-auto px-4 md:px-8">
+                    <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+                      <motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
+                        <div className="flex items-center gap-3 mb-6">
+                          <span className="bg-amber text-black text-[10px] font-black uppercase tracking-wide px-3 py-1 rounded-full">HOT DEAL</span>
+                          <span className="text-white/50 text-sm">Oferta limitada</span>
+                        </div>
+                        <h2 className="text-2xl sm:text-3xl md:text-4xl font-headline font-black text-white mb-4 uppercase leading-tight">
+                          {car.brand} {car.name} al mejor precio de Chile
+                        </h2>
+                        <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-5 space-y-2">
+                          <div className="flex justify-between items-baseline">
+                            <span className="text-white/40 text-sm">Precio lista</span>
+                            <span className="text-white/40 line-through">{formatCLP(car.basePrice)}</span>
+                          </div>
+                          <div className="flex justify-between items-baseline">
+                            <span className="text-white text-sm font-medium">Con descuento Electrificarte</span>
+                            <span className="text-primary text-3xl font-headline font-black">{formatCLP(car.discountPrice)}</span>
+                          </div>
+                          <p className="text-white/30 text-xs pt-2 border-t border-white/10">Ahorra {discountPct}% · Incluye bono concesionario + Electrificarte</p>
+                        </div>
+                        <div className="flex flex-col sm:flex-row gap-3">
+                          <Link href={`/solicitar?auto=${car.slug}`} className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-6 py-3 rounded-xl transition-all shadow-[0_4px_20px_rgba(0,229,229,0.30)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]">
+                            Quiero esta oferta <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                          </Link>
+                          <Link href={`/auto/${car.slug}`} className="inline-flex items-center justify-center gap-2 border border-white/20 hover:border-white/40 text-white font-medium px-6 py-3 rounded-xl transition-all">
+                            Ver especificaciones
+                          </Link>
+                        </div>
+                      </motion.div>
+
+                      <motion.div initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.15 }} className="relative">
+                        <div className="absolute -top-6 -right-6 w-40 h-40 rounded-full blur-3xl pointer-events-none opacity-20" style={{ backgroundColor: meta.color }} />
+                        <div className="relative bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 rounded-2xl overflow-hidden">
+                          {car.imageUrl ? (
+                            <img src={car.imageUrl} alt={`${car.brand} ${car.name}`} className="w-full aspect-[16/10] object-cover" />
+                          ) : (
+                            <div className="p-8 text-center">
+                              <span className="material-symbols-outlined text-[80px]" style={{ color: `${meta.color}4D` }}>electric_car</span>
+                              <p className="text-white/40 text-sm mt-1">{car.brand} {car.name}</p>
+                            </div>
+                          )}
+                          <div className="p-4 md:p-5">
+                            <div className="grid grid-cols-2 gap-2">
+                              {[
+                                { label: car.range > 0 ? "Autonomía" : "Sistema", value: car.range > 0 ? `${car.range} km` : "Híbrido" },
+                                { label: "Potencia", value: `${car.power} CV` },
+                                { label: "Batería",  value: car.battery >= 1 ? `${car.battery} kWh` : "48V" },
+                                { label: "Tipo",     value: meta.tag },
+                              ].map((s) => (
+                                <div key={s.label} className="bg-white/5 rounded-xl p-3">
+                                  <p className="text-primary text-base font-headline font-bold">{s.value}</p>
+                                  <p className="text-white/40 text-xs">{s.label}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
       {/* ─── All cars ───────────────────────────────────────────────── */}
       <section id={`catalogo-${slug}`} className="py-16 md:py-20">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
@@ -399,89 +508,6 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes }: E
           )}
         </div>
       </section>
-
-      {/* ─── Hot Deals ──────────────────────────────────────────────── */}
-      {hotDeals.length > 0 && (
-        <section className="py-14 md:py-16 bg-black">
-          <div className="max-w-7xl mx-auto px-4 md:px-8">
-            <div className="flex items-center gap-3 mb-8">
-              <span className="bg-amber text-black text-[10px] font-black uppercase tracking-wide px-3 py-1 rounded-full">
-                HOT DEAL
-              </span>
-              <p className="text-white/50 text-sm">Ofertas exclusivas en {meta.label}</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {hotDeals.map((car, i) => {
-                const pct = Math.round(((car.basePrice - car.discountPrice) / car.basePrice) * 100);
-                return (
-                  <motion.article
-                    key={car.slug}
-                    initial={{ opacity: 0, y: 16 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.4, delay: i * 0.1 }}
-                    className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:border-primary/30 transition-all duration-300"
-                  >
-                    <div className="aspect-[16/7] bg-gradient-to-br from-white/5 to-transparent relative flex items-center justify-center overflow-hidden">
-                      {car.imageUrl ? (
-                        <img src={car.imageUrl} alt={`${car.brand} ${car.name}`} className="object-cover w-full h-full" />
-                      ) : (
-                        <>
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="w-40 h-40 rounded-full blur-3xl opacity-20" style={{ backgroundColor: meta.color }} />
-                          </div>
-                          <span className="material-symbols-outlined text-[80px] text-white/10 relative z-10">electric_car</span>
-                        </>
-                      )}
-                      {pct > 0 && <span className="absolute top-3 left-3 bg-amber text-black text-[9px] font-black uppercase tracking-wide px-2.5 py-1 rounded-full z-10">-{pct}% ahorro</span>}
-                    </div>
-
-                    <div className="p-6">
-                      <p className="text-white/40 text-[11px] uppercase tracking-widest font-semibold mb-1">{car.brand}</p>
-                      <h3 className="font-headline font-black text-white text-2xl mb-1">{car.name}</h3>
-                      <p className="text-white/50 text-sm mb-5">{car.tagline}</p>
-
-                      <div className="grid grid-cols-3 gap-3 mb-6">
-                        {[
-                          { label: car.range > 0 ? "Autonomía" : "Sistema", value: car.range > 0 ? `${car.range} km` : "Híbrido" },
-                          { label: "Potencia", value: `${car.power} CV` },
-                          { label: "Batería",  value: car.battery >= 1 ? `${car.battery} kWh` : "48V" },
-                        ].map((s) => (
-                          <div key={s.label} className="bg-white/5 rounded-xl p-3 text-center">
-                            <p className="text-primary font-headline font-bold text-base">{s.value}</p>
-                            <p className="text-white/30 text-[10px] mt-0.5">{s.label}</p>
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className="flex items-baseline justify-between mb-4">
-                        <span className="text-white/30 text-sm line-through">{formatCLP(car.basePrice)}</span>
-                        <span className="text-primary text-3xl font-headline font-black">{formatCLP(car.discountPrice)}</span>
-                      </div>
-
-                      <div className="flex gap-3">
-                        <Link
-                          href={`/solicitar?auto=${car.slug}`}
-                          className="flex-1 text-center bg-primary hover:bg-primary-dark text-black font-bold py-3 rounded-xl transition-colors text-sm"
-                        >
-                          Quiero esta oferta
-                        </Link>
-                        <Link
-                          href={`/marcas/${car.brandSlug}`}
-                          className="px-4 border border-white/20 hover:border-white/40 text-white font-medium rounded-xl transition-colors text-sm flex items-center"
-                        >
-                          Ver marca
-                        </Link>
-                      </div>
-                    </div>
-                  </motion.article>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-      )}
 
       {/* ─── Pros / Cons + Ideal for ─────────────────────────────────── */}
       <section className="py-14 bg-surface border-t border-b border-gray-100">

@@ -292,7 +292,14 @@ export const brandBySlugQuery = groq`
     accentColor,
     isFeatured,
     stats[]{label, value},
-    videos[]{title, videoUrl, thumbnail, duration, views, channel}
+    videos[]{title, videoUrl, thumbnail, duration, views, channel},
+    "heroFeaturedCar": heroFeaturedCar-> {
+      name,
+      "slug": slug.current,
+      mainImage,
+      basePrice,
+      discountPrice,
+    }
   }
 `;
 
