@@ -29,7 +29,10 @@ export function CoverImageInput(props: ObjectInputProps) {
 
   const pickFromGallery = useCallback(
     (img: GalleryImage) => {
-      onChange(set({ _type: "image", asset: img.asset, hotspot: img.hotspot, crop: img.crop }));
+      const value: Record<string, unknown> = { _type: "image", asset: img.asset };
+      if (img.hotspot) value.hotspot = img.hotspot;
+      if (img.crop)    value.crop    = img.crop;
+      onChange(set(value));
     },
     [onChange]
   );
