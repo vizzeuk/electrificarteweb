@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { formatCLP } from "@/lib/utils";
 import { CatalogFilters, type ActiveFilters } from "@/components/ui/CatalogFilters";
@@ -60,6 +60,7 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes }: E
   const [activeFilters, setActiveFilters] = useState<ActiveFilters>({ brand: "", tipo: "" });
   const [sort, setSort] = useState("default");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [openHowItem, setOpenHowItem] = useState<number | null>(null);
 
   const banners = [
     { id: 1, label: "Banner 1", bg: "from-primary/10 to-primary-deep/5" },
@@ -106,20 +107,30 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes }: E
   const rest     = filteredCars.filter((c) => !c.isHotDeal);
 
   // Hot deal carousel
-  const hotTrackRef = useRef<HTMLDivElement>(null);
-  const [hotCanLeft,  setHotCanLeft]  = useState(false);
-  const [hotCanRight, setHotCanRight] = useState(false);
+  const hotTrackRef  = useRef<HTMLDivElement>(null);
+  const hotPausedRef = useRef(false);
+  const [hotActiveIdx, setHotActiveIdx] = useState(0);
   useEffect(() => {
     const el = hotTrackRef.current;
     if (!el) return;
     function upd() {
-      setHotCanLeft(el!.scrollLeft > 8);
-      setHotCanRight(el!.scrollLeft < el!.scrollWidth - el!.clientWidth - 8);
+      setHotActiveIdx(Math.round(el!.scrollLeft / el!.clientWidth));
     }
     upd();
     el.addEventListener("scroll", upd, { passive: true });
     return () => el.removeEventListener("scroll", upd);
   }, [hotDeals]);
+  useEffect(() => {
+    if (hotDeals.length < 2) return;
+    const id = setInterval(() => {
+      if (hotPausedRef.current) return;
+      const el = hotTrackRef.current;
+      if (!el) return;
+      const next = Math.round(el.scrollLeft / el.clientWidth) + 1;
+      el.scrollTo({ left: el.clientWidth * (next >= hotDeals.length ? 0 : next), behavior: "smooth" });
+    }, 7000);
+    return () => clearInterval(id);
+  }, [hotDeals.length]);
   const visibleRest = rest.slice(0, visibleCount);
   const hasMore = visibleCount < rest.length;
 
@@ -229,7 +240,8 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes }: E
       {/* ─── Info strip (howItWorks) ─────────────────────────────────── */}
       <section className="py-10 bg-surface border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {/* Desktop: grid */}
+          <div className="hidden md:grid grid-cols-4 gap-4">
             {meta.howItWorks.map((h, i) => (
               <motion.div
                 key={h.title}
@@ -239,19 +251,47 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes }: E
                 transition={{ duration: 0.35, delay: i * 0.07 }}
                 className="flex flex-col items-start gap-3 bg-white border border-gray-100 rounded-2xl p-5"
               >
-                <div
-                  className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: `${meta.color}18` }}
-                >
-                  <span className="material-symbols-outlined text-[20px]" style={{ color: meta.color }}>
-                    {h.icon}
-                  </span>
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${meta.color}18` }}>
+                  <span className="material-symbols-outlined text-[20px]" style={{ color: meta.color }}>{h.icon}</span>
                 </div>
                 <div>
                   <p className="font-headline font-bold text-sm leading-snug mb-1 text-text-main">{h.title}</p>
                   <p className="text-text-ghost text-[12px] leading-snug">{h.desc}</p>
                 </div>
               </motion.div>
+            ))}
+          </div>
+
+          {/* Mobile: accordion */}
+          <div className="md:hidden space-y-2">
+            {meta.howItWorks.map((h, i) => (
+              <div key={h.title} className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
+                <button
+                  className="w-full flex items-center gap-3 px-4 py-3.5 text-left"
+                  onClick={() => setOpenHowItem(openHowItem === i ? null : i)}
+                >
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${meta.color}18` }}>
+                    <span className="material-symbols-outlined text-[18px]" style={{ color: meta.color }}>{h.icon}</span>
+                  </div>
+                  <span className="font-headline font-bold text-sm text-text-main flex-1 leading-tight">{h.title}</span>
+                  <span className={["material-symbols-outlined text-[20px] text-text-ghost transition-transform duration-200 flex-shrink-0", openHowItem === i ? "rotate-180" : ""].join(" ")}>
+                    expand_more
+                  </span>
+                </button>
+                <AnimatePresence>
+                  {openHowItem === i && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden"
+                    >
+                      <p className="px-4 pb-4 text-text-ghost text-sm leading-relaxed">{h.desc}</p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             ))}
           </div>
         </div>
@@ -297,19 +337,7 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes }: E
 
       {/* ─── Hot Deals ──────────────────────────────────────────────── */}
       {hotDeals.length > 0 && (
-        <section className="py-10 md:py-14 bg-black overflow-hidden">
-          {hotDeals.length > 1 && (
-            <div className="max-w-7xl mx-auto px-4 md:px-8 mb-6 flex justify-end gap-2">
-              <button onClick={() => hotTrackRef.current?.scrollBy({ left: -(hotTrackRef.current?.offsetWidth ?? 0), behavior: "smooth" })} disabled={!hotCanLeft}
-                className="w-9 h-9 rounded-full border border-white/20 flex items-center justify-center text-white/50 hover:border-primary hover:text-primary disabled:opacity-25 transition-all">
-                <span className="material-symbols-outlined text-[18px]">chevron_left</span>
-              </button>
-              <button onClick={() => hotTrackRef.current?.scrollBy({ left: hotTrackRef.current?.offsetWidth ?? 0, behavior: "smooth" })} disabled={!hotCanRight}
-                className="w-9 h-9 rounded-full border border-white/20 flex items-center justify-center text-white/50 hover:border-primary hover:text-primary disabled:opacity-25 transition-all">
-                <span className="material-symbols-outlined text-[18px]">chevron_right</span>
-              </button>
-            </div>
-          )}
+        <section className="py-6 sm:py-10 md:py-14 bg-black" onMouseEnter={() => { hotPausedRef.current = true; }} onMouseLeave={() => { hotPausedRef.current = false; }}>
 
           <div
             ref={hotTrackRef}
@@ -318,16 +346,66 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes }: E
           >
             {hotDeals.map((car) => {
               const discountPct = Math.round(((car.basePrice - car.discountPrice) / car.basePrice) * 100);
+              const specs = [
+                { label: car.range > 0 ? "Autonomía" : "Sistema", value: car.range > 0 ? `${car.range} km` : "Híbrido" },
+                { label: "Potencia", value: `${car.power} CV` },
+                { label: "Batería",  value: car.battery >= 1 ? `${car.battery} kWh` : "48V" },
+                { label: "Tipo",     value: meta.tag },
+              ];
               return (
-                <div key={car.slug} style={{ minWidth: "100%" }} className="flex-shrink-0">
-                  <div className="max-w-7xl mx-auto px-4 md:px-8">
-                    <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-                      <motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
-                        <div className="flex items-center gap-3 mb-6">
+                <div key={car.slug} style={{ flex: "0 0 100%", scrollSnapAlign: "start" }}>
+                  {/* ── MOBILE ── */}
+                  <div className="lg:hidden px-4">
+                    <div className="rounded-2xl overflow-hidden border border-white/10 bg-white/5">
+                      {car.imageUrl ? (
+                        <img src={car.imageUrl} alt={`${car.brand} ${car.name}`} className="w-full h-40 object-cover" />
+                      ) : (
+                        <div className="w-full h-40 flex items-center justify-center">
+                          <span className="material-symbols-outlined text-[64px]" style={{ color: `${meta.color}4D` }}>electric_car</span>
+                        </div>
+                      )}
+                      <div className="p-4 space-y-3">
+                        <div>
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <span className="bg-amber text-black text-[10px] font-black uppercase tracking-wide px-3 py-1 rounded-full">HOT DEAL</span>
+                            <span className="text-white/40 text-xs">Oferta limitada</span>
+                          </div>
+                          <p className="text-white font-headline font-black text-base uppercase leading-tight">{car.brand} {car.name}</p>
+                          <p className="text-white/50 text-xs mt-0.5">Al mejor precio de Chile</p>
+                        </div>
+                        <div className="flex items-center justify-between bg-white/5 rounded-xl px-3 py-2.5">
+                          <div>
+                            <p className="text-white/40 text-[10px] line-through">{formatCLP(car.basePrice)}</p>
+                            <p className="text-primary font-headline font-black text-xl leading-none">{formatCLP(car.discountPrice)}</p>
+                          </div>
+                          <p className="text-white/30 text-[10px] text-right leading-snug">Ahorra {discountPct}%<br />bono Electrificarte</p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="bg-white/5 rounded-lg px-3 py-2">
+                            <p className="text-primary text-sm font-headline font-bold">{car.range > 0 ? `${car.range} km` : "Híbrido"}</p>
+                            <p className="text-white/40 text-[10px]">{car.range > 0 ? "Autonomía" : "Sistema"}</p>
+                          </div>
+                          <div className="bg-white/5 rounded-lg px-3 py-2">
+                            <p className="text-primary text-sm font-headline font-bold">{meta.tag}</p>
+                            <p className="text-white/40 text-[10px]">Tipo</p>
+                          </div>
+                        </div>
+                        <Link href={`/solicitar?auto=${car.slug}`} className="flex items-center justify-center gap-2 w-full bg-primary hover:bg-primary-dark text-black font-bold py-3 rounded-xl text-sm transition-colors">
+                          Quiero esta oferta <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* ── DESKTOP ── */}
+                  <div className="hidden lg:block max-w-7xl mx-auto px-8">
+                    <div className="grid lg:grid-cols-2 gap-12 items-center">
+                      <div>
+                        <div className="flex items-center gap-3 mb-5">
                           <span className="bg-amber text-black text-[10px] font-black uppercase tracking-wide px-3 py-1 rounded-full">HOT DEAL</span>
                           <span className="text-white/50 text-sm">Oferta limitada</span>
                         </div>
-                        <h2 className="text-2xl sm:text-3xl md:text-4xl font-headline font-black text-white mb-4 uppercase leading-tight">
+                        <h2 className="text-3xl md:text-4xl font-headline font-black text-white mb-4 uppercase leading-tight">
                           {car.brand} {car.name} al mejor precio de Chile
                         </h2>
                         <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-5 space-y-2">
@@ -341,50 +419,62 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes }: E
                           </div>
                           <p className="text-white/30 text-xs pt-2 border-t border-white/10">Ahorra {discountPct}% · Incluye bono concesionario + Electrificarte</p>
                         </div>
-                        <div className="flex flex-col sm:flex-row gap-3">
-                          <Link href={`/solicitar?auto=${car.slug}`} className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-6 py-3 rounded-xl transition-all shadow-[0_4px_20px_rgba(0,229,229,0.30)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]">
+                        <div className="flex gap-3">
+                          <Link href={`/solicitar?auto=${car.slug}`} className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-6 py-3 rounded-xl transition-all text-sm shadow-[0_4px_20px_rgba(0,229,229,0.30)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]">
                             Quiero esta oferta <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
                           </Link>
-                          <Link href={`/auto/${car.slug}`} className="inline-flex items-center justify-center gap-2 border border-white/20 hover:border-white/40 text-white font-medium px-6 py-3 rounded-xl transition-all">
+                          <Link href={`/auto/${car.slug}`} className="inline-flex items-center justify-center gap-2 border border-white/20 hover:border-white/40 text-white font-medium px-6 py-3 rounded-xl transition-all text-sm">
                             Ver especificaciones
                           </Link>
                         </div>
-                      </motion.div>
+                      </div>
 
-                      <motion.div initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.15 }} className="relative">
-                        <div className="absolute -top-6 -right-6 w-40 h-40 rounded-full blur-3xl pointer-events-none opacity-20" style={{ backgroundColor: meta.color }} />
-                        <div className="relative bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 rounded-2xl overflow-hidden">
-                          {car.imageUrl ? (
-                            <img src={car.imageUrl} alt={`${car.brand} ${car.name}`} className="w-full aspect-[16/10] object-cover" />
-                          ) : (
-                            <div className="p-8 text-center">
-                              <span className="material-symbols-outlined text-[80px]" style={{ color: `${meta.color}4D` }}>electric_car</span>
-                              <p className="text-white/40 text-sm mt-1">{car.brand} {car.name}</p>
-                            </div>
-                          )}
-                          <div className="p-4 md:p-5">
-                            <div className="grid grid-cols-2 gap-2">
-                              {[
-                                { label: car.range > 0 ? "Autonomía" : "Sistema", value: car.range > 0 ? `${car.range} km` : "Híbrido" },
-                                { label: "Potencia", value: `${car.power} CV` },
-                                { label: "Batería",  value: car.battery >= 1 ? `${car.battery} kWh` : "48V" },
-                                { label: "Tipo",     value: meta.tag },
-                              ].map((s) => (
-                                <div key={s.label} className="bg-white/5 rounded-xl p-3">
-                                  <p className="text-primary text-base font-headline font-bold">{s.value}</p>
-                                  <p className="text-white/40 text-xs">{s.label}</p>
-                                </div>
-                              ))}
-                            </div>
+                      <div className="bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 rounded-2xl overflow-hidden">
+                        {car.imageUrl ? (
+                          <img src={car.imageUrl} alt={`${car.brand} ${car.name}`} className="w-full aspect-[16/9] object-cover" />
+                        ) : (
+                          <div className="w-full aspect-[16/9] flex items-center justify-center flex-col gap-2">
+                            <span className="material-symbols-outlined text-[80px]" style={{ color: `${meta.color}4D` }}>electric_car</span>
+                            <p className="text-white/40 text-sm">{car.brand} {car.name}</p>
+                          </div>
+                        )}
+                        <div className="p-4 md:p-5">
+                          <div className="grid grid-cols-2 gap-2">
+                            {specs.map((s) => (
+                              <div key={s.label} className="bg-white/5 rounded-xl p-3">
+                                <p className="text-primary text-base font-headline font-bold">{s.value}</p>
+                                <p className="text-white/40 text-xs">{s.label}</p>
+                              </div>
+                            ))}
                           </div>
                         </div>
-                      </motion.div>
+                      </div>
                     </div>
                   </div>
                 </div>
               );
             })}
           </div>
+
+          {/* Dots */}
+          {hotDeals.length > 1 && (
+            <div className="flex justify-center gap-2 mt-5">
+              {hotDeals.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => hotTrackRef.current?.scrollTo({ left: (hotTrackRef.current?.clientWidth ?? 0) * i, behavior: "smooth" })}
+                  aria-label={`Ir al hot deal ${i + 1}`}
+                  style={{
+                    width: i === hotActiveIdx ? 20 : 6,
+                    height: 6,
+                    borderRadius: 9999,
+                    backgroundColor: i === hotActiveIdx ? "#00E5E5" : "rgba(255,255,255,0.2)",
+                    transition: "all 0.3s",
+                  }}
+                />
+              ))}
+            </div>
+          )}
         </section>
       )}
 
@@ -419,7 +509,7 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes }: E
               <p className="text-text-muted font-medium">No hay autos con estos filtros.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
               {visibleRest.map((car, i) => {
                 const pct = Math.round(((car.basePrice - car.discountPrice) / car.basePrice) * 100);
                 return (
@@ -449,28 +539,28 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes }: E
                       )}
                     </div>
 
-                    <div className="flex flex-col flex-1 p-5">
-                      <h3 className="font-headline font-bold text-lg mb-1 group-hover:text-primary-deep transition-colors">
+                    <div className="flex flex-col flex-1 p-3 sm:p-5">
+                      <h3 className="font-headline font-bold text-sm sm:text-lg mb-1 group-hover:text-primary-deep transition-colors leading-tight">
                         {car.brand} {car.name}
                       </h3>
-                      <p className="text-xs text-text-ghost mb-4 leading-snug line-clamp-2">{car.tagline}</p>
+                      <p className="hidden sm:block text-xs text-text-ghost mb-2 sm:mb-3 leading-snug line-clamp-2">{car.tagline}</p>
 
-                      <div className="grid grid-cols-3 gap-2 mb-4">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-1 sm:gap-2 mb-2 sm:mb-4">
                         {[
-                          { label: car.range > 0 ? "Autonomía" : "Tracción", value: car.range > 0 ? `${car.range} km` : "híbrido" },
-                          { label: "Potencia", value: `${car.power} CV` },
-                          { label: "Batería",  value: car.battery >= 1 ? `${car.battery} kWh` : "48V" },
+                          { label: car.range > 0 ? "Autonomía" : "Tracción", value: car.range > 0 ? `${car.range} km` : "híbrido", mobile: true },
+                          { label: "Potencia", value: `${car.power} CV`, mobile: true },
+                          { label: "Batería",  value: car.battery >= 1 ? `${car.battery} kWh` : "48V", mobile: false },
                         ].map((s) => (
-                          <div key={s.label} className="bg-surface rounded-xl p-2 text-center">
-                            <p className="text-[11px] font-bold text-text-main">{s.value}</p>
-                            <p className="text-[10px] text-text-ghost">{s.label}</p>
+                          <div key={s.label} className={`bg-surface rounded-xl p-1.5 sm:p-2 text-center${s.mobile ? "" : " hidden sm:block"}`}>
+                            <p className="text-[10px] sm:text-[11px] font-bold text-text-main">{s.value}</p>
+                            <p className="text-[9px] sm:text-[10px] text-text-ghost">{s.label}</p>
                           </div>
                         ))}
                       </div>
 
-                      <div className="flex justify-between items-baseline mb-4">
-                        <span className="text-xs text-text-ghost line-through">{formatCLP(car.basePrice)}</span>
-                        <span className="text-xl font-headline font-black text-primary-deep">{formatCLP(car.discountPrice)}</span>
+                      <div className="mb-2 sm:mb-4">
+                        {pct > 0 && <p className="text-[10px] text-text-ghost line-through">{formatCLP(car.basePrice)}</p>}
+                        <p className="text-sm sm:text-xl font-headline font-black text-primary-deep">{formatCLP(pct > 0 ? car.discountPrice : car.basePrice)}</p>
                       </div>
 
                       <div className="flex gap-2 mt-auto">

@@ -3,15 +3,16 @@
 
     :host {
       --color-primary: ${a};
-      --color-bg: #0F172A;
-      --color-surface: #1E293B;
-      --color-border: #334155;
-      --color-text: #F1F5F9;
-      --color-text-muted: #94A3B8;
+      --color-bg: #000000;
+      --color-surface: #0f0f0f;
+      --color-border: rgba(255,255,255,0.1);
+      --color-text: #ffffff;
+      --color-text-muted: rgba(255,255,255,0.45);
       --color-user-bubble: var(--color-primary);
-      --color-bot-bubble: var(--color-surface);
+      --color-user-text: #000000;
+      --color-bot-bubble: #1a1a1a;
       --radius: 16px;
-      --shadow: 0 8px 32px rgba(0,0,0,0.4);
+      --shadow: 0 8px 40px rgba(0,0,0,0.7), 0 0 0 1px rgba(0,229,229,0.08);
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     }
 
@@ -29,12 +30,12 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: var(--shadow);
+      box-shadow: 0 4px 20px rgba(0,229,229,0.35);
       transition: transform 0.2s ease, box-shadow 0.2s ease;
       z-index: 9999;
     }
-    #launcher:hover { transform: scale(1.08); box-shadow: 0 12px 40px rgba(0,0,0,0.5); }
-    #launcher svg { width: 26px; height: 26px; fill: white; }
+    #launcher:hover { transform: scale(1.08); box-shadow: 0 8px 32px rgba(0,229,229,0.5); }
+    #launcher svg { width: 26px; height: 26px; fill: #000000; }
     #launcher.open svg.icon-chat { display: none; }
     #launcher:not(.open) svg.icon-close { display: none; }
 
@@ -67,7 +68,7 @@
 
     /* Header */
     #header {
-      background: var(--color-surface);
+      background: #000000;
       padding: 14px 16px;
       display: flex;
       align-items: center;
@@ -85,7 +86,7 @@
       justify-content: center;
       flex-shrink: 0;
     }
-    #header-avatar svg { width: 20px; height: 20px; fill: white; }
+    #header-avatar svg { width: 20px; height: 20px; fill: #000000; }
     #header-info { flex: 1; min-width: 0; }
     #header-name {
       font-size: 14px;
@@ -142,8 +143,9 @@
     }
     .msg.user .bubble {
       background: var(--color-user-bubble);
-      color: white;
+      color: var(--color-user-text);
       border-bottom-right-radius: 4px;
+      font-weight: 500;
     }
     .msg.bot .bubble {
       background: var(--color-bot-bubble);
@@ -162,19 +164,20 @@
     }
     .menu-btn {
       background: transparent;
-      border: 1px solid var(--color-primary);
+      border: 1px solid rgba(0, 229, 229, 0.3);
       color: var(--color-primary);
       border-radius: 20px;
       padding: 7px 14px;
       font-size: 13px;
       cursor: pointer;
       text-align: left;
-      transition: background 0.15s, color 0.15s;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
       line-height: 1.4;
     }
     .menu-btn:hover {
-      background: rgba(0, 229, 229, 0.1);
-      color: var(--color-text);
+      background: rgba(0, 229, 229, 0.12);
+      border-color: var(--color-primary);
+      color: var(--color-primary);
     }
     a.menu-btn {
       display: block;
@@ -218,7 +221,7 @@
       border-top: 1px solid var(--color-border);
       display: flex;
       gap: 8px;
-      background: var(--color-surface);
+      background: #000000;
       flex-shrink: 0;
     }
     #input {
@@ -253,7 +256,7 @@
       align-self: flex-end;
     }
     #btn-send:disabled { opacity: 0.4; cursor: not-allowed; }
-    #btn-send svg { width: 16px; height: 16px; fill: white; }
+    #btn-send svg { width: 16px; height: 16px; fill: #000000; }
 
     /* Position variants */
     :host([data-position="bottom-left"]) #launcher,

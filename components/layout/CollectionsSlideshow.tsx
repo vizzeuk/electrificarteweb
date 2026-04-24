@@ -47,7 +47,6 @@ const FALLBACK: CollectionCardData[] = [
 const CARD_W = 380;
 const GAP    = 20;
 
-// Gradient fallbacks per card index
 const GRADIENTS = [
   "from-[#002a2a] via-[#004040] to-[#00595a]",
   "from-[#1a1a2e] via-[#16213e] to-[#0f3460]",
@@ -56,24 +55,36 @@ const GRADIENTS = [
 ];
 
 export function CollectionsSlideshow({ collections }: CollectionsSlideshowProps) {
-  const items    = collections && collections.length > 0 ? collections : FALLBACK;
-  const trackRef = useRef<HTMLDivElement>(null);
+  const items        = collections && collections.length > 0 ? collections : FALLBACK;
+  const trackRef     = useRef<HTMLDivElement>(null);
+  const mobileRef    = useRef<HTMLDivElement>(null);
   const [canLeft,  setCanLeft]  = useState(false);
   const [canRight, setCanRight] = useState(true);
+  const [activeIdx, setActiveIdx] = useState(0);
 
-  function updateArrows() {
-    const el = trackRef.current;
-    if (!el) return;
-    setCanLeft(el.scrollLeft > 8);
-    setCanRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 8);
-  }
-
+  // Desktop scroll state
   useEffect(() => {
     const el = trackRef.current;
     if (!el) return;
-    updateArrows();
-    el.addEventListener("scroll", updateArrows, { passive: true });
-    return () => el.removeEventListener("scroll", updateArrows);
+    function upd() {
+      setCanLeft(el!.scrollLeft > 8);
+      setCanRight(el!.scrollLeft < el!.scrollWidth - el!.clientWidth - 8);
+    }
+    upd();
+    el.addEventListener("scroll", upd, { passive: true });
+    return () => el.removeEventListener("scroll", upd);
+  }, [items]);
+
+  // Mobile active dot
+  useEffect(() => {
+    const el = mobileRef.current;
+    if (!el) return;
+    function upd() {
+      const idx = Math.round(el!.scrollLeft / el!.clientWidth);
+      setActiveIdx(idx);
+    }
+    el.addEventListener("scroll", upd, { passive: true });
+    return () => el.removeEventListener("scroll", upd);
   }, [items]);
 
   function scroll(dir: "left" | "right") {
@@ -84,7 +95,7 @@ export function CollectionsSlideshow({ collections }: CollectionsSlideshowProps)
   }
 
   return (
-    <section className="pb-20 md:pb-24 overflow-hidden" aria-label="Colecciones destacadas">
+    <section className="pb-20 md:pb-24" aria-label="Colecciones destacadas">
       {/* Header */}
       <div className="max-w-7xl mx-auto px-4 md:px-8 mb-8">
         <div className="flex items-end justify-between gap-4">
@@ -96,7 +107,6 @@ export function CollectionsSlideshow({ collections }: CollectionsSlideshowProps)
               Encuentra tu auto ideal
             </h2>
           </div>
-
           {/* Desktop arrows */}
           <div className="hidden md:flex gap-2 shrink-0">
             <button
@@ -119,25 +129,93 @@ export function CollectionsSlideshow({ collections }: CollectionsSlideshowProps)
         </div>
       </div>
 
-      {/* Track */}
-      <div className="relative">
-        {/* Fade left */}
+      {/* ── MOBILE carousel (md:hidden) ── */}
+      <div className="md:hidden">
+        <div
+          ref={mobileRef}
+          className="flex overflow-x-auto"
+          style={{
+            scrollSnapType: "x mandatory",
+            WebkitOverflowScrolling: "touch",
+            scrollbarWidth: "none",
+            msOverflowStyle: "none",
+          }}
+        >
+          {items.map((col, i) => (
+            <Link
+              key={col._id}
+              href={`/coleccion/${col.slug}`}
+              style={{ flex: "0 0 100%", scrollSnapAlign: "start" }}
+              className="px-4"
+              aria-label={col.title}
+            >
+              <div className="relative rounded-2xl overflow-hidden h-52">
+                {col.heroImageUrl ? (
+                  <img
+                    src={col.heroImageUrl}
+                    alt={col.title}
+                    className="absolute inset-0 w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className={`absolute inset-0 bg-gradient-to-br ${GRADIENTS[i % GRADIENTS.length]}`} />
+                )}
+                <div className="absolute inset-0 bg-black/50" />
+                <div className="relative z-10 p-5 h-full flex flex-col justify-between">
+                  <div>
+                    {col.badge && (
+                      <span className="inline-block bg-primary text-black text-[9px] font-extrabold uppercase tracking-widest px-2.5 py-1 rounded-full">
+                        {col.badge}
+                      </span>
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="text-white font-headline font-bold text-lg leading-snug mb-1">
+                      {col.title}
+                    </h3>
+                    {col.subtitle && (
+                      <p className="text-white/60 text-xs leading-snug mb-3">{col.subtitle}</p>
+                    )}
+                    <span className="inline-flex items-center gap-1.5 text-primary font-bold text-sm">
+                      {col.ctaText ?? "Ver colección"}
+                      <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+
+        {/* Dot indicators */}
+        <div className="flex justify-center gap-2 mt-4">
+          {items.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => mobileRef.current?.scrollTo({ left: mobileRef.current.clientWidth * i, behavior: "smooth" })}
+              className="transition-all duration-300"
+              style={{
+                width:  i === activeIdx ? 20 : 6,
+                height: 6,
+                borderRadius: 9999,
+                backgroundColor: i === activeIdx ? "var(--color-primary, #00E5E5)" : "#d1d5db",
+              }}
+              aria-label={`Ir a colección ${i + 1}`}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* ── DESKTOP carousel (hidden md:block) ── */}
+      <div className="hidden md:block relative">
         <div
           className="pointer-events-none absolute left-0 top-0 bottom-0 w-20 z-10 transition-opacity duration-200"
-          style={{
-            background: "linear-gradient(to right, white, transparent)",
-            opacity: canLeft ? 1 : 0,
-          }}
+          style={{ background: "linear-gradient(to right, white, transparent)", opacity: canLeft ? 1 : 0 }}
         />
-        {/* Fade right */}
         <div
           className="pointer-events-none absolute right-0 top-0 bottom-0 w-20 z-10 transition-opacity duration-200"
-          style={{
-            background: "linear-gradient(to left, white, transparent)",
-            opacity: canRight ? 1 : 0,
-          }}
+          style={{ background: "linear-gradient(to left, white, transparent)", opacity: canRight ? 1 : 0 }}
         />
-
         <div
           ref={trackRef}
           className="flex gap-5 overflow-x-auto pb-3"
@@ -158,9 +236,7 @@ export function CollectionsSlideshow({ collections }: CollectionsSlideshowProps)
               className="relative rounded-2xl overflow-hidden flex flex-col justify-end group cursor-pointer"
               aria-label={col.title}
             >
-              {/* Fixed height for the card */}
               <div className="relative h-[220px] w-full">
-                {/* Background image or gradient */}
                 {col.heroImageUrl ? (
                   <img
                     src={col.heroImageUrl}
@@ -169,17 +245,10 @@ export function CollectionsSlideshow({ collections }: CollectionsSlideshowProps)
                     loading="lazy"
                   />
                 ) : (
-                  <div
-                    className={`absolute inset-0 bg-gradient-to-br ${GRADIENTS[i % GRADIENTS.length]}`}
-                  />
+                  <div className={`absolute inset-0 bg-gradient-to-br ${GRADIENTS[i % GRADIENTS.length]}`} />
                 )}
-
-                {/* Dark overlay — lightens a bit on hover */}
                 <div className="absolute inset-0 bg-black/50 group-hover:bg-black/40 transition-colors duration-300" />
-
-                {/* Content */}
                 <div className="relative z-10 p-6 h-full flex flex-col justify-between">
-                  {/* Badge */}
                   <div>
                     {col.badge && (
                       <span className="inline-block bg-primary text-black text-[9px] font-extrabold uppercase tracking-widest px-2.5 py-1 rounded-full">
@@ -187,16 +256,12 @@ export function CollectionsSlideshow({ collections }: CollectionsSlideshowProps)
                       </span>
                     )}
                   </div>
-
-                  {/* Title + subtitle + arrow */}
                   <div>
                     <h3 className="text-white font-headline font-bold text-xl leading-snug mb-1 group-hover:text-primary transition-colors duration-200">
                       {col.title}
                     </h3>
                     {col.subtitle && (
-                      <p className="text-white/60 text-sm leading-snug mb-3">
-                        {col.subtitle}
-                      </p>
+                      <p className="text-white/60 text-sm leading-snug mb-3">{col.subtitle}</p>
                     )}
                     <span className="inline-flex items-center gap-1.5 text-primary font-bold text-sm group-hover:gap-2.5 transition-all duration-200">
                       {col.ctaText ?? "Ver colección"}
@@ -208,26 +273,6 @@ export function CollectionsSlideshow({ collections }: CollectionsSlideshowProps)
             </Link>
           ))}
         </div>
-      </div>
-
-      {/* Mobile arrows */}
-      <div className="flex md:hidden justify-center gap-3 mt-4 px-4">
-        <button
-          onClick={() => scroll("left")}
-          disabled={!canLeft}
-          aria-label="Anterior"
-          className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-text-muted disabled:opacity-30 disabled:cursor-not-allowed"
-        >
-          <span className="material-symbols-outlined text-[20px]">chevron_left</span>
-        </button>
-        <button
-          onClick={() => scroll("right")}
-          disabled={!canRight}
-          aria-label="Siguiente"
-          className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-text-muted disabled:opacity-30 disabled:cursor-not-allowed"
-        >
-          <span className="material-symbols-outlined text-[20px]">chevron_right</span>
-        </button>
       </div>
     </section>
   );

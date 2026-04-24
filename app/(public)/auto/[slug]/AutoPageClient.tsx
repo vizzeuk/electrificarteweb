@@ -134,8 +134,12 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
               </div>
               <div className="flex items-center gap-3 flex-shrink-0">
                 <div className="hidden sm:block text-right">
-                  <p className="text-xs text-text-ghost line-through">{formatCLP(ver.price)}</p>
-                  <p className="font-headline font-black text-primary-deep text-base leading-none">{formatCLP(ver.discountPrice)}</p>
+                  {car.isHotDeal && savingsPct > 0 && (
+                    <p className="text-xs text-text-ghost line-through">{formatCLP(ver.price)}</p>
+                  )}
+                  <p className="font-headline font-black text-primary-deep text-base leading-none">
+                    {formatCLP(car.isHotDeal && savingsPct > 0 ? ver.discountPrice : ver.price)}
+                  </p>
                 </div>
                 <Link
                   href={`/solicitar?auto=${car.slug}`}
@@ -195,21 +199,37 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
               </div>
 
               <div className="bg-white/5 border border-white/10 rounded-2xl p-5 mb-7">
-                <div className="flex justify-between items-baseline mb-1">
-                  <span className="text-white/40 text-sm">Precio lista</span>
-                  <span className="text-white/40 line-through text-sm">{formatCLP(ver.price)}</span>
-                </div>
-                <div className="flex justify-between items-baseline">
-                  <span className="text-white font-medium">Con bono Electrificarte</span>
-                  <span className="text-primary text-3xl font-headline font-black">{formatCLP(ver.discountPrice)}</span>
-                </div>
-                <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/10">
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
-                  <span className="text-white/40 text-xs">
-                    Ahorras {formatCLP(savings)} ({savingsPct}%)
-                    {car.hotDealBonus ? ` · Bono adicional ${formatCLP(car.hotDealBonus)}` : ""}
-                  </span>
-                </div>
+                {car.isHotDeal && savingsPct > 0 ? (
+                  <>
+                    <div className="flex justify-between items-baseline mb-1">
+                      <span className="text-white/40 text-sm">Precio lista</span>
+                      <span className="text-white/40 line-through text-sm">{formatCLP(ver.price)}</span>
+                    </div>
+                    <div className="flex justify-between items-baseline">
+                      <span className="text-white font-medium">Con bono Electrificarte</span>
+                      <span className="text-primary text-3xl font-headline font-black">{formatCLP(ver.discountPrice)}</span>
+                    </div>
+                    <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/10">
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
+                      <span className="text-white/40 text-xs">
+                        Ahorras {formatCLP(savings)} ({savingsPct}%)
+                        {car.hotDealBonus ? ` · Bono adicional ${formatCLP(car.hotDealBonus)}` : ""}
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex justify-between items-baseline mb-1">
+                      <span className="text-white/40 text-sm">Precio Electrificarte</span>
+                    </div>
+                    <div className="flex justify-between items-baseline">
+                      <span className="text-primary text-3xl font-headline font-black">{formatCLP(ver.price)}</span>
+                    </div>
+                    <p className="text-white/30 text-xs mt-3 pt-3 border-t border-white/10">
+                      *Precio referencial. Consulta por financiamiento y bonos disponibles.
+                    </p>
+                  </>
+                )}
               </div>
 
               <div className="flex flex-col sm:flex-row gap-3">
@@ -241,9 +261,11 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
                 ) : (
                   <span className="material-symbols-outlined text-[100px] text-white/10 relative z-10">electric_car</span>
                 )}
-                <div className="absolute top-4 right-4 bg-primary text-black text-xs font-black px-3 py-1.5 rounded-full z-20">
-                  -{savingsPct}% con Electrificarte
-                </div>
+                {car.isHotDeal && savingsPct > 0 && (
+                  <div className="absolute top-4 right-4 bg-primary text-black text-xs font-black px-3 py-1.5 rounded-full z-20">
+                    -{savingsPct}% con Electrificarte
+                  </div>
+                )}
               </div>
             </motion.div>
           </div>
@@ -283,9 +305,15 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
                       ))}
                     </div>
                     <div>
-                      <p className="text-white/30 text-xs line-through">{formatCLP(v.price)}</p>
-                      <p className={["font-headline font-black text-xl", isActive ? "text-primary" : "text-white"].join(" ")}>{formatCLP(v.discountPrice)}</p>
-                      <p className="text-green-400 text-[10px] font-bold mt-0.5">-{vPct}% ahorro</p>
+                      {car.isHotDeal && vPct > 0 && (
+                        <p className="text-white/30 text-xs line-through">{formatCLP(v.price)}</p>
+                      )}
+                      <p className={["font-headline font-black text-xl", isActive ? "text-primary" : "text-white"].join(" ")}>
+                        {formatCLP(car.isHotDeal && vPct > 0 ? v.discountPrice : v.price)}
+                      </p>
+                      {car.isHotDeal && vPct > 0 && (
+                        <p className="text-green-400 text-[10px] font-bold mt-0.5">-{vPct}% ahorro</p>
+                      )}
                     </div>
                   </button>
                 );
@@ -533,14 +561,14 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
               {similarCars.map((s) => (
                 <Link key={s.slug} href={`/auto/${s.slug}`} className="group bg-white border border-gray-100 rounded-2xl overflow-hidden hover:border-primary/40 hover:shadow-md transition-all duration-300">
-                  <div className="aspect-[16/9] bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col items-center justify-center overflow-hidden">
+                  <div className="aspect-[16/9] bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
                     {s.imageUrl ? (
-                      <img src={s.imageUrl} alt={`${s.brand} ${s.name}`} className="w-full h-full object-contain" />
+                      <img src={s.imageUrl} alt={`${s.brand} ${s.name}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     ) : (
-                      <>
+                      <div className="w-full h-full flex flex-col items-center justify-center">
                         <span className="material-symbols-outlined text-[56px] text-gray-200">electric_car</span>
                         <span className="text-[10px] uppercase tracking-widest text-text-ghost font-bold mt-1">{s.brand}</span>
-                      </>
+                      </div>
                     )}
                   </div>
                   <div className="p-4">
@@ -561,8 +589,14 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
           <div className="bg-black rounded-2xl p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-6">
             <div>
               <p className="text-primary text-xs uppercase tracking-widest font-bold mb-2">¿Listo para ahorrar?</p>
-              <h2 className="text-white font-headline font-black text-2xl md:text-3xl tracking-tight">Obtén la mejor oferta del {car.brand} {car.name}</h2>
-              <p className="text-white/50 text-sm mt-1">Negociamos por ti. Ahorras hasta {formatCLP(totalBonus)} sobre precio lista.</p>
+              <h2 className="text-white font-headline font-black text-2xl md:text-3xl tracking-tight">
+                {car.isHotDeal ? `Obtén la mejor oferta del ${car.brand} ${car.name}` : `¿Te interesa el ${car.brand} ${car.name}?`}
+              </h2>
+              <p className="text-white/50 text-sm mt-1">
+                {car.isHotDeal && savingsPct > 0
+                  ? `Negociamos por ti. Ahorras hasta ${formatCLP(totalBonus)} sobre precio lista.`
+                  : "Consulta disponibilidad, financiamiento y los mejores precios del mercado."}
+              </p>
             </div>
             <Link href={`/solicitar?auto=${car.slug}`} className="flex-shrink-0 inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-black px-8 py-4 rounded-xl transition-colors text-sm whitespace-nowrap">
               Solicitar oferta ahora

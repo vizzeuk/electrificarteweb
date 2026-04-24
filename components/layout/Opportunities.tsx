@@ -43,20 +43,20 @@ export function Opportunities({ title = "Destacados Electrificarte", cars }: Opp
   const trackRef    = useRef<HTMLDivElement>(null);
   const [canLeft,  setCanLeft]  = useState(false);
   const [canRight, setCanRight] = useState(true);
-
-  function updateArrows() {
-    const el = trackRef.current;
-    if (!el) return;
-    setCanLeft(el.scrollLeft > 8);
-    setCanRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 8);
-  }
+  const [scrollPct, setScrollPct] = useState(0);
 
   useEffect(() => {
     const el = trackRef.current;
     if (!el) return;
-    updateArrows();
-    el.addEventListener("scroll", updateArrows, { passive: true });
-    return () => el.removeEventListener("scroll", updateArrows);
+    function upd() {
+      const max = el!.scrollWidth - el!.clientWidth;
+      setCanLeft(el!.scrollLeft > 8);
+      setCanRight(el!.scrollLeft < max - 8);
+      setScrollPct(max > 0 ? el!.scrollLeft / max : 0);
+    }
+    upd();
+    el.addEventListener("scroll", upd, { passive: true });
+    return () => el.removeEventListener("scroll", upd);
   }, [displayCars]);
 
   function scroll(dir: "left" | "right") {
@@ -109,7 +109,7 @@ export function Opportunities({ title = "Destacados Electrificarte", cars }: Opp
       <div className="relative">
         {/* Left fade */}
         <div
-          className="pointer-events-none absolute left-0 top-0 bottom-0 w-16 z-10 transition-opacity duration-200"
+          className="pointer-events-none absolute left-0 top-0 bottom-0 w-0 sm:w-16 z-10 transition-opacity duration-200"
           style={{
             background: "linear-gradient(to right, white, transparent)",
             opacity: canLeft ? 1 : 0,
@@ -117,7 +117,7 @@ export function Opportunities({ title = "Destacados Electrificarte", cars }: Opp
         />
         {/* Right fade */}
         <div
-          className="pointer-events-none absolute right-0 top-0 bottom-0 w-16 z-10 transition-opacity duration-200"
+          className="pointer-events-none absolute right-0 top-0 bottom-0 w-0 sm:w-16 z-10 transition-opacity duration-200"
           style={{
             background: "linear-gradient(to left, white, transparent)",
             opacity: canRight ? 1 : 0,
@@ -245,24 +245,14 @@ export function Opportunities({ title = "Destacados Electrificarte", cars }: Opp
         </div>
       </div>
 
-      {/* Mobile nav arrows */}
-      <div className="flex md:hidden justify-center gap-3 mt-4 px-4">
-        <button
-          onClick={() => scroll("left")}
-          disabled={!canLeft}
-          aria-label="Anterior"
-          className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-text-muted disabled:opacity-30 disabled:cursor-not-allowed"
-        >
-          <span className="material-symbols-outlined text-[20px]">chevron_left</span>
-        </button>
-        <button
-          onClick={() => scroll("right")}
-          disabled={!canRight}
-          aria-label="Siguiente"
-          className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-text-muted disabled:opacity-30 disabled:cursor-not-allowed"
-        >
-          <span className="material-symbols-outlined text-[20px]">chevron_right</span>
-        </button>
+      {/* Barra de progreso mobile */}
+      <div className="md:hidden mx-4 mt-5">
+        <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
+          <div
+            className="h-full rounded-full transition-all duration-150"
+            style={{ width: `${Math.max(scrollPct * 100, 8)}%`, backgroundColor: "#00E5E5" }}
+          />
+        </div>
       </div>
     </section>
   );

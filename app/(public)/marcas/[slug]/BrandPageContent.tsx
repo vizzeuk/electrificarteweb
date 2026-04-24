@@ -112,20 +112,31 @@ export default function BrandPageContent({ slug, brand }: BrandPageContentProps)
 
   // Hot deal carousel
   const hotDeals = brand.hotDeals;
-  const hotTrackRef = useRef<HTMLDivElement>(null);
-  const [hotCanLeft,  setHotCanLeft]  = useState(false);
-  const [hotCanRight, setHotCanRight] = useState(false);
+  const hotTrackRef  = useRef<HTMLDivElement>(null);
+  const hotPausedRef = useRef(false);
+  const [hotActiveIdx, setHotActiveIdx] = useState(0);
   useEffect(() => {
     const el = hotTrackRef.current;
     if (!el) return;
     function upd() {
-      setHotCanLeft(el!.scrollLeft > 8);
-      setHotCanRight(el!.scrollLeft < el!.scrollWidth - el!.clientWidth - 8);
+      setHotActiveIdx(Math.round(el!.scrollLeft / el!.clientWidth));
     }
     upd();
     el.addEventListener("scroll", upd, { passive: true });
     return () => el.removeEventListener("scroll", upd);
   }, [hotDeals]);
+
+  useEffect(() => {
+    if (hotDeals.length < 2) return;
+    const id = setInterval(() => {
+      if (hotPausedRef.current) return;
+      const el = hotTrackRef.current;
+      if (!el) return;
+      const next = Math.round(el.scrollLeft / el.clientWidth) + 1;
+      el.scrollTo({ left: el.clientWidth * (next >= hotDeals.length ? 0 : next), behavior: "smooth" });
+    }, 7000);
+    return () => clearInterval(id);
+  }, [hotDeals.length]);
 
   // Featured car for hero — Sanity override > hot deal > top seller > first with image
   const featuredCarForHero = useMemo(() => {
@@ -231,8 +242,10 @@ export default function BrandPageContent({ slug, brand }: BrandPageContentProps)
                         <span className="inline-block bg-amber text-black text-[9px] font-black uppercase tracking-wide px-2 py-0.5 rounded-full mb-1.5">HOT DEAL</span>
                       )}
                       <p className="text-white font-headline font-bold text-base leading-tight">{brand.name} {featuredCarForHero.name}</p>
-                      <p className="text-white/40 text-xs line-through mt-0.5">{formatCLP(featuredCarForHero.basePrice)}</p>
-                      <p className="text-primary font-headline font-black text-xl">{formatCLP(featuredCarForHero.discountPrice)}</p>
+                      {featuredCarForHero.discountPrice < featuredCarForHero.basePrice && (
+                        <p className="text-white/40 text-xs line-through mt-0.5">{formatCLP(featuredCarForHero.basePrice)}</p>
+                      )}
+                      <p className="text-primary font-headline font-black text-xl">{formatCLP(featuredCarForHero.discountPrice < featuredCarForHero.basePrice ? featuredCarForHero.discountPrice : featuredCarForHero.basePrice)}</p>
                     </div>
                     <Link
                       href={`/auto/${featuredCarForHero.slug}`}
@@ -305,20 +318,7 @@ export default function BrandPageContent({ slug, brand }: BrandPageContentProps)
 
       {/* ─── HOT DEAL ─────────────────────────────────────────────── */}
       {hotDeals.length > 0 && (
-        <section className="bg-black py-10 md:py-14 overflow-hidden">
-          {/* Nav arrows — solo si hay más de 1 */}
-          {hotDeals.length > 1 && (
-            <div className="max-w-7xl mx-auto px-4 md:px-8 mb-6 flex justify-end gap-2">
-              <button onClick={() => hotTrackRef.current?.scrollBy({ left: -hotTrackRef.current.offsetWidth, behavior: "smooth" })} disabled={!hotCanLeft}
-                className="w-9 h-9 rounded-full border border-white/20 flex items-center justify-center text-white/50 hover:border-primary hover:text-primary disabled:opacity-25 transition-all">
-                <span className="material-symbols-outlined text-[18px]">chevron_left</span>
-              </button>
-              <button onClick={() => hotTrackRef.current?.scrollBy({ left: hotTrackRef.current.offsetWidth, behavior: "smooth" })} disabled={!hotCanRight}
-                className="w-9 h-9 rounded-full border border-white/20 flex items-center justify-center text-white/50 hover:border-primary hover:text-primary disabled:opacity-25 transition-all">
-                <span className="material-symbols-outlined text-[18px]">chevron_right</span>
-              </button>
-            </div>
-          )}
+        <section className="bg-black py-6 sm:py-10 md:py-14" onMouseEnter={() => { hotPausedRef.current = true; }} onMouseLeave={() => { hotPausedRef.current = false; }}>
 
           <div
             ref={hotTrackRef}
@@ -332,22 +332,69 @@ export default function BrandPageContent({ slug, brand }: BrandPageContentProps)
           >
             {hotDeals.map((deal) => {
               const discountPct = Math.round(((deal.basePrice - deal.discountPrice) / deal.basePrice) * 100);
+              const bonusAmt    = deal.bonus > 0 ? deal.bonus : deal.basePrice - deal.discountPrice;
+              const specs = [
+                { label: "Autonomía",  value: `${deal.range} km` },
+                { label: "Potencia",   value: deal.power },
+                { label: "Tracción",   value: deal.traction },
+                { label: "0-100 km/h", value: deal.acceleration },
+              ];
               return (
-                <div
-                  key={deal.carSlug}
-                  style={{ minWidth: "100%" }}
-                  className="flex-shrink-0 scroll-snap-align-start"
-                >
-                  <div className="max-w-7xl mx-auto px-4 md:px-8">
-                    <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-                      <motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
-                        <div className="flex items-center gap-3 mb-6">
+                <div key={deal.carSlug} style={{ flex: "0 0 100%", scrollSnapAlign: "start" }}>
+                  {/* ── MOBILE ── */}
+                  <div className="lg:hidden px-4">
+                    <div className="rounded-2xl overflow-hidden border border-white/10 bg-white/5">
+                      {deal.imageUrl ? (
+                        <img src={deal.imageUrl} alt={`${brand.name} ${deal.carName}`} className="w-full h-40 object-cover" />
+                      ) : (
+                        <div className="w-full h-40 flex items-center justify-center">
+                          <span className="material-symbols-outlined text-[64px] text-primary/30">electric_car</span>
+                        </div>
+                      )}
+                      <div className="p-4 space-y-3">
+                        <div>
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <span className="bg-amber text-black text-[10px] font-black uppercase tracking-wide px-3 py-1 rounded-full">HOT DEAL</span>
+                            <span className="text-white/40 text-xs">Oferta limitada</span>
+                          </div>
+                          <p className="text-white font-headline font-black text-base uppercase leading-tight">{brand.name} {deal.carName}</p>
+                          <p className="text-white/50 text-xs mt-0.5">Bonos de hasta <span className="text-primary font-bold">{formatCLP(bonusAmt)}</span></p>
+                        </div>
+                        <div className="flex items-center justify-between bg-white/5 rounded-xl px-3 py-2.5">
+                          <div>
+                            <p className="text-white/40 text-[10px] line-through">{formatCLP(deal.basePrice)}</p>
+                            <p className="text-primary font-headline font-black text-xl leading-none">{formatCLP(deal.discountPrice)}</p>
+                          </div>
+                          <p className="text-white/30 text-[10px] text-right leading-snug">Ahorra {discountPct}%<br />bono Electrificarte</p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="bg-white/5 rounded-lg px-3 py-2">
+                            <p className="text-primary text-sm font-headline font-bold">{deal.range} km</p>
+                            <p className="text-white/40 text-[10px]">Autonomía</p>
+                          </div>
+                          <div className="bg-white/5 rounded-lg px-3 py-2">
+                            <p className="text-primary text-sm font-headline font-bold">{deal.traction}</p>
+                            <p className="text-white/40 text-[10px]">Tracción</p>
+                          </div>
+                        </div>
+                        <Link href={`/solicitar?auto=${deal.carSlug}`} className="flex items-center justify-center gap-2 w-full bg-primary hover:bg-primary-dark text-black font-bold py-3 rounded-xl text-sm transition-colors">
+                          Quiero esta oferta <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* ── DESKTOP ── */}
+                  <div className="hidden lg:block max-w-7xl mx-auto px-8">
+                    <div className="grid lg:grid-cols-2 gap-12 items-center">
+                      <div>
+                        <div className="flex items-center gap-3 mb-5">
                           <span className="bg-amber text-black text-[10px] font-black uppercase tracking-wide px-3 py-1 rounded-full">HOT DEAL</span>
                           <span className="text-white/50 text-sm">Oferta limitada</span>
                         </div>
-                        <h2 className="text-2xl sm:text-3xl md:text-4xl font-headline font-black text-white mb-4 uppercase leading-tight">
+                        <h2 className="text-3xl md:text-4xl font-headline font-black text-white mb-4 uppercase leading-tight">
                           {brand.name} {deal.carName} con bonos de hasta{" "}
-                          <span className="text-primary">{formatCLP(deal.bonus > 0 ? deal.bonus : deal.basePrice - deal.discountPrice)}</span>
+                          <span className="text-primary">{formatCLP(bonusAmt)}</span>
                         </h2>
                         <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-5 space-y-2">
                           <div className="flex justify-between items-baseline">
@@ -360,47 +407,62 @@ export default function BrandPageContent({ slug, brand }: BrandPageContentProps)
                           </div>
                           <p className="text-white/30 text-xs pt-2 border-t border-white/10">Ahorra {discountPct}% · Incluye bono concesionario + Electrificarte</p>
                         </div>
-                        <div className="flex flex-col sm:flex-row gap-3">
-                          <Link href={`/solicitar?auto=${deal.carSlug}`} className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-6 py-3 rounded-xl transition-all shadow-[0_4px_20px_rgba(0,229,229,0.30)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]">
+                        <div className="flex gap-3">
+                          <Link href={`/solicitar?auto=${deal.carSlug}`} className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-6 py-3 rounded-xl transition-all text-sm shadow-[0_4px_20px_rgba(0,229,229,0.30)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]">
                             Quiero esta oferta <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
                           </Link>
-                          <Link href={`/auto/${deal.carSlug}`} className="inline-flex items-center justify-center gap-2 border border-white/20 hover:border-white/40 text-white font-medium px-6 py-3 rounded-xl transition-all">
+                          <Link href={`/auto/${deal.carSlug}`} className="inline-flex items-center justify-center gap-2 border border-white/20 hover:border-white/40 text-white font-medium px-6 py-3 rounded-xl transition-all text-sm">
                             Ver especificaciones
                           </Link>
                         </div>
-                      </motion.div>
+                      </div>
 
-                      <motion.div initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.15 }} className="relative">
-                        <div className="absolute -top-6 -right-6 w-40 h-40 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
-                        <div className="relative bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 rounded-2xl overflow-hidden">
-                          {deal.imageUrl ? (
-                            <img src={deal.imageUrl} alt={`${brand.name} ${deal.carName}`} className="w-full aspect-[16/10] object-cover" />
-                          ) : (
-                            <div className="p-8 md:p-10">
-                              <div className="text-center mb-6">
-                                <span className="material-symbols-outlined text-[80px] text-primary/30">electric_car</span>
-                                <p className="text-white/40 text-sm mt-1">{brand.name} {deal.carName}</p>
+                      <div className="bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 rounded-2xl overflow-hidden">
+                        {deal.imageUrl ? (
+                          <img src={deal.imageUrl} alt={`${brand.name} ${deal.carName}`} className="w-full aspect-[16/9] object-cover" />
+                        ) : (
+                          <div className="w-full aspect-[16/9] flex items-center justify-center flex-col gap-2">
+                            <span className="material-symbols-outlined text-[80px] text-primary/30">electric_car</span>
+                            <p className="text-white/40 text-sm">{brand.name} {deal.carName}</p>
+                          </div>
+                        )}
+                        <div className="p-4 md:p-5">
+                          <div className="grid grid-cols-2 gap-2">
+                            {specs.map((s) => (
+                              <div key={s.label} className="bg-white/5 rounded-xl p-3">
+                                <p className="text-primary text-base font-headline font-bold">{s.value}</p>
+                                <p className="text-white/40 text-xs">{s.label}</p>
                               </div>
-                            </div>
-                          )}
-                          <div className="p-4 md:p-5">
-                            <div className="grid grid-cols-2 gap-2">
-                              {[{label:"Autonomía",value:`${deal.range} km`},{label:"Potencia",value:deal.power},{label:"Tracción",value:deal.traction},{label:"0-100 km/h",value:deal.acceleration}].map((s) => (
-                                <div key={s.label} className="bg-white/5 rounded-xl p-3">
-                                  <p className="text-primary text-base font-headline font-bold">{s.value}</p>
-                                  <p className="text-white/40 text-xs">{s.label}</p>
-                                </div>
-                              ))}
-                            </div>
+                            ))}
                           </div>
                         </div>
-                      </motion.div>
+                      </div>
                     </div>
                   </div>
                 </div>
               );
             })}
           </div>
+
+          {/* Dots */}
+          {hotDeals.length > 1 && (
+            <div className="flex justify-center gap-2 mt-5">
+              {hotDeals.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => hotTrackRef.current?.scrollTo({ left: (hotTrackRef.current?.clientWidth ?? 0) * i, behavior: "smooth" })}
+                  aria-label={`Ir al hot deal ${i + 1}`}
+                  style={{
+                    width: i === hotActiveIdx ? 20 : 6,
+                    height: 6,
+                    borderRadius: 9999,
+                    backgroundColor: i === hotActiveIdx ? "#00E5E5" : "rgba(255,255,255,0.2)",
+                    transition: "all 0.3s",
+                  }}
+                />
+              ))}
+            </div>
+          )}
         </section>
       )}
 
@@ -421,7 +483,7 @@ export default function BrandPageContent({ slug, brand }: BrandPageContentProps)
               total={brand.cars.length} count={filteredCars.length}
             />
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
             {filteredCars.length === 0 ? (
               <div className="col-span-3 py-16 text-center">
                 <span className="material-symbols-outlined text-[40px] text-gray-200 block mb-3">search_off</span>
@@ -444,17 +506,17 @@ export default function BrandPageContent({ slug, brand }: BrandPageContentProps)
                       </>
                     )}
                   </div>
-                  <div className="flex flex-col flex-1 p-5">
-                    <h3 className="font-headline font-bold text-lg mb-1 group-hover:text-primary-deep transition-colors">{brand.name} {car.name}</h3>
-                    <p className="text-xs text-text-ghost mb-4 leading-snug line-clamp-2">{car.range} km · {car.power} · {car.traction}</p>
-                    <div className="grid grid-cols-3 gap-2 mb-4">
-                      <div className="bg-surface rounded-lg p-2 text-center"><p className="text-[11px] font-bold">{car.specs.battery}</p><p className="text-[10px] text-text-ghost">Batería</p></div>
-                      <div className="bg-surface rounded-lg p-2 text-center"><p className="text-[11px] font-bold">{car.specs.charge0to80}</p><p className="text-[10px] text-text-ghost">0→80%</p></div>
-                      <div className="bg-surface rounded-lg p-2 text-center"><p className="text-[11px] font-bold">{car.specs.topSpeed}</p><p className="text-[10px] text-text-ghost">V. máx</p></div>
+                  <div className="flex flex-col flex-1 p-3 sm:p-5">
+                    <h3 className="font-headline font-bold text-sm sm:text-lg mb-1 group-hover:text-primary-deep transition-colors leading-tight">{brand.name} {car.name}</h3>
+                    <p className="hidden sm:block text-xs text-text-ghost mb-2 sm:mb-3 leading-snug line-clamp-2">{car.range} km · {car.power} · {car.traction}</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-1 sm:gap-2 mb-2 sm:mb-4">
+                      <div className="bg-surface rounded-lg p-1.5 sm:p-2 text-center"><p className="text-[10px] sm:text-[11px] font-bold">{car.specs.battery}</p><p className="text-[9px] sm:text-[10px] text-text-ghost">Batería</p></div>
+                      <div className="bg-surface rounded-lg p-1.5 sm:p-2 text-center"><p className="text-[10px] sm:text-[11px] font-bold">{car.specs.topSpeed}</p><p className="text-[9px] sm:text-[10px] text-text-ghost">V. máx</p></div>
+                      <div className="hidden sm:block bg-surface rounded-lg p-1.5 sm:p-2 text-center"><p className="text-[10px] sm:text-[11px] font-bold">{car.specs.charge0to80}</p><p className="text-[9px] sm:text-[10px] text-text-ghost">0→80%</p></div>
                     </div>
-                    <div className="flex justify-between items-baseline mb-4">
-                      <span className="text-xs text-text-ghost line-through">{formatCLP(car.basePrice)}</span>
-                      <span className="text-xl font-headline font-black text-primary-deep">{formatCLP(car.discountPrice)}</span>
+                    <div className="mb-2 sm:mb-4">
+                      {pct > 0 && <p className="text-[10px] text-text-ghost line-through">{formatCLP(car.basePrice)}</p>}
+                      <p className="text-sm sm:text-xl font-headline font-black text-primary-deep">{formatCLP(pct > 0 ? car.discountPrice : car.basePrice)}</p>
                     </div>
                     <div className="flex gap-2 mt-auto">
                       <Link href={`/auto/${car.slug}`} className="flex-1 text-center bg-primary hover:bg-primary-dark text-black font-bold py-2.5 rounded-xl text-sm transition-colors after:absolute after:inset-0">
