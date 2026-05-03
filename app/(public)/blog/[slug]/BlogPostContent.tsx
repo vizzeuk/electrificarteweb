@@ -25,6 +25,12 @@ interface BlogPost {
   articleType?: string;
   geoRegions?: string[];
   geoCities?: string[];
+  articleCta?: {
+    heading: string;
+    subtext?: string;
+    buttonLabel: string;
+    buttonUrl: string;
+  } | null;
   relatedCars?: {
     _id: string; name: string; slug: string; tagline: string;
     discountPrice: number; basePrice: number; range: number;
@@ -338,6 +344,36 @@ export function BlogPostContent({ post }: { post: BlogPost }) {
                         </div>
                       </details>
                     ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Article CTA */}
+              {post.articleCta && (
+                <div className="mt-12 rounded-2xl bg-black overflow-hidden relative">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-[80px] pointer-events-none" />
+                  <div className="relative z-10 p-8 md:p-10 flex flex-col sm:flex-row sm:items-center gap-6">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="material-symbols-outlined text-primary text-[16px]">bolt</span>
+                        <span className="text-primary text-[10px] font-black uppercase tracking-widest">Electrificarte</span>
+                      </div>
+                      <h3 className="font-headline font-black text-white text-xl md:text-2xl leading-tight mb-2">
+                        {post.articleCta.heading}
+                      </h3>
+                      {post.articleCta.subtext && (
+                        <p className="text-white/50 text-sm leading-relaxed">
+                          {post.articleCta.subtext}
+                        </p>
+                      )}
+                    </div>
+                    <Link
+                      href={post.articleCta.buttonUrl}
+                      className="flex-shrink-0 inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-black font-bold text-sm px-6 py-3.5 rounded-xl transition-colors whitespace-nowrap"
+                    >
+                      {post.articleCta.buttonLabel}
+                      <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                    </Link>
                   </div>
                 </div>
               )}

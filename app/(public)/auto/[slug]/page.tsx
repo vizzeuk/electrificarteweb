@@ -86,6 +86,15 @@ export default async function CarDetailPage({ params }: PageProps) {
     techFeatures:    sanity.techFeatures ?? [],
     comfortFeatures: sanity.comfortFeatures ?? [],
     fichaUrl:        sanity.brand?.website ?? undefined,
+    brandLogoUrl:    sanity.brand?.logoUrl ?? undefined,
+    highlights:      (sanity.highlights ?? []).map((h: any) => ({
+      title:         h.title,
+      description:   h.description ?? "",
+      badge:         h.badge,
+      icon:          h.icon,
+      imageUrl:      h.imageUrl,
+      imagePosition: h.imagePosition ?? "right",
+    })),
     versions:        (sanity.versions ?? []).map((v: any) => ({
       name:          v.name,
       price:         v.price,

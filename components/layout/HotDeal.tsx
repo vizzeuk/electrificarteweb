@@ -264,21 +264,42 @@ export function HotDeal({ car, cars }: HotDealProps) {
   }
 
   const dots = list.length > 1 && (
-    <div className="flex justify-center gap-2 mt-5">
-      {list.map((_, i) => (
-        <button
-          key={i}
-          onClick={() => goTo(i)}
-          aria-label={`Ir al hot deal ${i + 1}`}
-          style={{
-            width: i === activeIdx ? 20 : 6,
-            height: 6,
-            borderRadius: 9999,
-            backgroundColor: i === activeIdx ? "#00E5E5" : "rgba(255,255,255,0.2)",
-            transition: "all 0.3s",
-          }}
-        />
-      ))}
+    <div className="flex items-center justify-center gap-3 mt-5">
+      {/* Prev — desktop only */}
+      <button
+        onClick={() => goTo(activeIdx > 0 ? activeIdx - 1 : list.length - 1)}
+        aria-label="Anterior"
+        className="hidden lg:flex items-center justify-center w-6 h-6 rounded-full border border-white/20 hover:border-primary hover:bg-primary/10 transition-all"
+      >
+        <span className="material-symbols-outlined text-white/50 hover:text-primary text-[14px]">chevron_left</span>
+      </button>
+
+      {/* Dots */}
+      <div className="flex items-center gap-2">
+        {list.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => goTo(i)}
+            aria-label={`Ir al hot deal ${i + 1}`}
+            style={{
+              width: i === activeIdx ? 20 : 6,
+              height: 6,
+              borderRadius: 9999,
+              backgroundColor: i === activeIdx ? "#00E5E5" : "rgba(255,255,255,0.2)",
+              transition: "all 0.3s",
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Next — desktop only */}
+      <button
+        onClick={() => goTo(activeIdx < list.length - 1 ? activeIdx + 1 : 0)}
+        aria-label="Siguiente"
+        className="hidden lg:flex items-center justify-center w-6 h-6 rounded-full border border-white/20 hover:border-primary hover:bg-primary/10 transition-all"
+      >
+        <span className="material-symbols-outlined text-white/50 hover:text-primary text-[14px]">chevron_right</span>
+      </button>
     </div>
   );
 

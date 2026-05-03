@@ -84,18 +84,6 @@ export function Navbar() {
           {/* ── Desktop links ─────────────────────────────── */}
           <div className="hidden lg:flex items-center gap-1">
 
-            <Link
-              href="/comparador"
-              className={[
-                "px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-                transparent
-                  ? "text-white/80 hover:text-white hover:bg-white/10"
-                  : "text-text-muted hover:text-text-main hover:bg-surface",
-              ].join(" ")}
-            >
-              Comparador
-            </Link>
-
             {/* Dropdown – Marcas */}
             <Dropdown
               id="brands"
@@ -204,7 +192,7 @@ export function Navbar() {
         {/* ── Right CTAs ───────────────────────────────────── */}
         <div className="flex items-center gap-2.5">
           <Link
-            href="/calculadora"
+            href="/comparador"
             className={[
               "hidden lg:inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all",
               transparent
@@ -212,15 +200,15 @@ export function Navbar() {
                 : "text-text-main border border-gray-200 hover:border-primary/40 hover:text-primary hover:bg-surface",
             ].join(" ")}
           >
-            <Icon name="calculate" size="sm" />
-            Calcula tu ahorro
+            <Icon name="compare" size="sm" />
+            Comparador
           </Link>
           <Link
-            href="/solicitar"
+            href="/calculadora"
             className="hidden sm:inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-5 py-2.5 rounded-xl text-sm transition-all shadow-[0_4px_16px_rgba(0,229,229,0.22)] hover:shadow-[0_6px_24px_rgba(0,229,229,0.35)] hover:scale-[1.02] active:scale-[0.99]"
           >
-            Solicitar oferta
-            <Icon name="arrow_forward" size="sm" />
+            <Icon name="calculate" size="sm" />
+            Calcula tu ahorro
           </Link>
 
           {/* Hamburger */}
@@ -248,14 +236,6 @@ export function Navbar() {
             className="lg:hidden overflow-hidden bg-white border-b border-gray-100"
           >
             <div className="px-4 py-5 space-y-1">
-              <Link
-                href="/comparador"
-                className="block text-base font-medium py-2.5 px-3 hover:text-primary transition-colors rounded-xl hover:bg-surface"
-                onClick={() => setMobileOpen(false)}
-              >
-                Comparador
-              </Link>
-
               {/* Mobile – Marcas accordion */}
               <MobileAccordion
                 label="Buscar por Marca"
@@ -325,19 +305,20 @@ export function Navbar() {
 
               <div className="pt-4 border-t border-gray-100 space-y-2">
                 <Link
-                  href="/calculadora"
+                  href="/comparador"
                   className="flex items-center justify-center gap-2 w-full text-center border border-gray-200 hover:border-primary/40 hover:text-primary text-text-main font-semibold py-3 rounded-xl transition-colors"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <span className="material-symbols-outlined text-[18px]">compare</span>
+                  Comparador
+                </Link>
+                <Link
+                  href="/calculadora"
+                  className="flex items-center justify-center gap-2 w-full text-center bg-primary hover:bg-primary-dark text-black font-bold py-3 rounded-xl transition-colors"
                   onClick={() => setMobileOpen(false)}
                 >
                   <span className="material-symbols-outlined text-[18px]">calculate</span>
                   Calcula tu ahorro
-                </Link>
-                <Link
-                  href="/solicitar"
-                  className="block w-full text-center bg-primary hover:bg-primary-dark text-black font-bold py-3 rounded-xl transition-colors"
-                  onClick={() => setMobileOpen(false)}
-                >
-                  Solicitar oferta
                 </Link>
               </div>
             </div>

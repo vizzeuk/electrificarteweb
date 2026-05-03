@@ -59,6 +59,25 @@ export const featuredCarsQuery = groq`
   }
 `;
 
+// ─── Todos los Hot Deals (isHotDeal) — para carrusel ─────────────────────────
+export const allHotDealsQuery = groq`
+  *[_type == "car" && isHotDeal == true] | order(coalesce(discountPrice, basePrice) asc) {
+    _id,
+    name,
+    "slug": slug.current,
+    mainImage,
+    "imageUrl": mainImage.asset->url,
+    basePrice,
+    discountPrice,
+    hotDealBonusAmount,
+    range,
+    power,
+    traction,
+    acceleration,
+    "brand": brand->{ name, "slug": slug.current }
+  }
+`;
+
 // ─── Hot Deal único (isHotDeal) ───────────────────────────────────────────────
 export const hotDealQuery = groq`
   *[_type == "car" && isHotDeal == true][0] {
@@ -93,6 +112,14 @@ export const carBySlugQuery = groq`
     modelYear,
     mainImage,
     "gallery": gallery[]{ "url": asset->url, alt, caption },
+    "highlights": highlights[]{
+      title,
+      description,
+      badge,
+      icon,
+      "imageUrl": image.asset->url,
+      imagePosition
+    },
     basePrice,
     discountPrice,
     priceNote,
@@ -162,7 +189,7 @@ export const carBySlugQuery = groq`
       chargeTimeDC,
       chargeTimeAC
     },
-    "brand": brand->{ _id, name, "slug": slug.current, logo, description, accentColor },
+    "brand": brand->{ _id, name, "slug": slug.current, "logoUrl": logo.asset->url, logo, description, accentColor },
     "vehicleType": vehicleType->{ _id, name, "slug": slug.current, label, icon },
     "electricType": electricType->{ _id, name, "slug": slug.current, label, tag, color, icon },
     "category": category->{ _id, name, "slug": slug.current },
@@ -311,6 +338,21 @@ export const allVehicleTypesQuery = groq`
     "slug": slug.current,
     label,
     icon
+  }
+`;
+
+// ─── Tipos eléctricos con conteo y tagline (para sección home) ───────────────
+export const electricTypesForHomeQuery = groq`
+  *[_type == "electricType"] | order(navbarOrder asc) {
+    _id,
+    "slug": slug.current,
+    label,
+    tag,
+    color,
+    icon,
+    tagline,
+    idealFor,
+    "carCount": count(*[_type == "car" && electricType._ref == ^._id])
   }
 `;
 

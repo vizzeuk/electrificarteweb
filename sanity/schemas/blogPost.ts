@@ -108,6 +108,45 @@ export const blogPost = defineType({
       type: "blockContent",
       group: "content",
     }),
+    defineField({
+      name: "articleCta",
+      title: "CTA al final del artículo",
+      type: "object",
+      group: "content",
+      description: "Bloque de llamada a la acción que aparece al final del contenido. Personalízalo según el tema del artículo.",
+      fields: [
+        defineField({
+          name: "heading",
+          title: "Título del CTA",
+          type: "string",
+          description: "Ej: «¿Listo para comprar tu primer eléctrico?»",
+          validation: (Rule) => Rule.required().max(80),
+        }),
+        defineField({
+          name: "subtext",
+          title: "Subtexto",
+          type: "text",
+          rows: 2,
+          description: "Frase corta que refuerza el mensaje. Máx. 150 caracteres.",
+          validation: (Rule) => Rule.max(150),
+        }),
+        defineField({
+          name: "buttonLabel",
+          title: "Texto del botón",
+          type: "string",
+          initialValue: "Solicitar oferta",
+          validation: (Rule) => Rule.required().max(40),
+        }),
+        defineField({
+          name: "buttonUrl",
+          title: "URL del botón",
+          type: "string",
+          description: "Ruta interna (ej: /solicitar) o URL completa (ej: https://...).",
+          initialValue: "/solicitar",
+          validation: (Rule) => Rule.required(),
+        }),
+      ],
+    }),
 
     // ─── SEO ──────────────────────────────────────────────────────────────────
     defineField({

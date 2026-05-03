@@ -26,7 +26,6 @@ export default async function ComparadorPage({ searchParams }: PageProps) {
       isHotDeal: c.isHotDeal ?? false,
       highlight: c.highlight,
       ground:    c.groundClearance ?? 0,
-      warranty:  c.warranty ?? "—",
     };
 
     if (versions.length === 0) {

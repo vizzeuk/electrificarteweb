@@ -51,7 +51,6 @@ html {
 .marquee-right {
   animation: marquee-right 65s linear infinite;
 }
-.marquee-left:hover,
-.marquee-right:hover {
+.marquee-paused {
   animation-play-state: paused;
 }

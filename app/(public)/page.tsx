@@ -2,7 +2,7 @@ import React from "react";
 import { client } from "@/lib/sanity/client";
 import { homePageQuery } from "@/lib/queries/pages";
 import { latestBlogPostsQuery } from "@/lib/queries/blog";
-import { allBrandsStripQuery } from "@/lib/queries/car";
+import { allBrandsStripQuery, allHotDealsQuery, electricTypesForHomeQuery } from "@/lib/queries/car";
 import { collectionsForHomeQuery } from "@/lib/queries/collections";
 import { Hero }             from "@/components/layout/Hero";
 import { BrandStrip }       from "@/components/layout/BrandStrip";
@@ -11,6 +11,7 @@ import { CollectionsSlideshow } from "@/components/layout/CollectionsSlideshow";
 import { HotDeal }          from "@/components/layout/HotDeal";
 import { Opportunities }    from "@/components/layout/Opportunities";
 import { ServiciosExtras }  from "@/components/layout/ServiciosExtras";
+import { VehicleTypeGrid }  from "@/components/layout/VehicleTypeGrid";
 import { HowItWorks }       from "@/components/layout/HowItWorks";
 import { TrustBadges }      from "@/components/layout/TrustBadges";
 import { Testimonials }     from "@/components/layout/Testimonials";
@@ -25,11 +26,13 @@ export const revalidate = 60;
 
 export default async function HomePage() {
   // Fetch all home page content from Sanity (falls back gracefully if no data yet)
-  const [page, blogPosts, brands, collections] = await Promise.all([
+  const [page, blogPosts, brands, collections, hotDeals, vehicleTypes] = await Promise.all([
     client.fetch(homePageQuery, {}, { next: { tags: ["homePage"] } }).catch(() => null),
     client.fetch(latestBlogPostsQuery, { count: 3 }, { next: { tags: ["blogPost"] } }).catch(() => []),
     client.fetch(allBrandsStripQuery, {}, { next: { tags: ["brand"] } }).catch(() => []),
     client.fetch(collectionsForHomeQuery, {}, { next: { tags: ["collection"] } }).catch(() => []),
+    client.fetch(allHotDealsQuery, {}, { next: { tags: ["car"] } }).catch(() => []),
+    client.fetch(electricTypesForHomeQuery, {}, { next: { tags: ["electricType"] } }).catch(() => []),
   ]);
 
   return (
@@ -76,9 +79,9 @@ export default async function HomePage() {
         }))}
       />
 
-      <CollectionsSlideshow collections={collections} />
+      <VehicleTypeGrid types={vehicleTypes ?? []} />
 
-      <HotDeal car={page?.hotDealCar ?? null} />
+      <HotDeal cars={hotDeals?.length ? hotDeals : (page?.hotDealCar ? [page.hotDealCar] : null)} />
 
       <Opportunities
         title="Destacados Electrificarte"
@@ -99,12 +102,15 @@ export default async function HomePage() {
         }))}
       />
 
+      <CollectionsSlideshow collections={collections} />
+
       <ServiciosExtras items={page?.serviciosExtras} />
 
       <HowItWorks
         title={page?.howItWorksTitle}
         subtitle={page?.howItWorksSubtitle}
         steps={page?.howItWorksSteps}
+        videoUrl={page?.howItWorksVideoUrl}
       />
 
       <TrustBadges badges={page?.trustBadges} />

@@ -68,6 +68,8 @@ export const blogPostBySlugQuery = groq`
     faqBlock,
     howToBlock,
     articleType,
+    // ─ CTA
+    articleCta,
     // ─ Relaciones
     "relatedCars": relatedCars[]->{
       _id,

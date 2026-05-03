@@ -144,6 +144,11 @@ export const homePage = defineType({
       initialValue: "En 4 simples pasos pasas de buscar a estrenar tu auto eléctrico al mejor precio de Chile.",
     }),
     defineField({
+      name: "howItWorksVideoUrl", title: "Video explicativo (URL YouTube)", type: "url",
+      group: "howItWorks",
+      description: 'URL del video explicativo de Electrificarte. Ej: "https://www.youtube.com/embed/xxxx". Se abre en popup al hacer clic en el botón.',
+    }),
+    defineField({
       name: "howItWorksSteps", title: "Pasos del proceso", type: "array", group: "howItWorks",
       description: "Los 4 pasos de Cómo Funciona. Puedes editar el ícono, título y descripción.",
       of: [defineArrayMember({

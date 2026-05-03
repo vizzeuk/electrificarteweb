@@ -31,7 +31,6 @@ export interface Car {
   seats: number;
   cargo: number;
   ground: number;
-  warranty: string;
   isHotDeal: boolean;
   highlight?: string;
 }
@@ -65,7 +64,6 @@ const ROWS: {
   { label: "Categoría",           key: "category",      type: "text" },
   { label: "Maletero",            key: "cargo",         unit: " L",    type: "number", highlight: "high" },
   { label: "Altura libre",        key: "ground",        unit: " mm",   type: "number", highlight: "high" },
-  { label: "Garantía",            key: "warranty",      type: "text" },
   { label: "Plazas",              key: "seats",         type: "number" },
 ];
 
@@ -73,7 +71,7 @@ const SECTIONS = [
   { label: "Precio",          keys: ["discountPrice", "basePrice"] },
   { label: "Rendimiento",     keys: ["range", "battery", "power", "acceleration", "topSpeed"] },
   { label: "Carga eléctrica", keys: ["chargeTimeDC", "chargeType"] },
-  { label: "Practicidad",     keys: ["traction", "category", "cargo", "ground", "seats", "warranty"] },
+  { label: "Practicidad",     keys: ["traction", "category", "cargo", "ground", "seats"] },
 ];
 
 const MAX_CARS = 3;
@@ -87,7 +85,7 @@ function CarImage({ url, name, size = "md" }: { url?: string; name: string; size
     return (
       <div className={`${dims} overflow-hidden flex-shrink-0`}>
         <Image src={url} alt={name} width={size === "lg" ? 300 : 56} height={size === "lg" ? 200 : 56}
-          className="w-full h-full object-contain" />
+          className="w-full h-full object-cover" />
       </div>
     );
   }
@@ -121,7 +119,7 @@ function HeroInfo() {
     {
       icon: "receipt_long",
       title: "Comparación completa",
-      desc: "Autonomía, carga, potencia, tracción, maletero y garantía. Todo en una sola tabla.",
+      desc: "Autonomía, carga, potencia, tracción, maletero y más. Todo en una sola tabla.",
     },
   ];
 
@@ -432,7 +430,7 @@ export default function ComparadorClient({ allCars, initialId }: ComparadorClien
                       <div className="w-14 h-11 bg-gray-50 rounded-xl overflow-hidden flex items-center justify-center flex-shrink-0">
                         {car.imageUrl ? (
                           <Image src={car.imageUrl} alt={car.name} width={56} height={44}
-                            className="w-full h-full object-contain" />
+                            className="w-full h-full object-cover" />
                         ) : (
                           <span className="material-symbols-outlined text-[22px] text-gray-300">electric_car</span>
                         )}
@@ -527,7 +525,7 @@ function DesktopCarSlot({ car, onRemove, onAdd }: { car: Car | undefined; onRemo
         <div className="mx-auto w-28 h-20 rounded-xl overflow-hidden bg-gray-50 flex items-center justify-center mb-3">
           {car.imageUrl ? (
             <Image src={car.imageUrl} alt={car.name} width={112} height={80}
-              className="w-full h-full object-contain" />
+              className="w-full h-full object-cover" />
           ) : (
             <span className="material-symbols-outlined text-[40px] text-gray-200">electric_car</span>
           )}
@@ -594,7 +592,7 @@ function MobileCarSlot({ car, onRemove, onAdd }: { car: Car | undefined; onRemov
         <div className="mx-auto w-20 h-14 rounded-lg overflow-hidden bg-gray-50 flex items-center justify-center mb-2">
           {car.imageUrl ? (
             <Image src={car.imageUrl} alt={car.name} width={80} height={56}
-              className="w-full h-full object-contain" />
+              className="w-full h-full object-cover" />
           ) : (
             <span className="material-symbols-outlined text-[28px] text-gray-200">electric_car</span>
           )}

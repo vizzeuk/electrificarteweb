@@ -72,9 +72,14 @@ export function Opportunities({ title = "Destacados Electrificarte", cars }: Opp
       <div className="max-w-7xl mx-auto px-4 md:px-8 mb-10">
         <div className="flex items-end justify-between gap-4">
           <div>
-            <p className="text-[11px] uppercase tracking-widest text-primary-deep font-bold mb-2">
-              Selección exclusiva
-            </p>
+            <div className="flex items-center gap-2 mb-2">
+              <p className="text-[11px] uppercase tracking-widest text-primary-deep font-bold">
+                Selección exclusiva
+              </p>
+              <span className="text-[9px] font-medium text-text-ghost border border-gray-200 px-1.5 py-0.5 rounded">
+                Publicidad
+              </span>
+            </div>
             <h2
               id="opportunities-title"
               className="text-3xl md:text-4xl font-headline font-black uppercase tracking-tighter"

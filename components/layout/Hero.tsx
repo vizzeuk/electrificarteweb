@@ -133,17 +133,17 @@ export function Hero({ data }: HeroProps) {
               {subtitle}
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col items-start sm:flex-row gap-3">
               <Link
                 href={cta1Href}
-                className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-8 py-4 rounded-xl transition-all text-lg shadow-[0_6px_32px_rgba(0,229,229,0.30)] hover:shadow-[0_8px_40px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]"
+                className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-5 py-3 sm:px-8 sm:py-4 rounded-xl transition-all text-sm sm:text-lg shadow-[0_6px_32px_rgba(0,229,229,0.30)] hover:shadow-[0_8px_40px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]"
               >
                 {cta1Text}
                 <Icon name="arrow_forward" size="sm" />
               </Link>
               <a
                 href="#como-funciona"
-                className="inline-flex items-center justify-center gap-2 border border-white/20 hover:border-white/50 hover:bg-white/5 text-white font-medium px-8 py-4 rounded-xl transition-all"
+                className="inline-flex items-center justify-center gap-2 border border-white/20 hover:border-white/50 hover:bg-white/5 text-white font-medium px-5 py-3 sm:px-8 sm:py-4 rounded-xl transition-all text-sm sm:text-base"
               >
                 {cta2Text}
                 <Icon name="expand_more" size="sm" />

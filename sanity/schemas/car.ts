@@ -269,6 +269,39 @@ export const car = defineType({
     defineField({ name: "videoTitle",    title: "Título del video",   type: "string", group: "media" }),
     defineField({ name: "videoDuration", title: "Duración del video", type: "string", group: "media", description: 'Ej: "12:34"' }),
 
+    defineField({
+      name: "highlights",
+      title: "Secciones destacadas (foto + texto)",
+      type: "array",
+      group: "media",
+      description: "Secciones que aparecen bajo el hero con una foto y texto. Ideal para resaltar características clave. Se muestran en orden, alternando fondo blanco/gris.",
+      of: [defineArrayMember({
+        type: "object",
+        name: "highlight",
+        title: "Sección",
+        fields: [
+          defineField({ name: "title", title: "Título", type: "string", validation: (r) => r.required(), description: 'Ej: "Carga ultrarrápida de 800V"' }),
+          defineField({ name: "description", title: "Descripción", type: "text", rows: 3, description: "2-3 líneas que explican la característica." }),
+          defineField({ name: "badge", title: "Etiqueta", type: "string", description: 'Categoría visible sobre el título. Ej: "Carga", "Seguridad", "Tecnología"' }),
+          defineField({ name: "icon", title: "Ícono (Material Symbol)", type: "string", description: 'Ej: "bolt", "shield", "memory", "speed"' }),
+          defineField({ name: "image", title: "Foto", type: "image", options: { hotspot: true }, description: "Foto de alta calidad (mín. 1200×900 px). Aspecto 4:3 recomendado." }),
+          defineField({
+            name: "imagePosition",
+            title: "Lado de la foto",
+            type: "string",
+            options: { list: [{ title: "Foto a la derecha", value: "right" }, { title: "Foto a la izquierda", value: "left" }], layout: "radio" },
+            initialValue: "right",
+          }),
+        ],
+        preview: {
+          select: { title: "title", badge: "badge", media: "image" },
+          prepare({ title, badge, media }: any) {
+            return { title: title || "Sin título", subtitle: badge || "Sin etiqueta", media };
+          },
+        },
+      })],
+    }),
+
     // ─── Deal flags ─────────────────────────────────────────────────────────
     defineField({
       name: "isNew", title: "🆕 Nuevo lanzamiento", type: "boolean", group: "deal",

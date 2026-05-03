@@ -79,6 +79,7 @@ export const homePageQuery = groq`
 
     howItWorksTitle,
     howItWorksSubtitle,
+    howItWorksVideoUrl,
     howItWorksSteps[]{number, icon, title, description},
 
     trustBadges[]{icon, title, description},
