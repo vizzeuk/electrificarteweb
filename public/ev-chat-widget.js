@@ -263,6 +263,47 @@
     #btn-send:disabled { opacity: 0.4; cursor: not-allowed; }
     #btn-send svg { width: 16px; height: 16px; fill: #000000; }
 
+    /* Nudge tooltip */
+    #nudge {
+      position: fixed;
+      bottom: calc(var(--chat-bottom, 24px) + 8px);
+      right: 88px;
+      background: #ffffff;
+      color: #111111;
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 1.4;
+      padding: 10px 14px;
+      border-radius: 12px 12px 4px 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+      white-space: nowrap;
+      pointer-events: auto;
+      cursor: pointer;
+      opacity: 0;
+      transform: translateY(6px) scale(0.96);
+      transition: opacity 0.3s ease, transform 0.3s ease, bottom 0.3s ease;
+      z-index: 9998;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    #nudge.visible {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    #nudge.hidden { display: none; }
+    #nudge-close {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      color: #888;
+      padding: 0;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    #nudge-close:hover { color: #333; }
+
     /* Position variants */
     :host([data-position="bottom-left"]) #launcher,
     :host([data-position="bottom-left"]) #panel {
@@ -292,6 +333,11 @@
     }
   `}function _(a){const e=/\[MENU\]([\s\S]*?)\[\/MENU\]/g,t=[];let s=a,i;for(;(i=e.exec(a))!==null;){const d=i[1].split(`
 `).map(r=>r.trim()).filter(Boolean);for(const r of d){const l=r.match(/^(\d+)\.\s+(.+?)\s+→\s+((?:https?:\/\/|\/)\S+)$/);if(l){t.push({number:l[1],label:l[2],url:l[3]});continue}const o=r.match(/^(\d+)\.\s+(.+)$/);o&&t.push({number:o[1],label:o[2]})}}return s=a.replace(/\[MENU\][\s\S]*?\[\/MENU\]/g,"").trim(),{text:s,menuItems:t}}function y(a){return`
+    <div id="nudge" class="hidden" role="status" aria-live="polite">
+      <span>¿Necesitas ayuda? 💬</span>
+      <button id="nudge-close" aria-label="Cerrar">✕</button>
+    </div>
+
     <button id="launcher" aria-label="Abrir chat" aria-expanded="false">
       <img class="icon-chat" src="/images/foto-francisco.jpeg" alt="Francisco" />
       <svg class="icon-close" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -343,7 +389,7 @@
 2. Quiero información de un modelo específico
 3. ¿Cuánto ahorro versus bencina?
 4. Quiero contactar al equipo
-[/MENU]`,u=[{key:"budget",question:"¿Cuál es tu presupuesto aproximado?",options:[{label:"Hasta 15 millones CLP",value:"hasta-15",display:"hasta 15 millones CLP"},{label:"15 a 30 millones CLP",value:"15-30",display:"15 a 30 millones CLP"},{label:"30 a 50 millones CLP",value:"30-50",display:"30 a 50 millones CLP"},{label:"Más de 50 millones CLP",value:"mas-50",display:"más de 50 millones CLP"}]},{key:"vehicleType",question:"¿Qué tipo de carrocería prefieres?",options:[{label:"SUV o Crossover",value:"suv",display:"SUV o Crossover"},{label:"Sedán",value:"sedan",display:"Sedán"},{label:"Hatchback o City car",value:"hatchback",display:"Hatchback o City car"},{label:"Pickup",value:"pickup",display:"Pickup"},{label:"Sin preferencia",value:"any",display:"cualquier carrocería"}]},{key:"electricType",question:"¿Prefieres un auto 100% eléctrico o también consideras híbridos?",options:[{label:"100% eléctrico",value:"electric",display:"100% eléctrico"},{label:"Híbrido o enchufable",value:"hybrid",display:"híbrido o enchufable"},{label:"Me da igual",value:"any",display:"cualquier tipo"}]}];class E extends HTMLElement{constructor(){super(),this._shadow=this.attachShadow({mode:"open"}),this._history=[],this._isOpen=!1,this._loading=!1,this._savingsState=null,this._savingsKm=null,this._findStep=-1,this._findCriteria={}}connectedCallback(){this._apiUrl=this.dataset.apiUrl||"",this._botName=this.dataset.botName||"Asistente",this._primaryColor=this.dataset.primaryColor||"#00E5E5";const e=document.createElement("style");e.textContent=v(this._primaryColor),this._shadow.appendChild(e);const t=document.createElement("div");t.innerHTML=y(this._botName),this._shadow.appendChild(t),this._launcher=this._shadow.getElementById("launcher"),this._panel=this._shadow.getElementById("panel"),this._messagesEl=this._shadow.getElementById("messages"),this._input=this._shadow.getElementById("input"),this._btnSend=this._shadow.getElementById("btn-send"),this._btnClear=this._shadow.getElementById("btn-clear"),this._launcher.addEventListener("click",()=>this._togglePanel()),this._btnSend.addEventListener("click",()=>this._handleSend()),this._btnClear.addEventListener("click",()=>this._clearChat()),this._input.addEventListener("keydown",s=>{s.key==="Enter"&&!s.shiftKey&&(s.preventDefault(),this._handleSend())}),this._input.addEventListener("input",()=>{this._btnSend.disabled=this._input.value.trim()===""||this._loading,this._input.style.height="auto",this._input.style.height=Math.min(this._input.scrollHeight,80)+"px"}),this._restoreSession()}_saveSession(){try{sessionStorage.setItem(p,JSON.stringify(this._history))}catch{}}_restoreSession(){try{const e=sessionStorage.getItem(p);if(e&&(this._history=JSON.parse(e),this._history.length>0)){for(const t of this._history)c(this._messagesEl,t.role==="user"?"user":"bot",t.content,(s,i)=>this._handleMenuSelect(s,i));return}}catch{sessionStorage.removeItem(p)}this._showBotMessage(f)}_togglePanel(){this._isOpen=!this._isOpen,this._launcher.classList.toggle("open",this._isOpen),this._panel.classList.toggle("visible",this._isOpen),this._panel.setAttribute("aria-hidden",String(!this._isOpen)),this._launcher.setAttribute("aria-expanded",String(this._isOpen)),this._isOpen&&requestAnimationFrame(()=>this._input.focus())}_clearChat(){this._history=[],this._savingsState=null,this._savingsKm=null,this._findStep=-1,this._findCriteria={},this._messagesEl.innerHTML="",sessionStorage.removeItem(p),this._showBotMessage(f)}_showBotMessage(e){c(this._messagesEl,"bot",e,(t,s)=>this._handleMenuSelect(t,s))}_handleMenuSelect(e,t){this._loading||this._submitUserMessage(`${e}. ${t}`)}async _handleSend(){const e=this._input.value.trim();!e||this._loading||(this._input.value="",this._input.style.height="auto",this._btnSend.disabled=!0,this._submitUserMessage(e))}async _submitUserMessage(e){if(e.includes("Empezar de nuevo")||e.includes("Volver al inicio")){c(this._messagesEl,"user",e,()=>{}),this._clearChat();return}if(this._isSavingsFlow(e)){this._handleSavingsFlow(e);return}if(this._isContactFlow(e)){this._handleContactFlow();return}if(this._isFindFlow(e)){this._handleFindFlow(e);return}c(this._messagesEl,"user",e,()=>{}),this._history.push({role:"user",content:e}),this._history.length>h&&(this._history=this._history.slice(-h)),this._loading=!0,this._btnSend.disabled=!0;const t=b(this._messagesEl);try{const s=await w(this._apiUrl,this._history);t(),this._history.push({role:"assistant",content:s}),this._history.length>h&&(this._history=this._history.slice(-h)),this._saveSession(),this._showBotMessage(s)}catch{t(),this._showBotMessage(`Lo siento, hubo un problema al conectar. Por favor intenta nuevamente.
+[/MENU]`,u=[{key:"budget",question:"¿Cuál es tu presupuesto aproximado?",options:[{label:"Hasta 15 millones CLP",value:"hasta-15",display:"hasta 15 millones CLP"},{label:"15 a 30 millones CLP",value:"15-30",display:"15 a 30 millones CLP"},{label:"30 a 50 millones CLP",value:"30-50",display:"30 a 50 millones CLP"},{label:"Más de 50 millones CLP",value:"mas-50",display:"más de 50 millones CLP"}]},{key:"vehicleType",question:"¿Qué tipo de carrocería prefieres?",options:[{label:"SUV o Crossover",value:"suv",display:"SUV o Crossover"},{label:"Sedán",value:"sedan",display:"Sedán"},{label:"Hatchback o City car",value:"hatchback",display:"Hatchback o City car"},{label:"Pickup",value:"pickup",display:"Pickup"},{label:"Sin preferencia",value:"any",display:"cualquier carrocería"}]},{key:"electricType",question:"¿Prefieres un auto 100% eléctrico o también consideras híbridos?",options:[{label:"100% eléctrico",value:"electric",display:"100% eléctrico"},{label:"Híbrido o enchufable",value:"hybrid",display:"híbrido o enchufable"},{label:"Me da igual",value:"any",display:"cualquier tipo"}]}];class E extends HTMLElement{constructor(){super(),this._shadow=this.attachShadow({mode:"open"}),this._history=[],this._isOpen=!1,this._loading=!1,this._savingsState=null,this._savingsKm=null,this._findStep=-1,this._findCriteria={}}connectedCallback(){this._apiUrl=this.dataset.apiUrl||"",this._botName=this.dataset.botName||"Asistente",this._primaryColor=this.dataset.primaryColor||"#00E5E5";const e=document.createElement("style");e.textContent=v(this._primaryColor),this._shadow.appendChild(e);const t=document.createElement("div");t.innerHTML=y(this._botName),this._shadow.appendChild(t),this._launcher=this._shadow.getElementById("launcher"),this._panel=this._shadow.getElementById("panel"),this._messagesEl=this._shadow.getElementById("messages"),this._input=this._shadow.getElementById("input"),this._btnSend=this._shadow.getElementById("btn-send"),this._btnClear=this._shadow.getElementById("btn-clear"),this._launcher.addEventListener("click",()=>this._togglePanel()),this._btnSend.addEventListener("click",()=>this._handleSend()),this._btnClear.addEventListener("click",()=>this._clearChat()),this._input.addEventListener("keydown",s=>{s.key==="Enter"&&!s.shiftKey&&(s.preventDefault(),this._handleSend())}),this._input.addEventListener("input",()=>{this._btnSend.disabled=this._input.value.trim()===""||this._loading,this._input.style.height="auto",this._input.style.height=Math.min(this._input.scrollHeight,80)+"px"}),this._restoreSession(),this._initNudge()}_initNudge(){this._nudgeEl=this._shadow.getElementById("nudge");const e=this._shadow.getElementById("nudge-close");if(!this._nudgeEl||sessionStorage.getItem("ev_nudge_seen"))return;e.addEventListener("click",t=>{t.stopPropagation(),this._hideNudge(!0)}),this._nudgeEl.addEventListener("click",()=>{this._hideNudge(!0),this._togglePanel()}),this._nudgeTimer=setTimeout(()=>{this._nudgeEl&&!this._isOpen&&(this._nudgeEl.classList.remove("hidden"),requestAnimationFrame(()=>this._nudgeEl.classList.add("visible")))},30*1e3)}_hideNudge(e=!1){if(!this._nudgeEl)return;this._nudgeEl.classList.remove("visible"),setTimeout(()=>this._nudgeEl&&this._nudgeEl.classList.add("hidden"),300),e&&sessionStorage.setItem("ev_nudge_seen","1"),clearTimeout(this._nudgeTimer)}_saveSession(){try{sessionStorage.setItem(p,JSON.stringify(this._history))}catch{}}_restoreSession(){try{const e=sessionStorage.getItem(p);if(e&&(this._history=JSON.parse(e),this._history.length>0)){for(const t of this._history)c(this._messagesEl,t.role==="user"?"user":"bot",t.content,(s,i)=>this._handleMenuSelect(s,i));return}}catch{sessionStorage.removeItem(p)}this._showBotMessage(f)}_togglePanel(){this._isOpen=!this._isOpen,this._launcher.classList.toggle("open",this._isOpen),this._panel.classList.toggle("visible",this._isOpen),this._panel.setAttribute("aria-hidden",String(!this._isOpen)),this._launcher.setAttribute("aria-expanded",String(this._isOpen)),this._isOpen&&(requestAnimationFrame(()=>this._input.focus()),this._hideNudge(!0))}_clearChat(){this._history=[],this._savingsState=null,this._savingsKm=null,this._findStep=-1,this._findCriteria={},this._messagesEl.innerHTML="",sessionStorage.removeItem(p),this._showBotMessage(f)}_showBotMessage(e){c(this._messagesEl,"bot",e,(t,s)=>this._handleMenuSelect(t,s))}_handleMenuSelect(e,t){this._loading||this._submitUserMessage(`${e}. ${t}`)}async _handleSend(){const e=this._input.value.trim();!e||this._loading||(this._input.value="",this._input.style.height="auto",this._btnSend.disabled=!0,this._submitUserMessage(e))}async _submitUserMessage(e){if(e.includes("Empezar de nuevo")||e.includes("Volver al inicio")){c(this._messagesEl,"user",e,()=>{}),this._clearChat();return}if(this._isSavingsFlow(e)){this._handleSavingsFlow(e);return}if(this._isContactFlow(e)){this._handleContactFlow();return}if(this._isFindFlow(e)){this._handleFindFlow(e);return}c(this._messagesEl,"user",e,()=>{}),this._history.push({role:"user",content:e}),this._history.length>h&&(this._history=this._history.slice(-h)),this._loading=!0,this._btnSend.disabled=!0;const t=b(this._messagesEl);try{const s=await w(this._apiUrl,this._history);t(),this._history.push({role:"assistant",content:s}),this._history.length>h&&(this._history=this._history.slice(-h)),this._saveSession(),this._showBotMessage(s)}catch{t(),this._showBotMessage(`Lo siento, hubo un problema al conectar. Por favor intenta nuevamente.
 
 [MENU]
 1. Volver al inicio
