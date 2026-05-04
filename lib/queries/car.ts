@@ -60,11 +60,9 @@ export const featuredCarsQuery = groq`
 `;
 
 // ─── Autos recientes — fallback para Últimos Lanzamientos ────────────────────
-// Prioriza isNew=true, rellena con recientes si hay menos de 6
+// isNew=true primero, luego por fecha — evita concatenación GROQ que rompe asset->url
 export const newCarsForHomeQuery = groq`
-  (*[_type == "car" && isNew == true] | order(_createdAt desc))
-  + (*[_type == "car" && isNew != true] | order(_createdAt desc))
-  [0...6] {
+  *[_type == "car"] | order(isNew desc, _createdAt desc) [0...6] {
     _id,
     name,
     "slug": slug.current,
@@ -74,17 +72,15 @@ export const newCarsForHomeQuery = groq`
     basePrice,
     discountPrice,
     isNew,
-    "brand": brand->{ name, "slug": slug.current },
+    "brand": brand->{ name, "slug": slug.current, "logoUrl": logo.asset->url },
     "category": category->{ name }
   }
 `;
 
 // ─── Autos destacados — fallback para Oportunidades ──────────────────────────
-// Prioriza isFeatured=true, rellena con más baratos si hay menos de 8
+// isFeatured=true primero, luego por precio — evita concatenación GROQ que rompe asset->url
 export const featuredCarsForHomeQuery = groq`
-  (*[_type == "car" && isFeatured == true] | order(coalesce(discountPrice, basePrice) asc))
-  + (*[_type == "car" && isFeatured != true] | order(coalesce(discountPrice, basePrice) asc))
-  [0...8] {
+  *[_type == "car"] | order(isFeatured desc, coalesce(discountPrice, basePrice) asc) [0...8] {
     _id,
     name,
     "slug": slug.current,

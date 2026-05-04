@@ -9,11 +9,12 @@ import { formatCLP, calculateDiscount } from "@/lib/utils";
 interface CarCardProps {
   name: string;
   brand: string;
+  brandLogo?: string;
   slug: string;
   image?: string;
   category?: string;
-  batteryCapacity: number;
-  range: number;
+  batteryCapacity?: number;
+  range?: number;
   basePrice: number;
   discountPrice?: number;
   isNew?: boolean;
@@ -23,6 +24,7 @@ interface CarCardProps {
 export function CarCard({
   name,
   brand,
+  brandLogo,
   slug,
   image,
   category,
@@ -87,7 +89,15 @@ export function CarCard({
             </h3>
             <p className="text-text-muted text-sm">{brand}</p>
           </div>
-          <Icon name="electric_car" className="text-gray-200" size="sm" />
+          {brandLogo ? (
+            <img
+              src={brandLogo}
+              alt={brand}
+              className="h-7 w-auto max-w-[56px] object-contain opacity-60"
+            />
+          ) : (
+            <Icon name="electric_car" className="text-gray-200" size="sm" />
+          )}
         </div>
 
         <div className="space-y-2 py-3 border-y border-gray-100">
@@ -95,13 +105,17 @@ export function CarCard({
             <span className="text-[11px] uppercase tracking-wide text-text-muted font-semibold">
               Bateria
             </span>
-            <span className="text-sm font-medium">{batteryCapacity} kWh</span>
+            <span className="text-sm font-medium">
+              {batteryCapacity != null ? `${batteryCapacity} kWh` : "N/D"}
+            </span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-[11px] uppercase tracking-wide text-text-muted font-semibold">
               Autonomia
             </span>
-            <span className="text-sm font-medium">{range} km</span>
+            <span className="text-sm font-medium">
+              {range != null ? `${range} km` : "N/D"}
+            </span>
           </div>
         </div>
 

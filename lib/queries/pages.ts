@@ -34,7 +34,7 @@ export const homePageQuery = groq`
       isNew,
       isHotDeal,
       isTopSeller,
-      "brand": brand->{ name, "slug": slug.current },
+      "brand": brand->{ name, "slug": slug.current, "logoUrl": logo.asset->url },
       "category": category->{ name }
     },
 

@@ -7,11 +7,11 @@ export interface LaunchCarData {
   _id?: string;
   name: string;
   slug: string;
-  brand: { name: string; slug: string } | string;
+  brand: { name: string; slug?: string; logoUrl?: string } | string;
   category?: { name: string } | string;
   imageUrl?: string;
-  batteryCapacity: number;
-  range: number;
+  batteryCapacity?: number | null;
+  range?: number | null;
   basePrice: number;
   discountPrice?: number;
   isNew?: boolean;
@@ -100,7 +100,7 @@ export function LatestLaunches({ title = "Últimos lanzamientos", cars }: Latest
           style={{ scrollSnapType: "x mandatory" }}
         >
           {displayCars.map((car, i) => {
-            const brandName = typeof car.brand === "string" ? car.brand : car.brand.name;
+            const brandObj    = typeof car.brand === "string" ? { name: car.brand } : car.brand;
             const categoryName = car.category ? (typeof car.category === "string" ? car.category : car.category.name) : undefined;
             return (
               <div
@@ -110,12 +110,13 @@ export function LatestLaunches({ title = "Últimos lanzamientos", cars }: Latest
               >
                 <CarCard
                   name={car.name}
-                  brand={brandName}
+                  brand={brandObj.name}
+                  brandLogo={brandObj.logoUrl}
                   slug={car.slug}
                   image={car.imageUrl}
                   category={categoryName}
-                  batteryCapacity={car.batteryCapacity}
-                  range={car.range}
+                  batteryCapacity={car.batteryCapacity ?? undefined}
+                  range={car.range ?? undefined}
                   basePrice={car.basePrice}
                   discountPrice={car.discountPrice}
                   isNew={car.isNew}

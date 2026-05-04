@@ -50,12 +50,19 @@ export default async function HomePage() {
     return [...(manual ?? []), ...extras].slice(0, limit);
   };
 
+  // Sanity slug can come as string ("abc") or object ({current:"abc"}) — normalise
+  const toSlug = (s: any): string =>
+    typeof s === "string" ? s : (s?.current ?? "");
+
+  const toBrand = (b: any) =>
+    typeof b === "string" || b == null ? b : { name: b.name, slug: toSlug(b.slug), logoUrl: b.logoUrl };
+
   const latestCars = mergeAndDedup(page?.latestLaunchesCars, newCars, 6)
     .map((c: any) => ({
       _id:             c._id,
       name:            c.name,
-      slug:            c.slug,
-      brand:           c.brand,
+      slug:            toSlug(c.slug),
+      brand:           toBrand(c.brand),
       category:        c.category,
       imageUrl:        c.imageUrl,
       batteryCapacity: c.batteryCapacity,
@@ -69,8 +76,8 @@ export default async function HomePage() {
     .map((c: any) => ({
       _id:             c._id,
       name:            c.name,
-      slug:            c.slug,
-      brand:           c.brand,
+      slug:            toSlug(c.slug),
+      brand:           toBrand(c.brand),
       category:        c.category,
       imageUrl:        c.imageUrl,
       basePrice:       c.basePrice,
