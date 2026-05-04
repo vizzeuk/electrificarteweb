@@ -213,13 +213,13 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
         <div className="absolute inset-0 pointer-events-none opacity-[0.025]"
           style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.1) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.1) 1px,transparent 1px)", backgroundSize: "60px 60px" }} />
 
-        {/* Car image — full background, object-contain so small images don't stretch */}
-        <div className="absolute inset-0 flex items-center justify-center">
+        {/* Car image — object-cover fills the hero horizontally, gradients protect edges */}
+        <div className="absolute inset-0">
           {galleryImages[0] ? (
             <img
               src={galleryImages[0]}
               alt={`${car.brand} ${car.name}`}
-              className="w-full h-full object-contain"
+              className="w-full h-full object-cover object-center"
             />
           ) : (
             <span className="material-symbols-outlined text-[240px] text-white/5">electric_car</span>

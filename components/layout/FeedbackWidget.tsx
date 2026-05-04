@@ -6,43 +6,53 @@ const SEEN_KEY = "ea_feedback_ts";
 const DAYS_UNTIL_RESHOWN = 30;
 
 export function FeedbackWidget() {
-  const [hidden, setHidden]       = useState(true); // start hidden, reveal after mount check
+  const [hidden, setHidden]       = useState(true);
   const [expanded, setExpanded]   = useState(false);
   const [rating, setRating]       = useState(0);
   const [hovered, setHovered]     = useState(0);
   const [comment, setComment]     = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [sending, setSending]     = useState(false);
 
   useEffect(() => {
     const ts = localStorage.getItem(SEEN_KEY);
     if (ts) {
       const daysSince = (Date.now() - parseInt(ts)) / 86_400_000;
-      if (daysSince < DAYS_UNTIL_RESHOWN) return; // stay hidden
+      if (daysSince < DAYS_UNTIL_RESHOWN) return;
     }
     setHidden(false);
 
-    // Auto-open as popup after 5 minutes if user hasn't interacted
     const timer = setTimeout(() => {
-      setExpanded(prev => {
-        if (!prev) return true; // only open if not already open
-        return prev;
-      });
+      setExpanded(prev => (!prev ? true : prev));
     }, 5 * 60 * 1000);
 
     return () => clearTimeout(timer);
   }, []);
 
-  function dismiss() {
+  // Closing without answering — just collapse to bubble, don't mark as seen
+  function collapse() {
     setExpanded(false);
-    setHidden(true);
-    localStorage.setItem(SEEN_KEY, Date.now().toString());
   }
 
-  function handleSubmit() {
-    if (rating === 0) return;
+  async function handleSubmit() {
+    if (rating === 0 || sending) return;
+    setSending(true);
+    try {
+      await fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rating, comment: comment.trim() || undefined, page: window.location.pathname }),
+      });
+    } catch {
+      // silently ignore; user still sees thank-you
+    }
+    setSending(false);
     localStorage.setItem(SEEN_KEY, Date.now().toString());
     setSubmitted(true);
-    setTimeout(dismiss, 2500);
+    setTimeout(() => {
+      setExpanded(false);
+      setHidden(true);
+    }, 2500);
   }
 
   if (hidden) return null;
@@ -85,7 +95,7 @@ export function FeedbackWidget() {
                 star
               </span>
               <p className="font-headline font-black text-lg">¡Gracias por tu opinión!</p>
-              <p className="text-text-muted text-sm mt-1 leading-snug">
+              <p className="text-gray-500 text-sm mt-1 leading-snug">
                 Tu feedback nos ayuda a mejorar la experiencia para todos.
               </p>
             </div>
@@ -95,7 +105,7 @@ export function FeedbackWidget() {
               <div className="flex items-center justify-between px-4 py-3 bg-black">
                 <p className="text-white font-bold text-sm">Tu experiencia</p>
                 <button
-                  onClick={dismiss}
+                  onClick={collapse}
                   className="text-white/50 hover:text-white transition-colors"
                   aria-label="Cerrar"
                 >
@@ -107,7 +117,7 @@ export function FeedbackWidget() {
                 <p className="text-sm font-semibold text-gray-800 leading-snug mb-1">
                   ¿Cómo fue tu experiencia en Electrificarte?
                 </p>
-                <p className="text-xs text-text-muted mb-4 leading-relaxed">
+                <p className="text-xs text-gray-400 mb-4 leading-relaxed">
                   Cuéntanos cómo podemos mejorar el sitio para ayudarte mejor.
                 </p>
 
@@ -140,15 +150,15 @@ export function FeedbackWidget() {
                   onChange={(e) => setComment(e.target.value)}
                   placeholder="¿Qué podríamos mejorar? (opcional)"
                   rows={2}
-                  className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2 resize-none focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all mb-3 placeholder:text-text-ghost"
+                  className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2 resize-none focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all mb-3 placeholder:text-gray-300"
                 />
 
                 <button
                   onClick={handleSubmit}
-                  disabled={rating === 0}
-                  className="w-full bg-primary hover:bg-primary-dark text-black font-bold text-sm py-2.5 rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                  disabled={rating === 0 || sending}
+                  className="w-full bg-primary hover:bg-primary-deep text-black font-bold text-sm py-2.5 rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  Enviar feedback
+                  {sending ? "Enviando…" : "Enviar feedback"}
                 </button>
               </div>
             </>

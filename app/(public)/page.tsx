@@ -43,8 +43,14 @@ export default async function HomePage() {
       client.fetch(featuredCarsForHomeQuery, {}, { next: { tags: ["car"] } }).catch(() => []),
     ]);
 
-  // Cars manually curated in Sanity take priority; dynamic query is the fallback
-  const latestCars = (page?.latestLaunchesCars?.length ? page.latestLaunchesCars : newCars ?? [])
+  // Manual Sanity curation takes priority; dynamic fallback fills remaining slots
+  const mergeAndDedup = (manual: any[], dynamic: any[], limit: number) => {
+    const manualIds = new Set((manual ?? []).map((c: any) => c._id));
+    const extras = (dynamic ?? []).filter((c: any) => !manualIds.has(c._id));
+    return [...(manual ?? []), ...extras].slice(0, limit);
+  };
+
+  const latestCars = mergeAndDedup(page?.latestLaunchesCars, newCars, 6)
     .map((c: any) => ({
       _id:             c._id,
       name:            c.name,
@@ -59,7 +65,7 @@ export default async function HomePage() {
       isNew:           c.isNew,
     }));
 
-  const opportunityCars = (page?.opportunitiesCars?.length ? page.opportunitiesCars : featuredCars ?? [])
+  const opportunityCars = mergeAndDedup(page?.opportunitiesCars, featuredCars, 8)
     .map((c: any) => ({
       _id:             c._id,
       name:            c.name,
