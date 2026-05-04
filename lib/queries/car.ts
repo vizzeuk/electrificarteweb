@@ -59,6 +59,48 @@ export const featuredCarsQuery = groq`
   }
 `;
 
+// ─── Autos recientes — fallback para Últimos Lanzamientos ────────────────────
+// Prioriza isNew=true, rellena con recientes si hay menos de 6
+export const newCarsForHomeQuery = groq`
+  (*[_type == "car" && isNew == true] | order(_createdAt desc))
+  + (*[_type == "car" && isNew != true] | order(_createdAt desc))
+  [0...6] {
+    _id,
+    name,
+    "slug": slug.current,
+    "imageUrl": mainImage.asset->url,
+    batteryCapacity,
+    range,
+    basePrice,
+    discountPrice,
+    isNew,
+    "brand": brand->{ name, "slug": slug.current },
+    "category": category->{ name }
+  }
+`;
+
+// ─── Autos destacados — fallback para Oportunidades ──────────────────────────
+// Prioriza isFeatured=true, rellena con más baratos si hay menos de 8
+export const featuredCarsForHomeQuery = groq`
+  (*[_type == "car" && isFeatured == true] | order(coalesce(discountPrice, basePrice) asc))
+  + (*[_type == "car" && isFeatured != true] | order(coalesce(discountPrice, basePrice) asc))
+  [0...8] {
+    _id,
+    name,
+    "slug": slug.current,
+    "imageUrl": mainImage.asset->url,
+    basePrice,
+    discountPrice,
+    range,
+    batteryCapacity,
+    power,
+    isNew,
+    isHotDeal,
+    "brand": brand->{ name },
+    "category": category->{ name }
+  }
+`;
+
 // ─── Todos los Hot Deals (isHotDeal) — para carrusel ─────────────────────────
 export const allHotDealsQuery = groq`
   *[_type == "car" && isHotDeal == true] | order(coalesce(discountPrice, basePrice) asc) {

@@ -112,6 +112,11 @@ function CarCombobox({
   const [open, setOpen]     = useState(false);
   const containerRef        = useRef<HTMLDivElement>(null);
 
+  // Sync display text when external setValue() changes the field value
+  useEffect(() => {
+    setQuery(value ?? "");
+  }, [value]);
+
   const filtered = query.length === 0
     ? options.slice(0, 40)
     : options.filter((o) => o.toLowerCase().includes(query.toLowerCase())).slice(0, 40);
@@ -279,12 +284,18 @@ function SectionHeading({ icon, title }: { icon: string; title: string }) {
 interface LeadFormProps {
   carOptions?: string[];
   carSlug?: string;
+  carName?: string;
 }
 
-export function LeadForm({ carOptions = [], carSlug }: LeadFormProps) {
+export function LeadForm({ carOptions = [], carSlug, carName }: LeadFormProps) {
   const [status, setStatus]   = useState<"idle" | "loading" | "success" | "error">("idle");
   const [photos, setPhotos]   = useState<string[]>([]);
   const [photoError, setPhotoError] = useState("");
+
+  // Match carName against available options at mount time (synchronous — carOptions is from server)
+  const initialCarSearch = carName
+    ? (carOptions.find(o => o.toLowerCase() === carName.toLowerCase()) ?? "")
+    : "";
 
   const {
     register,
@@ -296,7 +307,7 @@ export function LeadForm({ carOptions = [], carSlug }: LeadFormProps) {
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { tradeIn: undefined, paymentMethod: undefined },
+    defaultValues: { tradeIn: undefined, paymentMethod: undefined, carSearch: initialCarSearch },
   });
 
   const tradeIn = watch("tradeIn");

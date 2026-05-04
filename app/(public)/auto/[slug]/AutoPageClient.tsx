@@ -192,7 +192,7 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
                   </p>
                 </div>
                 <Link
-                  href={`/solicitar?auto=${car.slug}`}
+                  href={`/solicitar?auto=${car.slug}&nombre=${encodeURIComponent(car.brand + " " + car.name)}`}
                   className="bg-primary hover:bg-primary-dark text-black font-bold px-4 py-2 rounded-lg text-sm transition-colors whitespace-nowrap"
                 >
                   Solicitar oferta
@@ -270,7 +270,7 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
 
               <div className="flex flex-col sm:flex-row gap-3">
                 <Link
-                  href={`/solicitar?auto=${car.slug}`}
+                  href={`/solicitar?auto=${car.slug}&nombre=${encodeURIComponent(car.brand + " " + car.name)}`}
                   className="flex-1 inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-black font-black px-7 py-4 rounded-xl transition-colors"
                 >
                   Obtén la mejor oferta
@@ -670,7 +670,7 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
                   : "Consulta disponibilidad, financiamiento y los mejores precios del mercado."}
               </p>
             </div>
-            <Link href={`/solicitar?auto=${car.slug}`} className="flex-shrink-0 inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-black px-8 py-4 rounded-xl transition-colors text-sm whitespace-nowrap">
+            <Link href={`/solicitar?auto=${car.slug}&nombre=${encodeURIComponent(car.brand + " " + car.name)}`} className="flex-shrink-0 inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-black px-8 py-4 rounded-xl transition-colors text-sm whitespace-nowrap">
               Solicitar oferta ahora
               <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
             </Link>

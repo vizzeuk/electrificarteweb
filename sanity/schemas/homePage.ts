@@ -33,7 +33,7 @@ export const homePage = defineType({
     defineField({
       name: "heroSubtitle", title: "Subtítulo", type: "text", rows: 2,
       group: "hero",
-      initialValue: "Negociamos con nuestra red exclusiva de concesionarios para garantizarte el mejor precio del mercado. Sin letra chica.",
+      initialValue: "Por solo $19.990 negociamos con nuestra red de concesionarios y te traemos la mejor oferta del mercado en 48-96 horas. Si no ahorras, te devolvemos el dinero.",
     }),
     defineField({
       name: "heroCta1Text", title: "Botón principal – texto", type: "string",

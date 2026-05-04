@@ -16,6 +16,11 @@ export function StickyCTA() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  useEffect(() => {
+    document.documentElement.style.setProperty("--sticky-h", visible ? "68px" : "0px");
+    return () => document.documentElement.style.setProperty("--sticky-h", "0px");
+  }, [visible]);
+
   return (
     <AnimatePresence>
       {visible && (

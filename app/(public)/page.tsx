@@ -2,7 +2,13 @@ import React from "react";
 import { client } from "@/lib/sanity/client";
 import { homePageQuery } from "@/lib/queries/pages";
 import { latestBlogPostsQuery } from "@/lib/queries/blog";
-import { allBrandsStripQuery, allHotDealsQuery, electricTypesForHomeQuery } from "@/lib/queries/car";
+import {
+  allBrandsStripQuery,
+  allHotDealsQuery,
+  electricTypesForHomeQuery,
+  newCarsForHomeQuery,
+  featuredCarsForHomeQuery,
+} from "@/lib/queries/car";
 import { collectionsForHomeQuery } from "@/lib/queries/collections";
 import { Hero }             from "@/components/layout/Hero";
 import { BrandStrip }       from "@/components/layout/BrandStrip";
@@ -25,15 +31,50 @@ import { HomeStructuredData } from "@/components/layout/StructuredData";
 export const revalidate = 60;
 
 export default async function HomePage() {
-  // Fetch all home page content from Sanity (falls back gracefully if no data yet)
-  const [page, blogPosts, brands, collections, hotDeals, vehicleTypes] = await Promise.all([
-    client.fetch(homePageQuery, {}, { next: { tags: ["homePage"] } }).catch(() => null),
-    client.fetch(latestBlogPostsQuery, { count: 3 }, { next: { tags: ["blogPost"] } }).catch(() => []),
-    client.fetch(allBrandsStripQuery, {}, { next: { tags: ["brand"] } }).catch(() => []),
-    client.fetch(collectionsForHomeQuery, {}, { next: { tags: ["collection"] } }).catch(() => []),
-    client.fetch(allHotDealsQuery, {}, { next: { tags: ["car"] } }).catch(() => []),
-    client.fetch(electricTypesForHomeQuery, {}, { next: { tags: ["electricType"] } }).catch(() => []),
-  ]);
+  const [page, blogPosts, brands, collections, hotDeals, vehicleTypes, newCars, featuredCars] =
+    await Promise.all([
+      client.fetch(homePageQuery, {}, { next: { tags: ["homePage"] } }).catch(() => null),
+      client.fetch(latestBlogPostsQuery, { count: 3 }, { next: { tags: ["blogPost"] } }).catch(() => []),
+      client.fetch(allBrandsStripQuery, {}, { next: { tags: ["brand"] } }).catch(() => []),
+      client.fetch(collectionsForHomeQuery, {}, { next: { tags: ["collection"] } }).catch(() => []),
+      client.fetch(allHotDealsQuery, {}, { next: { tags: ["car"] } }).catch(() => []),
+      client.fetch(electricTypesForHomeQuery, {}, { next: { tags: ["electricType"] } }).catch(() => []),
+      client.fetch(newCarsForHomeQuery, {}, { next: { tags: ["car"] } }).catch(() => []),
+      client.fetch(featuredCarsForHomeQuery, {}, { next: { tags: ["car"] } }).catch(() => []),
+    ]);
+
+  // Cars manually curated in Sanity take priority; dynamic query is the fallback
+  const latestCars = (page?.latestLaunchesCars?.length ? page.latestLaunchesCars : newCars ?? [])
+    .map((c: any) => ({
+      _id:             c._id,
+      name:            c.name,
+      slug:            c.slug,
+      brand:           c.brand,
+      category:        c.category,
+      imageUrl:        c.imageUrl,
+      batteryCapacity: c.batteryCapacity,
+      range:           c.range,
+      basePrice:       c.basePrice,
+      discountPrice:   c.discountPrice,
+      isNew:           c.isNew,
+    }));
+
+  const opportunityCars = (page?.opportunitiesCars?.length ? page.opportunitiesCars : featuredCars ?? [])
+    .map((c: any) => ({
+      _id:             c._id,
+      name:            c.name,
+      slug:            c.slug,
+      brand:           c.brand,
+      category:        c.category,
+      imageUrl:        c.imageUrl,
+      basePrice:       c.basePrice,
+      discountPrice:   c.discountPrice,
+      range:           c.range,
+      batteryCapacity: c.batteryCapacity,
+      power:           c.power,
+      isNew:           c.isNew,
+      isHotDeal:       c.isHotDeal,
+    }));
 
   return (
     <>
@@ -41,7 +82,6 @@ export default async function HomePage() {
 
       <Hero
         data={page ? {
-
           badge:           page.heroBadge,
           title:           page.heroTitle,
           titleHighlight:  page.heroTitleHighlight,
@@ -64,19 +104,7 @@ export default async function HomePage() {
 
       <LatestLaunches
         title={page?.latestLaunchesTitle}
-        cars={page?.latestLaunchesCars?.map((c: any) => ({
-          _id:             c._id,
-          name:            c.name,
-          slug:            c.slug,
-          brand:           c.brand,
-          category:        c.category,
-          imageUrl:        c.imageUrl,
-          batteryCapacity: c.batteryCapacity,
-          range:           c.range,
-          basePrice:       c.basePrice,
-          discountPrice:   c.discountPrice,
-          isNew:           c.isNew,
-        }))}
+        cars={latestCars}
       />
 
       <VehicleTypeGrid types={vehicleTypes ?? []} />
@@ -84,22 +112,8 @@ export default async function HomePage() {
       <HotDeal cars={hotDeals?.length ? hotDeals : (page?.hotDealCar ? [page.hotDealCar] : null)} />
 
       <Opportunities
-        title="Destacados Electrificarte"
-        cars={page?.opportunitiesCars?.map((c: any) => ({
-          _id:             c._id,
-          name:            c.name,
-          slug:            c.slug,
-          brand:           c.brand,
-          category:        c.category,
-          imageUrl:        c.imageUrl,
-          basePrice:       c.basePrice,
-          discountPrice:   c.discountPrice,
-          range:           c.range,
-          batteryCapacity: c.batteryCapacity,
-          power:           c.power,
-          isNew:           c.isNew,
-          isHotDeal:       c.isHotDeal,
-        }))}
+        title={page?.opportunitiesTitle ?? "Destacados Electrificarte"}
+        cars={opportunityCars}
       />
 
       <CollectionsSlideshow collections={collections} />

@@ -14,7 +14,8 @@ interface SolicitarContentProps {
 
 function SolicitarInner({ carOptions }: SolicitarContentProps) {
   const searchParams = useSearchParams();
-  const autoSlug = searchParams.get("auto") || undefined;
+  const autoSlug   = searchParams.get("auto")    || undefined;
+  const autoNombre = searchParams.get("nombre")  || undefined;
 
   return (
     <>
@@ -137,7 +138,7 @@ function SolicitarInner({ carOptions }: SolicitarContentProps) {
 
             {/* Form */}
             <div className="lg:col-span-8">
-              <LeadForm carOptions={carOptions} carSlug={autoSlug} />
+              <LeadForm carOptions={carOptions} carSlug={autoSlug} carName={autoNombre} />
             </div>
           </div>
         </div>

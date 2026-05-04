@@ -200,11 +200,9 @@ export default function BrandPageContent({ slug, brand }: BrandPageContentProps)
               {brand.heroTagline && <p className="text-white/40 text-sm uppercase tracking-widest mb-3">{brand.heroTagline}</p>}
               <p className="text-white/60 text-base leading-relaxed max-w-md mb-8">{brand.description}</p>
               <div className="flex flex-wrap gap-3">
-                <Link href="/solicitar" className="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-6 py-3 rounded-xl transition-all text-sm shadow-[0_4px_20px_rgba(0,229,229,0.30)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]">
-                  Cotizar un {brand.name} <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
-                </Link>
-                <a href={`#autos-${slug}`} className="inline-flex items-center gap-2 border border-white/20 hover:border-white/40 text-white font-medium px-6 py-3 rounded-xl transition-colors text-sm">
+                <a href={`#autos-${slug}`} className="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-6 py-3 rounded-xl transition-all text-sm shadow-[0_4px_20px_rgba(0,229,229,0.30)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]">
                   Ver modelos
+                  <span className="material-symbols-outlined text-[16px]">arrow_downward</span>
                 </a>
               </div>
             </motion.div>
@@ -446,21 +444,37 @@ export default function BrandPageContent({ slug, brand }: BrandPageContentProps)
 
           {/* Dots */}
           {hotDeals.length > 1 && (
-            <div className="flex justify-center gap-2 mt-5">
-              {hotDeals.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => hotTrackRef.current?.scrollTo({ left: (hotTrackRef.current?.clientWidth ?? 0) * i, behavior: "smooth" })}
-                  aria-label={`Ir al hot deal ${i + 1}`}
-                  style={{
-                    width: i === hotActiveIdx ? 20 : 6,
-                    height: 6,
-                    borderRadius: 9999,
-                    backgroundColor: i === hotActiveIdx ? "#00E5E5" : "rgba(255,255,255,0.2)",
-                    transition: "all 0.3s",
-                  }}
-                />
-              ))}
+            <div className="flex items-center justify-center gap-3 mt-5">
+              <button
+                onClick={() => hotTrackRef.current?.scrollTo({ left: (hotTrackRef.current?.clientWidth ?? 0) * (hotActiveIdx > 0 ? hotActiveIdx - 1 : hotDeals.length - 1), behavior: "smooth" })}
+                aria-label="Anterior"
+                className="hidden lg:flex items-center justify-center w-6 h-6 rounded-full border border-white/20 hover:border-primary hover:bg-primary/10 transition-all"
+              >
+                <span className="material-symbols-outlined text-white/50 text-[14px]">chevron_left</span>
+              </button>
+              <div className="flex items-center gap-2">
+                {hotDeals.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => hotTrackRef.current?.scrollTo({ left: (hotTrackRef.current?.clientWidth ?? 0) * i, behavior: "smooth" })}
+                    aria-label={`Ir al hot deal ${i + 1}`}
+                    style={{
+                      width: i === hotActiveIdx ? 20 : 6,
+                      height: 6,
+                      borderRadius: 9999,
+                      backgroundColor: i === hotActiveIdx ? "#00E5E5" : "rgba(255,255,255,0.2)",
+                      transition: "all 0.3s",
+                    }}
+                  />
+                ))}
+              </div>
+              <button
+                onClick={() => hotTrackRef.current?.scrollTo({ left: (hotTrackRef.current?.clientWidth ?? 0) * (hotActiveIdx < hotDeals.length - 1 ? hotActiveIdx + 1 : 0), behavior: "smooth" })}
+                aria-label="Siguiente"
+                className="hidden lg:flex items-center justify-center w-6 h-6 rounded-full border border-white/20 hover:border-primary hover:bg-primary/10 transition-all"
+              >
+                <span className="material-symbols-outlined text-white/50 text-[14px]">chevron_right</span>
+              </button>
             </div>
           )}
         </section>

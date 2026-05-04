@@ -19,7 +19,7 @@
     /* Launcher bubble */
     #launcher {
       position: fixed;
-      bottom: 24px;
+      bottom: var(--chat-bottom, 24px);
       right: 24px;
       width: 56px;
       height: 56px;
@@ -31,19 +31,22 @@
       align-items: center;
       justify-content: center;
       box-shadow: 0 4px 20px rgba(0,229,229,0.35);
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, bottom 0.3s ease;
       z-index: 9999;
     }
     #launcher:hover { transform: scale(1.08); box-shadow: 0 8px 32px rgba(0,229,229,0.5); }
-    #launcher svg { width: 26px; height: 26px; fill: #000000; }
-    #launcher.open svg.icon-chat { display: none; }
+    #launcher img.icon-chat { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 50%; object-fit: cover; object-position: center top; }
+    #launcher svg.icon-close { width: 26px; height: 26px; fill: #000000; }
+    #launcher.open img.icon-chat { display: none; }
     #launcher:not(.open) svg.icon-close { display: none; }
+    #launcher:not(.open) { background: transparent; box-shadow: 0 4px 24px rgba(0,0,0,0.35), 0 0 0 2px rgba(0,229,229,0.4); overflow: hidden; }
 
     /* Chat panel */
     #panel {
       position: fixed;
-      bottom: 92px;
+      bottom: calc(var(--chat-bottom, 24px) + 68px);
       right: 24px;
+      transition: bottom 0.3s ease;
       width: 380px;
       height: 520px;
       background: var(--color-bg);
@@ -85,7 +88,9 @@
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
+      overflow: hidden;
     }
+    #header-avatar img { width: 100%; height: 100%; object-fit: cover; object-position: center top; border-radius: 50%; }
     #header-avatar svg { width: 20px; height: 20px; fill: #000000; }
     #header-info { flex: 1; min-width: 0; }
     #header-name {
@@ -288,9 +293,7 @@
   `}function _(a){const e=/\[MENU\]([\s\S]*?)\[\/MENU\]/g,t=[];let s=a,i;for(;(i=e.exec(a))!==null;){const d=i[1].split(`
 `).map(r=>r.trim()).filter(Boolean);for(const r of d){const l=r.match(/^(\d+)\.\s+(.+?)\s+→\s+((?:https?:\/\/|\/)\S+)$/);if(l){t.push({number:l[1],label:l[2],url:l[3]});continue}const o=r.match(/^(\d+)\.\s+(.+)$/);o&&t.push({number:o[1],label:o[2]})}}return s=a.replace(/\[MENU\][\s\S]*?\[\/MENU\]/g,"").trim(),{text:s,menuItems:t}}function y(a){return`
     <button id="launcher" aria-label="Abrir chat" aria-expanded="false">
-      <svg class="icon-chat" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path d="M20 2H4C2.9 2 2 2.9 2 4v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
-      </svg>
+      <img class="icon-chat" src="/images/foto-francisco.jpeg" alt="Francisco" />
       <svg class="icon-close" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
         <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
       </svg>
@@ -299,9 +302,7 @@
     <div id="panel" role="dialog" aria-label="Chat de asistencia" aria-hidden="true">
       <div id="header">
         <div id="header-avatar">
-          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path d="M17.656 5.344C15.892 3.58 13.54 2.5 11 2.5 5.754 2.5 1.5 6.754 1.5 12S5.754 21.5 11 21.5c5.246 0 9.5-4.254 9.5-9.5 0-2.54-1.08-4.892-2.844-6.656zM11 19.5C6.86 19.5 3.5 16.14 3.5 12S6.86 4.5 11 4.5s7.5 3.36 7.5 7.5-3.36 7.5-7.5 7.5zm.5-12.5h-1v6l5.25 3.15.75-1.23-4-2.37V7z"/>
-          </svg>
+          <img src="/images/foto-francisco.jpeg" alt="Francisco" />
         </div>
         <div id="header-info">
           <div id="header-name">${g(a)}</div>

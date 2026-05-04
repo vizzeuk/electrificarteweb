@@ -54,3 +54,8 @@ html {
 .marquee-paused {
   animation-play-state: paused;
 }
+
+/* Sticky-bar-aware widget positioning */
+ev-chat-widget {
+  --chat-bottom: calc(24px + var(--sticky-h, 0px));
+}
