@@ -87,6 +87,21 @@ export default async function ElectricoPage({ params }: PageProps) {
     imageUrl:     c.mainImage ? urlFor(c.mainImage).width(800).auto("format").url() : undefined,
   }));
 
+  // Ad car: Sanity selection takes priority, fallback = most expensive in catalog
+  const rawAdCar = sanityMeta.heroFeaturedCar ?? (sanityCars ?? []).slice().sort(
+    (a: any, b: any) => (b.discountPrice ?? b.basePrice) - (a.discountPrice ?? a.basePrice)
+  )[0];
+  const adCar = rawAdCar ? {
+    name:          rawAdCar.name,
+    slug:          rawAdCar.slug ?? rawAdCar.slug?.current ?? "",
+    imageUrl:      rawAdCar.imageUrl ?? (rawAdCar.mainImage ? urlFor(rawAdCar.mainImage).width(600).auto("format").url() : undefined),
+    brand:         rawAdCar.brand?.name ?? "",
+    basePrice:     rawAdCar.basePrice,
+    discountPrice: rawAdCar.discountPrice,
+    range:         rawAdCar.range,
+  } : null;
+  const adText = sanityMeta.heroAdText ?? "El mejor precio del mercado garantizado";
+
   const otherTypes: OtherElectricType[] = (allTypes ?? []).map((t: any) => ({
     slug:  t.slug,
     label: t.label ?? t.name,
@@ -100,6 +115,8 @@ export default async function ElectricoPage({ params }: PageProps) {
       meta={meta}
       cars={cars}
       otherTypes={otherTypes}
+      adCar={adCar}
+      adText={adText}
     />
   );
 }

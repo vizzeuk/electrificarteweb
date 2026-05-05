@@ -29,7 +29,7 @@ export function ChatWidget() {
   return (
     <ev-chat-widget
       data-api-url=""
-      data-bot-name="Asistente Electrificarte"
+      data-bot-name="Francisco Electrificarte"
       data-primary-color="#00E5E5"
     />
   );

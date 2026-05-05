@@ -46,6 +46,18 @@ export const electricType = defineType({
       group: "general",
     }),
 
+    // ─── Hero ad ────────────────────────────────────────────────────────────
+    defineField({
+      name: "heroFeaturedCar", title: "Auto destacado (publicidad)", type: "reference", to: [{ type: "car" }],
+      group: "general",
+      description: "Auto que aparece como tarjeta publicitaria en el hero de esta PLP. Si no se selecciona, se muestra el más caro del catálogo.",
+    }),
+    defineField({
+      name: "heroAdText", title: "Texto del anuncio", type: "string",
+      group: "general",
+      description: 'Texto destacado sobre el auto. Ej: "El eléctrico más eficiente del mercado"',
+    }),
+
     // ─── Content ────────────────────────────────────────────────────────────
     defineField({
       name: "tagline", title: "Tagline del hero", type: "string",

@@ -49,6 +49,16 @@ export const vehicleType = defineType({
       group: "hero",
       description: "Párrafo de descripción en el hero de la PLP",
     }),
+    defineField({
+      name: "heroFeaturedCar", title: "Auto destacado (publicidad)", type: "reference", to: [{ type: "car" }],
+      group: "hero",
+      description: "Auto que aparece como tarjeta publicitaria en el hero de esta PLP. Si no se selecciona, se muestra el más caro del catálogo.",
+    }),
+    defineField({
+      name: "heroAdText", title: "Texto del anuncio", type: "string",
+      group: "hero",
+      description: 'Texto destacado sobre el auto. Ej: "El SUV más conveniente de todos"',
+    }),
 
     // ─── SEO ────────────────────────────────────────────────────────────────
     defineField({ name: "metaTitle",       title: "Meta Title",       type: "string", group: "seo" }),

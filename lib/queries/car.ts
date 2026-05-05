@@ -404,6 +404,16 @@ export const vehicleTypeBySlugQuery = groq`
     icon,
     heroTagline,
     heroDescription,
+    heroAdText,
+    "heroFeaturedCar": heroFeaturedCar->{
+      name,
+      "slug": slug.current,
+      "imageUrl": mainImage.asset->url,
+      basePrice,
+      discountPrice,
+      range,
+      "brand": brand->{ name }
+    },
     metaTitle,
     metaDescription
   }
@@ -438,6 +448,16 @@ export const electricTypeBySlugQuery = groq`
     pros,
     cons,
     idealFor,
+    heroAdText,
+    "heroFeaturedCar": heroFeaturedCar->{
+      name,
+      "slug": slug.current,
+      "imageUrl": mainImage.asset->url,
+      basePrice,
+      discountPrice,
+      range,
+      "brand": brand->{ name }
+    },
     metaTitle,
     metaDescription
   }

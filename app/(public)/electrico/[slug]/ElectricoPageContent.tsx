@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { formatCLP } from "@/lib/utils";
+import { formatCLP, calculateDiscount } from "@/lib/utils";
 import { CatalogFilters, type ActiveFilters } from "@/components/ui/CatalogFilters";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -45,18 +45,30 @@ export interface OtherElectricType {
   tag: string;
 }
 
+export interface AdCarData {
+  name: string;
+  slug: string;
+  imageUrl?: string;
+  brand: string;
+  basePrice: number;
+  discountPrice?: number;
+  range?: number;
+}
+
 interface ElectricoPageContentProps {
   slug: string;
   meta: ElectricoMeta;
   cars: ElectricoCarData[];
   otherTypes: OtherElectricType[];
+  adCar?: AdCarData | null;
+  adText?: string;
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
 const PAGE_SIZE = 9;
 
-export default function ElectricoPageContent({ slug, meta, cars, otherTypes }: ElectricoPageContentProps) {
+export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adCar, adText }: ElectricoPageContentProps) {
   const [activeFilters, setActiveFilters] = useState<ActiveFilters>({ brand: "", tipo: "" });
   const [sort, setSort] = useState("default");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
@@ -214,14 +226,53 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes }: E
               </div>
             </div>
 
-            {/* Right – hero image */}
+            {/* Right – ad car card */}
             <div className="relative hidden md:block">
-              <div className="aspect-[4/3] rounded-2xl overflow-hidden bg-white/5 border border-white/10 flex items-center justify-center">
-                <div className="text-center">
-                  <span className="material-symbols-outlined text-[64px] text-white/10 block mb-3">image</span>
-                  <p className="text-white/20 text-xs uppercase tracking-widest font-semibold">Foto {meta.label}</p>
-                </div>
-              </div>
+              {adCar && (
+                <>
+                  <p className="text-[10px] uppercase tracking-widest text-white/20 font-semibold mb-2 text-right">Publicidad</p>
+                  <Link
+                    href={`/auto/${adCar.slug}`}
+                    className="block rounded-2xl overflow-hidden border border-white/10 bg-white/5 hover:border-primary/40 transition-all duration-300 group"
+                  >
+                    <div className="aspect-[16/9] relative overflow-hidden">
+                      {adCar.imageUrl ? (
+                        <img
+                          src={adCar.imageUrl}
+                          alt={`${adCar.brand} ${adCar.name}`}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <span className="material-symbols-outlined text-[64px] text-white/10">electric_car</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-5">
+                      <p className="font-headline font-bold text-sm mb-2" style={{ color: meta.color }}>{adCar.brand} {adCar.name}</p>
+                      <p className="text-white font-headline font-black text-xl leading-tight mb-4">{adText}</p>
+                      <div className="flex items-end justify-between mb-4">
+                        <div>
+                          {adCar.discountPrice && adCar.discountPrice < adCar.basePrice && (
+                            <p className="text-white/30 text-xs line-through">{formatCLP(adCar.basePrice)}</p>
+                          )}
+                          <p className="font-headline font-black text-2xl" style={{ color: meta.color }}>
+                            {formatCLP(adCar.discountPrice && adCar.discountPrice < adCar.basePrice ? adCar.discountPrice : adCar.basePrice)}
+                          </p>
+                        </div>
+                        {adCar.discountPrice && adCar.discountPrice < adCar.basePrice && (
+                          <span className="text-xs font-black px-2 py-1 rounded-lg" style={{ backgroundColor: `${meta.color}20`, color: meta.color }}>
+                            -{calculateDiscount(adCar.basePrice, adCar.discountPrice)}%
+                          </span>
+                        )}
+                      </div>
+                      <span className="block w-full text-center bg-primary hover:bg-primary-dark text-black font-bold py-2.5 rounded-xl text-sm transition-colors">
+                        Ver modelo
+                      </span>
+                    </div>
+                  </Link>
+                </>
+              )}
               <div
                 className="absolute -bottom-4 -right-4 w-32 h-32 rounded-full blur-3xl pointer-events-none opacity-20"
                 style={{ backgroundColor: meta.color }}
