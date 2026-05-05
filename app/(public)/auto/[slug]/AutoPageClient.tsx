@@ -19,6 +19,8 @@ export interface VersionData {
   topSpeed: number;
   chargeTimeDC: string;
   chargeTimeAC: string;
+  fuelConsumption?: number | null;
+  rendimientoElectrico?: number | null;
 }
 
 export interface CarData {
@@ -47,6 +49,8 @@ export interface CarData {
   chargeTimeDC: string;
   chargeTimeAC: string;
   chargeType: string;
+  fuelConsumption?: number | null;
+  rendimientoElectrico?: number | null;
   warranty?: string;
   versions: VersionData[];
   gallery?: string[];
@@ -537,36 +541,42 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
           <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
             {[
               { section: "Batería y Autonomía", rows: [
-                { label: "Batería",          value: `${ver.battery} kWh` },
-                { label: "Autonomía WLTP",   value: `${ver.range} km` },
-                { label: "Carga rápida DC",  value: ver.chargeTimeDC },
-                { label: "Carga AC",         value: ver.chargeTimeAC },
-                { label: "Tipo de conector", value: car.chargeType },
+                { label: "Batería",              value: ver.battery ? `${ver.battery} kWh` : null },
+                { label: "Autonomía WLTP",       value: ver.range   ? `${ver.range} km`    : null },
+                { label: "Eficiencia eléctrica", value: (ver.rendimientoElectrico ?? car.rendimientoElectrico) ? `${ver.rendimientoElectrico ?? car.rendimientoElectrico} km/kWh` : null },
+                { label: "Rendimiento híbrido",  value: (ver.fuelConsumption ?? car.fuelConsumption) ? `${ver.fuelConsumption ?? car.fuelConsumption} km/L` : null },
+                { label: "Carga rápida DC",      value: ver.chargeTimeDC || null },
+                { label: "Carga AC",             value: ver.chargeTimeAC || null },
+                { label: "Tipo de conector",     value: car.chargeType   || null },
               ]},
               { section: "Motor y Rendimiento", rows: [
-                { label: "Potencia",           value: `${ver.power} CV (${Math.round(ver.power * 0.7355)} kW)` },
-                { label: "Torque",             value: `${ver.torque} Nm` },
-                { label: "Tracción",           value: ver.traction },
-                { label: "Aceleración 0–100",  value: `${ver.acceleration} segundos` },
-                { label: "Velocidad máxima",   value: `${ver.topSpeed} km/h` },
+                { label: "Potencia",          value: ver.power        ? `${ver.power} CV (${Math.round(ver.power * 0.7355)} kW)` : null },
+                { label: "Torque",            value: ver.torque       ? `${ver.torque} Nm`        : null },
+                { label: "Tracción",          value: ver.traction     || null },
+                { label: "Aceleración 0–100", value: ver.acceleration ? `${ver.acceleration} s`   : null },
+                { label: "Velocidad máxima",  value: ver.topSpeed     ? `${ver.topSpeed} km/h`    : null },
               ]},
               { section: "Dimensiones y Capacidad", rows: [
-                { label: "Plazas",    value: String(car.seats) },
-                { label: "Maletero", value: `${car.cargo} litros` },
+                { label: "Plazas",   value: car.seats ? String(car.seats) : null },
+                { label: "Maletero", value: car.cargo ? `${car.cargo} litros` : null },
               ]},
-            ].map((group) => (
-              <div key={group.section}>
-                <div className="bg-surface px-6 py-3 border-b border-gray-100">
-                  <p className="text-[11px] uppercase tracking-widest font-bold text-primary-deep">{group.section}</p>
-                </div>
-                {group.rows.map((row, ri) => (
-                  <div key={row.label} className={["grid grid-cols-2 px-6 py-3.5 text-sm", ri < group.rows.length - 1 ? "border-b border-gray-50" : "border-b border-gray-100"].join(" ")}>
-                    <span className="text-text-muted font-medium">{row.label}</span>
-                    <span className="font-semibold text-text-main">{row.value}</span>
+            ].map((group) => {
+              const visibleRows = group.rows.filter(r => r.value);
+              if (!visibleRows.length) return null;
+              return (
+                <div key={group.section}>
+                  <div className="bg-surface px-6 py-3 border-b border-gray-100">
+                    <p className="text-[11px] uppercase tracking-widest font-bold text-primary-deep">{group.section}</p>
                   </div>
-                ))}
-              </div>
-            ))}
+                  {visibleRows.map((row, ri) => (
+                    <div key={row.label} className={["grid grid-cols-2 px-6 py-3.5 text-sm", ri < visibleRows.length - 1 ? "border-b border-gray-50" : "border-b border-gray-100"].join(" ")}>
+                      <span className="text-text-muted font-medium">{row.label}</span>
+                      <span className="font-semibold text-text-main">{row.value}</span>
+                    </div>
+                  ))}
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>

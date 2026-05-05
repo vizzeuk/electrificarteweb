@@ -229,7 +229,7 @@ function CarPickerModal({
                       <div className="flex-shrink-0 w-16 h-12 bg-gray-100 rounded-lg overflow-hidden">
                         {car.imageUrl ? (
                           <Image src={car.imageUrl} alt={car.name} width={64} height={48}
-                            className="w-full h-full object-contain" />
+                            className="w-full h-full object-cover" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
                             <span className="material-symbols-outlined text-[24px] text-gray-300">electric_car</span>
@@ -283,7 +283,38 @@ export default function CalculadoraContent({ cars }: Props) {
     cars.filter(c => c.range > 0 && c.batteryCapacity > 0),
   [cars]);
 
-  const topCars = useMemo(() => validCars.slice(0, 5), [validCars]);
+  // When a car is selected, rank all other cars by similarity (vehicle type, price, range, electric type)
+  const similarCars = useMemo(() => {
+    if (!selectedCar) return validCars.slice(0, 5);
+
+    const refPrice = selectedCar.discountPrice ?? selectedCar.basePrice;
+    const refRange = selectedCar.range;
+
+    return validCars
+      .filter(c => c._id !== selectedCar._id)
+      .map(c => {
+        let score = 0;
+        // Same vehicle type is the strongest signal
+        if (c.vehicleTypeSlug && c.vehicleTypeSlug === selectedCar.vehicleTypeSlug) score += 40;
+        // Price proximity: full 30 pts at 0% diff, 0 pts at ≥40% diff
+        const cPrice    = c.discountPrice ?? c.basePrice;
+        const priceDiff = Math.abs(cPrice - refPrice) / Math.max(refPrice, 1);
+        score += Math.max(0, 30 - Math.round(priceDiff * 100));
+        // Same electric type
+        if (c.electricTypeTag && c.electricTypeTag === selectedCar.electricTypeTag) score += 20;
+        // Range proximity: full 10 pts at 0% diff, 0 pts at ≥50% diff
+        const rangeDiff = Math.abs(c.range - refRange) / Math.max(refRange, 1);
+        score += Math.max(0, 10 - Math.round(rangeDiff * 20));
+        return { car: c, score };
+      })
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 4)
+      .map(({ car }) => car);
+  }, [validCars, selectedCar]);
+
+  const topCars = useMemo(() =>
+    selectedCar ? similarCars : validCars.slice(0, 5),
+  [selectedCar, similarCars, validCars]);
 
   const handleSelectCar = useCallback((car: CalcCar) => {
     setSelectedCar(car);
@@ -315,8 +346,8 @@ export default function CalculadoraContent({ cars }: Props) {
     const saving5yr   = savingYear * 5;
     const savingPct   = gasCostMonth > 0 ? Math.round((savingMonth / gasCostMonth) * 100) : 0;
 
-    // Comparison list: top 5 with selected car promoted to first position
-    const carResults = topCars.map(car => {
+    // Comparison list: selected car first, then similar cars (or top5 if none selected)
+    const enriched = (list: CalcCar[]) => list.map(car => {
       const em = calcElectricMonthlyCost(car, kmPerMonth);
       return {
         ...car,
@@ -326,11 +357,9 @@ export default function CalculadoraContent({ cars }: Props) {
       };
     });
 
-    // If selected car isn't in top5, add it at front of comparison
-    const selectedInTop5 = selectedCar ? carResults.some(c => c._id === selectedCar._id) : false;
-    const comparisonList = selectedCar && !selectedInTop5
-      ? [{ ...selectedCar, electricMonth, savingMonth, savingPct }, ...carResults.slice(0, 4)]
-      : carResults;
+    const comparisonList = selectedCar
+      ? [{ ...selectedCar, electricMonth, savingMonth, savingPct }, ...enriched(similarCars)]
+      : enriched(topCars);
 
     return { electricMonth, savingMonth, savingYear, saving5yr, savingPct,
              co2SavedKgYear, treesEquiv, comparisonList, isEstimate };
@@ -390,7 +419,7 @@ export default function CalculadoraContent({ cars }: Props) {
                     <div className="flex-shrink-0 w-14 h-10 bg-white/5 rounded-lg overflow-hidden">
                       {selectedCar.imageUrl ? (
                         <Image src={selectedCar.imageUrl} alt={selectedCar.name} width={56} height={40}
-                          className="w-full h-full object-contain" />
+                          className="w-full h-full object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
                           <span className="material-symbols-outlined text-[20px] text-white/20">electric_car</span>
@@ -575,13 +604,13 @@ export default function CalculadoraContent({ cars }: Props) {
                   viewport={{ once: true }}
                   transition={{ duration: 0.35, delay: i * 0.06 }}
                   className={[
-                    "group relative flex flex-col sm:flex-row items-center gap-5 rounded-2xl p-5 transition-all duration-300",
+                    "group relative flex flex-row items-center gap-3 sm:gap-5 rounded-2xl p-4 sm:p-5 transition-all duration-300",
                     isSelected
                       ? "border-2 border-primary bg-primary/[0.03] shadow-[0_0_0_4px_rgba(0,229,229,0.08)]"
                       : "border border-gray-100 bg-white hover:border-primary/30 hover:shadow-md",
                   ].join(" ")}
                 >
-                  {/* Selected badge / rank */}
+                  {/* Rank: solo desktop */}
                   <div className="hidden sm:flex flex-shrink-0 w-8 h-8 rounded-full items-center justify-center"
                     style={{ background: isSelected ? "rgba(0,229,229,0.15)" : "#f9fafb" }}>
                     {isSelected ? (
@@ -591,29 +620,35 @@ export default function CalculadoraContent({ cars }: Props) {
                     )}
                   </div>
 
-                  {/* Image */}
-                  <div className="flex-shrink-0 w-full sm:w-28 h-20 bg-gray-50 rounded-xl overflow-hidden">
+                  {/* Image: pequeña en mobile */}
+                  <div className="flex-shrink-0 w-16 h-12 sm:w-28 sm:h-20 bg-gray-50 rounded-xl overflow-hidden">
                     {car.imageUrl ? (
                       <Image src={car.imageUrl} alt={car.name} width={112} height={80}
-                        className="w-full h-full object-contain" />
+                        className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
-                        <span className="material-symbols-outlined text-[36px] text-gray-200">electric_car</span>
+                        <span className="material-symbols-outlined text-[28px] sm:text-[36px] text-gray-200">electric_car</span>
                       </div>
                     )}
                   </div>
 
                   {/* Info */}
-                  <div className="flex-1 min-w-0 text-center sm:text-left">
+                  <div className="flex-1 min-w-0 text-left">
                     <p className="text-text-ghost text-xs font-semibold">{car.brand}</p>
-                    <h3 className="font-headline font-bold text-text-main text-base leading-tight">{car.name}</h3>
-                    <div className="flex items-center gap-2 justify-center sm:justify-start mt-0.5">
+                    <h3 className="font-headline font-bold text-text-main text-sm sm:text-base leading-tight">{car.name}</h3>
+                    <div className="flex items-center gap-1.5 sm:gap-2 mt-0.5 flex-wrap">
                       <span className="text-text-ghost text-xs">{car.range} km</span>
-                      <span className="text-gray-200">·</span>
-                      <span className="text-text-ghost text-xs">{car.batteryCapacity} kWh</span>
-                      <span className="text-gray-200">·</span>
-                      <span className="text-text-ghost text-xs">{(car.batteryCapacity / car.range * 100).toFixed(1)} kWh/100km</span>
+                      <span className="text-gray-200 hidden sm:inline">·</span>
+                      <span className="text-text-ghost text-xs hidden sm:inline">{car.batteryCapacity} kWh</span>
+                      <span className="text-gray-200 hidden sm:inline">·</span>
+                      <span className="text-text-ghost text-xs hidden sm:inline">{(car.batteryCapacity / car.range * 100).toFixed(1)} kWh/100km</span>
                     </div>
+                    {/* Ahorro inline en mobile */}
+                    {car.savingMonth > 0 && (
+                      <p className="sm:hidden font-headline font-black text-sm text-primary-deep mt-0.5">
+                        +{formatCLP(car.savingMonth)}<span className="text-text-ghost font-normal text-[11px]">/mes</span>
+                      </p>
+                    )}
                     {isSelected && (
                       <span className="inline-flex items-center gap-1 mt-1 bg-primary/10 text-primary text-[10px] font-bold px-2 py-0.5 rounded-full">
                         <span className="material-symbols-outlined text-[11px]">check_circle</span>
@@ -622,16 +657,16 @@ export default function CalculadoraContent({ cars }: Props) {
                     )}
                   </div>
 
-                  {/* Electric cost */}
-                  <div className="text-center flex-shrink-0">
+                  {/* Costo eléctrico: solo desktop */}
+                  <div className="hidden sm:block text-center flex-shrink-0">
                     <p className="text-text-ghost text-xs uppercase tracking-wide font-bold">Costo eléctrico</p>
                     <p className="font-headline font-black text-lg text-text-main">
                       {formatCLP(car.electricMonth)}<span className="text-text-ghost text-xs font-normal">/mes</span>
                     </p>
                   </div>
 
-                  {/* Saving */}
-                  <div className={["text-center flex-shrink-0 px-4 py-2 rounded-xl",
+                  {/* Ahorro: solo desktop */}
+                  <div className={["hidden sm:block text-center flex-shrink-0 px-4 py-2 rounded-xl",
                     car.savingMonth > 0 ? "bg-primary/10" : "bg-gray-50"].join(" ")}>
                     <p className="text-text-ghost text-xs uppercase tracking-wide font-bold">Ahorro mensual</p>
                     <p className={["font-headline font-black text-lg",
@@ -644,12 +679,12 @@ export default function CalculadoraContent({ cars }: Props) {
                   </div>
 
                   {/* Price + CTA */}
-                  <div className="text-center flex-shrink-0">
-                    <p className="text-text-ghost text-xs mb-0.5">Desde</p>
-                    <p className="font-headline font-bold text-text-main text-base">{formatCLP(price)}</p>
+                  <div className="text-right sm:text-center flex-shrink-0">
+                    <p className="hidden sm:block text-text-ghost text-xs mb-0.5">Desde</p>
+                    <p className="hidden sm:block font-headline font-bold text-text-main text-base">{formatCLP(price)}</p>
                     <Link
                       href={`/solicitar?auto=${car.slug}`}
-                      className="relative z-[1] mt-2 inline-flex items-center gap-1 bg-primary hover:bg-primary-dark text-black font-bold text-xs px-4 py-2 rounded-lg transition-all shadow-[0_2px_12px_rgba(0,229,229,0.25)] hover:shadow-[0_4px_18px_rgba(0,229,229,0.40)] hover:scale-[1.02]"
+                      className="relative z-[1] mt-0 sm:mt-2 inline-flex items-center gap-1 bg-primary hover:bg-primary-dark text-black font-bold text-xs px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-all shadow-[0_2px_12px_rgba(0,229,229,0.25)] hover:shadow-[0_4px_18px_rgba(0,229,229,0.40)] hover:scale-[1.02]"
                     >
                       Lo quiero
                       <span className="material-symbols-outlined text-[14px]">arrow_forward</span>

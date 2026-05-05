@@ -183,6 +183,8 @@ export const carBySlugQuery = groq`
     maxACChargingPower,
     chargeTimeDC,
     chargeTimeAC,
+    fuelConsumption,
+    rendimientoElectrico,
     chargeType,
     warranty,
     highlight,
@@ -225,7 +227,9 @@ export const carBySlugQuery = groq`
       maxDCChargingPower,
       maxACChargingPower,
       chargeTimeDC,
-      chargeTimeAC
+      chargeTimeAC,
+      fuelConsumption,
+      rendimientoElectrico
     },
     "brand": brand->{ _id, name, "slug": slug.current, "logoUrl": logo.asset->url, logo, description, accentColor },
     "vehicleType": vehicleType->{ _id, name, "slug": slug.current, label, icon },

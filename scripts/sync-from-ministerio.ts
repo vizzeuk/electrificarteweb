@@ -35,6 +35,22 @@ interface MinisterioRow {
   potencia_dc_kW: number | null;
   precio_clp: number | null;
   precio_descuento_clp: number | null;
+  rendimientoUrbano: number | null;
+  rendimientoCarretera: number | null;
+  rendimientoMixto: number | null;
+  rendimientoElectrico: number | null;
+  rendimientoPonderadoCombustible: number | null;
+  rendimientoPonderadoElectrico: number | null;
+}
+
+/** Elige el mejor valor de eficiencia eléctrica (km/kWh) del row */
+function bestElectricRendimiento(row: MinisterioRow): number | null {
+  return row.rendimientoElectrico ?? row.rendimientoPonderadoElectrico ?? null;
+}
+
+/** Elige el mejor valor de rendimiento en combustible (km/L) del row */
+function bestFuelRendimiento(row: MinisterioRow): number | null {
+  return row.rendimientoPonderadoCombustible ?? row.rendimientoMixto ?? row.rendimientoUrbano ?? null;
 }
 
 interface SanityCar {
@@ -48,9 +64,11 @@ interface SanityCar {
   maxDCChargingPower: number | null;
   chargeTimeAC: string | null;
   chargeTimeDC: string | null;
+  fuelConsumption: number | null;
+  rendimientoElectrico: number | null;
   basePrice: number;
   discountPrice: number | null;
-  versions: { _key: string; name: string; batteryCapacity?: number | null; maxACChargingPower?: number | null; maxDCChargingPower?: number | null; chargeTimeAC?: string | null; chargeTimeDC?: string | null; price?: number | null; discountPrice?: number | null }[];
+  versions: { _key: string; _type?: string; name: string; batteryCapacity?: number | null; maxACChargingPower?: number | null; maxDCChargingPower?: number | null; chargeTimeAC?: string | null; chargeTimeDC?: string | null; fuelConsumption?: number | null; rendimientoElectrico?: number | null; price?: number | null; discountPrice?: number | null }[];
 }
 
 // ─── Normalization ────────────────────────────────────────────────────────────
@@ -119,8 +137,8 @@ async function main() {
       "brandRaw": brand->name,
       "brand": brand->name,
       batteryCapacity, maxACChargingPower, maxDCChargingPower,
-      chargeTimeAC, chargeTimeDC, basePrice, discountPrice,
-      "versions": versions[]{ _key, name, batteryCapacity, maxACChargingPower, maxDCChargingPower, chargeTimeAC, chargeTimeDC, price, discountPrice }
+      chargeTimeAC, chargeTimeDC, fuelConsumption, rendimientoElectrico, basePrice, discountPrice,
+      "versions": versions[]{ _key, _type, name, batteryCapacity, maxACChargingPower, maxDCChargingPower, chargeTimeAC, chargeTimeDC, fuelConsumption, rendimientoElectrico, price, discountPrice }
     }
   `);
   console.log(`🚗 Sanity: ${sanityCars.length} autos\n`);
@@ -181,11 +199,13 @@ async function main() {
 
     // For cars with no versions (single config), update top-level fields from refRow
     if (!car.versions || car.versions.length === 0) {
-      maybeSet("batteryCapacity",    car.batteryCapacity,    refRow.bateria_kWh);
-      maybeSet("maxACChargingPower", car.maxACChargingPower, refRow.potencia_ac_kW);
-      maybeSet("maxDCChargingPower", car.maxDCChargingPower, refRow.potencia_dc_kW);
-      maybeSet("chargeTimeAC",       car.chargeTimeAC,       refRow.carga_ac);
-      maybeSet("chargeTimeDC",       car.chargeTimeDC,       refRow.carga_dc);
+      maybeSet("batteryCapacity",      car.batteryCapacity,      refRow.bateria_kWh);
+      maybeSet("maxACChargingPower",   car.maxACChargingPower,   refRow.potencia_ac_kW);
+      maybeSet("maxDCChargingPower",   car.maxDCChargingPower,   refRow.potencia_dc_kW);
+      maybeSet("chargeTimeAC",         car.chargeTimeAC,         refRow.carga_ac);
+      maybeSet("chargeTimeDC",         car.chargeTimeDC,         refRow.carga_dc);
+      maybeSet("fuelConsumption",      car.fuelConsumption,      bestFuelRendimiento(refRow));
+      maybeSet("rendimientoElectrico", car.rendimientoElectrico, bestElectricRendimiento(refRow));
       if (refRow.precio_clp != null) maybeSet("basePrice", car.basePrice, refRow.precio_clp);
       if (refRow.precio_descuento_clp != null) maybeSet("discountPrice", car.discountPrice, refRow.precio_descuento_clp);
     } else {
@@ -206,7 +226,7 @@ async function main() {
 
         if (existingIdx >= 0) {
           const v = updatedVersions[existingIdx];
-          const vPatch: Record<string, unknown> = { ...v };
+          const vPatch: Record<string, unknown> = { ...v, _type: v._type ?? "version" };
           let vChanged = false;
 
           function maybeSetV(field: string, current: unknown, newVal: unknown) {
@@ -223,11 +243,13 @@ async function main() {
             }
           }
 
-          maybeSetV("batteryCapacity",    v.batteryCapacity,    row.bateria_kWh);
-          maybeSetV("maxACChargingPower", v.maxACChargingPower, row.potencia_ac_kW);
-          maybeSetV("maxDCChargingPower", v.maxDCChargingPower, row.potencia_dc_kW);
-          maybeSetV("chargeTimeAC",       v.chargeTimeAC,       row.carga_ac);
-          maybeSetV("chargeTimeDC",       v.chargeTimeDC,       row.carga_dc);
+          maybeSetV("batteryCapacity",      v.batteryCapacity,      row.bateria_kWh);
+          maybeSetV("maxACChargingPower",   v.maxACChargingPower,   row.potencia_ac_kW);
+          maybeSetV("maxDCChargingPower",   v.maxDCChargingPower,   row.potencia_dc_kW);
+          maybeSetV("chargeTimeAC",         v.chargeTimeAC,         row.carga_ac);
+          maybeSetV("chargeTimeDC",         v.chargeTimeDC,         row.carga_dc);
+          maybeSetV("fuelConsumption",      v.fuelConsumption,      bestFuelRendimiento(row));
+          maybeSetV("rendimientoElectrico", v.rendimientoElectrico, bestElectricRendimiento(row));
           if (row.precio_clp != null) maybeSetV("price", v.price, row.precio_clp);
           if (row.precio_descuento_clp != null) maybeSetV("discountPrice", v.discountPrice, row.precio_descuento_clp);
 
@@ -239,14 +261,17 @@ async function main() {
           // New version not in Sanity — add it
           const newVersion = {
             _key: `v_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+            _type: "version",
             name: row.version,
-            batteryCapacity:    row.bateria_kWh ?? undefined,
-            maxACChargingPower: row.potencia_ac_kW ?? undefined,
-            maxDCChargingPower: row.potencia_dc_kW ?? undefined,
-            chargeTimeAC:       row.carga_ac ?? undefined,
-            chargeTimeDC:       row.carga_dc ?? undefined,
-            price:              row.precio_clp ?? undefined,
-            discountPrice:      row.precio_descuento_clp ?? undefined,
+            batteryCapacity:      row.bateria_kWh ?? undefined,
+            maxACChargingPower:   row.potencia_ac_kW ?? undefined,
+            maxDCChargingPower:   row.potencia_dc_kW ?? undefined,
+            chargeTimeAC:         row.carga_ac ?? undefined,
+            chargeTimeDC:         row.carga_dc ?? undefined,
+            fuelConsumption:      bestFuelRendimiento(row) ?? undefined,
+            rendimientoElectrico: bestElectricRendimiento(row) ?? undefined,
+            price:                row.precio_clp ?? undefined,
+            discountPrice:        row.precio_descuento_clp ?? undefined,
           };
           updatedVersions.push(newVersion);
           changes.push(`  ➕ Nueva versión: "${row.version}"`);
@@ -255,11 +280,13 @@ async function main() {
       }
 
       // Also update top-level car fields from first row if missing
-      maybeSet("batteryCapacity",    car.batteryCapacity,    refRow.bateria_kWh);
-      maybeSet("maxACChargingPower", car.maxACChargingPower, refRow.potencia_ac_kW);
-      maybeSet("maxDCChargingPower", car.maxDCChargingPower, refRow.potencia_dc_kW);
-      maybeSet("chargeTimeAC",       car.chargeTimeAC,       refRow.carga_ac);
-      maybeSet("chargeTimeDC",       car.chargeTimeDC,       refRow.carga_dc);
+      maybeSet("batteryCapacity",      car.batteryCapacity,      refRow.bateria_kWh);
+      maybeSet("maxACChargingPower",   car.maxACChargingPower,   refRow.potencia_ac_kW);
+      maybeSet("maxDCChargingPower",   car.maxDCChargingPower,   refRow.potencia_dc_kW);
+      maybeSet("chargeTimeAC",         car.chargeTimeAC,         refRow.carga_ac);
+      maybeSet("chargeTimeDC",         car.chargeTimeDC,         refRow.carga_dc);
+      maybeSet("fuelConsumption",      car.fuelConsumption,      bestFuelRendimiento(refRow));
+      maybeSet("rendimientoElectrico", car.rendimientoElectrico, bestElectricRendimiento(refRow));
       if (refRow.precio_clp != null) maybeSet("basePrice", car.basePrice, refRow.precio_clp);
 
       if (versionsChanged) patch["versions"] = updatedVersions;
@@ -285,7 +312,27 @@ async function main() {
   console.log(`  Actualizados:    ${updated}`);
   console.log(`  Sin cambios:     ${skipped}`);
   console.log(`  Sin match JSON:  ${noMatch}`);
-  if (DRY_RUN) console.log("\n  (Dry run — nada fue escrito)");
+  if (DRY_RUN) { console.log("\n  (Dry run — nada fue escrito)"); return; }
+
+  // Purge Next.js ISR cache so pages reflect the new data immediately
+  const siteUrl = process.env.SITE_URL ?? process.env.NEXT_PUBLIC_SITE_URL;
+  if (siteUrl && updated > 0) {
+    console.log(`\n🔄 Purgando caché ISR en ${siteUrl}...`);
+    try {
+      const res = await fetch(`${siteUrl}/api/revalidate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ _type: "car" }),
+      });
+      const json = await res.json().catch(() => ({}));
+      console.log(`  ✔ Revalidado: ${JSON.stringify(json)}`);
+    } catch (e) {
+      console.log(`  ⚠️  No se pudo purgar el caché: ${e}`);
+    }
+  } else if (updated > 0) {
+    console.log(`\n⚠️  Agrega SITE_URL=https://tu-dominio.com en .env.local para purgar el caché automáticamente.`);
+    console.log(`   O llama manualmente: curl -X POST https://tu-dominio.com/api/revalidate -H 'Content-Type: application/json' -d '{"_type":"car"}'`);
+  }
 }
 
 main().catch(err => { console.error(err); process.exit(1); });

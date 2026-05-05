@@ -11,17 +11,18 @@ export const metadata: Metadata = {
 };
 
 export interface CalcCar {
-  _id:             string;
-  name:            string;
-  slug:            string;
-  brand:           string;
-  brandSlug:       string;
-  imageUrl?:       string;
-  basePrice:       number;
-  discountPrice:   number;
-  range:           number;
-  batteryCapacity: number;
-  electricTypeTag: string;
+  _id:              string;
+  name:             string;
+  slug:             string;
+  brand:            string;
+  brandSlug:        string;
+  imageUrl?:        string;
+  basePrice:        number;
+  discountPrice:    number;
+  range:            number;
+  batteryCapacity:  number;
+  electricTypeTag:  string;
+  vehicleTypeSlug?: string;
 }
 
 const carsForCalculatorQuery = groq`
@@ -41,7 +42,8 @@ const carsForCalculatorQuery = groq`
     discountPrice,
     range,
     batteryCapacity,
-    "electricTypeTag": electricType->tag,
+    "electricTypeTag":  electricType->tag,
+    "vehicleTypeSlug":  vehicleType->slug.current,
   }
 `;
 
