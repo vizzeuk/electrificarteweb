@@ -16,20 +16,24 @@ interface Highlight {
 }
 
 interface CarData {
-  _id:             string;
-  name:            string;
-  slug:            string;
-  imageUrl?:       string;
-  basePrice:       number;
-  discountPrice:   number;
-  range:           number;
-  batteryCapacity: number;
-  power:           number;
-  isNew:           boolean;
-  isHotDeal:       boolean;
-  brand?:          { name: string; slug: string };
-  vehicleType?:    { label: string; slug: string };
-  electricType?:   { tag: string; label: string; slug: string };
+  _id:                  string;
+  name:                 string;
+  slug:                 string;
+  imageUrl?:            string;
+  basePrice:            number;
+  discountPrice:        number;
+  range:                number;
+  maxVersionRange?:     number | null;
+  batteryCapacity:      number;
+  electricRangeKm?:     number | null;
+  fuelConsumption?:     number | null;
+  rendimientoElectrico?: number | null;
+  power:                number;
+  isNew:                boolean;
+  isHotDeal:            boolean;
+  brand?:               { name: string; slug: string };
+  vehicleType?:         { label: string; slug: string };
+  electricType?:        { tag: string; label: string; slug: string };
 }
 
 interface ColData {
@@ -268,8 +272,14 @@ export default function ColeccionPageContent({ col, cars }: Props) {
                         slug={car.slug}
                         image={car.imageUrl}
                         category={car.vehicleType?.label ?? car.electricType?.tag}
-                        batteryCapacity={car.batteryCapacity ?? 0}
-                        range={car.range ?? 0}
+                        batteryCapacity={car.batteryCapacity}
+                        range={car.range}
+                        maxVersionRange={car.maxVersionRange}
+                        electricRangeKm={car.electricRangeKm}
+                        fuelConsumption={car.fuelConsumption}
+                        rendimientoElectrico={car.rendimientoElectrico}
+                        electricTypeTag={car.electricType?.tag}
+                        power={car.power}
                         basePrice={car.basePrice}
                         discountPrice={car.discountPrice}
                         isNew={car.isNew}
@@ -297,8 +307,14 @@ export default function ColeccionPageContent({ col, cars }: Props) {
                         slug={car.slug}
                         image={car.imageUrl}
                         category={car.vehicleType?.label ?? car.electricType?.tag}
-                        batteryCapacity={car.batteryCapacity ?? 0}
-                        range={car.range ?? 0}
+                        batteryCapacity={car.batteryCapacity}
+                        range={car.range}
+                        maxVersionRange={car.maxVersionRange}
+                        electricRangeKm={car.electricRangeKm}
+                        fuelConsumption={car.fuelConsumption}
+                        rendimientoElectrico={car.rendimientoElectrico}
+                        electricTypeTag={car.electricType?.tag}
+                        power={car.power}
                         basePrice={car.basePrice}
                         discountPrice={car.discountPrice}
                         isNew={car.isNew}

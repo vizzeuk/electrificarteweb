@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { formatCLP, calculateDiscount } from "@/lib/utils";
+import { formatCLP, calculateDiscount, carStats } from "@/lib/utils";
 import { CatalogFilters, type ActiveFilters } from "@/components/ui/CatalogFilters";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -15,11 +15,16 @@ export interface TipoCarData {
   brandSlug: string;
   electricTypeSlug: string;
   electricTypeLabel: string;
+  electricTypeTag: string;
   basePrice: number;
   discountPrice: number;
   range: number;
+  maxVersionRange?: number | null;
   power: number;
   battery: number;
+  electricRangeKm?: number | null;
+  fuelConsumption?: number | null;
+  rendimientoElectrico?: number | null;
   traction: string;
   acceleration: number;
   isHotDeal: boolean;
@@ -311,12 +316,13 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes, adCar, a
           >
             {hotDeals.map((car) => {
               const discountPct = Math.round(((car.basePrice - car.discountPrice) / car.basePrice) * 100);
+              const primaryStats = carStats({ battery: car.battery, range: car.range, maxVersionRange: car.maxVersionRange, electricRangeKm: car.electricRangeKm, fuelConsumption: car.fuelConsumption, rendimientoElectrico: car.rendimientoElectrico, electricTypeTag: car.electricTypeTag, power: car.power });
               const specs = [
-                { label: "Autonomía",  value: `${car.range} km` },
+                ...primaryStats,
                 { label: "Potencia",   value: `${car.power} CV` },
                 { label: "Tracción",   value: car.traction },
                 { label: "0-100 km/h", value: car.acceleration ? `${car.acceleration} seg` : "–" },
-              ];
+              ].filter((s, i, arr) => s.value && arr.findIndex(x => x.label === s.label) === i).slice(0, 4);
               return (
                 <div key={car.slug} style={{ flex: "0 0 100%", scrollSnapAlign: "start" }}>
                   {/* ── MOBILE ── */}
@@ -347,8 +353,8 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes, adCar, a
                         </div>
                         <div className="grid grid-cols-2 gap-2">
                           <div className="bg-white/5 rounded-lg px-3 py-2">
-                            <p className="text-primary text-sm font-headline font-bold">{car.range} km</p>
-                            <p className="text-white/40 text-[10px]">Autonomía</p>
+                            <p className="text-primary text-sm font-headline font-bold">{primaryStats[0]?.value ?? "–"}</p>
+                            <p className="text-white/40 text-[10px]">{primaryStats[0]?.label ?? "–"}</p>
                           </div>
                           <div className="bg-white/5 rounded-lg px-3 py-2">
                             <p className="text-primary text-sm font-headline font-bold">{car.traction}</p>
@@ -522,16 +528,17 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes, adCar, a
                       <p className="hidden sm:block text-xs text-text-ghost mb-2 sm:mb-3 leading-snug line-clamp-2">{car.tagline}</p>
 
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-1 sm:gap-2 mb-2 sm:mb-4">
-                        {[
-                          { label: "Autonomía", value: `${car.range} km`, mobile: true },
-                          { label: "Potencia",  value: `${car.power} CV`, mobile: true },
-                          { label: "Batería",   value: `${car.battery} kWh`, mobile: false },
-                        ].map((s) => (
-                          <div key={s.label} className={`bg-surface rounded-xl p-1.5 sm:p-2 text-center${s.mobile ? "" : " hidden sm:block"}`}>
-                            <p className="text-[10px] sm:text-[11px] font-bold text-text-main">{s.value}</p>
-                            <p className="text-[9px] sm:text-[10px] text-text-ghost">{s.label}</p>
-                          </div>
-                        ))}
+                        {(() => {
+                          const cs = carStats({ battery: car.battery, range: car.range, maxVersionRange: car.maxVersionRange, electricRangeKm: car.electricRangeKm, fuelConsumption: car.fuelConsumption, rendimientoElectrico: car.rendimientoElectrico, electricTypeTag: car.electricTypeTag, power: car.power });
+                          const extra = { label: "Potencia", value: car.power ? `${car.power} CV` : null };
+                          const all = [...cs, extra].filter((s, i, arr) => s.value && arr.findIndex(x => x.label === s.label) === i).slice(0, 3);
+                          return all.map((s, i) => (
+                            <div key={s.label} className={`bg-surface rounded-xl p-1.5 sm:p-2 text-center${i >= 2 ? " hidden sm:block" : ""}`}>
+                              <p className="text-[10px] sm:text-[11px] font-bold text-text-main">{s.value}</p>
+                              <p className="text-[9px] sm:text-[10px] text-text-ghost">{s.label}</p>
+                            </div>
+                          ));
+                        })()}
                       </div>
 
                       <div className="mb-2 sm:mb-4">

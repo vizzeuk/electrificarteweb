@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { formatCLP, calculateDiscount } from "@/lib/utils";
+import { formatCLP, calculateDiscount, carStats } from "@/lib/utils";
 import { CatalogFilters, type ActiveFilters } from "@/components/ui/CatalogFilters";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -28,11 +28,16 @@ export interface ElectricoCarData {
   brandSlug: string;
   tipoSlug: string;
   tipoLabel: string;
+  electricTypeTag: string;
   basePrice: number;
   discountPrice: number;
   range: number;
+  maxVersionRange?: number | null;
   power: number;
   battery: number;
+  electricRangeKm?: number | null;
+  fuelConsumption?: number | null;
+  rendimientoElectrico?: number | null;
   isHotDeal: boolean;
   tagline: string;
   imageUrl?: string;
@@ -391,12 +396,12 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
           >
             {hotDeals.map((car) => {
               const discountPct = Math.round(((car.basePrice - car.discountPrice) / car.basePrice) * 100);
+              const primaryStats = carStats({ battery: car.battery, range: car.range, maxVersionRange: car.maxVersionRange, electricRangeKm: car.electricRangeKm, fuelConsumption: car.fuelConsumption, rendimientoElectrico: car.rendimientoElectrico, electricTypeTag: car.electricTypeTag, power: car.power });
               const specs = [
-                { label: car.range > 0 ? "Autonomía" : "Sistema", value: car.range > 0 ? `${car.range} km` : "Híbrido" },
-                { label: "Potencia", value: `${car.power} CV` },
-                { label: "Batería",  value: car.battery >= 1 ? `${car.battery} kWh` : "48V" },
+                ...primaryStats,
+                { label: "Potencia", value: car.power ? `${car.power} CV` : null },
                 { label: "Tipo",     value: meta.tag },
-              ];
+              ].filter((s, i, arr) => s.value && arr.findIndex(x => x.label === s.label) === i).slice(0, 4) as { label: string; value: string }[];
               return (
                 <div key={car.slug} style={{ flex: "0 0 100%", scrollSnapAlign: "start" }}>
                   {/* ── MOBILE ── */}
@@ -427,8 +432,8 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
                         </div>
                         <div className="grid grid-cols-2 gap-2">
                           <div className="bg-white/5 rounded-lg px-3 py-2">
-                            <p className="text-primary text-sm font-headline font-bold">{car.range > 0 ? `${car.range} km` : "Híbrido"}</p>
-                            <p className="text-white/40 text-[10px]">{car.range > 0 ? "Autonomía" : "Sistema"}</p>
+                            <p className="text-primary text-sm font-headline font-bold">{primaryStats[0]?.value ?? "–"}</p>
+                            <p className="text-white/40 text-[10px]">{primaryStats[0]?.label ?? "–"}</p>
                           </div>
                           <div className="bg-white/5 rounded-lg px-3 py-2">
                             <p className="text-primary text-sm font-headline font-bold">{meta.tag}</p>
@@ -607,16 +612,17 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
                       <p className="hidden sm:block text-xs text-text-ghost mb-2 sm:mb-3 leading-snug line-clamp-2">{car.tagline}</p>
 
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-1 sm:gap-2 mb-2 sm:mb-4">
-                        {[
-                          { label: car.range > 0 ? "Autonomía" : "Tracción", value: car.range > 0 ? `${car.range} km` : "híbrido", mobile: true },
-                          { label: "Potencia", value: `${car.power} CV`, mobile: true },
-                          { label: "Batería",  value: car.battery >= 1 ? `${car.battery} kWh` : "48V", mobile: false },
-                        ].map((s) => (
-                          <div key={s.label} className={`bg-surface rounded-xl p-1.5 sm:p-2 text-center${s.mobile ? "" : " hidden sm:block"}`}>
-                            <p className="text-[10px] sm:text-[11px] font-bold text-text-main">{s.value}</p>
-                            <p className="text-[9px] sm:text-[10px] text-text-ghost">{s.label}</p>
-                          </div>
-                        ))}
+                        {(() => {
+                          const cs = carStats({ battery: car.battery, range: car.range, maxVersionRange: car.maxVersionRange, electricRangeKm: car.electricRangeKm, fuelConsumption: car.fuelConsumption, rendimientoElectrico: car.rendimientoElectrico, electricTypeTag: car.electricTypeTag, power: car.power });
+                          const extra = { label: "Potencia", value: car.power ? `${car.power} CV` : null };
+                          const all = [...cs, extra].filter((s, i, arr) => s.value && arr.findIndex(x => x.label === s.label) === i).slice(0, 3);
+                          return all.map((s, i) => (
+                            <div key={s.label} className={`bg-surface rounded-xl p-1.5 sm:p-2 text-center${i >= 2 ? " hidden sm:block" : ""}`}>
+                              <p className="text-[10px] sm:text-[11px] font-bold text-text-main">{s.value}</p>
+                              <p className="text-[9px] sm:text-[10px] text-text-ghost">{s.label}</p>
+                            </div>
+                          ));
+                        })()}
                       </div>
 
                       <div className="mb-2 sm:mb-4">

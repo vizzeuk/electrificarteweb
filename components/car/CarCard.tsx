@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { Icon } from "@/components/ui/Icon";
-import { formatCLP, calculateDiscount } from "@/lib/utils";
+import { formatCLP, calculateDiscount, carStats } from "@/lib/utils";
 
 interface CarCardProps {
   name: string;
@@ -13,8 +13,14 @@ interface CarCardProps {
   slug: string;
   image?: string;
   category?: string;
-  batteryCapacity?: number;
-  range?: number;
+  batteryCapacity?: number | null;
+  range?: number | null;
+  maxVersionRange?: number | null;
+  electricRangeKm?: number | null;
+  fuelConsumption?: number | null;
+  rendimientoElectrico?: number | null;
+  electricTypeTag?: string | null;
+  power?: number | null;
   basePrice: number;
   discountPrice?: number;
   isNew?: boolean;
@@ -30,6 +36,12 @@ export function CarCard({
   category,
   batteryCapacity,
   range,
+  maxVersionRange,
+  electricRangeKm,
+  fuelConsumption,
+  rendimientoElectrico,
+  electricTypeTag,
+  power,
   basePrice,
   discountPrice,
   isNew,
@@ -37,6 +49,7 @@ export function CarCard({
 }: CarCardProps) {
   const hasDiscount = discountPrice && discountPrice < basePrice;
   const discountPct = hasDiscount ? calculateDiscount(basePrice, discountPrice) : 0;
+  const stats = carStats({ battery: batteryCapacity, range, maxVersionRange, electricRangeKm, fuelConsumption, rendimientoElectrico, electricTypeTag, power });
 
   return (
     <motion.article
@@ -100,24 +113,16 @@ export function CarCard({
           )}
         </div>
 
-        <div className="space-y-2 py-3 border-y border-gray-100">
-          <div className="flex justify-between items-center">
-            <span className="text-[11px] uppercase tracking-wide text-text-muted font-semibold">
-              Bateria
-            </span>
-            <span className="text-sm font-medium">
-              {batteryCapacity != null ? `${batteryCapacity} kWh` : "N/D"}
-            </span>
+        {stats.length > 0 && (
+          <div className="space-y-2 py-3 border-y border-gray-100">
+            {stats.map(s => (
+              <div key={s.label} className="flex justify-between items-center">
+                <span className="text-[11px] uppercase tracking-wide text-text-muted font-semibold">{s.label}</span>
+                <span className="text-sm font-medium">{s.value}</span>
+              </div>
+            ))}
           </div>
-          <div className="flex justify-between items-center">
-            <span className="text-[11px] uppercase tracking-wide text-text-muted font-semibold">
-              Autonomia
-            </span>
-            <span className="text-sm font-medium">
-              {range != null ? `${range} km` : "N/D"}
-            </span>
-          </div>
-        </div>
+        )}
 
         {/* Pricing block */}
         <div className="mt-4">

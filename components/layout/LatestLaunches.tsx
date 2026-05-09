@@ -12,6 +12,12 @@ export interface LaunchCarData {
   imageUrl?: string;
   batteryCapacity?: number | null;
   range?: number | null;
+  maxVersionRange?: number | null;
+  electricRangeKm?: number | null;
+  fuelConsumption?: number | null;
+  rendimientoElectrico?: number | null;
+  power?: number | null;
+  electricType?: { tag?: string } | null;
   basePrice: number;
   discountPrice?: number;
   isNew?: boolean;
@@ -115,8 +121,14 @@ export function LatestLaunches({ title = "Últimos lanzamientos", cars }: Latest
                   slug={car.slug}
                   image={car.imageUrl}
                   category={categoryName}
-                  batteryCapacity={car.batteryCapacity ?? undefined}
-                  range={car.range ?? undefined}
+                  batteryCapacity={car.batteryCapacity}
+                  range={car.range}
+                  maxVersionRange={car.maxVersionRange}
+                  electricRangeKm={car.electricRangeKm}
+                  fuelConsumption={car.fuelConsumption}
+                  rendimientoElectrico={car.rendimientoElectrico}
+                  electricTypeTag={car.electricType?.tag}
+                  power={car.power}
                   basePrice={car.basePrice}
                   discountPrice={car.discountPrice}
                   isNew={car.isNew}
