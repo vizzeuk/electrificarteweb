@@ -31,46 +31,48 @@ export interface CarStatInput {
 
 export function carStats(car: CarStatInput): { label: string; value: string }[] {
   const tag = (car.electricTypeTag ?? "").toUpperCase();
-  const base = car.range ?? 0;
+  const base   = car.range ?? 0;
   const maxVer = car.maxVersionRange ?? 0;
-  const effectiveRange = maxVer > base ? maxVer : base;
-  const rangeLabel = maxVer > base ? `hasta ${effectiveRange} km` : effectiveRange > 0 ? `${effectiveRange} km` : null;
+  const eff    = maxVer > base ? maxVer : base;
+  const rangeLabel = maxVer > base ? `hasta ${eff} km` : eff > 0 ? `${eff} km` : null;
 
-  const stat = (label: string, value: string | null | undefined) =>
-    value ? { label, value } : null;
+  type S = { label: string; value: string };
+  const out: S[] = [];
+  const push = (label: string, val: string | null | undefined) => { if (val) out.push({ label, value: val }); };
 
-  // BEV — batería + autonomía
+  // BEV: autonomía → eficiencia → batería → potencia (tomar los 3 primeros con valor)
   const isBEV = tag === "BEV" || (!car.fuelConsumption && (car.battery ?? 0) >= 10 && tag !== "PHEV" && tag !== "HEV" && tag !== "MHEV" && tag !== "REEV");
   if (isBEV) {
-    return [
-      stat("Batería",   (car.battery ?? 0) >= 1 ? `${car.battery} kWh` : null),
-      stat("Autonomía", rangeLabel),
-    ].filter(Boolean) as { label: string; value: string }[];
+    push("Autonomía",  rangeLabel);
+    push("Eficiencia", car.rendimientoElectrico ? `${car.rendimientoElectrico} km/kWh` : null);
+    push("Batería",    (car.battery ?? 0) >= 1 ? `${car.battery} kWh` : null);
+    push("Potencia",   (car.power ?? 0) > 0 ? `${car.power} CV` : null);
+    return out.slice(0, 3);
   }
 
-  // PHEV / REEV — autonomía eléctrica + rendimiento combinado
+  // PHEV / REEV: autonomía eléctrica → eficiencia e- → potencia
+  // fuelConsumption for PHEVs is the WLTP ponderado value which can be unrealistically high (62+ km/L)
+  // — prefer rendimientoElectrico (km/kWh) as the meaningful 2nd spec
   const isPHEV = tag === "PHEV" || tag === "REEV" || ((car.electricRangeKm ?? 0) > 0 && (car.fuelConsumption ?? 0) > 0);
   if (isPHEV) {
-    return [
-      stat("Autonomía e-",  (car.electricRangeKm ?? 0) > 0 ? `${car.electricRangeKm} km` : null)
-        ?? stat("Eficiencia e-", car.rendimientoElectrico ? `${car.rendimientoElectrico} km/kWh` : null),
-      stat("Rendimiento", car.fuelConsumption ? `${car.fuelConsumption} km/L` : null),
-    ].filter(Boolean) as { label: string; value: string }[];
+    if ((car.electricRangeKm ?? 0) > 0) push("Autonomía e-", `${car.electricRangeKm} km`);
+    push("Eficiencia e-", car.rendimientoElectrico ? `${car.rendimientoElectrico} km/kWh` : null);
+    push("Potencia",      (car.power ?? 0) > 0 ? `${car.power} CV` : null);
+    return out.slice(0, 3);
   }
 
-  // HEV / MHEV — rendimiento combustible + potencia
+  // HEV / MHEV: rendimiento combustible → potencia → batería (si existe)
   const isHEV = tag === "HEV" || tag === "MHEV" || (car.fuelConsumption ?? 0) > 0;
   if (isHEV) {
-    return [
-      stat("Rendimiento", car.fuelConsumption ? `${car.fuelConsumption} km/L` : null),
-      stat("Potencia",    (car.power ?? 0) > 0 ? `${car.power} CV` : null),
-    ].filter(Boolean) as { label: string; value: string }[];
+    push("Rendimiento", car.fuelConsumption ? `${car.fuelConsumption} km/L` : null);
+    push("Potencia",    (car.power ?? 0) > 0 ? `${car.power} CV` : null);
+    push("Batería",     (car.battery ?? 0) > 0 ? `${car.battery} kWh` : null);
+    return out.slice(0, 3);
   }
 
-  // Fallback — lo que haya disponible
-  return [
-    stat("Batería",   (car.battery ?? 0) >= 1 ? `${car.battery} kWh` : null),
-    stat("Autonomía", rangeLabel),
-    stat("Rendimiento", car.fuelConsumption ? `${car.fuelConsumption} km/L` : null),
-  ].filter(Boolean).slice(0, 2) as { label: string; value: string }[];
+  // Fallback
+  push("Batería",     (car.battery ?? 0) >= 1 ? `${car.battery} kWh` : null);
+  push("Autonomía",   rangeLabel);
+  push("Rendimiento", car.fuelConsumption ? `${car.fuelConsumption} km/L` : null);
+  return out.slice(0, 3);
 }

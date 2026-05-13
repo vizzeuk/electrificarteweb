@@ -12,6 +12,7 @@ export interface VersionData {
   discountPrice: number;
   battery: number;
   range: number;
+  electricRangeKm?: number | null;
   power: number;
   torque: number;
   traction: string;
@@ -37,8 +38,10 @@ export interface CarData {
   isHotDeal: boolean;
   isNew: boolean;
   isTopSeller?: boolean;
+  electricTypeTag?: string | null;
   battery: number;
   range: number;
+  electricRangeKm?: number | null;
   power: number;
   torque: number;
   traction: string;
@@ -80,6 +83,7 @@ export interface SimilarCarData {
   discountPrice: number;
   range: number;
   imageUrl?: string;
+  basePrice?: number;
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -99,33 +103,89 @@ const galleryGradients = [
 
 function buildFallbackHighlights(car: CarData) {
   const gallery = car.gallery ?? [];
+  const tag = (car.electricTypeTag ?? "").toUpperCase();
+  const isBEV  = tag === "BEV"  || (!car.fuelConsumption && (car.battery ?? 0) >= 10 && tag !== "PHEV" && tag !== "HEV" && tag !== "MHEV" && tag !== "REEV");
+  const isPHEV = tag === "PHEV" || tag === "REEV";
+  const isHEV  = !isBEV && !isPHEV;
+
+  const comfortDesc = car.comfortFeatures.length > 0
+    ? `El interior del ${car.name} combina materiales premium con tecnología conectada. ${car.comfortFeatures.slice(0, 2).join(", ")} y mucho más para que cada viaje sea placentero.`
+    : `El interior del ${car.name} está pensado para quienes buscan confort y funcionalidad. Con ${car.seats} plazas y ${car.cargo} litros de maletero, tiene espacio para todo lo que necesitas.`;
+
+  const comfortHighlight = {
+    title:         `${car.seats || 5} plazas de puro confort`,
+    description:   comfortDesc,
+    badge:         "Interior",
+    icon:          "airline_seat_recline_extra",
+    imageUrl:      gallery[3] ?? gallery[0] ?? undefined,
+    imagePosition: "right" as const,
+  };
+
+  if (isBEV) {
+    return [
+      {
+        title:         car.range ? `Hasta ${car.range} km de autonomía real` : "Autonomía para el día a día",
+        description:   car.range
+          ? `El ${car.brand} ${car.name} está diseñado para ir lejos sin preocupaciones. ${car.battery ? `Con una batería de ${car.battery} kWh, ` : ""}ofrece hasta ${car.range} km de autonomía WLTP para que cada trayecto sea una experiencia sin ansiedad de rango.`
+          : `El ${car.brand} ${car.name} es un vehículo eléctrico de última generación${car.rendimientoElectrico ? ` con una eficiencia de ${car.rendimientoElectrico} km/kWh` : ""}, diseñado para maximizar cada kilómetro recorrido.`,
+        badge:         "Rendimiento",
+        icon:          "electric_car",
+        imageUrl:      gallery[1] ?? gallery[0] ?? undefined,
+        imagePosition: "right" as const,
+      },
+      {
+        title:         car.chargeTimeDC ? `Carga rápida en ${car.chargeTimeDC}` : "Carga inteligente y flexible",
+        description:   `Olvídate de las esperas largas. ${car.chargeType ? `Compatible con ${car.chargeType}, ` : ""}el ${car.name} se adapta tanto a cargadores domésticos como a puntos de carga rápida DC para que siempre estés listo para salir.`,
+        badge:         "Carga",
+        icon:          "bolt",
+        imageUrl:      gallery[2] ?? gallery[0] ?? undefined,
+        imagePosition: "left" as const,
+      },
+      comfortHighlight,
+    ];
+  }
+
+  if (isPHEV) {
+    return [
+      {
+        title:         car.electricRangeKm ? `${car.electricRangeKm} km en modo 100% eléctrico` : "Lo mejor de dos mundos",
+        description:   `El ${car.brand} ${car.name} combina motor eléctrico y combustión para la máxima versatilidad. ${car.electricRangeKm ? `Recorre hasta ${car.electricRangeKm} km en modo eléctrico puro para trayectos urbanos sin emisiones.` : ""}${car.rendimientoElectrico ? ` Eficiencia eléctrica de ${car.rendimientoElectrico} km/kWh para maximizar cada kWh.` : ""}`,
+        badge:         "Electrificación",
+        icon:          "electric_car",
+        imageUrl:      gallery[1] ?? gallery[0] ?? undefined,
+        imagePosition: "right" as const,
+      },
+      {
+        title:         car.rendimientoElectrico ? `${car.rendimientoElectrico} km/kWh de eficiencia eléctrica` : "Carga inteligente para ciudad y carretera",
+        description:   `Con su sistema híbrido enchufable, el ${car.name} optimiza automáticamente el uso de energía según tu forma de conducir. ${car.chargeTimeDC ? `Carga rápida en ${car.chargeTimeDC}.` : car.chargeTimeAC ? `Carga completa en ${car.chargeTimeAC}.` : ""}`,
+        badge:         "Eficiencia",
+        icon:          "savings",
+        imageUrl:      gallery[2] ?? gallery[0] ?? undefined,
+        imagePosition: "left" as const,
+      },
+      comfortHighlight,
+    ];
+  }
+
+  // HEV / MHEV
   return [
     {
-      title:         `Hasta ${car.range} km de autonomía real`,
-      description:   `El ${car.brand} ${car.name} está diseñado para ir lejos sin preocupaciones. Con una batería de ${car.battery} kWh y tecnología de última generación, ofrece hasta ${car.range} km de autonomía WLTP para que cada trayecto sea una experiencia sin ansiedad de rango.`,
-      badge:         "Rendimiento",
-      icon:          "electric_car",
+      title:         car.fuelConsumption ? `${car.fuelConsumption} km/L: eficiencia sin enchufes` : "Eficiencia híbrida automática",
+      description:   `El ${car.brand} ${car.name} recupera energía en cada frenada y desaceleración para recargar su batería de forma automática, sin necesidad de enchufarse. ${car.fuelConsumption ? `Esto se traduce en un rendimiento de ${car.fuelConsumption} km/L` : "El resultado es un ahorro real de combustible"} en uso mixto urbano e interurbano.`,
+      badge:         "Eficiencia",
+      icon:          "savings",
       imageUrl:      gallery[1] ?? gallery[0] ?? undefined,
       imagePosition: "right" as const,
     },
     {
-      title:         car.chargeTimeDC ? `Carga rápida en ${car.chargeTimeDC}` : "Carga inteligente y flexible",
-      description:   `Olvídate de las esperas largas. ${car.chargeType ? `Compatible con ${car.chargeType},` : ""} el ${car.name} se adapta tanto a cargadores domésticos como a puntos de carga rápida, para que siempre estés listo para salir.`,
-      badge:         "Carga",
-      icon:          "bolt",
+      title:         car.power ? `${car.power} CV con tecnología híbrida` : "Potencia e inteligencia combinadas",
+      description:   `El motor híbrido del ${car.name} combina un motor de combustión con asistencia eléctrica para ofrecer una conducción más suave, potente y eficiente. ${car.traction ? `Tracción ${car.traction} para mayor control en todas las situaciones.` : ""}`,
+      badge:         "Motor",
+      icon:          "settings",
       imageUrl:      gallery[2] ?? gallery[0] ?? undefined,
       imagePosition: "left" as const,
     },
-    {
-      title:         `${car.seats} plazas de puro confort`,
-      description:   car.comfortFeatures.length > 0
-        ? `El interior del ${car.name} combina materiales premium con tecnología conectada. ${car.comfortFeatures.slice(0, 2).join(", ")} y mucho más para que cada viaje sea placentero.`
-        : `El interior del ${car.name} está pensado para quienes buscan confort y funcionalidad. Con ${car.seats} plazas y ${car.cargo} litros de maletero, tiene espacio para todo lo que necesitas.`,
-      badge:         "Interior",
-      icon:          "airline_seat_recline_extra",
-      imageUrl:      gallery[3] ?? gallery[0] ?? undefined,
-      imagePosition: "right" as const,
-    },
+    comfortHighlight,
   ];
 }
 
@@ -293,20 +353,35 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
             {/* Right: stats + price */}
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.15 }}>
               <div className="grid grid-cols-4 gap-2 mb-5">
-                {[
-                  { label: "Autonomía",  value: `${ver.range} km` },
-                  { label: "Potencia",   value: `${ver.power} CV` },
-                  { label: "0–100",      value: `${ver.acceleration}s` },
-                  { label: "Plazas",     value: `${car.seats} plz` },
-                ].map((s) => (
-                  <div key={s.label} className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-3 text-center">
-                    <p className="text-primary font-headline font-black text-lg leading-none">{s.value}</p>
-                    <p className="text-white/40 text-[10px] mt-1 uppercase tracking-wide">{s.label}</p>
-                  </div>
-                ))}
+                {(() => {
+                  const tag = (car.electricTypeTag ?? "").toUpperCase();
+                  const isBEV  = tag === "BEV"  || (!car.fuelConsumption && (car.battery ?? 0) >= 10 && tag !== "PHEV" && tag !== "HEV" && tag !== "MHEV" && tag !== "REEV");
+                  const isPHEV = tag === "PHEV" || tag === "REEV";
+                  const stat1 = isBEV
+                    ? { label: "Autonomía",   value: ver.range ? `${ver.range} km` : (car.rendimientoElectrico ? `${car.rendimientoElectrico} km/kWh` : "—") }
+                    : isPHEV
+                      ? { label: "Autón. e-",   value: (ver.electricRangeKm ?? car.electricRangeKm) ? `${ver.electricRangeKm ?? car.electricRangeKm} km` : "—" }
+                      : { label: "Rendimiento", value: (ver.fuelConsumption ?? car.fuelConsumption) ? `${ver.fuelConsumption ?? car.fuelConsumption} km/L` : "—" };
+                  const stat2 = isBEV
+                    ? { label: "Batería",     value: ver.battery ? `${ver.battery} kWh` : "—" }
+                    : isPHEV
+                      ? { label: "Eficiencia e-", value: (ver.rendimientoElectrico ?? car.rendimientoElectrico) ? `${ver.rendimientoElectrico ?? car.rendimientoElectrico} km/kWh` : "—" }
+                      : { label: "Potencia",    value: ver.power ? `${ver.power} CV` : "—" };
+                  return [
+                    stat1,
+                    stat2,
+                    { label: "0–100",  value: ver.acceleration ? `${ver.acceleration}s` : "—" },
+                    { label: "Plazas", value: `${car.seats || 5} plz` },
+                  ].map((s) => (
+                    <div key={s.label} className="rounded-xl p-3 text-center" style={{ backgroundColor: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.10)", backdropFilter: "blur(8px)" }}>
+                      <p className="text-primary font-headline font-black text-lg leading-none">{s.value}</p>
+                      <p className="text-[10px] mt-1 uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.40)" }}>{s.label}</p>
+                    </div>
+                  ));
+                })()}
               </div>
 
-              <div className="bg-black/60 backdrop-blur-md border border-white/10 rounded-2xl p-5">
+              <div className="rounded-2xl p-5" style={{ backgroundColor: "rgba(0,0,0,0.65)", backdropFilter: "blur(12px)", border: "1px solid rgba(255,255,255,0.10)" }}>
                 {car.isHotDeal && savingsPct > 0 ? (
                   <>
                     <div className="flex justify-between items-baseline mb-1">
@@ -317,9 +392,9 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
                       <span className="text-white font-medium">Con bono Electrificarte</span>
                       <span className="text-primary text-3xl font-headline font-black">{formatCLP(ver.discountPrice)}</span>
                     </div>
-                    <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/10">
+                    <div className="flex items-center gap-2 mt-3 pt-3" style={{ borderTop: "1px solid rgba(255,255,255,0.10)" }}>
                       <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
-                      <span className="text-white/40 text-xs">
+                      <span className="text-xs" style={{ color: "rgba(255,255,255,0.40)" }}>
                         Ahorras {formatCLP(savings)} ({savingsPct}%)
                         {car.hotDealBonus ? ` · Bono adicional ${formatCLP(car.hotDealBonus)}` : ""}
                       </span>
@@ -333,7 +408,7 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
                     <div className="flex justify-between items-baseline">
                       <span className="text-primary text-3xl font-headline font-black">{formatCLP(ver.price)}</span>
                     </div>
-                    <p className="text-white/30 text-xs mt-3 pt-3 border-t border-white/10">
+                    <p className="text-xs mt-3 pt-3" style={{ color: "rgba(255,255,255,0.30)", borderTop: "1px solid rgba(255,255,255,0.10)" }}>
                       *Precio referencial. Consulta por financiamiento y bonos disponibles.
                     </p>
                   </>
@@ -351,7 +426,7 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
 
       {/* ─── Version selector ─────────────────────────────────────────── */}
       {car.versions.length > 1 && (
-        <section className="bg-black border-t border-white/5 py-10">
+        <section className="bg-black py-10" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
           <div className="max-w-7xl mx-auto px-4 md:px-8">
             <p className="text-white/40 text-xs uppercase tracking-widest font-bold mb-5">Elige tu versión</p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -363,7 +438,10 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
                   <button
                     key={v.name}
                     onClick={() => setActiveVersion(i)}
-                    className={["text-left rounded-2xl border p-5 transition-all duration-200", isActive ? "bg-primary/10 border-primary/50 ring-1 ring-primary/30" : "bg-white/5 border-white/10 hover:border-white/20"].join(" ")}
+                    className="text-left rounded-2xl p-5 transition-all duration-200"
+                    style={isActive
+                      ? { backgroundColor: "rgba(0,229,229,0.10)", border: "1px solid rgba(0,229,229,0.50)", boxShadow: "0 0 0 1px rgba(0,229,229,0.30)" }
+                      : { backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)" }}
                   >
                     <div className="flex items-start justify-between mb-3">
                       <span className={["font-headline font-bold text-sm", isActive ? "text-primary" : "text-white"].join(" ")}>{v.name}</span>
@@ -374,12 +452,22 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
                       )}
                     </div>
                     <div className="grid grid-cols-2 gap-2 mb-4">
-                      {[{label:"Autonomía",value:`${v.range} km`},{label:"Potencia",value:`${v.power} CV`},{label:"Tracción",value:v.traction},{label:"0–100",value:`${v.acceleration}s`}].map((s) => (
-                        <div key={s.label}>
-                          <p className={["text-xs font-bold", isActive ? "text-primary/80" : "text-white/60"].join(" ")}>{s.value}</p>
-                          <p className="text-white/30 text-[10px]">{s.label}</p>
-                        </div>
-                      ))}
+                      {(() => {
+                        const tag = (car.electricTypeTag ?? "").toUpperCase();
+                        const isBEV  = tag === "BEV"  || (!car.fuelConsumption && (car.battery ?? 0) >= 10 && tag !== "PHEV" && tag !== "HEV" && tag !== "MHEV" && tag !== "REEV");
+                        const isPHEV = tag === "PHEV" || tag === "REEV";
+                        const vStats = isBEV
+                          ? [{label:"Autonomía",value:v.range ? `${v.range} km` : "—"},{label:"Batería",value:v.battery ? `${v.battery} kWh` : "—"},{label:"Tracción",value:v.traction||"—"},{label:"0–100",value:v.acceleration ? `${v.acceleration}s` : "—"}]
+                          : isPHEV
+                          ? [{label:"Autón. e-",value:(v.electricRangeKm ?? car.electricRangeKm) ? `${v.electricRangeKm ?? car.electricRangeKm} km` : "—"},{label:"Eficiencia e-",value:(v.rendimientoElectrico ?? car.rendimientoElectrico) ? `${v.rendimientoElectrico ?? car.rendimientoElectrico} km/kWh` : "—"},{label:"Tracción",value:v.traction||"—"},{label:"0–100",value:v.acceleration ? `${v.acceleration}s` : "—"}]
+                          : [{label:"Rendimiento",value:(v.fuelConsumption ?? car.fuelConsumption) ? `${v.fuelConsumption ?? car.fuelConsumption} km/L` : "—"},{label:"Potencia",value:v.power ? `${v.power} CV` : "—"},{label:"Tracción",value:v.traction||"—"},{label:"0–100",value:v.acceleration ? `${v.acceleration}s` : "—"}];
+                        return vStats.map((s) => (
+                          <div key={s.label}>
+                            <p className="text-xs font-bold" style={{ color: isActive ? "rgba(0,229,229,0.80)" : "rgba(255,255,255,0.60)" }}>{s.value}</p>
+                            <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.30)" }}>{s.label}</p>
+                          </div>
+                        ));
+                      })()}
                     </div>
                     <div>
                       {car.isHotDeal && vPct > 0 && (
@@ -451,19 +539,32 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
             <h2 className="text-3xl md:text-4xl font-headline font-black tracking-tighter uppercase mb-6">{car.brand} {car.name}</h2>
             <p className="text-text-muted leading-relaxed mb-10">{car.description}</p>
             <div className="grid sm:grid-cols-2 gap-3">
-              {[
-                { icon: "bolt",            text: `${car.chargeType} · carga en ${car.chargeTimeDC}` },
-                { icon: "electric_car",    text: `Hasta ${ver.range} km de autonomía real` },
-                { icon: "airline_seat_recline_extra", text: `${car.seats} plazas · maletero ${car.cargo} L` },
-                { icon: "shield",          text: car.safetyFeatures[0] ?? "Garantía de precio más bajo del mercado" },
-              ].map((h) => (
-                <div key={h.icon} className="flex items-center gap-3 bg-surface rounded-xl p-3.5">
-                  <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <span className="material-symbols-outlined text-primary text-[16px]">{h.icon}</span>
+              {(() => {
+                const tag = (car.electricTypeTag ?? "").toUpperCase();
+                const isBEV  = tag === "BEV"  || (!car.fuelConsumption && (car.battery ?? 0) >= 10 && tag !== "PHEV" && tag !== "HEV" && tag !== "MHEV" && tag !== "REEV");
+                const isPHEV = tag === "PHEV" || tag === "REEV";
+                const perf = isBEV
+                  ? { icon: "electric_car", text: ver.range ? `Hasta ${ver.range} km de autonomía` : car.rendimientoElectrico ? `Eficiencia ${car.rendimientoElectrico} km/kWh` : "Vehículo 100% eléctrico" }
+                  : isPHEV
+                  ? { icon: "electric_car", text: [car.electricRangeKm ? `${car.electricRangeKm} km eléctrico` : null, car.rendimientoElectrico ? `${car.rendimientoElectrico} km/kWh eficiencia` : null].filter(Boolean).join(" · ") || "Híbrido enchufable" }
+                  : { icon: "savings",      text: car.fuelConsumption ? `Rendimiento ${car.fuelConsumption} km/L · auto-recarga` : "Híbrido de auto-recarga" };
+                const charge = isBEV || isPHEV
+                  ? { icon: "bolt", text: [car.chargeType, car.chargeTimeDC ? `carga DC en ${car.chargeTimeDC}` : null].filter(Boolean).join(" · ") || "Carga eléctrica compatible" }
+                  : { icon: "bolt", text: "Sin necesidad de enchufarse · auto-recarga" };
+                return [
+                  charge,
+                  perf,
+                  { icon: "airline_seat_recline_extra", text: `${car.seats || 5} plazas · maletero ${car.cargo || "—"} L` },
+                  { icon: "shield", text: car.safetyFeatures[0] ?? "Garantía de precio más bajo del mercado" },
+                ].map((h) => (
+                  <div key={h.icon} className="flex items-center gap-3 bg-surface rounded-xl p-3.5">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "rgba(0,229,229,0.10)" }}>
+                      <span className="material-symbols-outlined text-primary text-[16px]">{h.icon}</span>
+                    </div>
+                    <span className="text-text-muted text-sm">{h.text}</span>
                   </div>
-                  <span className="text-text-muted text-sm">{h.text}</span>
-                </div>
-              ))}
+                ));
+              })()}
             </div>
           </div>
         </div>
@@ -544,7 +645,7 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
                 { label: "Batería",              value: ver.battery ? `${ver.battery} kWh` : null },
                 { label: "Autonomía WLTP",       value: ver.range   ? `${ver.range} km`    : null },
                 { label: "Eficiencia eléctrica", value: (ver.rendimientoElectrico ?? car.rendimientoElectrico) ? `${ver.rendimientoElectrico ?? car.rendimientoElectrico} km/kWh` : null },
-                { label: "Rendimiento híbrido",  value: (ver.fuelConsumption ?? car.fuelConsumption) ? `${ver.fuelConsumption ?? car.fuelConsumption} km/L` : null },
+                { label: "Rendimiento híbrido",  value: (["PHEV","REEV"].includes((car.electricTypeTag ?? "").toUpperCase())) ? null : ((ver.fuelConsumption ?? car.fuelConsumption) ? `${ver.fuelConsumption ?? car.fuelConsumption} km/L` : null) },
                 { label: "Carga rápida DC",      value: ver.chargeTimeDC || null },
                 { label: "Carga AC",             value: ver.chargeTimeAC || null },
                 { label: "Tipo de conector",     value: car.chargeType   || null },

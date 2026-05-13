@@ -45,10 +45,14 @@ export default async function CarDetailPage({ params }: PageProps) {
     );
   }
 
-  // Fetch similar cars (same vehicleType, different slug)
-  const sanitySimiar = sanity.vehicleType?._id
-    ? await client.fetch(similarCarsQuery, { vehicleTypeId: sanity.vehicleType._id, excludeSlug: slug }).catch(() => [])
-    : [];
+  // Fetch all similar car candidates (same brand, vehicleType, or electricType)
+  // No ordering/limit in GROQ — JS scoring handles ranking by price proximity + type
+  const sanitySimiar = await client.fetch(similarCarsQuery, {
+    excludeSlug:   slug,
+    brandId:       sanity.brand?._id ?? null,
+    vehicleTypeId: sanity.vehicleType?._id ?? null,
+    electricTypeId: sanity.electricType?._id ?? null,
+  }).catch(() => []);
 
   // ─── Map Sanity data → CarData shape ────────────────────────────────────────
   const car: CarData = {
@@ -65,8 +69,10 @@ export default async function CarDetailPage({ params }: PageProps) {
     isHotDeal:       sanity.isHotDeal ?? false,
     isNew:           sanity.isNew ?? false,
     isTopSeller:     sanity.isTopSeller ?? false,
+    electricTypeTag: sanity.electricType?.tag ?? null,
     battery:         sanity.batteryCapacity,
     range:           sanity.range,
+    electricRangeKm: sanity.electricRangeKm ?? null,
     power:           sanity.power,
     torque:          sanity.torque ?? 0,
     traction:        sanity.traction,
@@ -110,17 +116,42 @@ export default async function CarDetailPage({ params }: PageProps) {
       topSpeed:      v.topSpeed ?? sanity.topSpeed ?? 0,
       chargeTimeDC:         v.chargeTimeDC ?? sanity.chargeTimeDC ?? "",
       chargeTimeAC:         v.chargeTimeAC ?? sanity.chargeTimeAC ?? "",
+      electricRangeKm:      v.electricRangeKm ?? sanity.electricRangeKm ?? null,
       fuelConsumption:      v.fuelConsumption ?? sanity.fuelConsumption ?? null,
       rendimientoElectrico: v.rendimientoElectrico ?? sanity.rendimientoElectrico ?? null,
     })),
   };
 
-  // ─── Map similar cars ────────────────────────────────────────────────────────
-  const similarCars: SimilarCarData[] = (sanitySimiar ?? []).map((s: any) => ({
+  // ─── Score and rank similar cars ────────────────────────────────────────────
+  // Priority: price proximity > vehicle type > electric type > brand
+  const refPrice = sanity.discountPrice ?? sanity.basePrice ?? 0;
+  const rankedSimilar = (sanitySimiar ?? [])
+    .map((s: any) => {
+      let score = 0;
+      const sPrice    = s.discountPrice ?? s.basePrice;
+      const priceDiff = refPrice > 0 && sPrice > 0 ? Math.abs(sPrice - refPrice) / refPrice : 1;
+      // Price proximity: tiered — ≤30% diff: 60pts, ≤60% diff: 25pts, ≤100%: 8pts, >100%: 0pts
+      if (priceDiff <= 0.3)       score += 60;
+      else if (priceDiff <= 0.6)  score += 25;
+      else if (priceDiff <= 1.0)  score += 8;
+      // Same vehicle type (SUV, sedan, etc.): 30pts
+      if (s.vehicleTypeId && s.vehicleTypeId === sanity.vehicleType?._id) score += 30;
+      // Same electric type (BEV/PHEV/HEV): 15pts
+      if (s.electricTypeId && s.electricTypeId === sanity.electricType?._id) score += 15;
+      // Same brand: 5pts — tiebreaker only
+      if (s.brandId && s.brandId === sanity.brand?._id) score += 5;
+      return { s, score };
+    })
+    .sort((a: any, b: any) => b.score - a.score)
+    .slice(0, 3)
+    .map(({ s }: any) => s);
+
+  const similarCars: SimilarCarData[] = rankedSimilar.map((s: any) => ({
     slug:          s.slug,
     name:          s.name,
     brand:         s.brand?.name ?? "",
-    category:      s.vehicleType?.label ?? s.category?.name ?? "",
+    category:      s.vehicleType?.label ?? "",
+    basePrice:     s.basePrice,
     discountPrice: s.discountPrice ?? s.basePrice,
     range:         s.range,
     imageUrl:      s.imageUrl,

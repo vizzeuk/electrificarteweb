@@ -133,6 +133,7 @@ export function LatestLaunches({ title = "Últimos lanzamientos", cars }: Latest
                   discountPrice={car.discountPrice}
                   isNew={car.isNew}
                   index={i}
+                  compact
                 />
               </div>
             );

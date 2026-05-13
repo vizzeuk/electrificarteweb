@@ -8,29 +8,77 @@ import { formatCLP } from "@/lib/utils";
 import type { CalcCar } from "./page";
 
 // ─── Constantes Chile ────────────────────────────────────────────────────────
-const ELECTRICITY_CLP_KWH = 135;   // CLP/kWh tarifa residencial promedio
-const CO2_GAS_KG_KM       = 0.138; // kg CO₂/km auto gasolina promedio
-const CO2_EV_KG_KM        = 0.050; // kg CO₂/km (factor red eléctrica Chile)
-const TREES_PER_TON_CO2   = 45;
+const ELECTRICITY_CLP_KWH  = 200;   // CLP/kWh tarifa residencial promedio
+const BENCINA_CLP_L        = 1600;  // CLP/L, ~95 octane promedio Chile
+const PHEV_ICE_KM_L        = 15;    // km/L modo combustión típico PHEV
+const CO2_GAS_KG_L         = 2.31;  // kg CO₂ por litro de bencina
+const CO2_EV_KG_KM         = 0.050; // kg CO₂/km (factor red eléctrica Chile)
+const TREES_PER_TON_CO2    = 45;
+const DEFAULT_RENDIMIENTO  = 10;    // km/L estándar si usuario no sabe
 
-function calcElectricMonthlyCost(car: CalcCar, kmPerMonth: number) {
-  const efficiency = car.batteryCapacity / car.range; // kWh/km
-  return Math.round(kmPerMonth * efficiency * ELECTRICITY_CLP_KWH);
-}
-
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 function formatNum(n: number) {
   return n.toLocaleString("es-CL");
 }
 
+function getCarType(tag: string) {
+  const t = (tag ?? "").toUpperCase();
+  if (t === "PHEV" || t === "REEV") return "PHEV";
+  if (t === "HEV"  || t === "MHEV") return "HEV";
+  return "BEV";
+}
+
+function calcCarMonthlyCost(car: CalcCar, kmPerMonth: number): number {
+  const type = getCarType(car.electricTypeTag);
+
+  if (type === "BEV") {
+    if (car.batteryCapacity > 0 && car.range > 0)
+      return Math.round(kmPerMonth * (car.batteryCapacity / car.range) * ELECTRICITY_CLP_KWH);
+    return 0;
+  }
+
+  if (type === "PHEV") {
+    const eRange = car.electricRangeKm ?? 0;
+    if (eRange > 0) {
+      const elecKmMonth = Math.min(kmPerMonth, eRange * 30);
+      const fuelKmMonth = Math.max(0, kmPerMonth - eRange * 30);
+      const kWhPerKm    = car.batteryCapacity > 0 ? car.batteryCapacity / eRange : 0.20;
+      return Math.round(elecKmMonth * kWhPerKm * ELECTRICITY_CLP_KWH + (fuelKmMonth / PHEV_ICE_KM_L) * BENCINA_CLP_L);
+    }
+    if (car.batteryCapacity > 0 && car.range > 0)
+      return Math.round(kmPerMonth * (car.batteryCapacity / car.range) * ELECTRICITY_CLP_KWH);
+    return 0;
+  }
+
+  // HEV / MHEV
+  const kmL = (car.fuelConsumption && car.fuelConsumption <= 20) ? car.fuelConsumption : 15;
+  return Math.round((kmPerMonth / kmL) * BENCINA_CLP_L);
+}
+
+function carSpecLabel(car: CalcCar): string {
+  const type = getCarType(car.electricTypeTag);
+  if (type === "BEV")  return car.range > 0 ? `${car.range} km autonomía · ${car.batteryCapacity} kWh` : `${car.batteryCapacity} kWh`;
+  if (type === "PHEV") return car.electricRangeKm ? `${car.electricRangeKm} km eléctrico · ${car.batteryCapacity} kWh` : `${car.batteryCapacity} kWh PHEV`;
+  return car.fuelConsumption ? `${car.fuelConsumption} km/L híbrido` : "HEV";
+}
+
+function carTypeBadge(tag: string) {
+  const type = getCarType(tag);
+  if (type === "PHEV") return { label: "PHEV", color: "text-blue-600 bg-blue-50" };
+  if (type === "HEV")  return { label: "HEV",  color: "text-green-700 bg-green-50" };
+  return { label: "EV", color: "text-primary-deep bg-primary/10" };
+}
+
 // ─── Slider ──────────────────────────────────────────────────────────────────
 function Slider({
-  label, icon, value, min, max, step, format, onChange, editable = false,
+  label, icon, value, min, max, step, format, onChange, editable = false, disabled = false,
 }: {
   label: string; icon: string; value: number;
   min: number; max: number; step: number;
   format: (v: number) => string;
   onChange: (v: number) => void;
   editable?: boolean;
+  disabled?: boolean;
 }) {
   const [draft, setDraft] = useState<string | null>(null);
   const pct = ((value - min) / (max - min)) * 100;
@@ -42,7 +90,7 @@ function Slider({
   }
 
   return (
-    <div>
+    <div className={disabled ? "opacity-40 pointer-events-none" : ""}>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <span className="material-symbols-outlined text-primary text-[18px]">{icon}</span>
@@ -118,10 +166,7 @@ function StatCard({
 
 // ─── Car Picker Modal ─────────────────────────────────────────────────────────
 function CarPickerModal({
-  cars,
-  selected,
-  onSelect,
-  onClose,
+  cars, selected, onSelect, onClose,
 }: {
   cars: CalcCar[];
   selected: CalcCar | null;
@@ -141,9 +186,7 @@ function CarPickerModal({
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return cars;
-    return cars.filter(c =>
-      `${c.brand} ${c.name}`.toLowerCase().includes(q)
-    );
+    return cars.filter(c => `${c.brand} ${c.name}`.toLowerCase().includes(q));
   }, [cars, query]);
 
   return (
@@ -155,10 +198,7 @@ function CarPickerModal({
         className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
         onClick={onClose}
       >
-        {/* Backdrop */}
         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-
-        {/* Panel */}
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
@@ -168,21 +208,16 @@ function CarPickerModal({
           style={{ maxHeight: "90dvh" }}
           onClick={e => e.stopPropagation()}
         >
-          {/* Header */}
           <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-gray-100 flex-shrink-0">
             <div>
               <h2 className="font-headline font-black text-lg text-text-main">Elige el auto que te interesa</h2>
               <p className="text-text-ghost text-xs mt-0.5">{cars.length} modelos disponibles</p>
             </div>
-            <button
-              onClick={onClose}
-              className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
-            >
+            <button onClick={onClose} className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors">
               <span className="material-symbols-outlined text-[18px] text-text-muted">close</span>
             </button>
           </div>
 
-          {/* Search */}
           <div className="px-5 py-3 border-b border-gray-100 flex-shrink-0">
             <div className="flex items-center gap-2.5 bg-gray-50 rounded-xl px-3 py-2.5">
               <span className="material-symbols-outlined text-[18px] text-text-ghost">search</span>
@@ -202,7 +237,6 @@ function CarPickerModal({
             </div>
           </div>
 
-          {/* Car list */}
           <div className="overflow-y-auto flex-1 p-4">
             {filtered.length === 0 ? (
               <div className="text-center py-12">
@@ -213,7 +247,8 @@ function CarPickerModal({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {filtered.map(car => {
                   const isSelected = selected?._id === car._id;
-                  const price = car.discountPrice ?? car.basePrice;
+                  const price      = car.discountPrice ?? car.basePrice;
+                  const badge      = carTypeBadge(car.electricTypeTag);
                   return (
                     <button
                       key={car._id}
@@ -225,7 +260,6 @@ function CarPickerModal({
                           : "border-gray-100 hover:border-primary/40 hover:bg-gray-50",
                       ].join(" ")}
                     >
-                      {/* Image */}
                       <div className="flex-shrink-0 w-16 h-12 bg-gray-100 rounded-lg overflow-hidden">
                         {car.imageUrl ? (
                           <Image src={car.imageUrl} alt={car.name} width={64} height={48}
@@ -236,19 +270,14 @@ function CarPickerModal({
                           </div>
                         )}
                       </div>
-
-                      {/* Info */}
                       <div className="flex-1 min-w-0">
-                        <p className="text-[11px] font-bold text-text-ghost uppercase tracking-wide truncate">{car.brand}</p>
-                        <p className="font-headline font-bold text-sm text-text-main leading-tight truncate">{car.name}</p>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-[11px] text-text-ghost">{car.range} km</span>
-                          <span className="text-gray-200">·</span>
-                          <span className="text-[11px] text-text-ghost">{car.batteryCapacity} kWh</span>
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <p className="text-[11px] font-bold text-text-ghost uppercase tracking-wide truncate">{car.brand}</p>
+                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${badge.color}`}>{badge.label}</span>
                         </div>
+                        <p className="font-headline font-bold text-sm text-text-main leading-tight truncate">{car.name}</p>
+                        <p className="text-[11px] text-text-ghost mt-0.5 truncate">{carSpecLabel(car)}</p>
                       </div>
-
-                      {/* Price + selected badge */}
                       <div className="flex-shrink-0 text-right">
                         {isSelected ? (
                           <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
@@ -274,37 +303,35 @@ function CarPickerModal({
 interface Props { cars: CalcCar[] }
 
 export default function CalculadoraContent({ cars }: Props) {
-  const [kmPerMonth,   setKmPerMonth]   = useState(500);
-  const [gasCostMonth, setGasCostMonth] = useState(150000);
-  const [selectedCar,  setSelectedCar]  = useState<CalcCar | null>(null);
-  const [pickerOpen,   setPickerOpen]   = useState(false);
+  const [kmPerMonth,      setKmPerMonth]      = useState(500);
+  const [rendimientoKmL,  setRendimientoKmL]  = useState(DEFAULT_RENDIMIENTO);
+  const [useDefaultRend,  setUseDefaultRend]  = useState(false);
+  const [selectedCar,     setSelectedCar]     = useState<CalcCar | null>(null);
+  const [pickerOpen,      setPickerOpen]      = useState(false);
+
+  const efectiveRend = useDefaultRend ? DEFAULT_RENDIMIENTO : rendimientoKmL;
 
   const validCars = useMemo(() =>
-    cars.filter(c => c.range > 0 && c.batteryCapacity > 0),
+    cars.filter(c => {
+      const type = getCarType(c.electricTypeTag);
+      if (type === "PHEV") return (c.electricRangeKm ?? 0) > 0;
+      if (type === "HEV")  return (c.fuelConsumption ?? 0) > 0 && (c.fuelConsumption ?? 0) <= 20;
+      return c.range > 0 && c.batteryCapacity > 0;
+    }),
   [cars]);
 
-  // When a car is selected, rank all other cars by similarity (vehicle type, price, range, electric type)
   const similarCars = useMemo(() => {
     if (!selectedCar) return validCars.slice(0, 5);
-
     const refPrice = selectedCar.discountPrice ?? selectedCar.basePrice;
-    const refRange = selectedCar.range;
-
     return validCars
       .filter(c => c._id !== selectedCar._id)
       .map(c => {
         let score = 0;
-        // Same vehicle type is the strongest signal
         if (c.vehicleTypeSlug && c.vehicleTypeSlug === selectedCar.vehicleTypeSlug) score += 40;
-        // Price proximity: full 30 pts at 0% diff, 0 pts at ≥40% diff
         const cPrice    = c.discountPrice ?? c.basePrice;
         const priceDiff = Math.abs(cPrice - refPrice) / Math.max(refPrice, 1);
         score += Math.max(0, 30 - Math.round(priceDiff * 100));
-        // Same electric type
         if (c.electricTypeTag && c.electricTypeTag === selectedCar.electricTypeTag) score += 20;
-        // Range proximity: full 10 pts at 0% diff, 0 pts at ≥50% diff
-        const rangeDiff = Math.abs(c.range - refRange) / Math.max(refRange, 1);
-        score += Math.max(0, 10 - Math.round(rangeDiff * 20));
         return { car: c, score };
       })
       .sort((a, b) => b.score - a.score)
@@ -316,58 +343,54 @@ export default function CalculadoraContent({ cars }: Props) {
     selectedCar ? similarCars : validCars.slice(0, 5),
   [selectedCar, similarCars, validCars]);
 
-  const handleSelectCar = useCallback((car: CalcCar) => {
-    setSelectedCar(car);
-  }, []);
+  const handleSelectCar = useCallback((car: CalcCar) => setSelectedCar(car), []);
 
-  // Primary results: selected car if chosen, otherwise average of top 5
+  const gasCostMonth = Math.round((kmPerMonth / efectiveRend) * BENCINA_CLP_L);
+
   const results = useMemo(() => {
-    const co2SavedKgYear = kmPerMonth * 12 * (CO2_GAS_KG_KM - CO2_EV_KG_KM);
-    const treesEquiv     = Math.round(co2SavedKgYear / 1000 * TREES_PER_TON_CO2);
+    const currentCO2PerKm    = (1 / efectiveRend) * CO2_GAS_KG_L;
+    const co2SavedKgYear     = kmPerMonth * 12 * (currentCO2PerKm - CO2_EV_KG_KM);
+    const treesEquiv         = Math.round(Math.max(0, co2SavedKgYear) / 1000 * TREES_PER_TON_CO2);
 
-    let electricMonth: number;
-    let savingMonth: number;
+    let newCarMonth: number;
     let isEstimate: boolean;
 
     if (selectedCar) {
-      electricMonth = calcElectricMonthlyCost(selectedCar, kmPerMonth);
-      savingMonth   = gasCostMonth - electricMonth;
-      isEstimate    = false;
+      newCarMonth = calcCarMonthlyCost(selectedCar, kmPerMonth);
+      isEstimate  = false;
     } else {
-      const avgElec = topCars.length > 0
-        ? Math.round(topCars.reduce((s, c) => s + calcElectricMonthlyCost(c, kmPerMonth), 0) / topCars.length)
+      const avgCost = topCars.length > 0
+        ? Math.round(topCars.reduce((s, c) => s + calcCarMonthlyCost(c, kmPerMonth), 0) / topCars.length)
         : 0;
-      electricMonth = avgElec;
-      savingMonth   = gasCostMonth - avgElec;
-      isEstimate    = true;
+      newCarMonth = avgCost;
+      isEstimate  = true;
     }
 
-    const savingYear  = savingMonth * 12;
-    const saving5yr   = savingYear * 5;
-    const savingPct   = gasCostMonth > 0 ? Math.round((savingMonth / gasCostMonth) * 100) : 0;
+    const savingMonth  = gasCostMonth - newCarMonth;
+    const savingYear   = savingMonth * 12;
+    const saving5yr    = savingYear * 5;
+    const savingPct    = gasCostMonth > 0 ? Math.round((savingMonth / gasCostMonth) * 100) : 0;
 
-    // Comparison list: selected car first, then similar cars (or top5 if none selected)
     const enriched = (list: CalcCar[]) => list.map(car => {
-      const em = calcElectricMonthlyCost(car, kmPerMonth);
+      const cm = calcCarMonthlyCost(car, kmPerMonth);
       return {
         ...car,
-        electricMonth: em,
-        savingMonth:   gasCostMonth - em,
-        savingPct:     gasCostMonth > 0 ? Math.round(((gasCostMonth - em) / gasCostMonth) * 100) : 0,
+        newCarMonth: cm,
+        savingMonth: gasCostMonth - cm,
+        savingPct:   gasCostMonth > 0 ? Math.round(((gasCostMonth - cm) / gasCostMonth) * 100) : 0,
       };
     });
 
     const comparisonList = selectedCar
-      ? [{ ...selectedCar, electricMonth, savingMonth, savingPct }, ...enriched(similarCars)]
+      ? [{ ...selectedCar, newCarMonth, savingMonth, savingPct }, ...enriched(similarCars)]
       : enriched(topCars);
 
-    return { electricMonth, savingMonth, savingYear, saving5yr, savingPct,
+    return { newCarMonth, savingMonth, savingYear, saving5yr, savingPct,
              co2SavedKgYear, treesEquiv, comparisonList, isEstimate };
-  }, [kmPerMonth, gasCostMonth, selectedCar, topCars]);
+  }, [kmPerMonth, gasCostMonth, efectiveRend, selectedCar, topCars, similarCars]);
 
   return (
     <>
-      {/* ─── Car Picker Modal ─────────────────────────────────────────── */}
       {pickerOpen && (
         <CarPickerModal
           cars={validCars}
@@ -408,7 +431,7 @@ export default function CalculadoraContent({ cars }: Props) {
                 ¿Cuánto puedes<br /><span className="text-primary">ahorrar?</span>
               </h1>
               <p className="text-white/60 text-base leading-relaxed max-w-md mb-8">
-                Ingresa tu uso mensual, elige el auto que te interesa y calcula tu ahorro real al pasarte a eléctrico.
+                Ingresa tu uso mensual y tu consumo actual, elige el auto que te interesa y calcula tu ahorro real.
               </p>
 
               {/* Car picker trigger */}
@@ -429,13 +452,10 @@ export default function CalculadoraContent({ cars }: Props) {
                     <div className="flex-1 min-w-0">
                       <p className="text-white/50 text-[11px] font-bold uppercase tracking-wide">{selectedCar.brand}</p>
                       <p className="text-white font-headline font-bold text-sm leading-tight truncate">{selectedCar.name}</p>
-                      <p className="text-primary/70 text-[11px]">{selectedCar.range} km autonomía · {selectedCar.batteryCapacity} kWh</p>
+                      <p className="text-primary/70 text-[11px]">{carSpecLabel(selectedCar)}</p>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
-                      <button
-                        onClick={() => setPickerOpen(true)}
-                        className="text-white/50 hover:text-white text-[11px] font-semibold transition-colors"
-                      >
+                      <button onClick={() => setPickerOpen(true)} className="text-white/50 hover:text-white text-[11px] font-semibold transition-colors">
                         Cambiar
                       </button>
                       <button
@@ -468,68 +488,105 @@ export default function CalculadoraContent({ cars }: Props) {
                   label="Kilómetros por mes"
                   icon="route"
                   value={kmPerMonth}
-                  min={100} max={2500} step={50}
+                  min={50} max={2000} step={50}
                   format={v => `${formatNum(v)} km`}
                   onChange={setKmPerMonth}
                   editable
                 />
-                <Slider
-                  label="Gasto mensual en bencina"
-                  icon="local_gas_station"
-                  value={gasCostMonth}
-                  min={30000} max={600000} step={10000}
-                  format={v => formatCLP(v)}
-                  onChange={setGasCostMonth}
-                />
+
+                {/* Rendimiento actual */}
+                <div>
+                  <Slider
+                    label="Rendimiento de tu auto actual"
+                    icon="local_gas_station"
+                    value={rendimientoKmL}
+                    min={5} max={25} step={1}
+                    format={v => `${v} km/L`}
+                    onChange={setRendimientoKmL}
+                    disabled={useDefaultRend}
+                  />
+                  <label className="flex items-center gap-2 mt-3 cursor-pointer group w-fit select-none">
+                    <input
+                      type="checkbox"
+                      className="sr-only"
+                      checked={useDefaultRend}
+                      onChange={e => setUseDefaultRend(e.target.checked)}
+                    />
+                    <div
+                      className="relative w-4 h-4 rounded flex-shrink-0 border transition-colors"
+                      style={{
+                        backgroundColor: useDefaultRend ? "#00E5E5" : "transparent",
+                        borderColor: useDefaultRend ? "#00E5E5" : "rgba(255,255,255,0.25)",
+                      }}
+                    >
+                      {useDefaultRend && (
+                        <span className="material-symbols-outlined text-black absolute inset-0 flex items-center justify-center leading-none" style={{ fontSize: 11 }}>check</span>
+                      )}
+                    </div>
+                    <span className="text-white/40 text-xs group-hover:text-white/60 transition-colors">
+                      No sé mi rendimiento — usar estándar de {DEFAULT_RENDIMIENTO} km/L
+                    </span>
+                  </label>
+                </div>
               </div>
 
               <p className="text-white/20 text-xs mt-6">
-                * Tarifa eléctrica residencial promedio Chile ($135 CLP/kWh)
-                {results.isEstimate && " · Mostrando promedio de los 5 autos más accesibles"}
+                * Tarifa eléctrica $200/kWh · Bencina $1.600/L · PHEVs asumen carga diaria
+                {results.isEstimate && " · Promedio de los primeros modelos disponibles"}
               </p>
             </div>
 
             {/* Right – live summary */}
             <div className="relative">
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-8 space-y-6">
-                {/* Selected car context */}
+              <div className="rounded-2xl p-8 space-y-6" style={{ backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)" }}>
                 {selectedCar && (
-                  <div className="flex items-center gap-2 pb-2 border-b border-white/10">
-                    <span className="material-symbols-outlined text-primary text-[16px]">electric_car</span>
+                  <div className="flex items-center gap-2 pb-2" style={{ borderBottom: "1px solid rgba(255,255,255,0.10)" }}>
+                    {selectedCar.brandLogoUrl ? (
+                      <img src={selectedCar.brandLogoUrl} alt={selectedCar.brand}
+                        className="h-5 w-auto max-w-[40px] object-contain opacity-70 flex-shrink-0" />
+                    ) : (
+                      <span className="material-symbols-outlined text-primary text-[16px] flex-shrink-0">electric_car</span>
+                    )}
                     <p className="text-primary text-sm font-bold truncate">{selectedCar.brand} {selectedCar.name}</p>
                   </div>
                 )}
 
                 <div>
-                  <p className="text-white/40 text-xs uppercase tracking-widest font-bold mb-1">Tu gasto actual en bencina</p>
+                  <p className="text-white/40 text-xs uppercase tracking-widest font-bold mb-1">Tu gasto actual en combustible</p>
                   <p className="text-white font-headline font-black text-3xl">
                     {formatCLP(gasCostMonth)}
                     <span className="text-white/40 text-base font-normal">/mes</span>
                   </p>
+                  <p className="text-white/25 text-xs mt-0.5">
+                    {formatNum(kmPerMonth)} km ÷ {efectiveRend} km/L × $1.100/L
+                  </p>
                 </div>
 
-                <div className="h-px bg-white/10" />
+                <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.10)" }} />
 
                 <div>
                   <p className="text-white/40 text-xs uppercase tracking-widest font-bold mb-1">
                     {selectedCar
-                      ? `Costo eléctrico con el ${selectedCar.name}`
-                      : "Con un auto eléctrico pagarías (promedio)"}
+                      ? `Costo estimado con el ${selectedCar.name}`
+                      : "Con un auto electrificado pagarías (promedio)"}
                   </p>
                   <p className="text-primary font-headline font-black text-3xl">
-                    {formatCLP(results.electricMonth)}
+                    {formatCLP(results.newCarMonth)}
                     <span className="text-primary/60 text-base font-normal">/mes</span>
                   </p>
                   {selectedCar && (
-                    <p className="text-white/30 text-xs mt-1">
-                      {selectedCar.range} km autonomía · eficiencia {(selectedCar.batteryCapacity / selectedCar.range).toFixed(3)} kWh/km
-                    </p>
+                    <p className="text-white/30 text-xs mt-1">{carSpecLabel(selectedCar)}</p>
                   )}
                 </div>
 
-                <div className="h-px bg-white/10" />
+                <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.10)" }} />
 
-                <div className={["rounded-xl p-5", results.savingMonth > 0 ? "bg-primary/10 border border-primary/20" : "bg-white/5"].join(" ")}>
+                <div
+                  className="rounded-xl p-5"
+                  style={results.savingMonth > 0
+                    ? { backgroundColor: "rgba(0,229,229,0.10)", border: "1px solid rgba(0,229,229,0.20)" }
+                    : { backgroundColor: "rgba(255,255,255,0.05)" }}
+                >
                   <p className="text-white/40 text-xs uppercase tracking-widest font-bold mb-2">
                     {results.savingMonth > 0 ? "Tu ahorro estimado" : "Diferencia estimada"}
                   </p>
@@ -544,7 +601,7 @@ export default function CalculadoraContent({ cars }: Props) {
                       <p className="text-primary/70 text-sm mt-1 font-semibold">
                         {formatCLP(results.savingYear)} al año · {formatCLP(results.saving5yr)} en 5 años
                       </p>
-                      <p className="text-primary/50 text-xs mt-0.5">{results.savingPct}% menos que en bencina</p>
+                      <p className="text-primary/50 text-xs mt-0.5">{results.savingPct}% menos que en combustible</p>
                     </>
                   )}
                 </div>
@@ -560,7 +617,7 @@ export default function CalculadoraContent({ cars }: Props) {
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           {results.isEstimate && (
             <p className="text-center text-text-ghost text-xs mb-4">
-              Ahorro promedio calculado con los 5 eléctricos más accesibles —{" "}
+              Ahorro promedio calculado con los modelos más accesibles —{" "}
               <button onClick={() => setPickerOpen(true)} className="text-primary-deep font-semibold underline underline-offset-2">
                 elige tu auto para un resultado exacto
               </button>
@@ -569,7 +626,7 @@ export default function CalculadoraContent({ cars }: Props) {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <StatCard icon="savings"        label="Ahorro mensual"  value={formatCLP(Math.max(0, results.savingMonth))}  highlight={results.savingMonth > 0} delay={0} />
             <StatCard icon="calendar_month" label="Ahorro anual"    value={formatCLP(Math.max(0, results.savingYear))}  delay={0.07} />
-            <StatCard icon="eco"            label="CO₂ ahorrado"    value={`${formatNum(Math.round(results.co2SavedKgYear))} kg`} sub="por año" delay={0.14} />
+            <StatCard icon="eco"            label="CO₂ ahorrado"    value={`${formatNum(Math.round(Math.max(0, results.co2SavedKgYear)))} kg`} sub="por año" delay={0.14} />
             <StatCard icon="forest"         label="Árboles equiv."  value={`${formatNum(results.treesEquiv)}`} sub="por año" delay={0.21} />
           </div>
         </div>
@@ -580,15 +637,13 @@ export default function CalculadoraContent({ cars }: Props) {
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="mb-10">
             <p className="text-xs font-bold uppercase tracking-widest text-primary-deep mb-2">
-              Tu perfil: {formatNum(kmPerMonth)} km/mes
+              Tu perfil: {formatNum(kmPerMonth)} km/mes · {efectiveRend} km/L actual
             </p>
             <h2 className="text-2xl md:text-3xl font-headline font-extrabold text-text-main">
-              {selectedCar
-                ? "Tu selección y alternativas similares"
-                : "Los eléctricos más convenientes para ti"}
+              {selectedCar ? "Tu selección y alternativas similares" : "Los modelos más convenientes para ti"}
             </h2>
             <p className="text-text-muted text-sm mt-1">
-              Costo eléctrico estimado con tu consumo real · autonomía y eficiencia reales de cada modelo
+              Costo mensual estimado con tu perfil de conducción · eléctrico, híbrido enchufable e híbrido
             </p>
           </div>
 
@@ -596,6 +651,7 @@ export default function CalculadoraContent({ cars }: Props) {
             {results.comparisonList.map((car, i) => {
               const price      = car.discountPrice ?? car.basePrice;
               const isSelected = selectedCar?._id === car._id;
+              const badge      = carTypeBadge(car.electricTypeTag);
               return (
                 <motion.div
                   key={car._id}
@@ -610,7 +666,6 @@ export default function CalculadoraContent({ cars }: Props) {
                       : "border border-gray-100 bg-white hover:border-primary/30 hover:shadow-md",
                   ].join(" ")}
                 >
-                  {/* Rank: solo desktop */}
                   <div className="hidden sm:flex flex-shrink-0 w-8 h-8 rounded-full items-center justify-center"
                     style={{ background: isSelected ? "rgba(0,229,229,0.15)" : "#f9fafb" }}>
                     {isSelected ? (
@@ -620,7 +675,6 @@ export default function CalculadoraContent({ cars }: Props) {
                     )}
                   </div>
 
-                  {/* Image: pequeña en mobile */}
                   <div className="flex-shrink-0 w-16 h-12 sm:w-28 sm:h-20 bg-gray-50 rounded-xl overflow-hidden">
                     {car.imageUrl ? (
                       <Image src={car.imageUrl} alt={car.name} width={112} height={80}
@@ -632,18 +686,13 @@ export default function CalculadoraContent({ cars }: Props) {
                     )}
                   </div>
 
-                  {/* Info */}
                   <div className="flex-1 min-w-0 text-left">
-                    <p className="text-text-ghost text-xs font-semibold">{car.brand}</p>
-                    <h3 className="font-headline font-bold text-text-main text-sm sm:text-base leading-tight">{car.name}</h3>
-                    <div className="flex items-center gap-1.5 sm:gap-2 mt-0.5 flex-wrap">
-                      <span className="text-text-ghost text-xs">{car.range} km</span>
-                      <span className="text-gray-200 hidden sm:inline">·</span>
-                      <span className="text-text-ghost text-xs hidden sm:inline">{car.batteryCapacity} kWh</span>
-                      <span className="text-gray-200 hidden sm:inline">·</span>
-                      <span className="text-text-ghost text-xs hidden sm:inline">{(car.batteryCapacity / car.range * 100).toFixed(1)} kWh/100km</span>
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <p className="text-text-ghost text-xs font-semibold">{car.brand}</p>
+                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${badge.color}`}>{badge.label}</span>
                     </div>
-                    {/* Ahorro inline en mobile */}
+                    <h3 className="font-headline font-bold text-text-main text-sm sm:text-base leading-tight">{car.name}</h3>
+                    <p className="text-text-ghost text-xs mt-0.5 hidden sm:block">{carSpecLabel(car)}</p>
                     {car.savingMonth > 0 && (
                       <p className="sm:hidden font-headline font-black text-sm text-primary-deep mt-0.5">
                         +{formatCLP(car.savingMonth)}<span className="text-text-ghost font-normal text-[11px]">/mes</span>
@@ -657,15 +706,13 @@ export default function CalculadoraContent({ cars }: Props) {
                     )}
                   </div>
 
-                  {/* Costo eléctrico: solo desktop */}
                   <div className="hidden sm:block text-center flex-shrink-0">
-                    <p className="text-text-ghost text-xs uppercase tracking-wide font-bold">Costo eléctrico</p>
+                    <p className="text-text-ghost text-xs uppercase tracking-wide font-bold">Costo mensual</p>
                     <p className="font-headline font-black text-lg text-text-main">
-                      {formatCLP(car.electricMonth)}<span className="text-text-ghost text-xs font-normal">/mes</span>
+                      {formatCLP(car.newCarMonth)}<span className="text-text-ghost text-xs font-normal">/mes</span>
                     </p>
                   </div>
 
-                  {/* Ahorro: solo desktop */}
                   <div className={["hidden sm:block text-center flex-shrink-0 px-4 py-2 rounded-xl",
                     car.savingMonth > 0 ? "bg-primary/10" : "bg-gray-50"].join(" ")}>
                     <p className="text-text-ghost text-xs uppercase tracking-wide font-bold">Ahorro mensual</p>
@@ -678,7 +725,6 @@ export default function CalculadoraContent({ cars }: Props) {
                     )}
                   </div>
 
-                  {/* Price + CTA */}
                   <div className="text-right sm:text-center flex-shrink-0">
                     <p className="hidden sm:block text-text-ghost text-xs mb-0.5">Desde</p>
                     <p className="hidden sm:block font-headline font-bold text-text-main text-base">{formatCLP(price)}</p>
@@ -691,14 +737,12 @@ export default function CalculadoraContent({ cars }: Props) {
                     </Link>
                   </div>
 
-                  {/* Stretched link */}
                   <Link href={`/auto/${car.slug}`} className="absolute inset-0 rounded-2xl z-0" aria-label={`Ver ${car.brand} ${car.name}`} />
                 </motion.div>
               );
             })}
           </div>
 
-          {/* Prompt to pick car if none selected */}
           {!selectedCar && (
             <div className="mt-10 text-center">
               <button

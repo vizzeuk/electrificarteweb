@@ -25,6 +25,7 @@ interface CarCardProps {
   discountPrice?: number;
   isNew?: boolean;
   index?: number;
+  compact?: boolean;
 }
 
 export function CarCard({
@@ -46,10 +47,29 @@ export function CarCard({
   discountPrice,
   isNew,
   index = 0,
+  compact = false,
 }: CarCardProps) {
   const hasDiscount = discountPrice && discountPrice < basePrice;
   const discountPct = hasDiscount ? calculateDiscount(basePrice, discountPrice) : 0;
-  const stats = carStats({ battery: batteryCapacity, range, maxVersionRange, electricRangeKm, fuelConsumption, rendimientoElectrico, electricTypeTag, power });
+
+  const stats = compact ? (() => {
+    const tag = (electricTypeTag ?? "").toUpperCase();
+    const isPHEV = tag === "PHEV" || tag === "REEV";
+    const isHEV  = tag === "HEV"  || tag === "MHEV";
+    const isBEV  = !isPHEV && !isHEV;
+    type S = { label: string; value: string };
+    const out: S[] = [];
+    if (isBEV) {
+      const rv = (maxVersionRange && maxVersionRange > (range ?? 0)) ? maxVersionRange : range;
+      if (rv) out.push({ label: "Autonomía", value: `${rv} km` });
+    } else if (isPHEV) {
+      if (electricRangeKm) out.push({ label: "Autonomía e-", value: `${electricRangeKm} km` });
+    } else {
+      if (fuelConsumption) out.push({ label: "Rendimiento", value: `${fuelConsumption} km/L` });
+    }
+    if ((batteryCapacity ?? 0) >= 1) out.push({ label: "Batería", value: `${batteryCapacity} kWh` });
+    return out;
+  })() : carStats({ battery: batteryCapacity, range, maxVersionRange, electricRangeKm, fuelConsumption, rendimientoElectrico, electricTypeTag, power });
 
   return (
     <motion.article
@@ -113,16 +133,14 @@ export function CarCard({
           )}
         </div>
 
-        {stats.length > 0 && (
-          <div className="space-y-2 py-3 border-y border-gray-100">
-            {stats.map(s => (
-              <div key={s.label} className="flex justify-between items-center">
-                <span className="text-[11px] uppercase tracking-wide text-text-muted font-semibold">{s.label}</span>
-                <span className="text-sm font-medium">{s.value}</span>
-              </div>
-            ))}
-          </div>
-        )}
+        <div className="py-3 border-y border-gray-100 min-h-[72px] flex flex-col justify-center space-y-2">
+          {stats.map(s => (
+            <div key={s.label} className="flex justify-between items-center">
+              <span className="text-[11px] uppercase tracking-wide text-text-muted font-semibold">{s.label}</span>
+              <span className="text-sm font-medium">{s.value}</span>
+            </div>
+          ))}
+        </div>
 
         {/* Pricing block */}
         <div className="mt-4">

@@ -3,7 +3,7 @@
 import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
-import { formatCLP } from "@/lib/utils";
+import { formatCLP, carStats } from "@/lib/utils";
 
 export interface OpportunityCarData {
   _id?: string;
@@ -14,11 +14,16 @@ export interface OpportunityCarData {
   imageUrl?: string;
   basePrice: number;
   discountPrice?: number;
-  range?: number;
-  batteryCapacity?: number;
-  power?: number;
+  range?: number | null;
+  maxVersionRange?: number | null;
+  batteryCapacity?: number | null;
+  electricRangeKm?: number | null;
+  fuelConsumption?: number | null;
+  rendimientoElectrico?: number | null;
+  power?: number | null;
   isNew?: boolean;
   isHotDeal?: boolean;
+  electricType?: { tag?: string } | null;
 }
 
 interface OpportunitiesProps {
@@ -192,26 +197,29 @@ export function Opportunities({ title = "Destacados Electrificarte", cars }: Opp
                   </h3>
 
                   {/* Spec strip */}
-                  <div className="flex gap-2 mb-3">
-                    {deal.range && (
-                      <div className="flex-1 bg-gray-50 rounded-lg px-2 py-1.5 text-center">
-                        <p className="text-[10px] text-text-ghost leading-none mb-0.5">Autonomía</p>
-                        <p className="text-xs font-bold text-text leading-none">{deal.range} km</p>
+                  {(() => {
+                    const specs = carStats({
+                      battery: deal.batteryCapacity,
+                      range: deal.range,
+                      maxVersionRange: deal.maxVersionRange,
+                      electricRangeKm: deal.electricRangeKm,
+                      fuelConsumption: deal.fuelConsumption,
+                      rendimientoElectrico: deal.rendimientoElectrico,
+                      electricTypeTag: deal.electricType?.tag,
+                      power: deal.power,
+                    });
+                    if (specs.length === 0) return null;
+                    return (
+                      <div className="flex gap-2 mb-3">
+                        {specs.map(s => (
+                          <div key={s.label} className="flex-1 bg-gray-50 rounded-lg px-2 py-1.5 text-center">
+                            <p className="text-[10px] text-text-ghost leading-none mb-0.5">{s.label}</p>
+                            <p className="text-xs font-bold text-text leading-none">{s.value}</p>
+                          </div>
+                        ))}
                       </div>
-                    )}
-                    {deal.batteryCapacity && (
-                      <div className="flex-1 bg-gray-50 rounded-lg px-2 py-1.5 text-center">
-                        <p className="text-[10px] text-text-ghost leading-none mb-0.5">Batería</p>
-                        <p className="text-xs font-bold text-text leading-none">{deal.batteryCapacity} kWh</p>
-                      </div>
-                    )}
-                    {deal.power && (
-                      <div className="flex-1 bg-gray-50 rounded-lg px-2 py-1.5 text-center">
-                        <p className="text-[10px] text-text-ghost leading-none mb-0.5">Potencia</p>
-                        <p className="text-xs font-bold text-text leading-none">{deal.power} CV</p>
-                      </div>
-                    )}
-                  </div>
+                    );
+                  })()}
 
                   <div className="space-y-1 mb-4">
                     {hasDiscount && (

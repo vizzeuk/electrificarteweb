@@ -29,13 +29,18 @@ export const homePageQuery = groq`
       "imageUrl": mainImage.asset->url,
       batteryCapacity,
       range,
+      "maxVersionRange": math::max(versions[defined(range) && range > 0].range),
+      electricRangeKm,
+      fuelConsumption,
+      rendimientoElectrico,
+      power,
       basePrice,
       discountPrice,
       isNew,
       isHotDeal,
-      isTopSeller,
       "brand": brand->{ name, "slug": slug.current, "logoUrl": logo.asset->url },
-      "category": category->{ name }
+      "category": category->{ name },
+      "electricType": electricType->{ tag }
     },
 
     "hotDealCar": hotDealCar->{
@@ -64,12 +69,17 @@ export const homePageQuery = groq`
       basePrice,
       discountPrice,
       range,
+      "maxVersionRange": math::max(versions[defined(range) && range > 0].range),
       batteryCapacity,
+      electricRangeKm,
+      fuelConsumption,
+      rendimientoElectrico,
       power,
       isNew,
       isHotDeal,
       "brand": brand->{ name },
-      "category": category->{ name }
+      "category": category->{ name },
+      "electricType": electricType->{ tag }
     },
 
     serviciosExtras[]{
@@ -88,7 +98,7 @@ export const homePageQuery = groq`
     testimonials[]{name, car, savings, quote, rating},
 
     faqTitle,
-    faqs[]{question, answer}
+    faqs[]{icon, question, answer}
   }
 `;
 

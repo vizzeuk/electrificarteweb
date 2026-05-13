@@ -11,39 +11,50 @@ export const metadata: Metadata = {
 };
 
 export interface CalcCar {
-  _id:              string;
-  name:             string;
-  slug:             string;
-  brand:            string;
-  brandSlug:        string;
-  imageUrl?:        string;
-  basePrice:        number;
-  discountPrice:    number;
-  range:            number;
-  batteryCapacity:  number;
-  electricTypeTag:  string;
-  vehicleTypeSlug?: string;
+  _id:                  string;
+  name:                 string;
+  slug:                 string;
+  brand:                string;
+  brandSlug:            string;
+  imageUrl?:            string;
+  basePrice:            number;
+  discountPrice:        number;
+  range:                number;
+  batteryCapacity:      number;
+  electricTypeTag:      string;
+  vehicleTypeSlug?:     string;
+  electricRangeKm?:     number | null;
+  fuelConsumption?:     number | null;
+  rendimientoElectrico?: number | null;
+  brandLogoUrl?:        string | null;
 }
 
 const carsForCalculatorQuery = groq`
   *[
     _type == "car"
-    && defined(batteryCapacity) && batteryCapacity > 0
-    && defined(range) && range > 100
     && defined(basePrice)
+    && (
+      (defined(batteryCapacity) && batteryCapacity > 0 && defined(range) && range > 0) ||
+      (defined(electricRangeKm) && electricRangeKm > 0) ||
+      (defined(fuelConsumption) && fuelConsumption > 0 && fuelConsumption <= 20)
+    )
   ] | order(coalesce(discountPrice, basePrice) asc) {
     _id,
     name,
-    "slug":            slug.current,
-    "brand":           brand->name,
-    "brandSlug":       brand->slug.current,
-    "imageUrl":        mainImage.asset->url,
+    "slug":              slug.current,
+    "brand":             brand->name,
+    "brandSlug":         brand->slug.current,
+    "imageUrl":          mainImage.asset->url,
     basePrice,
     discountPrice,
     range,
     batteryCapacity,
-    "electricTypeTag":  electricType->tag,
-    "vehicleTypeSlug":  vehicleType->slug.current,
+    electricRangeKm,
+    fuelConsumption,
+    rendimientoElectrico,
+    "electricTypeTag":   electricType->tag,
+    "vehicleTypeSlug":   vehicleType->slug.current,
+    "brandLogoUrl":      brand->logo.asset->url,
   }
 `;
 
