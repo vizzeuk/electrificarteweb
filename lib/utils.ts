@@ -5,6 +5,11 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+export function normalizeElectricLabel(tag: string | null | undefined, label: string | null | undefined): string | null {
+  if ((tag ?? "").toUpperCase() === "MHEV") return "Micro Híbrido";
+  return label ?? null;
+}
+
 export function formatCLP(amount: number): string {
   return new Intl.NumberFormat("es-CL", {
     style: "currency",
