@@ -31,7 +31,7 @@ export default async function ColeccionPage({ params }: PageProps) {
     cars = col.manualCars ?? [];
   } else {
     cars = await client.fetch(carsByFiltersQuery, {
-      brandRef:        col.filterBrandRef        ?? null,
+      brandRefs:       col.filterBrandRefs       ?? [],
       vehicleTypeRef:  col.filterVehicleTypeRef  ?? null,
       electricTypeRef: col.filterElectricTypeRef ?? null,
       maxPrice:        col.filterMaxPrice  ? col.filterMaxPrice  * 1_000_000 : 0,

@@ -46,13 +46,14 @@ export default defineConfig({
             // ─── Catálogo ───────────────────────────────────────────────────
             S.documentTypeListItem("brand").title("🚗 Marcas"),
             S.documentTypeListItem("car").title("⚡ Autos"),
+            S.documentTypeListItem("collection").title("📦 Colecciones"),
 
             S.divider(),
 
             // ─── Taxonomías ─────────────────────────────────────────────────
             S.documentTypeListItem("vehicleType").title("📂 Tipos de Vehículo"),
             S.documentTypeListItem("electricType").title("🔋 Tipos Eléctricos"),
-            S.documentTypeListItem("category").title("🏷️ Categorías"),
+            S.documentTypeListItem("category").title("🏷️ Categorías (legado)"),
           ]),
     }),
   ],

@@ -8,6 +8,7 @@ export const brand = defineType({
     { name: "general",   title: "📋 General",    default: true },
     { name: "branding",  title: "🎨 Branding" },
     { name: "content",   title: "📝 Contenido PLP" },
+    { name: "banners",   title: "📣 Banners PLP" },
     { name: "media",     title: "🎬 Videos y multimedia" },
   ],
   fields: [
@@ -40,6 +41,11 @@ export const brand = defineType({
       name: "isFeatured", title: "⭐ Mostrar en menú de navegación", type: "boolean",
       group: "general", initialValue: false,
       description: "Si está activo, la marca aparece en el dropdown del navbar",
+    }),
+    defineField({
+      name: "navbarLabel", title: "Subtítulo en el navbar", type: "string",
+      group: "general",
+      description: 'Texto pequeño bajo el nombre de la marca en el dropdown. Si se deja vacío, se muestran los modelos destacados.',
     }),
 
     // ─── Branding ────────────────────────────────────────────────────────────
@@ -106,6 +112,16 @@ export const brand = defineType({
           select: { title: "title", subtitle: "channel" },
         },
       })],
+    }),
+
+    // ─── Banners PLP ────────────────────────────────────────────────────────
+    defineField({
+      name: "plpBanners",
+      title: "Banners de la página",
+      type: "array",
+      of: [{ type: "plpBanner" }],
+      group: "banners",
+      description: "Banners que aparecen en el slideshow de esta PLP. Si está vacío o todos están inactivos, el bloque no se muestra.",
     }),
   ],
   preview: {

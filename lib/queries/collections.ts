@@ -34,7 +34,7 @@ export const collectionBySlugQuery = groq`
     filterMinSeats,
     filterIsNew,
     filterIsHotDeal,
-    "filterBrandRef":       filterBrand._ref,
+    "filterBrandRefs":      filterBrands[]._ref,
     "filterVehicleTypeRef": filterVehicleType._ref,
     "filterElectricTypeRef": filterElectricType._ref,
 
@@ -55,7 +55,7 @@ export const collectionBySlugQuery = groq`
       "maxVersionRange": math::max(versions[defined(range) && range > 0].range),
       isNew,
       isHotDeal,
-      "brand":        brand->{ name, "slug": slug.current },
+      "brand":        brand->{ name, "slug": slug.current, "logoUrl": logo.asset->url },
       "vehicleType":  vehicleType->{ label, "slug": slug.current },
       "electricType": electricType->{ tag, label, "slug": slug.current },
     },
@@ -66,7 +66,7 @@ export const collectionBySlugQuery = groq`
 export const carsByFiltersQuery = groq`
   *[
     _type == "car"
-    && ($brandRef        == null  || brand._ref        == $brandRef)
+    && (count($brandRefs) == 0    || brand._ref        in $brandRefs)
     && ($vehicleTypeRef  == null  || vehicleType._ref  == $vehicleTypeRef)
     && ($electricTypeRef == null  || electricType._ref == $electricTypeRef)
     && ($maxPrice        == 0     || basePrice         <= $maxPrice)
@@ -90,7 +90,7 @@ export const carsByFiltersQuery = groq`
     "maxVersionRange": math::max(versions[defined(range) && range > 0].range),
     isNew,
     isHotDeal,
-    "brand":        brand->{ name, "slug": slug.current },
+    "brand":        brand->{ name, "slug": slug.current, "logoUrl": logo.asset->url },
     "vehicleType":  vehicleType->{ label, "slug": slug.current },
     "electricType": electricType->{ tag, label, "slug": slug.current },
   }

@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { motion } from "framer-motion";
 import { formatCLP } from "@/lib/utils";
 import { CarCard } from "@/components/car/CarCard";
@@ -31,7 +30,7 @@ interface CarData {
   power:                number;
   isNew:                boolean;
   isHotDeal:            boolean;
-  brand?:               { name: string; slug: string };
+  brand?:               { name: string; slug: string; logoUrl?: string };
   vehicleType?:         { label: string; slug: string };
   electricType?:        { tag: string; label: string; slug: string };
 }
@@ -77,25 +76,38 @@ export default function ColeccionPageContent({ col, cars }: Props) {
   return (
     <>
       {/* ─── Hero ─────────────────────────────────────────────────────── */}
-      <section className="bg-black pt-20 pb-16 md:pt-28 md:pb-20 overflow-hidden relative">
-        {/* Grid texture */}
+      <section className="relative bg-black overflow-hidden flex flex-col" style={{ minHeight: "100svh" }}>
+        {/* Background image */}
+        {col.heroImageUrl ? (
+          <img
+            src={col.heroImageUrl}
+            alt={col.title}
+            className="absolute inset-0 w-full h-full object-cover object-center"
+          />
+        ) : (
+          <div
+            className="absolute inset-0 opacity-[0.03] pointer-events-none"
+            style={{
+              backgroundImage:
+                "linear-gradient(rgba(255,255,255,.1) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.1) 1px,transparent 1px)",
+              backgroundSize: "60px 60px",
+            }}
+          />
+        )}
+
+        {/* Gradient overlays */}
+        <div className="absolute inset-0" style={{ background: "linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,0.82) 45%, rgba(0,0,0,0.30) 100%)" }} />
+        <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.70) 0%, transparent 55%, rgba(0,0,0,0.45) 100%)" }} />
+
+        {/* Glow accent */}
         <div
-          className="absolute inset-0 opacity-[0.03] pointer-events-none"
-          style={{
-            backgroundImage:
-              "linear-gradient(rgba(255,255,255,.1) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.1) 1px,transparent 1px)",
-            backgroundSize: "60px 60px",
-          }}
-        />
-        {/* Glow */}
-        <div
-          className="absolute bottom-0 left-0 w-[500px] h-[300px] rounded-full blur-[120px] opacity-10 pointer-events-none"
-          style={{ backgroundColor: ACCENT }}
+          className="absolute bottom-0 left-0 w-[500px] h-[300px] rounded-full blur-[120px] pointer-events-none"
+          style={{ backgroundColor: ACCENT, opacity: 0.15 }}
         />
 
-        <div className="max-w-7xl mx-auto px-4 md:px-8 relative z-10">
+        <div className="relative z-10 flex flex-col flex-1 max-w-7xl mx-auto px-4 md:px-8 w-full" style={{ minHeight: "100svh" }}>
           {/* Breadcrumb */}
-          <nav className="flex items-center gap-2 text-white/30 text-xs mb-10">
+          <nav className="flex items-center gap-2 text-white/30 text-xs pt-24 mb-auto">
             <Link href="/" className="hover:text-white/60 transition-colors">Inicio</Link>
             <span>/</span>
             <Link href="/#colecciones" className="hover:text-white/60 transition-colors">Colecciones</Link>
@@ -103,101 +115,81 @@ export default function ColeccionPageContent({ col, cars }: Props) {
             <span className="text-white/60">{col.title}</span>
           </nav>
 
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            {/* Left – copy */}
-            <div>
-              {col.badge && (
-                <span className="inline-block bg-primary text-black text-[10px] font-extrabold uppercase tracking-widest px-3 py-1 rounded-full mb-5">
-                  {col.badge}
-                </span>
-              )}
+          {/* Content — anchored to bottom */}
+          <div className="pb-16 max-w-2xl">
+            {col.badge && (
+              <span className="inline-block bg-primary text-black text-[10px] font-extrabold uppercase tracking-widest px-3 py-1 rounded-full mb-5">
+                {col.badge}
+              </span>
+            )}
 
-              <div className="flex flex-wrap items-center gap-2 mb-6">
-                {minPrice > 0 && (
-                  <div className="inline-flex items-center gap-1.5 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full">
-                    <span className="material-symbols-outlined text-primary text-[14px]">sell</span>
-                    <span className="text-white/60 text-xs font-semibold">Desde {formatCLP(minPrice)}</span>
-                  </div>
-                )}
-                {hotDeals.length > 0 && (
-                  <div className="inline-flex items-center gap-1.5 bg-amber/10 border border-amber/30 px-3 py-1.5 rounded-full">
-                    <span className="material-symbols-outlined text-amber text-[14px]">local_fire_department</span>
-                    <span className="text-amber text-xs font-bold">{hotDeals.length} Hot Deal{hotDeals.length !== 1 ? "s" : ""}</span>
-                  </div>
-                )}
-              </div>
-
-              <h1 className="text-5xl md:text-6xl font-headline font-black text-white tracking-tighter leading-[0.92] mb-4">
-                {col.title}<span className="text-primary">.</span>
-              </h1>
-
-              {col.subtitle && (
-                <p className="font-headline text-xl md:text-2xl font-bold text-primary mb-4">
-                  {col.subtitle}
-                </p>
-              )}
-
-              {col.description && (
-                <p className="text-white/60 text-base leading-relaxed max-w-md mb-8">
-                  {col.description}
-                </p>
-              )}
-
-              <div className="flex flex-wrap gap-4 mb-10">
-                <div className="flex items-center gap-2 text-white/40 text-sm">
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
-                  {cars.length} modelo{cars.length !== 1 ? "s" : ""} disponible{cars.length !== 1 ? "s" : ""}
-                </div>
-                <div className="flex items-center gap-2 text-white/40 text-sm">
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
-                  Precios negociados al mejor valor
-                </div>
-                <div className="flex items-center gap-2 text-white/40 text-sm">
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
-                  Respuesta en 24 h
-                </div>
-              </div>
-
-              <div className="flex flex-wrap gap-3">
-                <Link
-                  href="/solicitar"
-                  className="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-6 py-3 rounded-xl transition-all text-sm shadow-[0_4px_20px_rgba(0,229,229,0.30)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]"
+            <div className="flex flex-wrap items-center gap-2 mb-5">
+              {minPrice > 0 && (
+                <div
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full"
+                  style={{ backgroundColor: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.10)", backdropFilter: "blur(4px)" }}
                 >
-                  Solicitar oferta
-                  <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
-                </Link>
-                <a
-                  href={`#catalogo-${col.slug}`}
-                  className="inline-flex items-center gap-2 border border-white/20 hover:border-white/50 hover:bg-white/5 text-white font-medium px-6 py-3 rounded-xl transition-all text-sm"
+                  <span className="material-symbols-outlined text-primary text-[14px]">sell</span>
+                  <span className="text-xs font-semibold" style={{ color: "rgba(255,255,255,0.70)" }}>Desde {formatCLP(minPrice)}</span>
+                </div>
+              )}
+              {hotDeals.length > 0 && (
+                <div
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full"
+                  style={{ backgroundColor: "rgba(245,158,11,0.10)", border: "1px solid rgba(245,158,11,0.30)", backdropFilter: "blur(4px)" }}
                 >
-                  Ver catálogo
-                </a>
+                  <span className="material-symbols-outlined text-amber text-[14px]">local_fire_department</span>
+                  <span className="text-amber text-xs font-bold">{hotDeals.length} Hot Deal{hotDeals.length !== 1 ? "s" : ""}</span>
+                </div>
+              )}
+            </div>
+
+            <h1 className="text-5xl md:text-7xl font-headline font-black text-white tracking-tighter leading-[0.9] mb-4">
+              {col.title}<span className="text-primary">.</span>
+            </h1>
+
+            {col.subtitle && (
+              <p className="font-headline text-xl md:text-2xl font-bold text-primary mb-4">
+                {col.subtitle}
+              </p>
+            )}
+
+            {col.description && (
+              <p className="text-white/60 text-base leading-relaxed mb-8">
+                {col.description}
+              </p>
+            )}
+
+            <div className="flex flex-wrap gap-x-6 gap-y-2 mb-8">
+              <div className="flex items-center gap-2 text-white/40 text-sm">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
+                {cars.length} modelo{cars.length !== 1 ? "s" : ""} disponible{cars.length !== 1 ? "s" : ""}
+              </div>
+              <div className="flex items-center gap-2 text-white/40 text-sm">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
+                Precios negociados al mejor valor
+              </div>
+              <div className="flex items-center gap-2 text-white/40 text-sm">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
+                Respuesta en 48-96 h
               </div>
             </div>
 
-            {/* Right – hero image */}
-            <div className="relative hidden md:block">
-              <div className="aspect-[4/3] rounded-2xl overflow-hidden bg-white/5 border border-white/10 flex items-center justify-center">
-                {col.heroImageUrl ? (
-                  <Image
-                    src={col.heroImageUrl}
-                    alt={col.title}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 1280px) 50vw, 640px"
-                    priority
-                  />
-                ) : (
-                  <div className="text-center">
-                    <span className="material-symbols-outlined text-[64px] text-white/10 block mb-3">photo_library</span>
-                    <p className="text-white/20 text-xs uppercase tracking-widest font-semibold">{col.title}</p>
-                  </div>
-                )}
-              </div>
-              <div
-                className="absolute -bottom-4 -right-4 w-32 h-32 rounded-full blur-3xl pointer-events-none opacity-20"
-                style={{ backgroundColor: ACCENT }}
-              />
+            <div className="flex flex-wrap gap-3">
+              <Link
+                href="/solicitar"
+                className="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-6 py-3 rounded-xl transition-all text-sm shadow-[0_4px_20px_rgba(0,229,229,0.30)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]"
+              >
+                Solicitar oferta
+                <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+              </Link>
+              <a
+                href={`#catalogo-${col.slug}`}
+                className="inline-flex items-center gap-2 text-white font-medium px-6 py-3 rounded-xl transition-all text-sm"
+                style={{ border: "1px solid rgba(255,255,255,0.20)" }}
+              >
+                Ver catálogo
+              </a>
             </div>
           </div>
         </div>
@@ -269,6 +261,7 @@ export default function ColeccionPageContent({ col, cars }: Props) {
                         key={car._id}
                         name={car.name}
                         brand={car.brand?.name ?? ""}
+                        brandLogo={car.brand?.logoUrl}
                         slug={car.slug}
                         image={car.imageUrl}
                         category={car.vehicleType?.label ?? car.electricType?.tag}
@@ -304,6 +297,7 @@ export default function ColeccionPageContent({ col, cars }: Props) {
                         key={car._id}
                         name={car.name}
                         brand={car.brand?.name ?? ""}
+                        brandLogo={car.brand?.logoUrl}
                         slug={car.slug}
                         image={car.imageUrl}
                         category={car.vehicleType?.label ?? car.electricType?.tag}

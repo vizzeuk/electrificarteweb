@@ -33,12 +33,12 @@ const DEFAULT_STEPS: HowItWorksStep[] = [
     icon: "payments",
     tag: "Pago único $19.990",
     title: "Activamos tu búsqueda",
-    description: "Con un pago único de $19.990 negociamos en tu nombre con nuestra red exclusiva de concesionarios.",
+    description: "Con un pago único de $19.990 negociamos en tu nombre con nuestra red exclusiva de vendedores oficiales.",
   },
   {
     number: "03",
     icon: "handshake",
-    tag: "Respuesta en 24h",
+    tag: "Respuesta en 48-96h",
     title: "Recibe la mejor oferta",
     description: "Comparamos precios, bonos y financiamiento disponible. Tú decides si la tomas.",
   },
@@ -47,11 +47,12 @@ const DEFAULT_STEPS: HowItWorksStep[] = [
     icon: "celebration",
     tag: "A estrenar",
     title: "Estrena tu auto",
-    description: "Coordinas directamente con el concesionario los últimos detalles y retiras tu vehículo nuevo.",
+    description: "Coordinas directamente con el vendedor oficial los últimos detalles y retiras tu vehículo nuevo.",
   },
 ];
 
-const LOCAL_VIDEO = "/hero-video/hero.mp4";
+const VIDEO_16x9 = "/hero-video/explicativo-16x9.mp4";
+const VIDEO_9x16 = "/hero-video/explicativo-9x16.mp4";
 const SEEN_KEY = "ea_how_video_seen";
 
 export function HowItWorks({ title = "Cómo funciona Electrificarte", subtitle, steps, videoUrl }: HowItWorksProps) {
@@ -187,12 +188,34 @@ export function HowItWorks({ title = "Cómo funciona Electrificarte", subtitle, 
           className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
           onClick={closeModal}
         >
+          {/* Desktop: 16:9 */}
           <div
-            className="relative w-full max-w-4xl aspect-video rounded-2xl overflow-hidden shadow-2xl bg-black"
+            className="relative hidden sm:block w-full max-w-4xl aspect-video rounded-2xl overflow-hidden shadow-2xl bg-black"
             onClick={(e) => e.stopPropagation()}
           >
             <video
-              src={LOCAL_VIDEO}
+              src={VIDEO_16x9}
+              className="w-full h-full object-cover"
+              autoPlay
+              controls
+              playsInline
+            />
+            <button
+              onClick={closeModal}
+              className="absolute top-3 right-3 w-9 h-9 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center transition-colors z-10"
+              aria-label="Cerrar video"
+            >
+              <Icon name="close" size="sm" />
+            </button>
+          </div>
+
+          {/* Mobile: 9:16 */}
+          <div
+            className="relative sm:hidden w-full max-w-xs aspect-[9/16] rounded-2xl overflow-hidden shadow-2xl bg-black"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <video
+              src={VIDEO_9x16}
               className="w-full h-full object-cover"
               autoPlay
               controls

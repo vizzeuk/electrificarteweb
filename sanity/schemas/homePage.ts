@@ -93,7 +93,7 @@ export const homePage = defineType({
     defineField({
       name: "latestLaunchesCars", title: "Autos en 'Últimos Lanzamientos'", type: "array",
       group: "catalog",
-      description: "Selecciona los autos que aparecen en la sección 'Últimos Lanzamientos' del home. Máximo 3.",
+      description: "Selecciona hasta 3 autos para mostrar primero en 'Últimos Lanzamientos'. Los espacios restantes se completan automáticamente con autos marcados como 🆕 Nuevo lanzamiento.",
       of: [defineArrayMember({ type: "reference", to: [{ type: "car" }] })],
       validation: (r) => r.max(3),
     }),
@@ -109,7 +109,7 @@ export const homePage = defineType({
     defineField({
       name: "opportunitiesCars", title: "Autos en 'Destacados'", type: "array",
       group: "catalog",
-      description: "Autos que aparecen en el carrusel de Destacados. Puedes agregar todos los que quieras.",
+      description: "Autos que aparecen en el carrusel 'Destacados' (sección inferior del home). Si no hay selección manual, se muestran los autos marcados como ⭐ Destacado en Home.",
       of: [defineArrayMember({ type: "reference", to: [{ type: "car" }] })],
     }),
     defineField({
@@ -193,13 +193,14 @@ export const homePage = defineType({
       of: [defineArrayMember({
         type: "object", name: "testimonial", title: "Testimonio",
         fields: [
-          defineField({ name: "name",    title: "Nombre del cliente", type: "string" }),
-          defineField({ name: "car",     title: "Auto que compró",    type: "string", description: 'Ej: "Tesla Model 3"' }),
-          defineField({ name: "savings", title: "Ahorro logrado",     type: "string", description: 'Ej: "$5.200.000"' }),
-          defineField({ name: "quote",   title: "Opinión",            type: "text", rows: 3 }),
-          defineField({ name: "rating",  title: "Calificación (1-5)", type: "number", initialValue: 5, validation: (r) => r.min(1).max(5) }),
+          defineField({ name: "name",      title: "Nombre del cliente", type: "string" }),
+          defineField({ name: "car",       title: "Auto que compró",    type: "string", description: 'Ej: "Tesla Model 3"' }),
+          defineField({ name: "savings",   title: "Ahorro logrado",     type: "string", description: 'Ej: "$5.200.000"' }),
+          defineField({ name: "quote",     title: "Opinión",            type: "text", rows: 3 }),
+          defineField({ name: "rating",    title: "Calificación (1-5)", type: "number", initialValue: 5, validation: (r) => r.min(1).max(5) }),
+          defineField({ name: "cardImage", title: "Foto del auto (opcional)", type: "image", options: { hotspot: true }, description: "Imagen de fondo en la parte superior de la tarjeta. Formato recomendado: 16:9, al menos 600×338px." }),
         ],
-        preview: { select: { title: "name", subtitle: "car" } },
+        preview: { select: { title: "name", subtitle: "car", media: "cardImage" } },
       })],
     }),
 
@@ -216,10 +217,11 @@ export const homePage = defineType({
       of: [defineArrayMember({
         type: "object", name: "faqItem", title: "Pregunta",
         fields: [
+          defineField({ name: "icon",     title: "Ícono (Material Symbol)", type: "string", description: 'Opcional. Ej: "savings", "shield", "payments", "directions_car". Ver icons.google.com' }),
           defineField({ name: "question", title: "Pregunta", type: "string" }),
           defineField({ name: "answer",   title: "Respuesta", type: "text", rows: 3 }),
         ],
-        preview: { select: { title: "question" } },
+        preview: { select: { title: "question", subtitle: "icon" } },
       })],
     }),
   ],

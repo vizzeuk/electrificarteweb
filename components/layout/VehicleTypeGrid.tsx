@@ -12,6 +12,7 @@ export interface ElectricTypeItem {
   icon?: string;
   tagline?: string;
   idealFor?: string;
+  cardImageUrl?: string;
   carCount: number;
 }
 
@@ -19,7 +20,7 @@ interface ElectricTypeGridProps {
   types: ElectricTypeItem[];
 }
 
-const CARD_W = 300;
+const CARD_W = 360;
 const GAP    = 16;
 
 export function VehicleTypeGrid({ types }: ElectricTypeGridProps) {
@@ -103,60 +104,99 @@ export function VehicleTypeGrid({ types }: ElectricTypeGridProps) {
         }}
       >
         {types.map((type) => {
-          const accent = type.color ?? "#00E5E5";
-          const desc   = type.tagline ?? type.idealFor ?? null;
+          const accent   = type.color ?? "#00E5E5";
+          const desc     = type.tagline ?? type.idealFor ?? null;
+          const hasImage = !!type.cardImageUrl;
 
           return (
             <Link
               key={type._id}
               href={`/electrico/${type.slug}`}
-              style={{ minWidth: CARD_W, scrollSnapAlign: "start" }}
-              className="group flex flex-col gap-3 bg-white border border-gray-100 hover:border-gray-300 hover:shadow-md rounded-2xl p-5 transition-all duration-200 flex-shrink-0"
+              style={{ width: CARD_W, minWidth: CARD_W, maxWidth: CARD_W, height: 460, scrollSnapAlign: "start" }}
+              className="group relative flex flex-col rounded-2xl overflow-hidden flex-shrink-0"
             >
-              {/* Tag + icon */}
-              <div className="flex items-center justify-between">
+              {/* Background — photo or gradient */}
+              {hasImage ? (
+                <img
+                  src={type.cardImageUrl}
+                  alt=""
+                  aria-hidden
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+              ) : (
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    background: `linear-gradient(135deg, ${accent}22 0%, #0a0a0a 60%)`,
+                  }}
+                />
+              )}
+
+              {/* Dark overlay — stronger at bottom */}
+              <div
+                className="absolute inset-0"
+                style={{
+                  background: hasImage
+                    ? "linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.15) 35%, rgba(0,0,0,0.75) 70%, rgba(0,0,0,0.92) 100%)"
+                    : "linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.7) 100%)",
+                }}
+              />
+
+              {/* Top row — tag + icon */}
+              <div className="relative flex items-start justify-between p-4">
                 <span
-                  className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full"
-                  style={{ backgroundColor: `${accent}20`, color: accent }}
+                  className="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full backdrop-blur-sm"
+                  style={{
+                    backgroundColor: `${accent}30`,
+                    color: accent,
+                    border: `1px solid ${accent}50`,
+                  }}
                 >
                   {type.tag}
                 </span>
                 <span
-                  className="material-symbols-outlined text-[22px]"
-                  style={{ color: `${accent}99` }}
+                  className="material-symbols-outlined text-[26px] opacity-80"
+                  style={{ color: accent }}
                 >
                   {type.icon ?? "bolt"}
                 </span>
               </div>
 
-              {/* Label + description */}
-              <div>
-                <p className="font-headline font-bold text-sm text-text-main leading-tight mb-1">
-                  {type.label}
-                </p>
-                {desc && (
-                  <p className="text-[11px] text-text-ghost leading-snug line-clamp-2">
-                    {desc}
-                  </p>
-                )}
-              </div>
+              {/* Spacer */}
+              <div className="flex-1" />
 
-              {/* Footer */}
-              <div className="flex items-center justify-between mt-auto pt-2 border-t border-gray-50">
-                {type.carCount > 0 ? (
-                  <span className="text-[10px] text-text-ghost">
-                    {type.carCount} {type.carCount === 1 ? "modelo" : "modelos"}
+              {/* Bottom content */}
+              <div className="relative px-4 pb-4 space-y-2">
+                <div>
+                  <p className="font-headline font-black text-lg text-white leading-tight tracking-tight line-clamp-1">
+                    {type.label}
+                  </p>
+                  {desc && (
+                    <p className="text-[12px] leading-snug mt-1 line-clamp-2" style={{ color: "rgba(255,255,255,0.70)" }}>
+                      {desc}
+                    </p>
+                  )}
+                </div>
+
+                {/* Footer */}
+                <div className="flex items-center justify-between pt-2 border-t" style={{ borderColor: "rgba(255,255,255,0.15)" }}>
+                  {type.carCount > 0 ? (
+                    <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.50)" }}>
+                      {type.carCount} {type.carCount === 1 ? "modelo" : "modelos"}
+                    </span>
+                  ) : (
+                    <span />
+                  )}
+                  <span
+                    className="text-[11px] font-bold flex items-center gap-0.5"
+                    style={{ color: accent }}
+                  >
+                    Ver todos
+                    <span className="material-symbols-outlined text-[13px] transition-transform group-hover:translate-x-0.5">
+                      arrow_forward
+                    </span>
                   </span>
-                ) : (
-                  <span />
-                )}
-                <span
-                  className="text-[10px] font-bold flex items-center gap-0.5"
-                  style={{ color: accent }}
-                >
-                  Ver todos
-                  <span className="material-symbols-outlined text-[13px]">arrow_forward</span>
-                </span>
+                </div>
               </div>
             </Link>
           );

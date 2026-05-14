@@ -155,7 +155,7 @@ function HotDealDesktop({ c, brandDisplay, modelDisplay, bonusAmt, savingsPct }:
               <span className="text-primary text-3xl font-headline font-black">{formatCLP(c.discountPrice)}</span>
             </div>
             <p className="text-white/30 text-xs pt-2 border-t border-white/10">
-              Ahorra {savingsPct}% · Incluye bono concesionario + Electrificarte
+              Ahorra {savingsPct}% · Incluye bono vendedor + Electrificarte
             </p>
           </div>
           <div className="flex gap-3">

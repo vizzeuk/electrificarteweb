@@ -8,13 +8,13 @@ const features = [
     icon: "search_insights",
     title: "Precios que el público no ve",
     description:
-      "Accedemos a inventarios y bonos que los concesionarios no publican. Solo disponibles a través de nuestra red exclusiva.",
+      "Accedemos a inventarios y bonos que los vendedores no publican. Solo disponibles a través de nuestra red exclusiva.",
   },
   {
     icon: "bolt",
-    title: "Oferta en 24 horas, garantizado",
+    title: "Oferta en 48-96 horas",
     description:
-      "Desde que activas el servicio, tienes tu mejor opción del mercado en menos de 24 horas.",
+      "Desde que activas el servicio, tienes tu mejor opción del mercado en 48 a 96 horas.",
   },
   {
     icon: "handshake",

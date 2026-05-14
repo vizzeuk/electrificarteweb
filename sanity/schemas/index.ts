@@ -8,6 +8,7 @@ import { homePage }     from "./homePage";
 import { collection }   from "./collection";
 import { blockContent } from "./blockContent";
 import { blogPost }     from "./blogPost";
+import { plpBanner }    from "./plpBanner";
 
 export const schemaTypes = [
   // ─── Singleton documents (una sola instancia) ───────────────────────────
@@ -31,4 +32,5 @@ export const schemaTypes = [
 
   // ─── Tipos de contenido reutilizables ────────────────────────────────────
   blockContent,
+  plpBanner,
 ];

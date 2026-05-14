@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { client } from "@/lib/sanity/client";
 import { urlFor } from "@/lib/sanity/image";
+import { normalizeElectricLabel } from "@/lib/utils";
 import {
   electricTypeBySlugQuery,
   carsByElectricTypeQuery,
@@ -59,7 +60,7 @@ export default async function ElectricoPage({ params }: PageProps) {
 
   const meta: ElectricoMeta = {
     tag:         sanityMeta.tag ?? slug.toUpperCase(),
-    label:       sanityMeta.label ?? slug,
+    label:       normalizeElectricLabel(sanityMeta.tag, sanityMeta.label) ?? slug,
     icon:        sanityMeta.icon ?? "bolt",
     color:       sanityMeta.color ?? "#003499",
     tagline:     sanityMeta.tagline ?? "",
@@ -114,6 +115,8 @@ export default async function ElectricoPage({ params }: PageProps) {
     tag:   t.tag ?? t.slug.toUpperCase(),
   }));
 
+  const plpBanners = sanityMeta.plpBanners ?? [];
+
   return (
     <ElectricoPageContent
       slug={slug}
@@ -122,6 +125,7 @@ export default async function ElectricoPage({ params }: PageProps) {
       otherTypes={otherTypes}
       adCar={adCar}
       adText={adText}
+      plpBanners={plpBanners}
     />
   );
 }

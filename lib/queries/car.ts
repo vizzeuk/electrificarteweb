@@ -260,9 +260,13 @@ export const allCarSlugsQuery = groq`
   *[_type == "car"]{ "slug": slug.current }
 `;
 
-// ─── Autos similares (misma categoría/tipo, distinto slug) ───────────────────
+// ─── Autos similares — candidatos para scoring (misma marca / tipo / eléctrico) ─
 export const similarCarsQuery = groq`
-  *[_type == "car" && vehicleType._ref == $vehicleTypeId && slug.current != $excludeSlug] | order(coalesce(discountPrice, basePrice) asc)[0...4] {
+  *[
+    _type == "car" &&
+    slug.current != $excludeSlug &&
+    (brand._ref == $brandId || vehicleType._ref == $vehicleTypeId || electricType._ref == $electricTypeId)
+  ] {
     _id,
     name,
     "slug": slug.current,
@@ -270,6 +274,9 @@ export const similarCarsQuery = groq`
     basePrice,
     discountPrice,
     range,
+    "brandId": brand._ref,
+    "vehicleTypeId": vehicleType._ref,
+    "electricTypeId": electricType._ref,
     "brand": brand->{ name },
     "vehicleType": vehicleType->{ label }
   }
@@ -382,6 +389,11 @@ export const brandBySlugQuery = groq`
       mainImage,
       basePrice,
       discountPrice,
+    },
+    "plpBanners": plpBanners[active != false]{
+      "imageUrl": image.asset->url,
+      ctaHref,
+      altText
     }
   }
 `;
@@ -393,7 +405,8 @@ export const allVehicleTypesQuery = groq`
     name,
     "slug": slug.current,
     label,
-    icon
+    icon,
+    "heroTagline": coalesce(navbarLabel, heroTagline)
   }
 `;
 
@@ -408,6 +421,7 @@ export const electricTypesForHomeQuery = groq`
     icon,
     tagline,
     idealFor,
+    "cardImageUrl": cardImage.asset->url,
     "carCount": count(*[_type == "car" && electricType._ref == ^._id])
   }
 `;
@@ -432,6 +446,11 @@ export const vehicleTypeBySlugQuery = groq`
       range,
       "brand": brand->{ name }
     },
+    "plpBanners": plpBanners[active != false]{
+      "imageUrl": image.asset->url,
+      ctaHref,
+      altText
+    },
     metaTitle,
     metaDescription
   }
@@ -446,7 +465,8 @@ export const allElectricTypesQuery = groq`
     label,
     tag,
     color,
-    icon
+    icon,
+    "tagline": coalesce(navbarLabel, tagline)
   }
 `;
 
@@ -475,6 +495,11 @@ export const electricTypeBySlugQuery = groq`
       discountPrice,
       range,
       "brand": brand->{ name }
+    },
+    "plpBanners": plpBanners[active != false]{
+      "imageUrl": image.asset->url,
+      ctaHref,
+      altText
     },
     metaTitle,
     metaDescription
@@ -551,7 +576,6 @@ export const featuredBrandsQuery = groq`
     _id,
     name,
     "slug": slug.current,
-    logo,
-    accentColor
+    "models": coalesce(navbarLabel, array::join(*[_type == "car" && brand._ref == ^._id] | order(coalesce(discountPrice, basePrice) desc)[0...3].name, " · "))
   }
 `;

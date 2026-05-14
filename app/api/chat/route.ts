@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "next-sanity";
 import { groq } from "next-sanity";
+import Anthropic from "@anthropic-ai/sdk";
 
 const client = createClient({
   projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID!,
@@ -142,19 +143,47 @@ async function handleRecommendation(body: {
 async function handleChat(messages: { role: string; content: string }[]): Promise<string> {
   const lastMsg = messages.at(-1)?.content?.toLowerCase() ?? "";
 
-  // ── Pregunta por una marca específica
-  const allBrands: { name: string; slug: string }[] = await client.fetch(
-    groq`*[_type == "brand" && !(_id in path("drafts.**"))] | order(name asc) { name, "slug": slug.current }`
-  );
+  // Fetch context in parallel: brands, hot deals, cheapest cars, high range cars
+  const [allBrands, hotDeals, cheapCars, longRangeCars] = await Promise.all([
+    client.fetch<{ name: string; slug: string }[]>(
+      groq`*[_type == "brand" && !(_id in path("drafts.**"))] | order(name asc) { name, "slug": slug.current }`
+    ),
+    client.fetch<CarResult[]>(
+      groq`*[_type == "car" && !(_id in path("drafts.**")) && isHotDeal == true]
+        | order(coalesce(discountPrice, basePrice) asc) [0..5] {
+          name, "slug": slug.current,
+          "brand": brand->{ name, "slug": slug.current },
+          "electricType": electricType->{ label, tag },
+          basePrice, discountPrice, hotDealBonusAmount, range, power, traction, acceleration
+        }`
+    ),
+    client.fetch<CarResult[]>(
+      groq`*[_type == "car" && !(_id in path("drafts.**"))]
+        | order(coalesce(discountPrice, basePrice) asc) [0..5] {
+          name, "slug": slug.current,
+          "brand": brand->{ name, "slug": slug.current },
+          "electricType": electricType->{ label, tag },
+          basePrice, discountPrice, isHotDeal, range, power, traction
+        }`
+    ),
+    client.fetch<CarResult[]>(
+      groq`*[_type == "car" && !(_id in path("drafts.**")) && defined(range) && range > 0]
+        | order(range desc) [0..5] {
+          name, "slug": slug.current,
+          "brand": brand->{ name, "slug": slug.current },
+          "electricType": electricType->{ label, tag },
+          basePrice, discountPrice, isHotDeal, range, power, traction
+        }`
+    ),
+  ]);
 
-  const matchedBrand = allBrands.find((b) =>
-    lastMsg.includes(b.name.toLowerCase())
-  );
-
+  // If a specific brand is mentioned, fetch its models
+  const matchedBrand = allBrands.find((b) => lastMsg.includes(b.name.toLowerCase()));
+  let brandCars: CarResult[] = [];
   if (matchedBrand) {
-    const cars: CarResult[] = await client.fetch(
+    brandCars = await client.fetch<CarResult[]>(
       groq`*[_type == "car" && !(_id in path("drafts.**")) && brand->slug.current == $slug]
-        | order(coalesce(discountPrice, basePrice) asc) [0..4] {
+        | order(coalesce(discountPrice, basePrice) asc) [0..6] {
           name, "slug": slug.current,
           "brand": brand->{ name, "slug": slug.current },
           "electricType": electricType->{ label, tag },
@@ -162,134 +191,60 @@ async function handleChat(messages: { role: string; content: string }[]): Promis
         }`,
       { slug: matchedBrand.slug }
     );
-
-    if (cars.length === 0) {
-      return `Actualmente no tenemos modelos de **${matchedBrand.name}** disponibles en nuestro catálogo. Puedes explorar otras marcas o contactar al equipo.
-
-[MENU]
-1. Ver todas las marcas → /marcas
-2. Contactar al equipo → /contacto
-[/MENU]`;
-    }
-
-    const list = cars.map((c) => carCard(c)).join("\n\n");
-    return `Estos son los modelos **${matchedBrand.name}** disponibles:\n\n${list}
-
-[MENU]
-1. Ver más de ${matchedBrand.name} → /marcas/${matchedBrand.slug}
-2. Solicitar cotización → /solicitar
-[/MENU]`;
   }
 
-  // ── Pregunta por precio / económico
-  if (/precio|barato|económico|accesible|menos de|presupuesto/.test(lastMsg)) {
-    const cars: CarResult[] = await client.fetch(
-      groq`*[_type == "car" && !(_id in path("drafts.**"))]
-        | order(coalesce(discountPrice, basePrice) asc) [0..3] {
-          name, "slug": slug.current,
-          "brand": brand->{ name, "slug": slug.current },
-          "electricType": electricType->{ label, tag },
-          basePrice, discountPrice, isHotDeal, range, power, traction
-        }`
-    );
-
-    const list = cars.map((c) => carCard(c)).join("\n\n");
-    return `Las opciones más accesibles de nuestro catálogo son:\n\n${list}
-
-[MENU]
-1. Ver catálogo completo → /marcas
-2. Encontrar mi modelo ideal
-[/MENU]`;
+  function carsToText(cars: CarResult[]): string {
+    return cars.map((c) => {
+      const price = c.discountPrice && c.discountPrice < c.basePrice ? c.discountPrice : c.basePrice;
+      const specs = [
+        c.range ? `${c.range}km` : null,
+        c.power ? `${c.power}CV` : null,
+        c.traction ?? null,
+        c.acceleration ? `0-100: ${c.acceleration}s` : null,
+      ].filter(Boolean).join(", ");
+      return `- ${c.brand.name} ${c.name} | ${fmt(price)}${c.isHotDeal ? " 🔥HOT" : ""} | ${specs} | /auto/${c.slug}`;
+    }).join("\n");
   }
 
-  // ── Pregunta por autonomía / rango
-  if (/autonomía|kilómetros|km|rango|range|batería/.test(lastMsg)) {
-    const cars: CarResult[] = await client.fetch(
-      groq`*[_type == "car" && !(_id in path("drafts.**")) && defined(range) && range > 0]
-        | order(range desc) [0..3] {
-          name, "slug": slug.current,
-          "brand": brand->{ name, "slug": slug.current },
-          "electricType": electricType->{ label, tag },
-          basePrice, discountPrice, isHotDeal, range, power, traction
-        }`
-    );
+  const systemPrompt = `Eres Francisco, el asistente virtual de Electrificarte — el marketplace #1 de autos eléctricos e híbridos en Chile. Eres amable, experto y conciso.
 
-    const list = cars.map((c) => carCard(c)).join("\n\n");
-    return `Los autos con **mayor autonomía** de nuestro catálogo son:\n\n${list}
+MARCAS DISPONIBLES: ${allBrands.map((b) => b.name).join(", ")}
 
-[MENU]
-1. Ver catálogo completo → /marcas
-2. Encontrar mi modelo ideal
-[/MENU]`;
-  }
+HOT DEALS ACTIVOS:
+${hotDeals.length > 0 ? carsToText(hotDeals) : "Sin Hot Deals activos"}
 
-  // ── Pregunta por hot deals / ofertas
-  if (/oferta|hot deal|descuento|bono|ahorro|promoción/.test(lastMsg)) {
-    const cars: CarResult[] = await client.fetch(
-      groq`*[_type == "car" && !(_id in path("drafts.**")) && isHotDeal == true]
-        | order(coalesce(discountPrice, basePrice) asc) {
-          name, "slug": slug.current,
-          "brand": brand->{ name, "slug": slug.current },
-          "electricType": electricType->{ label, tag },
-          basePrice, discountPrice, isHotDeal, hotDealBonusAmount, range, power, traction
-        }`
-    );
+AUTOS MÁS ACCESIBLES (precio ascendente):
+${carsToText(cheapCars)}
 
-    if (cars.length === 0) {
-      return `En este momento no hay Hot Deals activos, pero podemos negociar el mejor precio para ti.
+MAYOR AUTONOMÍA:
+${carsToText(longRangeCars)}
 
-[MENU]
-1. Ver catálogo completo → /marcas
-2. Solicitar precio → /solicitar
-[/MENU]`;
-    }
+${matchedBrand ? `MODELOS ${matchedBrand.name.toUpperCase()}:\n${brandCars.length > 0 ? carsToText(brandCars) : "Sin modelos disponibles"}` : ""}
 
-    const list = cars.map((c) => carCard(c)).join("\n\n");
-    return `🔥 **Hot Deals activos** — ofertas con bono garantizado:\n\n${list}
+REGLAS:
+- Responde siempre en español chileno, tono cercano
+- Máximo 3-4 párrafos, sé directo
+- Usa markdown: **negrita**, listas con guiones
+- Incluye links clickeables: [Nombre del auto](/auto/slug) o [Ver catálogo](/marcas)
+- Rutas útiles: /marcas · /solicitar · /contacto · /auto/[slug]
+- Al final sugiere 2-3 acciones con links
+- NUNCA inventes precios ni especificaciones fuera de los datos aquí indicados
+- Si no tienes info suficiente, di "no tengo esa información en este momento" y sugiere /contacto`;
 
-[MENU]
-1. Ver catálogo completo → /marcas
-2. Quiero esta oferta → /solicitar
-[/MENU]`;
-  }
+  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-  // ── Pregunta por SUV
-  if (/suv|crossover|camioneta|pickup|sedán|sedan|hatchback/.test(lastMsg)) {
-    const typeKw = /suv|crossover/.test(lastMsg) ? "suv"
-      : /camioneta|pickup/.test(lastMsg) ? "pickup"
-      : /sedán|sedan/.test(lastMsg) ? "sedan"
-      : "hatchback";
+  const response = await anthropic.messages.create({
+    model: "claude-haiku-4-5-20251001",
+    max_tokens: 600,
+    system: systemPrompt,
+    messages: messages.map((m) => ({
+      role: m.role as "user" | "assistant",
+      content: m.content,
+    })),
+  });
 
-    const slugs = VEHICLE_SLUGS[typeKw] ?? [];
-    const cars: CarResult[] = await client.fetch(
-      groq`*[_type == "car" && !(_id in path("drafts.**")) && vehicleType->slug.current in $slugs]
-        | order(coalesce(discountPrice, basePrice) asc) [0..3] {
-          name, "slug": slug.current,
-          "brand": brand->{ name, "slug": slug.current },
-          "electricType": electricType->{ label, tag },
-          basePrice, discountPrice, isHotDeal, range, power, traction
-        }`,
-      { slugs }
-    );
-
-    const list = cars.map((c) => carCard(c)).join("\n\n");
-    return `Opciones de **${typeKw.toUpperCase()}** disponibles:\n\n${list}
-
-[MENU]
-1. Ver catálogo completo → /marcas
-2. Encontrar mi modelo ideal
-[/MENU]`;
-  }
-
-  // ── Fallback con menú principal
-  return `Puedo ayudarte con información sobre los autos eléctricos e híbridos de nuestro catálogo. ¿Qué te gustaría saber?
-
-[MENU]
-1. Quiero encontrar mi modelo ideal
-2. Ver Hot Deals activos
-3. ¿Cuánto ahorro versus bencina?
-4. Quiero contactar al equipo
-[/MENU]`;
+  const block = response.content[0];
+  return block.type === "text" ? block.text : "Lo siento, no pude procesar tu consulta. Intenta de nuevo.";
 }
 
 // ─── Route handler ────────────────────────────────────────────────────────────

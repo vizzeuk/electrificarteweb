@@ -17,7 +17,7 @@ const DEFAULT_BADGES: TrustBadgeData[] = [
   { icon: "verified_user",     title: "Pago seguro",              description: "Tu pago está protegido. Usamos WebPay y encriptación bancaria." },
   { icon: "shield",            title: "Garantía de devolución",   description: "Si no logramos un descuento significativo, te devolvemos el 100%." },
   { icon: "lock",              title: "Datos protegidos",         description: "Tu información personal está protegida bajo la Ley 19.628 de Chile." },
-  { icon: "workspace_premium", title: "Concesionarios oficiales", description: "Solo trabajamos con dealers autorizados y verificados en Chile." },
+  { icon: "workspace_premium", title: "Vendedores oficiales", description: "Solo trabajamos con vendedores autorizados y verificados en Chile." },
 ];
 
 export function TrustBadges({ badges }: TrustBadgesProps) {

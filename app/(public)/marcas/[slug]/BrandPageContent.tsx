@@ -48,6 +48,12 @@ interface HotDealData {
   imageUrl?: string;
 }
 
+export interface PlpBannerData {
+  imageUrl: string;
+  ctaHref?: string;
+  altText?: string;
+}
+
 export interface BrandData {
   name: string;
   country: string;
@@ -63,6 +69,7 @@ export interface BrandData {
   cars: BrandCarData[];
   hotDeals: HotDealData[];
   videos: VideoData[];
+  plpBanners?: PlpBannerData[];
 }
 
 // ─── Label maps ───────────────────────────────────────────────────────────────
@@ -70,7 +77,7 @@ const TIPO_LABELS: Record<string, string> = {
   suv: "SUV", sedan: "Sedán", "city-car": "City Car", pickup: "Pickup", hatchback: "Hatchback",
 };
 const ELECTRIC_LABELS: Record<string, string> = {
-  ev: "Eléctrico Puro", phev: "Híbrido Enchufable", hev: "Híbrido Clásico", erev: "Autonomía Extendida", mhev: "Microhíbrido",
+  ev: "Eléctrico Puro", phev: "Híbrido Enchufable", hev: "Híbrido Clásico", erev: "Autonomía Extendida", mhev: "Micro Híbrido",
 };
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -154,17 +161,14 @@ export default function BrandPageContent({ slug, brand }: BrandPageContentProps)
     return null;
   }, [brand.heroFeaturedCar, brand.hotDeals, brand.cars]);
 
-  const banners = [
-    { id: 1, label: "Banner 1", bg: "from-primary/10 to-primary-deep/5" },
-    { id: 2, label: "Banner 2", bg: "from-gray-100 to-gray-50" },
-    { id: 3, label: "Banner 3", bg: "from-primary-deep/10 to-primary/5" },
-  ];
+  const plpBanners = brand.plpBanners ?? [];
   const [activeSlide, setActiveSlide] = useState(0);
-  const nextSlide = useCallback(() => setActiveSlide((p) => (p + 1) % banners.length), [banners.length]);
+  const nextSlide = useCallback(() => setActiveSlide((p) => (p + 1) % (plpBanners.length || 1)), [plpBanners.length]);
   useEffect(() => {
+    if (plpBanners.length < 2) return;
     const t = setInterval(nextSlide, 5000);
     return () => clearInterval(t);
-  }, [nextSlide]);
+  }, [nextSlide, plpBanners.length]);
 
 
   return (
@@ -265,8 +269,11 @@ export default function BrandPageContent({ slug, brand }: BrandPageContentProps)
       {brand.stats.length > 0 && (
         <section className="bg-black border-t border-white/[0.07]">
           <div className="max-w-7xl mx-auto px-4 md:px-8 py-10">
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-              {brand.stats.map((stat) => (
+            <div
+              className="grid gap-4"
+              style={{ gridTemplateColumns: `repeat(${Math.min(brand.stats.length, 4)}, 1fr)` }}
+            >
+              {brand.stats.slice(0, 4).map((stat) => (
                 <div key={stat.label} className="bg-white/5 border border-white/10 rounded-2xl p-5 text-center">
                   <p className="text-2xl md:text-3xl font-headline font-black mb-1 text-primary">{stat.value}</p>
                   <p className="text-white/40 text-[11px] uppercase tracking-wide leading-snug">{stat.label}</p>
@@ -277,42 +284,34 @@ export default function BrandPageContent({ slug, brand }: BrandPageContentProps)
         </section>
       )}
 
-      {/* ─── Banner slideshow ───────────────────────────────────────── */}
-      <section className="py-8 bg-surface border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <div className="relative overflow-hidden rounded-2xl h-40 md:h-56 cursor-pointer" onClick={nextSlide}>
-            {banners.map((b, i) => (
-              <div
-                key={b.id}
-                className={[
-                  "absolute inset-0 bg-gradient-to-r flex items-center justify-center transition-opacity duration-700",
-                  b.bg,
-                  i === activeSlide ? "opacity-100" : "opacity-0 pointer-events-none",
-                ].join(" ")}
-              >
-                <div className="border-2 border-dashed border-gray-200 rounded-xl w-full h-full mx-4 flex flex-col items-center justify-center gap-2">
-                  <span className="material-symbols-outlined text-[36px] text-gray-300">image</span>
-                  <p className="text-gray-400 text-xs uppercase tracking-widest font-semibold">
-                    {b.label} — {brand.name}
-                  </p>
+      {/* ─── Banner slideshow — solo si hay banners en Sanity ──────── */}
+      {plpBanners.length > 0 && (
+        <section className="py-8 bg-surface border-b border-gray-100">
+          <div className="max-w-7xl mx-auto px-4 md:px-8">
+            <div className="relative rounded-2xl overflow-hidden">
+              <img src={plpBanners[activeSlide]?.imageUrl} alt="" aria-hidden className="w-full h-auto invisible" />
+              {plpBanners.map((b, i) => (
+                <div key={i} className="absolute inset-0 transition-opacity duration-500" style={{ opacity: i === activeSlide ? 1 : 0, pointerEvents: i === activeSlide ? "auto" : "none" }} onClick={plpBanners.length > 1 && !b.ctaHref ? nextSlide : undefined}>
+                  {b.ctaHref ? (
+                    <Link href={b.ctaHref} className="block w-full h-full">
+                      <img src={b.imageUrl} alt={b.altText ?? ""} className="w-full h-full object-cover" />
+                    </Link>
+                  ) : (
+                    <img src={b.imageUrl} alt={b.altText ?? ""} className="w-full h-full object-cover" />
+                  )}
                 </div>
-              </div>
-            ))}
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 z-10">
-              {banners.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={(e) => { e.stopPropagation(); setActiveSlide(i); }}
-                  className={[
-                    "w-1.5 h-1.5 rounded-full transition-all duration-300",
-                    i === activeSlide ? "w-4 bg-primary" : "bg-gray-300",
-                  ].join(" ")}
-                />
               ))}
+              {plpBanners.length > 1 && (
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+                  {plpBanners.map((_, i) => (
+                    <button key={i} onClick={(e) => { e.stopPropagation(); setActiveSlide(i); }} className="h-1.5 rounded-full transition-all duration-300" style={{ width: i === activeSlide ? 16 : 6, background: i === activeSlide ? "#00E5E5" : "rgba(0,0,0,0.35)" }} />
+                  ))}
+                </div>
+              )}
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ─── HOT DEAL ─────────────────────────────────────────────── */}
       {hotDeals.length > 0 && (

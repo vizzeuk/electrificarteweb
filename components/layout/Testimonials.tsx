@@ -9,6 +9,7 @@ export interface TestimonialData {
   savings: string;
   quote: string;
   rating: number;
+  imageUrl?: string;
 }
 
 interface TestimonialsProps {
@@ -17,9 +18,9 @@ interface TestimonialsProps {
 }
 
 const DEFAULT_TESTIMONIALS: TestimonialData[] = [
-  { name: "Francisco M.", car: "Tesla Model 3",  savings: "$5.200.000", rating: 5, quote: "Pensé que era demasiado bueno para ser real, pero Electrificarte me consiguió un precio que ningún concesionario me ofreció directamente. El proceso fue rápido y transparente." },
-  { name: "Sofía R.",     car: "Kia EV6",        savings: "$3.800.000", rating: 5, quote: "Me vine a vivir a Chile y necesitaba un SUV amplio. En 48 horas tenía una oferta con financiamiento incluido que me ahorró casi 4 millones." },
-  { name: "Pablo V.",     car: "BYD Tang Pro",   savings: "$6.100.000", rating: 5, quote: "Lo mejor es que no tuve que negociar con nadie. Ellos hicieron todo el trabajo pesado y yo solo fui a retirar mi auto. 100% recomendado." },
+  { name: "Francisco M.", car: "Tesla Model 3",  savings: "$5.200.000", rating: 5, imageUrl: "/images/testimonial-tesla-model3.png", quote: "Electrificarte me consiguió un precio que ningún vendedor me ofreció directamente. El proceso fue rápido y totalmente transparente." },
+  { name: "Sofía R.",     car: "Kia EV6",        savings: "$3.800.000", rating: 5, imageUrl: "/images/testimonial-kia-ev6.png",      quote: "Necesitaba un SUV amplio y en 48 horas tenía una oferta con financiamiento incluido que me ahorró casi 4 millones. Increíble." },
+  { name: "Pablo V.",     car: "BYD Tang Pro",   savings: "$6.100.000", rating: 5, imageUrl: "/images/testimonial-byd-tang.png",     quote: "Lo mejor es que no tuve que negociar con nadie. Ellos hicieron todo el trabajo pesado y yo solo fui a retirar mi auto. 100% recomendado." },
 ];
 
 export function Testimonials({ title = "Lo que dicen nuestros clientes", testimonials }: TestimonialsProps) {
@@ -43,24 +44,39 @@ export function Testimonials({ title = "Lo que dicen nuestros clientes", testimo
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: i * 0.1 }}
-              className="bg-white rounded-2xl p-6 md:p-8 border border-gray-100 flex flex-col"
+              className="bg-white rounded-2xl border border-gray-100 flex flex-col overflow-hidden h-full"
             >
-              <div className="flex gap-1 mb-4">
-                {Array.from({ length: t.rating }).map((_, si) => (
-                  <Icon key={si} name="star" className="text-amber" size="sm" filled />
-                ))}
-              </div>
-              <blockquote className="text-text-main text-sm leading-relaxed flex-grow mb-6">
-                &ldquo;{t.quote}&rdquo;
-              </blockquote>
-              <div className="border-t border-gray-100 pt-4 flex justify-between items-end">
-                <div>
-                  <p className="font-headline font-bold">{t.name}</p>
-                  <p className="text-text-muted text-xs">{t.car}</p>
+              {/* Car photo */}
+              {t.imageUrl && (
+                <div className="relative w-full flex-shrink-0" style={{ height: "200px" }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={t.imageUrl}
+                    alt={t.car}
+                    style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", display: "block" }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
                 </div>
-                <div className="text-right">
-                  <p className="text-[10px] text-text-ghost uppercase tracking-wide">Ahorro</p>
-                  <p className="text-primary-deep font-headline font-bold">{t.savings}</p>
+              )}
+
+              <div className="p-6 md:p-8 flex flex-col flex-grow">
+                <div className="flex gap-1 mb-4">
+                  {Array.from({ length: t.rating }).map((_, si) => (
+                    <Icon key={si} name="star" className="text-amber" size="sm" filled />
+                  ))}
+                </div>
+                <blockquote className="text-text-main text-sm leading-relaxed flex-grow mb-6 line-clamp-4">
+                  &ldquo;{t.quote}&rdquo;
+                </blockquote>
+                <div className="border-t border-gray-100 pt-4 flex justify-between items-end">
+                  <div>
+                    <p className="font-headline font-bold">{t.name}</p>
+                    <p className="text-text-muted text-xs">{t.car}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] text-text-ghost uppercase tracking-wide">Ahorro</p>
+                    <p className="text-primary-deep font-headline font-bold">{t.savings}</p>
+                  </div>
                 </div>
               </div>
             </motion.div>

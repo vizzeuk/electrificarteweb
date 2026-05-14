@@ -54,6 +54,12 @@ export interface AdCarData {
   range?: number;
 }
 
+export interface PlpBannerData {
+  imageUrl: string;
+  ctaHref?: string;
+  altText?: string;
+}
+
 interface TipoPageContentProps {
   slug: string;
   meta: TipoMeta;
@@ -61,13 +67,14 @@ interface TipoPageContentProps {
   otherTypes: OtherType[];
   adCar?: AdCarData | null;
   adText?: string;
+  plpBanners?: PlpBannerData[];
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
 const PAGE_SIZE = 9;
 
-export default function TipoPageContent({ slug, meta, cars, otherTypes, adCar, adText }: TipoPageContentProps) {
+export default function TipoPageContent({ slug, meta, cars, otherTypes, adCar, adText, plpBanners = [] }: TipoPageContentProps) {
   const [activeFilters, setActiveFilters] = useState<ActiveFilters>({ brand: "", electric: "" });
   const [sort, setSort] = useState("default");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
@@ -132,18 +139,14 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes, adCar, a
     return () => clearInterval(id);
   }, [hotDeals.length]);
 
-  // Banner slideshow
-  const banners = [
-    { id: 1, label: "Banner 1", bg: "from-primary/10 to-primary-deep/5" },
-    { id: 2, label: "Banner 2", bg: "from-gray-100 to-gray-50" },
-    { id: 3, label: "Banner 3", bg: "from-primary-deep/10 to-primary/5" },
-  ];
+  // Banner slideshow — solo si hay banners en Sanity
   const [activeSlide, setActiveSlide] = useState(0);
-  const nextSlide = useCallback(() => setActiveSlide((p) => (p + 1) % banners.length), [banners.length]);
+  const nextSlide = useCallback(() => setActiveSlide((p) => (p + 1) % (plpBanners.length || 1)), [plpBanners.length]);
   useEffect(() => {
+    if (plpBanners.length < 2) return;
     const t = setInterval(nextSlide, 5000);
     return () => clearInterval(t);
-  }, [nextSlide]);
+  }, [nextSlide, plpBanners.length]);
 
   return (
     <>
@@ -166,13 +169,19 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes, adCar, a
               {/* Mini badges */}
               <div className="flex flex-wrap items-center gap-2 mb-6">
                 {cars.length > 0 && (
-                  <div className="inline-flex items-center gap-1.5 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full">
+                  <div
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full"
+                    style={{ backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)" }}
+                  >
                     <span className="material-symbols-outlined text-primary text-[14px]">sell</span>
-                    <span className="text-white/60 text-xs font-semibold">Desde {formatCLP(Math.min(...cars.map((c) => c.discountPrice)))}</span>
+                    <span className="text-xs font-semibold" style={{ color: "rgba(255,255,255,0.60)" }}>Desde {formatCLP(Math.min(...cars.map((c) => c.discountPrice)))}</span>
                   </div>
                 )}
                 {hotDeals.length > 0 && (
-                  <div className="inline-flex items-center gap-1.5 bg-amber/10 border border-amber/30 px-3 py-1.5 rounded-full">
+                  <div
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full"
+                    style={{ backgroundColor: "rgba(245,158,11,0.10)", border: "1px solid rgba(245,158,11,0.30)" }}
+                  >
                     <span className="material-symbols-outlined text-amber text-[14px]">local_fire_department</span>
                     <span className="text-amber text-xs font-bold">{hotDeals.length} Hot Deal{hotDeals.length !== 1 ? "s" : ""}</span>
                   </div>
@@ -199,7 +208,7 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes, adCar, a
                 </div>
                 <div className="flex items-center gap-2 text-white/40 text-sm">
                   <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                  Respuesta en 24 h
+                  Respuesta en 48-96 h
                 </div>
               </div>
 
@@ -221,7 +230,8 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes, adCar, a
                   <p className="text-[10px] uppercase tracking-widest text-white/20 font-semibold mb-2 text-right">Publicidad</p>
                   <Link
                     href={`/auto/${adCar.slug}`}
-                    className="block rounded-2xl overflow-hidden border border-white/10 bg-white/5 hover:border-primary/40 transition-all duration-300 group"
+                    className="block rounded-2xl overflow-hidden hover:border-primary/40 transition-all duration-300 group"
+                    style={{ border: "1px solid rgba(255,255,255,0.10)", backgroundColor: "rgba(255,255,255,0.05)" }}
                   >
                     <div className="aspect-[16/9] relative overflow-hidden">
                       {adCar.imageUrl ? (
@@ -267,43 +277,41 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes, adCar, a
         </div>
       </section>
 
-      {/* ─── Banner slideshow ───────────────────────────────────────── */}
-      <section className="py-8 bg-surface border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <div className="relative overflow-hidden rounded-2xl h-40 md:h-56 cursor-pointer" onClick={nextSlide}>
-            {banners.map((b, i) => (
-              <div
-                key={b.id}
-                className={[
-                  "absolute inset-0 bg-gradient-to-r flex items-center justify-center transition-opacity duration-700",
-                  b.bg,
-                  i === activeSlide ? "opacity-100" : "opacity-0 pointer-events-none",
-                ].join(" ")}
-              >
-                <div className="border-2 border-dashed border-gray-200 rounded-xl w-full h-full mx-4 flex flex-col items-center justify-center gap-2">
-                  <span className="material-symbols-outlined text-[36px] text-gray-300">image</span>
-                  <p className="text-gray-400 text-xs uppercase tracking-widest font-semibold">
-                    {b.label} — {meta.label}
-                  </p>
-                </div>
-              </div>
-            ))}
-            {/* Dots */}
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 z-10">
-              {banners.map((_, i) => (
-                <button
+      {/* ─── Banner slideshow — solo si hay banners en Sanity ──────── */}
+      {plpBanners.length > 0 && (
+        <section className="py-8 bg-surface border-b border-gray-100">
+          <div className="max-w-7xl mx-auto px-4 md:px-8">
+            <div className="relative rounded-2xl overflow-hidden">
+              {/* Sizer invisible — define la altura del contenedor según la imagen activa */}
+              <img src={plpBanners[activeSlide]?.imageUrl} alt="" aria-hidden className="w-full h-auto invisible" />
+              {/* Slides con fade */}
+              {plpBanners.map((b, i) => (
+                <div
                   key={i}
-                  onClick={(e) => { e.stopPropagation(); setActiveSlide(i); }}
-                  className={[
-                    "w-1.5 h-1.5 rounded-full transition-all duration-300",
-                    i === activeSlide ? "bg-primary w-4" : "bg-gray-300",
-                  ].join(" ")}
-                />
+                  className="absolute inset-0 transition-opacity duration-500"
+                  style={{ opacity: i === activeSlide ? 1 : 0, pointerEvents: i === activeSlide ? "auto" : "none" }}
+                  onClick={plpBanners.length > 1 && !b.ctaHref ? nextSlide : undefined}
+                >
+                  {b.ctaHref ? (
+                    <Link href={b.ctaHref} className="block w-full h-full">
+                      <img src={b.imageUrl} alt={b.altText ?? ""} className="w-full h-full object-cover" />
+                    </Link>
+                  ) : (
+                    <img src={b.imageUrl} alt={b.altText ?? ""} className="w-full h-full object-cover" />
+                  )}
+                </div>
               ))}
+              {plpBanners.length > 1 && (
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+                  {plpBanners.map((_, i) => (
+                    <button key={i} onClick={(e) => { e.stopPropagation(); setActiveSlide(i); }} className="h-1.5 rounded-full transition-all duration-300" style={{ width: i === activeSlide ? 16 : 6, background: i === activeSlide ? "#00E5E5" : "rgba(0,0,0,0.35)" }} />
+                  ))}
+                </div>
+              )}
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ─── Hot Deals ──────────────────────────────────────────────── */}
       {hotDeals.length > 0 && (
@@ -327,7 +335,7 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes, adCar, a
                 <div key={car.slug} style={{ flex: "0 0 100%", scrollSnapAlign: "start" }}>
                   {/* ── MOBILE ── */}
                   <div className="lg:hidden px-4">
-                    <div className="rounded-2xl overflow-hidden border border-white/10 bg-white/5">
+                    <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.10)", backgroundColor: "rgba(255,255,255,0.05)" }}>
                       {car.imageUrl ? (
                         <img src={car.imageUrl} alt={`${car.brand} ${car.name}`} className="w-full h-40 object-cover" />
                       ) : (
@@ -344,21 +352,21 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes, adCar, a
                           <p className="text-white font-headline font-black text-base uppercase leading-tight">{car.brand} {car.name}</p>
                           <p className="text-white/50 text-xs mt-0.5">Al mejor precio de Chile</p>
                         </div>
-                        <div className="flex items-center justify-between bg-white/5 rounded-xl px-3 py-2.5">
+                        <div className="flex items-center justify-between rounded-xl px-3 py-2.5" style={{ backgroundColor: "rgba(255,255,255,0.05)" }}>
                           <div>
-                            <p className="text-white/40 text-[10px] line-through">{formatCLP(car.basePrice)}</p>
+                            <p className="text-[10px] line-through" style={{ color: "rgba(255,255,255,0.40)" }}>{formatCLP(car.basePrice)}</p>
                             <p className="text-primary font-headline font-black text-xl leading-none">{formatCLP(car.discountPrice)}</p>
                           </div>
-                          <p className="text-white/30 text-[10px] text-right leading-snug">Ahorra {discountPct}%<br />bono Electrificarte</p>
+                          <p className="text-[10px] text-right leading-snug" style={{ color: "rgba(255,255,255,0.30)" }}>Ahorra {discountPct}%<br />bono Electrificarte</p>
                         </div>
                         <div className="grid grid-cols-2 gap-2">
-                          <div className="bg-white/5 rounded-lg px-3 py-2">
+                          <div className="rounded-lg px-3 py-2" style={{ backgroundColor: "rgba(255,255,255,0.05)" }}>
                             <p className="text-primary text-sm font-headline font-bold">{primaryStats[0]?.value ?? "–"}</p>
-                            <p className="text-white/40 text-[10px]">{primaryStats[0]?.label ?? "–"}</p>
+                            <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.40)" }}>{primaryStats[0]?.label ?? "–"}</p>
                           </div>
-                          <div className="bg-white/5 rounded-lg px-3 py-2">
+                          <div className="rounded-lg px-3 py-2" style={{ backgroundColor: "rgba(255,255,255,0.05)" }}>
                             <p className="text-primary text-sm font-headline font-bold">{car.traction}</p>
-                            <p className="text-white/40 text-[10px]">Tracción</p>
+                            <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.40)" }}>Tracción</p>
                           </div>
                         </div>
                         <Link href={`/solicitar?auto=${car.slug}`} className="flex items-center justify-center gap-2 w-full bg-primary hover:bg-primary-dark text-black font-bold py-3 rounded-xl text-sm transition-colors">
@@ -379,22 +387,25 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes, adCar, a
                         <h2 className="text-3xl md:text-4xl font-headline font-black text-white mb-4 uppercase leading-tight">
                           {car.brand} {car.name} al mejor precio de Chile
                         </h2>
-                        <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-5 space-y-2">
+                        <div
+                          className="rounded-xl p-4 mb-5 space-y-2"
+                          style={{ backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)" }}
+                        >
                           <div className="flex justify-between items-baseline">
-                            <span className="text-white/40 text-sm">Precio lista</span>
-                            <span className="text-white/40 line-through">{formatCLP(car.basePrice)}</span>
+                            <span className="text-sm" style={{ color: "rgba(255,255,255,0.40)" }}>Precio lista</span>
+                            <span className="line-through" style={{ color: "rgba(255,255,255,0.40)" }}>{formatCLP(car.basePrice)}</span>
                           </div>
                           <div className="flex justify-between items-baseline">
                             <span className="text-white text-sm font-medium">Con descuento Electrificarte</span>
                             <span className="text-primary text-3xl font-headline font-black">{formatCLP(car.discountPrice)}</span>
                           </div>
-                          <p className="text-white/30 text-xs pt-2 border-t border-white/10">Ahorra {discountPct}% · Incluye bono concesionario + Electrificarte</p>
+                          <p className="text-xs pt-2" style={{ color: "rgba(255,255,255,0.30)", borderTop: "1px solid rgba(255,255,255,0.10)" }}>Ahorra {discountPct}% · Incluye bono concesionario + Electrificarte</p>
                         </div>
                         <div className="flex gap-3">
                           <Link href={`/solicitar?auto=${car.slug}`} className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-6 py-3 rounded-xl transition-all text-sm shadow-[0_4px_20px_rgba(0,229,229,0.30)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]">
                             Quiero esta oferta <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
                           </Link>
-                          <Link href={`/auto/${car.slug}`} className="inline-flex items-center justify-center gap-2 border border-white/20 hover:border-white/40 text-white font-medium px-6 py-3 rounded-xl transition-all text-sm">
+                          <Link href={`/auto/${car.slug}`} className="inline-flex items-center justify-center gap-2 text-white font-medium px-6 py-3 rounded-xl transition-all text-sm" style={{ border: "1px solid rgba(255,255,255,0.20)" }}>
                             Ver especificaciones
                           </Link>
                         </div>

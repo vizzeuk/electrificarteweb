@@ -39,7 +39,7 @@ export function PromoPopup({ car }: PromoPopupProps) {
 
     const onScroll = () => {
       const ratio = window.scrollY / (document.body.scrollHeight - window.innerHeight);
-      if (ratio >= 0.6) {
+      if (ratio >= 0.55) {
         setOpen(true);
         window.removeEventListener("scroll", onScroll);
       }
@@ -96,20 +96,40 @@ export function PromoPopup({ car }: PromoPopupProps) {
               type="button"
               onClick={close}
               aria-label="Cerrar"
-              className="absolute top-3 right-3 z-10 flex h-9 w-9 items-center justify-center rounded-lg text-white/40 transition-colors hover:text-white/80"
+              className="absolute top-3 right-3 z-10 flex h-9 w-9 items-center justify-center rounded-lg bg-black/40 backdrop-blur-sm text-white/60 transition-colors hover:text-white"
             >
               <span className="material-symbols-outlined text-xl">close</span>
             </button>
 
-            <div className="relative z-[2] px-8 pt-9 pb-7">
-              {/* Badge */}
-              <div className="mb-5 flex items-center gap-2.5">
-                <div className="inline-flex items-center gap-1.5 rounded-md bg-amber px-2.5 py-1 text-[11px] font-black uppercase tracking-[0.16em] text-black">
-                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-black" />
-                  HOT DEAL
+            {/* Foto del auto */}
+            {c.imageUrl && (
+              <div className="relative h-48 w-full overflow-hidden">
+                <img
+                  src={c.imageUrl}
+                  alt={`${brandName} ${modelName}`}
+                  className="h-full w-full object-cover object-center"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
+                <div className="absolute bottom-3 left-4">
+                  <div className="inline-flex items-center gap-1.5 rounded-md bg-amber px-2.5 py-1 text-[11px] font-black uppercase tracking-[0.16em] text-black">
+                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-black" />
+                    HOT DEAL
+                  </div>
                 </div>
-                <span className="text-white/40 text-xs">Oferta limitada</span>
               </div>
+            )}
+
+            <div className="relative z-[2] px-8 pt-6 pb-7">
+              {/* Badge — solo cuando no hay foto (si hay foto el badge va sobre la imagen) */}
+              {!c.imageUrl && (
+                <div className="mb-5 flex items-center gap-2.5">
+                  <div className="inline-flex items-center gap-1.5 rounded-md bg-amber px-2.5 py-1 text-[11px] font-black uppercase tracking-[0.16em] text-black">
+                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-black" />
+                    HOT DEAL
+                  </div>
+                  <span className="text-white/40 text-xs">Oferta limitada</span>
+                </div>
+              )}
 
               {/* Nombre del auto */}
               <h2

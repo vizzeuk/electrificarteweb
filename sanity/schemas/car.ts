@@ -90,7 +90,7 @@ export const car = defineType({
       group: "general", validation: (r) => r.required(),
       description: "EV, PHEV, HEV, EREV o MHEV",
     }),
-    defineField({ name: "category", title: "Categoría (legado)", type: "reference", to: [{ type: "category" }], group: "general" }),
+    defineField({ name: "category", title: "Categoría (no usar — campo antiguo)", type: "reference", to: [{ type: "category" }], group: "general", description: "Campo heredado. Ya no es necesario completarlo — se usa Tipo de Vehículo y Tipo Eléctrico.", hidden: ({ document }) => !document?.category }),
     defineField({ name: "modelYear", title: "Año del modelo", type: "number", group: "general", description: "Ej: 2025" }),
     defineField({
       name: "tagline", title: "Tagline corto", type: "string",
@@ -307,15 +307,11 @@ export const car = defineType({
     // ─── Deal flags ─────────────────────────────────────────────────────────
     defineField({
       name: "isNew", title: "🆕 Nuevo lanzamiento", type: "boolean", group: "deal",
-      initialValue: false, description: "Muestra badge NUEVO en tarjetas y listados",
+      initialValue: false, description: "Muestra badge NUEVO en las tarjetas. Los autos con este flag aparecen primero en la sección 'Últimos Lanzamientos' del home.",
     }),
     defineField({
       name: "isFeatured", title: "⭐ Destacado en Home", type: "boolean", group: "deal",
-      initialValue: false, description: "Aparece en la sección de Últimos Lanzamientos del home",
-    }),
-    defineField({
-      name: "isTopSeller", title: "🏆 Más Vendido", type: "boolean", group: "deal",
-      initialValue: false, description: "Muestra badge 'Más Vendido' en tarjetas",
+      initialValue: false, description: "Aparece en el carrusel 'Destacados' del home (sección inferior con múltiples autos). NO es 'Últimos Lanzamientos'.",
     }),
     defineField({
       name: "isHotDeal", title: "🔥 HOT DEAL", type: "boolean", group: "deal",
@@ -343,9 +339,9 @@ export const car = defineType({
     }),
   ],
   preview: {
-    select: { title: "name", brand: "brand.name", media: "mainImage", isHotDeal: "isHotDeal", isFeatured: "isFeatured" },
-    prepare({ title, brand, media, isHotDeal, isFeatured }: any) {
-      const badges = [isHotDeal && "🔥", isFeatured && "⭐"].filter(Boolean).join(" ");
+    select: { title: "name", brand: "brand.name", media: "mainImage", isHotDeal: "isHotDeal", isFeatured: "isFeatured", isNew: "isNew" },
+    prepare({ title, brand, media, isHotDeal, isFeatured, isNew }: any) {
+      const badges = [isHotDeal && "🔥 HOT DEAL", isFeatured && "⭐ Destacado", isNew && "🆕 Nuevo"].filter(Boolean).join(" · ");
       return { title: `${brand || ""} ${title || ""}`.trim(), subtitle: badges || undefined, media };
     },
   },

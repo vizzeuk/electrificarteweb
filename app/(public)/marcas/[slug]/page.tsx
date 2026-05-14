@@ -124,6 +124,7 @@ export default async function BrandPage({ params }: PageProps) {
     cars,
     hotDeals,
     videos,
+    plpBanners:       sanityBrand.plpBanners ?? [],
   };
 
   return <BrandPageContent slug={slug} brand={brand} />;

@@ -7,6 +7,7 @@ export const electricType = defineType({
   groups: [
     { name: "general", title: "📋 General",      default: true },
     { name: "content", title: "📝 Contenido educativo" },
+    { name: "banners", title: "📣 Banners PLP" },
     { name: "seo",     title: "🔍 SEO" },
   ],
   fields: [
@@ -25,6 +26,11 @@ export const electricType = defineType({
       name: "label", title: "Nombre completo", type: "string",
       group: "general", validation: (r) => r.required(),
       description: 'Ej: "Eléctrico Puro", "Híbrido Enchufable", "Híbrido Clásico"',
+    }),
+    defineField({
+      name: "navbarLabel", title: "Subtítulo en el navbar", type: "string",
+      group: "general",
+      description: 'Texto pequeño que aparece bajo el nombre en el dropdown del menú. Si se deja vacío, se usa el Tagline del hero.',
     }),
     defineField({
       name: "tag", title: "Sigla técnica", type: "string",
@@ -59,6 +65,12 @@ export const electricType = defineType({
     }),
 
     // ─── Content ────────────────────────────────────────────────────────────
+    defineField({
+      name: "cardImage", title: "Foto de fondo (card home)", type: "image",
+      options: { hotspot: true },
+      group: "content",
+      description: "Imagen de fondo para la card de tecnología en el home. Formato recomendado: vertical, al menos 400×500px.",
+    }),
     defineField({
       name: "tagline", title: "Tagline del hero", type: "string",
       group: "content",
@@ -99,6 +111,16 @@ export const electricType = defineType({
     }),
 
     // ─── SEO ────────────────────────────────────────────────────────────────
+    // ─── Banners PLP ────────────────────────────────────────────────────────
+    defineField({
+      name: "plpBanners",
+      title: "Banners de la página",
+      type: "array",
+      of: [{ type: "plpBanner" }],
+      group: "banners",
+      description: "Banners que aparecen en el slideshow de esta PLP. Si está vacío o todos están inactivos, el bloque no se muestra.",
+    }),
+
     defineField({ name: "metaTitle",       title: "Meta Title",       type: "string", group: "seo" }),
     defineField({ name: "metaDescription", title: "Meta Description", type: "text", rows: 2, group: "seo" }),
   ],

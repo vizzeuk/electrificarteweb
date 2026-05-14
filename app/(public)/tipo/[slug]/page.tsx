@@ -104,6 +104,8 @@ export default async function TipoPage({ params }: PageProps) {
     icon:  t.icon ?? "directions_car",
   }));
 
+  const plpBanners = sanityMeta.plpBanners ?? [];
+
   return (
     <TipoPageContent
       slug={slug}
@@ -112,6 +114,7 @@ export default async function TipoPage({ params }: PageProps) {
       otherTypes={otherTypes}
       adCar={adCar}
       adText={adText}
+      plpBanners={plpBanners}
     />
   );
 }

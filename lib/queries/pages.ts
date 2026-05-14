@@ -95,7 +95,7 @@ export const homePageQuery = groq`
     trustBadges[]{icon, title, description},
 
     testimonialsTitle,
-    testimonials[]{name, car, savings, quote, rating},
+    testimonials[]{name, car, savings, quote, rating, "imageUrl": cardImage.asset->url},
 
     faqTitle,
     faqs[]{icon, question, answer}

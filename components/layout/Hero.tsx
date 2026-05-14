@@ -71,14 +71,14 @@ export function Hero({ data }: HeroProps) {
   const badge         = data?.badge         ?? "Más de 500 compras negociadas en Chile";
   const title         = data?.title         ?? "Ahorra millones en tu próximo";
   const highlight     = data?.titleHighlight ?? "auto eléctrico";
-  const subtitle      = data?.subtitle      ?? "Por solo $19.990 negociamos con nuestra red de concesionarios y te traemos la mejor oferta del mercado en 48-96 horas. Si no ahorras, te devolvemos el dinero.";
+  const subtitle      = data?.subtitle      ?? "Por solo $19.990 negociamos con nuestra red de vendedores oficiales y te traemos la mejor oferta del mercado en 48-96 horas. Si no ahorras, te devolvemos el dinero.";
   const cta1Text      = data?.cta1Text      ?? "Ver autos disponibles";
   const cta1Href      = data?.cta1Href      ?? "/marcas";
   const cta2Text      = data?.cta2Text      ?? "Cómo funciona";
   const statSavings   = data?.statSavings   ?? "$4.200.000 CLP";
   const statCars      = data?.statCars      ?? "500+";
   const statDiscount  = data?.statDiscount  ?? "27%";
-  const statResponse  = data?.statResponse  ?? "24h";
+  const statResponse  = data?.statResponse  ?? "48-96h";
   const offerOld      = data?.offerOldPrice ?? "$29.990";
   const offerNew      = data?.offerNewPrice ?? "$19.990";
   const offerBadge    = data?.offerBadge    ?? "33% dcto Electric Sale";

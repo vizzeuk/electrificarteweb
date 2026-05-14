@@ -7,6 +7,7 @@ export const vehicleType = defineType({
   groups: [
     { name: "general", title: "📋 General", default: true },
     { name: "hero",    title: "🖼️ Hero de la página PLP" },
+    { name: "banners", title: "📣 Banners PLP" },
     { name: "seo",     title: "🔍 SEO" },
   ],
   fields: [
@@ -26,6 +27,11 @@ export const vehicleType = defineType({
       name: "label", title: "Nombre que ve el cliente", type: "string",
       group: "general", validation: (r) => r.required(),
       description: 'Ej: "SUV", "Sedán", "City Car", "Hatchback", "Pickup"',
+    }),
+    defineField({
+      name: "navbarLabel", title: "Subtítulo en el navbar", type: "string",
+      group: "general",
+      description: 'Texto pequeño que aparece bajo el nombre en el dropdown del menú. Si se deja vacío, se usa el Tagline del hero.',
     }),
     defineField({
       name: "icon", title: "Ícono (Material Symbol)", type: "string",
@@ -58,6 +64,16 @@ export const vehicleType = defineType({
       name: "heroAdText", title: "Texto del anuncio", type: "string",
       group: "hero",
       description: 'Texto destacado sobre el auto. Ej: "El SUV más conveniente de todos"',
+    }),
+
+    // ─── Banners PLP ────────────────────────────────────────────────────────
+    defineField({
+      name: "plpBanners",
+      title: "Banners de la página",
+      type: "array",
+      of: [{ type: "plpBanner" }],
+      group: "banners",
+      description: "Banners que aparecen en el slideshow de esta PLP. Si está vacío o todos están inactivos, el bloque no se muestra.",
     }),
 
     // ─── SEO ────────────────────────────────────────────────────────────────

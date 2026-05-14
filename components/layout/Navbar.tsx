@@ -5,34 +5,36 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Icon } from "@/components/ui/Icon";
 
-const testBrands = [
-  { href: "/marcas/hyundai", label: "Hyundai", models: "IONIQ 5 · IONIQ 6 · Kona Electric" },
-  { href: "/marcas/byd",     label: "BYD",     models: "Yuan Plus · Seal · Atto 3" },
-  { href: "/marcas/tesla",   label: "Tesla",   models: "Model 3 · Model Y" },
-  { href: "/marcas/mg",      label: "MG",      models: "Marvel R · ZS EV" },
-  { href: "/marcas/jac",     label: "JAC",     models: "E30X · E40X" },
-];
+export interface NavbarBrand {
+  slug: string;
+  name: string;
+  models?: string;
+}
 
-const vehicleTypes = [
-  { label: "SUV",        icon: "directions_car",  href: "/tipo/suv",        desc: "Espaciosos y versátiles" },
-  { label: "Sedán",      icon: "airport_shuttle", href: "/tipo/sedan",      desc: "Elegante y aerodinámico" },
-  { label: "City Car",   icon: "local_taxi",      href: "/tipo/city-car",   desc: "Ideal para ciudad" },
-  { label: "Pickup",     icon: "agriculture",     href: "/tipo/pickup",     desc: "Potencia y carga" },
-  { label: "Hatchback",  icon: "commute",         href: "/tipo/hatchback",  desc: "Práctico y ágil" },
-  { label: "Cabriolet",  icon: "wb_sunny",        href: "/tipo/cabriolet",  desc: "Cielo abierto, sin emisiones" },
-];
+export interface NavbarVehicleType {
+  slug: string;
+  label: string;
+  icon?: string;
+  heroTagline?: string;
+}
 
-const electricTypes = [
-  { label: "Eléctrico Puro",            icon: "bolt",             href: "/electrico/ev",    desc: "100% batería, cero emisiones", tag: "EV" },
-  { label: "Híbrido Enchufable",         icon: "ev_station",       href: "/electrico/phev",  desc: "Carga a la red + combustible", tag: "PHEV" },
-  { label: "Híbrido Clásico",            icon: "sync_alt",         href: "/electrico/hev",   desc: "Se recarga solo al frenar",     tag: "HEV" },
-  { label: "Eléctrico Autonomía Extendida", icon: "battery_charging_full", href: "/electrico/erev", desc: "Generador a bordo de respaldo", tag: "EREV" },
-  { label: "Microhíbrido",              icon: "electric_bolt",    href: "/electrico/mhev",  desc: "Asistencia eléctrica leve",     tag: "MHEV" },
-];
+export interface NavbarElectricType {
+  slug: string;
+  label: string;
+  tag?: string;
+  icon?: string;
+  tagline?: string;
+}
+
+interface NavbarProps {
+  brands?: NavbarBrand[];
+  vehicleTypes?: NavbarVehicleType[];
+  electricTypes?: NavbarElectricType[];
+}
 
 type DropdownId = "brands" | "types" | "electric" | null;
 
-export function Navbar() {
+export function Navbar({ brands = [], vehicleTypes = [], electricTypes = [] }: NavbarProps) {
   const [mobileOpen, setMobileOpen]         = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<DropdownId>(null);
   const [mobileSection, setMobileSection]   = useState<DropdownId>(null);
@@ -94,17 +96,17 @@ export function Navbar() {
               onLeave={() => setActiveDropdown(null)}
             >
               <div className="p-2">
-                {testBrands.map((b) => (
+                {brands.map((b) => (
                   <Link
-                    key={b.href}
-                    href={b.href}
+                    key={b.slug}
+                    href={`/marcas/${b.slug}`}
                     className="flex flex-col px-3 py-2.5 rounded-xl hover:bg-surface transition-colors group"
                     onClick={() => setActiveDropdown(null)}
                   >
                     <span className="font-bold text-sm text-text-main group-hover:text-primary-deep transition-colors">
-                      {b.label}
+                      {b.name}
                     </span>
-                    <span className="text-[11px] text-text-ghost mt-0.5">{b.models}</span>
+                    {b.models && <span className="text-[11px] text-text-ghost mt-0.5">{b.models}</span>}
                   </Link>
                 ))}
               </div>
@@ -132,19 +134,19 @@ export function Navbar() {
               <div className="p-2">
                 {vehicleTypes.map((t) => (
                   <Link
-                    key={t.href}
-                    href={t.href}
+                    key={t.slug}
+                    href={`/tipo/${t.slug}`}
                     className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-surface transition-colors group"
                     onClick={() => setActiveDropdown(null)}
                   >
                     <span className="material-symbols-outlined text-[18px] text-text-ghost group-hover:text-primary-deep transition-colors">
-                      {t.icon}
+                      {t.icon ?? "directions_car"}
                     </span>
                     <div>
                       <p className="font-bold text-xs text-text-main group-hover:text-primary-deep transition-colors leading-none">
                         {t.label}
                       </p>
-                      <p className="text-[10px] text-text-ghost mt-0.5">{t.desc}</p>
+                      {t.heroTagline && <p className="text-[10px] text-text-ghost mt-0.5">{t.heroTagline}</p>}
                     </div>
                   </Link>
                 ))}
@@ -163,24 +165,26 @@ export function Navbar() {
               <div className="p-2">
                 {electricTypes.map((t) => (
                   <Link
-                    key={t.href}
-                    href={t.href}
+                    key={t.slug}
+                    href={`/electrico/${t.slug}`}
                     className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-surface transition-colors group"
                     onClick={() => setActiveDropdown(null)}
                   >
                     <span className="material-symbols-outlined text-[18px] text-text-ghost group-hover:text-primary-deep transition-colors">
-                      {t.icon}
+                      {t.icon ?? "bolt"}
                     </span>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5">
                         <p className="font-bold text-xs text-text-main group-hover:text-primary-deep transition-colors leading-none truncate">
                           {t.label}
                         </p>
-                        <span className="text-[9px] font-black text-text-ghost bg-surface px-1 py-0.5 rounded leading-none flex-shrink-0">
-                          {t.tag}
-                        </span>
+                        {t.tag && (
+                          <span className="text-[9px] font-black text-text-ghost bg-surface px-1 py-0.5 rounded leading-none flex-shrink-0">
+                            {t.tag}
+                          </span>
+                        )}
                       </div>
-                      <p className="text-[10px] text-text-ghost mt-0.5">{t.desc}</p>
+                      {t.tagline && <p className="text-[10px] text-text-ghost mt-0.5">{t.tagline}</p>}
                     </div>
                   </Link>
                 ))}
@@ -242,15 +246,15 @@ export function Navbar() {
                 open={mobileSection === "brands"}
                 onToggle={() => toggleMobileSection("brands")}
               >
-                {testBrands.map((b) => (
+                {brands.map((b) => (
                   <Link
-                    key={b.href}
-                    href={b.href}
+                    key={b.slug}
+                    href={`/marcas/${b.slug}`}
                     className="flex flex-col py-2 px-3 rounded-xl hover:bg-surface transition-colors"
                     onClick={() => setMobileOpen(false)}
                   >
-                    <span className="font-semibold text-sm">{b.label}</span>
-                    <span className="text-[11px] text-text-ghost">{b.models}</span>
+                    <span className="font-semibold text-sm">{b.name}</span>
+                    {b.models && <span className="text-[11px] text-text-ghost">{b.models}</span>}
                   </Link>
                 ))}
                 <Link
@@ -270,12 +274,12 @@ export function Navbar() {
               >
                 {vehicleTypes.map((t) => (
                   <Link
-                    key={t.href}
-                    href={t.href}
+                    key={t.slug}
+                    href={`/tipo/${t.slug}`}
                     className="flex items-center gap-2.5 py-2 px-3 rounded-xl hover:bg-surface transition-colors"
                     onClick={() => setMobileOpen(false)}
                   >
-                    <span className="material-symbols-outlined text-[16px] text-text-ghost">{t.icon}</span>
+                    <span className="material-symbols-outlined text-[16px] text-text-ghost">{t.icon ?? "directions_car"}</span>
                     <span className="font-semibold text-sm">{t.label}</span>
                   </Link>
                 ))}
@@ -289,15 +293,15 @@ export function Navbar() {
               >
                 {electricTypes.map((t) => (
                   <Link
-                    key={t.href}
-                    href={t.href}
+                    key={t.slug}
+                    href={`/electrico/${t.slug}`}
                     className="flex items-center gap-2.5 py-2 px-3 rounded-xl hover:bg-surface transition-colors"
                     onClick={() => setMobileOpen(false)}
                   >
-                    <span className="material-symbols-outlined text-[16px] text-text-ghost">{t.icon}</span>
+                    <span className="material-symbols-outlined text-[16px] text-text-ghost">{t.icon ?? "bolt"}</span>
                     <div className="flex items-center gap-1.5">
                       <span className="font-semibold text-sm">{t.label}</span>
-                      <span className="text-[9px] font-black text-text-ghost bg-surface px-1.5 py-0.5 rounded">{t.tag}</span>
+                      {t.tag && <span className="text-[9px] font-black text-text-ghost bg-surface px-1.5 py-0.5 rounded">{t.tag}</span>}
                     </div>
                   </Link>
                 ))}

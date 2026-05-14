@@ -137,7 +137,7 @@ export function Footer() {
             </Link>
             <p className="text-white/50 text-sm mb-6 leading-relaxed">
               Marketplace de autos eléctricos en Chile. Conectamos compradores
-              con la mejor red de concesionarios.
+              con la mejor red de vendedores oficiales.
             </p>
             <div className="flex gap-3">
               {socialLinks.map((s) => (

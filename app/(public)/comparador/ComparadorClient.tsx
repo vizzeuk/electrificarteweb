@@ -474,7 +474,7 @@ export default function ComparadorClient({ allCars, initialId }: ComparadorClien
               <p className="text-primary text-xs uppercase tracking-widest font-bold mb-2">¿Ya decidiste?</p>
               <h2 className="text-white font-headline font-black text-2xl md:text-3xl tracking-tight">
                 {selected.length > 0
-                  ? `Consigue el mejor precio en el ${carDisplayName(selected[0])}`
+                  ? `Consigue el mejor precio en el ${selected[0].brand} ${selected[0].showVersionBadge && selected[0].versionName ? `${selected[0].name} ${selected[0].versionName}` : selected[0].name}`
                   : "Obtén el mejor precio del mercado"}
               </h2>
               <p className="text-white/50 text-sm mt-1">
