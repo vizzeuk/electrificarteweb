@@ -191,10 +191,10 @@ export default function BrandPageContent({ slug, brand }: BrandPageContentProps)
                   <img
                     src={brand.logoUrl}
                     alt={`${brand.name} logo`}
-                    className="h-16 w-auto max-w-[180px] object-contain flex-shrink-0"
+                    className="h-12 sm:h-16 w-auto max-w-[120px] sm:max-w-[180px] object-contain flex-shrink-0"
                   />
                 ) : (
-                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-white text-3xl font-headline font-black shadow-lg flex-shrink-0" style={{ backgroundColor: brand.logoColor }}>
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center text-white text-2xl sm:text-3xl font-headline font-black shadow-lg flex-shrink-0" style={{ backgroundColor: brand.logoColor }}>
                     {brand.logoLetter}
                   </div>
                 )}

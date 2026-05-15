@@ -61,19 +61,36 @@ function FieldLabel({ children, required }: { children: React.ReactNode; require
 const INPUT_CLS = "w-full bg-gray-100 rounded-lg py-3 px-4 text-sm text-text-main placeholder-text-ghost focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all";
 
 // ─── Radio pill group ─────────────────────────────────────────────────────────
+const COL_CLASS: Record<number, string> = {
+  1: "grid-cols-1",
+  2: "grid-cols-2",
+  3: "grid-cols-3",
+  4: "grid-cols-4",
+};
+const SM_COL_CLASS: Record<number, string> = {
+  1: "sm:grid-cols-1",
+  2: "sm:grid-cols-2",
+  3: "sm:grid-cols-3",
+  4: "sm:grid-cols-4",
+};
+
 function RadioPills<T extends string>({
   options,
   value,
   onChange,
   cols = 2,
+  mobileCols,
 }: {
   options: { value: T; label: string }[];
   value: T | undefined;
   onChange: (v: T) => void;
   cols?: number;
+  mobileCols?: number;
 }) {
+  const mc = mobileCols ?? cols;
+  const colsClass = `${COL_CLASS[mc] ?? "grid-cols-2"} ${SM_COL_CLASS[cols] ?? "sm:grid-cols-2"}`;
   return (
-    <div className={`grid gap-2`} style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}>
+    <div className={`grid gap-2 ${colsClass}`}>
       {options.map((opt) => {
         const active = value === opt.value;
         return (
@@ -218,7 +235,7 @@ function PhotoUploader({
     <div className="space-y-3">
       {/* Grid preview */}
       {photos.length > 0 && (
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {photos.map((src, i) => (
             <div key={i} className="relative aspect-square rounded-xl overflow-hidden bg-gray-100 group">
               <img src={src} alt={`Foto ${i + 1}`} className="w-full h-full object-cover" />
@@ -357,7 +374,7 @@ export function LeadForm({ carOptions = [], carSlug, carName }: LeadFormProps) {
         </div>
         <h3 className="text-2xl font-headline font-bold mb-2">¡Solicitud enviada!</h3>
         <p className="text-text-muted">
-          Nuestro equipo te contactará en menos de 24 horas con la mejor oferta.
+          Nuestro equipo te contactará en 48 a 96 horas con la mejor oferta.
         </p>
       </motion.div>
     );
@@ -449,6 +466,7 @@ export function LeadForm({ carOptions = [], carSlug, carName }: LeadFormProps) {
                 value={field.value}
                 onChange={field.onChange}
                 cols={2}
+                mobileCols={1}
               />
             )}
           />
