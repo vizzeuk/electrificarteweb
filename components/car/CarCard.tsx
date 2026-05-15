@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { Icon } from "@/components/ui/Icon";
@@ -83,7 +83,7 @@ export function CarCard({
       };
 
   return (
-    <motion.article
+    <m.article
       {...animProps}
       className="group border border-border bg-white rounded-2xl overflow-hidden flex flex-col hover:border-primary hover:shadow-lg hover:shadow-primary/5 transition-all duration-300"
     >
@@ -187,6 +187,6 @@ export function CarCard({
           <span className="material-symbols-outlined text-[18px]">compare</span>
         </Link>
       </div>
-    </motion.article>
+    </m.article>
   );
 }

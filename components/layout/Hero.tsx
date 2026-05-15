@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { Icon } from "@/components/ui/Icon";
@@ -31,8 +31,8 @@ function getYouTubeId(url: string): string | null {
     /youtube\.com\/embed\/([^?&]+)/,
   ];
   for (const p of patterns) {
-    const m = url.match(p);
-    if (m) return m[1];
+    const match = url.match(p);
+    if (match) return match[1];
   }
   return null;
 }
@@ -90,16 +90,19 @@ export function Hero({ data }: HeroProps) {
       aria-label="Bienvenida"
     >
       <div className="absolute inset-0 z-0">
-        {/* Background video — decorative, plays silently */}
+        {/* Background video — decorative, plays silently. Poster shows
+            instantly so the hero is paintable before the video buffers. */}
         <video
           autoPlay
           muted
           loop
           playsInline
-          preload="metadata"
+          preload="none"
+          poster="/hero-video/hero-poster.jpg"
           className="absolute inset-0 w-full h-full object-cover"
         >
-          <source src="/images/video-fondo-hero.mp4" type="video/mp4" />
+          <source src="/hero-video/hero.webm" type="video/webm" />
+          <source src="/hero-video/hero.mp4"  type="video/mp4"  />
         </video>
         {/* Dark overlay keeps text readable */}
         <div className="absolute inset-0 bg-black/78" />
@@ -117,7 +120,7 @@ export function Hero({ data }: HeroProps) {
       <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 py-12 md:py-24 lg:py-32 w-full">
         <div className="grid gap-12 items-center max-w-3xl">
           {/* Left: Copy */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, ease: "easeOut" }}
@@ -149,11 +152,11 @@ export function Hero({ data }: HeroProps) {
                 <Icon name="expand_more" size="sm" />
               </a>
             </div>
-          </motion.div>
+          </m.div>
 
           {/* Right: Sanity video > animated demo — temporalmente deshabilitado */}
           {false && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
@@ -166,7 +169,7 @@ export function Hero({ data }: HeroProps) {
                 <HeroVideoPlayer />
               )}
             </div>
-          </motion.div>
+          </m.div>
           )}
         </div>
 

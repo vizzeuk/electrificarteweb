@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
 
@@ -28,7 +28,7 @@ export function CategoryBanners({ banners }: CategoryBannersProps) {
     <section className="pb-20 md:pb-24" aria-label="Categorías destacadas">
       <div className="max-w-7xl mx-auto px-4 md:px-8 grid grid-cols-1 md:grid-cols-2 gap-6">
         {displayBanners.map((cat, i) => (
-          <motion.div
+          <m.div
             key={cat.title}
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -51,7 +51,7 @@ export function CategoryBanners({ banners }: CategoryBannersProps) {
                 </span>
               </div>
             </Link>
-          </motion.div>
+          </m.div>
         ))}
       </div>
     </section>

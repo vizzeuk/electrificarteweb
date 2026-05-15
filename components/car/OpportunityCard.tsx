@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import Link from "next/link";
 import { formatCLP } from "@/lib/utils";
 
@@ -22,7 +22,7 @@ export function OpportunityCard({
   index = 0,
 }: OpportunityCardProps) {
   return (
-    <motion.article
+    <m.article
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-50px" }}
@@ -59,6 +59,6 @@ export function OpportunityCard({
       >
         Lo Quiero
       </Link>
-    </motion.article>
+    </m.article>
   );
 }

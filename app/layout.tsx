@@ -92,10 +92,37 @@ export default function RootLayout({
   return (
     <html lang="es" className={`${spaceGrotesk.variable} ${inter.variable}`}>
       <head>
+        {/* Preconnects — open the TLS connection before assets are requested */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        <link rel="preconnect" href="https://cdn.sanity.io" crossOrigin="" />
+
+        {/* Material Symbols — load non-blocking. We start the fetch with
+            preload, attach the stylesheet with media="print" so it doesn't
+            block paint, then swap its media to "all" once loaded so icons
+            get styled. */}
         <link
+          rel="preload"
+          as="style"
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700&display=swap"
-          rel="stylesheet"
         />
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700&display=swap"
+          media="print"
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `document.querySelectorAll('link[rel="stylesheet"][media="print"]').forEach(function(l){if(l.sheet){l.media='all';}else{l.addEventListener('load',function(){l.media='all';});}});`,
+          }}
+        />
+        <noscript>
+          <link
+            rel="stylesheet"
+            href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700&display=swap"
+          />
+        </noscript>
+
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <meta name="theme-color" content="#00E5E5" />
       </head>

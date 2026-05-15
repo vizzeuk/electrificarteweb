@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
 
@@ -109,7 +109,7 @@ export function HowItWorks({ title = "Cómo funciona Electrificarte", subtitle, 
               />
 
               {displaySteps.map((step, i) => (
-                <motion.div
+                <m.div
                   key={step.title}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
@@ -129,7 +129,7 @@ export function HowItWorks({ title = "Cómo funciona Electrificarte", subtitle, 
                     <h3 className="font-headline font-bold text-base mb-2">{step.title}</h3>
                     <p className="text-sm text-text-muted leading-relaxed">{step.description}</p>
                   </div>
-                </motion.div>
+                </m.div>
               ))}
             </div>
           </div>
@@ -139,7 +139,7 @@ export function HowItWorks({ title = "Cómo funciona Electrificarte", subtitle, 
             <div className="absolute left-4 top-4 bottom-4 w-px border-l-2 border-dashed border-primary/30" />
 
             {displaySteps.map((step, i) => (
-              <motion.div
+              <m.div
                 key={step.title}
                 initial={{ opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -159,7 +159,7 @@ export function HowItWorks({ title = "Cómo funciona Electrificarte", subtitle, 
                   <h3 className="font-headline font-bold mb-1">{step.title}</h3>
                   <p className="text-sm text-text-muted leading-relaxed">{step.description}</p>
                 </div>
-              </motion.div>
+              </m.div>
             ))}
           </div>
 

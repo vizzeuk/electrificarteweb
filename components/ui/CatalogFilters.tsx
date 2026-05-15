@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 
 export interface FilterOption {
   value: string;
@@ -97,7 +97,7 @@ export function CatalogFilters({
         <div className="flex items-center gap-3">
           {/* Result count */}
           <AnimatePresence mode="wait">
-            <motion.p
+            <m.p
               key={count}
               initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
@@ -110,7 +110,7 @@ export function CatalogFilters({
                 <span className="text-text-ghost"> de {total}</span>
               )}{" "}
               auto{count !== 1 ? "s" : ""}
-            </motion.p>
+            </m.p>
           </AnimatePresence>
 
           {/* Clear */}

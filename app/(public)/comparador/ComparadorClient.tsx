@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import { formatCLP } from "@/lib/utils";
@@ -287,7 +287,7 @@ export default function ComparadorClient({ allCars, initialId }: ComparadorClien
 
           {/* Comparison table */}
           {selected.length >= 2 ? (
-            <motion.div
+            <m.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               className="mt-6 md:mt-0 md:px-8"
@@ -327,7 +327,7 @@ export default function ComparadorClient({ allCars, initialId }: ComparadorClien
                   })}
                 </div>
               </div>
-            </motion.div>
+            </m.div>
           ) : (
             <div className="text-center py-10 text-text-ghost px-4 md:px-8">
               <span className="material-symbols-outlined text-[40px] mb-2 block text-gray-200">compare</span>
@@ -340,14 +340,14 @@ export default function ComparadorClient({ allCars, initialId }: ComparadorClien
       {/* ─── Picker modal ─────────────────────────────────────────────── */}
       <AnimatePresence>
         {pickerSlot !== null && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-4"
             onClick={closePicker}
           >
-            <motion.div
+            <m.div
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
@@ -461,8 +461,8 @@ export default function ComparadorClient({ allCars, initialId }: ComparadorClien
                   );
                 })}
               </div>
-            </motion.div>
-          </motion.div>
+            </m.div>
+          </m.div>
         )}
       </AnimatePresence>
 
@@ -502,7 +502,7 @@ function DesktopCarSlot({ car, onRemove, onAdd }: { car: Car | undefined; onRemo
       ? Math.round(((car.basePrice - car.discountPrice) / car.basePrice) * 100)
       : 0;
     return (
-      <motion.div
+      <m.div
         key={car.id}
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -549,7 +549,7 @@ function DesktopCarSlot({ car, onRemove, onAdd }: { car: Car | undefined; onRemo
         >
           Solicitar oferta
         </Link>
-      </motion.div>
+      </m.div>
     );
   }
   return (
@@ -570,7 +570,7 @@ function MobileCarSlot({ car, onRemove, onAdd }: { car: Car | undefined; onRemov
       ? Math.round(((car.basePrice - car.discountPrice) / car.basePrice) * 100)
       : 0;
     return (
-      <motion.div
+      <m.div
         key={car.id}
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -608,7 +608,7 @@ function MobileCarSlot({ car, onRemove, onAdd }: { car: Car | undefined; onRemov
         >
           Solicitar
         </Link>
-      </motion.div>
+      </m.div>
     );
   }
   return (

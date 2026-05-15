@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import Link from "next/link";
 import { useEffect } from "react";
 import { allBrandsQuery } from "@/lib/queries/car";
@@ -175,7 +175,7 @@ export default function MarcasPage() {
                 const color = brand.accentColor ?? "#1a1a1a";
                 const country = getCountry(brand.slug, brand.country);
                 return (
-                  <motion.div
+                  <m.div
                     key={brand._id}
                     initial={{ opacity: 0, y: 16 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -221,7 +221,7 @@ export default function MarcasPage() {
                         <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-primary" title="Destacada" />
                       )}
                     </Link>
-                  </motion.div>
+                  </m.div>
                 );
               })}
             </div>

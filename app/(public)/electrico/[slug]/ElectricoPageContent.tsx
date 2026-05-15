@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { formatCLP, calculateDiscount, carStats } from "@/lib/utils";
 import { CatalogFilters, type ActiveFilters } from "@/components/ui/CatalogFilters";
@@ -254,8 +254,7 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
                         <img
                           src={adCar.imageUrl}
                           alt={`${adCar.brand} ${adCar.name}`}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        />
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" decoding="async" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
                           <span className="material-symbols-outlined text-[64px] text-white/10">electric_car</span>
@@ -302,7 +301,7 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
           {/* Desktop: grid */}
           <div className="hidden md:grid grid-cols-4 gap-4">
             {meta.howItWorks.map((h, i) => (
-              <motion.div
+              <m.div
                 key={h.title}
                 initial={{ opacity: 0, y: 12 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -317,7 +316,7 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
                   <p className="font-headline font-bold text-sm leading-snug mb-1 text-text-main">{h.title}</p>
                   <p className="text-text-ghost text-[12px] leading-snug">{h.desc}</p>
                 </div>
-              </motion.div>
+              </m.div>
             ))}
           </div>
 
@@ -339,7 +338,7 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
                 </button>
                 <AnimatePresence>
                   {openHowItem === i && (
-                    <motion.div
+                    <m.div
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: "auto", opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
@@ -347,7 +346,7 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
                       className="overflow-hidden"
                     >
                       <p className="px-4 pb-4 text-text-ghost text-sm leading-relaxed">{h.desc}</p>
-                    </motion.div>
+                    </m.div>
                   )}
                 </AnimatePresence>
               </div>
@@ -361,15 +360,15 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
         <section className="py-8 bg-surface border-b border-gray-100">
           <div className="max-w-7xl mx-auto px-4 md:px-8">
             <div className="relative rounded-2xl overflow-hidden">
-              <img src={plpBanners[activeSlide]?.imageUrl} alt="" aria-hidden className="w-full h-auto invisible" />
+              <img src={plpBanners[activeSlide]?.imageUrl} alt="" aria-hidden className="w-full h-auto invisible" loading="lazy" decoding="async" />
               {plpBanners.map((b, i) => (
                 <div key={i} className="absolute inset-0 transition-opacity duration-500" style={{ opacity: i === activeSlide ? 1 : 0, pointerEvents: i === activeSlide ? "auto" : "none" }} onClick={plpBanners.length > 1 && !b.ctaHref ? nextSlide : undefined}>
                   {b.ctaHref ? (
                     <Link href={b.ctaHref} className="block w-full h-full">
-                      <img src={b.imageUrl} alt={b.altText ?? ""} className="w-full h-full object-cover" />
+                      <img src={b.imageUrl} alt={b.altText ?? ""} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                     </Link>
                   ) : (
-                    <img src={b.imageUrl} alt={b.altText ?? ""} className="w-full h-full object-cover" />
+                    <img src={b.imageUrl} alt={b.altText ?? ""} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                   )}
                 </div>
               ))}
@@ -408,7 +407,7 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
                   <div className="lg:hidden px-4">
                     <div className="rounded-2xl overflow-hidden border border-white/10 bg-white/5">
                       {car.imageUrl ? (
-                        <img src={car.imageUrl} alt={`${car.brand} ${car.name}`} className="w-full h-40 object-cover" />
+                        <img src={car.imageUrl} alt={`${car.brand} ${car.name}`} className="w-full h-40 object-cover" loading="lazy" decoding="async" />
                       ) : (
                         <div className="w-full h-40 flex items-center justify-center">
                           <span className="material-symbols-outlined text-[64px]" style={{ color: `${meta.color}4D` }}>electric_car</span>
@@ -484,7 +483,7 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
 
                       <div className="bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 rounded-2xl overflow-hidden">
                         {car.imageUrl ? (
-                          <img src={car.imageUrl} alt={`${car.brand} ${car.name}`} className="w-full aspect-[16/9] object-cover" />
+                          <img src={car.imageUrl} alt={`${car.brand} ${car.name}`} className="w-full aspect-[16/9] object-cover" loading="lazy" decoding="async" />
                         ) : (
                           <div className="w-full aspect-[16/9] flex items-center justify-center flex-col gap-2">
                             <span className="material-symbols-outlined text-[80px]" style={{ color: `${meta.color}4D` }}>electric_car</span>
@@ -582,7 +581,7 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
               {visibleRest.map((car, i) => {
                 const pct = Math.round(((car.basePrice - car.discountPrice) / car.basePrice) * 100);
                 return (
-                  <motion.article
+                  <m.article
                     key={car.slug}
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -599,7 +598,7 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
                         {meta.tag}
                       </span>
                       {car.imageUrl ? (
-                        <img src={car.imageUrl} alt={`${car.brand} ${car.name}`} className="object-cover w-full h-full" />
+                        <img src={car.imageUrl} alt={`${car.brand} ${car.name}`} className="object-cover w-full h-full" loading="lazy" decoding="async" />
                       ) : (
                         <>
                           <span className="material-symbols-outlined text-[64px] text-gray-200">electric_car</span>
@@ -649,7 +648,7 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
                         </Link>
                       </div>
                     </div>
-                  </motion.article>
+                  </m.article>
                 );
               })}
             </div>

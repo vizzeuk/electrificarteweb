@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import Link from "next/link";
 import { formatCLP } from "@/lib/utils";
 import { CatalogFilters, type ActiveFilters } from "@/components/ui/CatalogFilters";
@@ -185,14 +185,13 @@ export default function BrandPageContent({ slug, brand }: BrandPageContentProps)
             <span className="text-white/60">{brand.name}</span>
           </nav>
           <div className="grid md:grid-cols-2 gap-12 items-center">
-            <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
+            <m.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
               <div className="flex items-center gap-4 mb-6">
                 {brand.logoUrl ? (
                   <img
                     src={brand.logoUrl}
                     alt={`${brand.name} logo`}
-                    className="h-12 sm:h-16 w-auto max-w-[120px] sm:max-w-[180px] object-contain flex-shrink-0"
-                  />
+                    className="h-12 sm:h-16 w-auto max-w-[120px] sm:max-w-[180px] object-contain flex-shrink-0" loading="lazy" decoding="async" />
                 ) : (
                   <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center text-white text-2xl sm:text-3xl font-headline font-black shadow-lg flex-shrink-0" style={{ backgroundColor: brand.logoColor }}>
                     {brand.logoLetter}
@@ -209,9 +208,9 @@ export default function BrandPageContent({ slug, brand }: BrandPageContentProps)
                   <span className="material-symbols-outlined text-[16px]">arrow_downward</span>
                 </a>
               </div>
-            </motion.div>
+            </m.div>
             {featuredCarForHero && (
-              <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.15 }}>
+              <m.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.15 }}>
 
                 {/* Label publicidad — encima de la card */}
                 {featuredCarForHero.isSponsored && (
@@ -229,6 +228,8 @@ export default function BrandPageContent({ slug, brand }: BrandPageContentProps)
                         src={featuredCarForHero.imageUrl}
                         alt={`${brand.name} ${featuredCarForHero.name}`}
                         className="w-full aspect-[16/10] object-cover group-hover:scale-[1.03] transition-transform duration-500"
+                        fetchPriority="high"
+                        decoding="async"
                       />
                     ) : (
                       <div className="w-full aspect-[16/10] flex items-center justify-center">
@@ -259,7 +260,7 @@ export default function BrandPageContent({ slug, brand }: BrandPageContentProps)
                   </div>
 
                 </div>
-              </motion.div>
+              </m.div>
             )}
           </div>
         </div>
@@ -286,15 +287,15 @@ export default function BrandPageContent({ slug, brand }: BrandPageContentProps)
         <section className="py-8 bg-surface border-b border-gray-100">
           <div className="max-w-7xl mx-auto px-4 md:px-8">
             <div className="relative rounded-2xl overflow-hidden">
-              <img src={plpBanners[activeSlide]?.imageUrl} alt="" aria-hidden className="w-full h-auto invisible" />
+              <img src={plpBanners[activeSlide]?.imageUrl} alt="" aria-hidden className="w-full h-auto invisible" loading="lazy" decoding="async" />
               {plpBanners.map((b, i) => (
                 <div key={i} className="absolute inset-0 transition-opacity duration-500" style={{ opacity: i === activeSlide ? 1 : 0, pointerEvents: i === activeSlide ? "auto" : "none" }} onClick={plpBanners.length > 1 && !b.ctaHref ? nextSlide : undefined}>
                   {b.ctaHref ? (
                     <Link href={b.ctaHref} className="block w-full h-full">
-                      <img src={b.imageUrl} alt={b.altText ?? ""} className="w-full h-full object-cover" />
+                      <img src={b.imageUrl} alt={b.altText ?? ""} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                     </Link>
                   ) : (
-                    <img src={b.imageUrl} alt={b.altText ?? ""} className="w-full h-full object-cover" />
+                    <img src={b.imageUrl} alt={b.altText ?? ""} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                   )}
                 </div>
               ))}
@@ -339,7 +340,7 @@ export default function BrandPageContent({ slug, brand }: BrandPageContentProps)
                   <div className="lg:hidden px-4">
                     <div className="rounded-2xl overflow-hidden border border-white/10 bg-white/5">
                       {deal.imageUrl ? (
-                        <img src={deal.imageUrl} alt={`${brand.name} ${deal.carName}`} className="w-full h-40 object-cover" />
+                        <img src={deal.imageUrl} alt={`${brand.name} ${deal.carName}`} className="w-full h-40 object-cover" loading="lazy" decoding="async" />
                       ) : (
                         <div className="w-full h-40 flex items-center justify-center">
                           <span className="material-symbols-outlined text-[64px] text-primary/30">electric_car</span>
@@ -413,7 +414,7 @@ export default function BrandPageContent({ slug, brand }: BrandPageContentProps)
 
                       <div className="bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 rounded-2xl overflow-hidden">
                         {deal.imageUrl ? (
-                          <img src={deal.imageUrl} alt={`${brand.name} ${deal.carName}`} className="w-full aspect-[16/9] object-cover" />
+                          <img src={deal.imageUrl} alt={`${brand.name} ${deal.carName}`} className="w-full aspect-[16/9] object-cover" loading="lazy" decoding="async" />
                         ) : (
                           <div className="w-full aspect-[16/9] flex items-center justify-center flex-col gap-2">
                             <span className="material-symbols-outlined text-[80px] text-primary/30">electric_car</span>
@@ -502,13 +503,13 @@ export default function BrandPageContent({ slug, brand }: BrandPageContentProps)
             ) : visibleCars.map((car, i) => {
               const pct = Math.round(((car.basePrice - car.discountPrice) / car.basePrice) * 100);
               return (
-                <motion.article key={car.slug} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.1 }}
+                <m.article key={car.slug} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.1 }}
                   className="group relative flex flex-col border border-gray-100 bg-white rounded-2xl overflow-hidden hover:border-primary/40 hover:shadow-lg transition-all duration-300">
                   <div className="aspect-[16/9] bg-gradient-to-br from-gray-50 to-gray-100 relative flex flex-col items-center justify-center overflow-hidden">
                     {car.isHotDeal && <span className="absolute top-3 left-3 bg-amber text-black text-[10px] font-black uppercase tracking-wide px-2.5 py-1 rounded-full z-10">HOT DEAL</span>}
                     {pct > 0 && <span className="absolute top-3 right-3 text-[10px] font-black text-white px-2 py-1 rounded-full z-10" style={{ backgroundColor: brand.accentColor }}>-{pct}%</span>}
                     {car.imageUrl ? (
-                      <img src={car.imageUrl} alt={`${brand.name} ${car.name}`} className="w-full h-full object-cover" />
+                      <img src={car.imageUrl} alt={`${brand.name} ${car.name}`} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                     ) : (
                       <>
                         <span className="material-symbols-outlined text-[72px] text-gray-200">electric_car</span>
@@ -538,7 +539,7 @@ export default function BrandPageContent({ slug, brand }: BrandPageContentProps)
                       </Link>
                     </div>
                   </div>
-                </motion.article>
+                </m.article>
               );
             })}
           </div>
@@ -567,7 +568,7 @@ export default function BrandPageContent({ slug, brand }: BrandPageContentProps)
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {brand.videos.map((video, i) => (
-                <motion.div key={video.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.1 }}
+                <m.div key={video.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.1 }}
                   className="group bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-primary/30 hover:shadow-md transition-all duration-300 cursor-pointer">
                   <div className="aspect-video bg-gradient-to-br from-gray-900 to-gray-800 relative flex items-center justify-center overflow-hidden">
                     <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.1) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.1) 1px,transparent 1px)", backgroundSize: "24px 24px" }} />
@@ -584,7 +585,7 @@ export default function BrandPageContent({ slug, brand }: BrandPageContentProps)
                     {(video.channel || video.views) && <p className="text-[10px] text-text-ghost uppercase tracking-wide font-semibold mb-1">{video.channel}{video.views ? ` · ${video.views} vistas` : ""}</p>}
                     <h3 className="font-headline font-bold text-sm leading-snug group-hover:text-primary-deep transition-colors line-clamp-2">{video.title}</h3>
                   </div>
-                </motion.div>
+                </m.div>
               ))}
             </div>
             <div className="mt-14 bg-black rounded-2xl p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-6">

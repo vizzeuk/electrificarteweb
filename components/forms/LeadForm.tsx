@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { Icon } from "@/components/ui/Icon";
 
 // ─── RUT validator ────────────────────────────────────────────────────────────
@@ -173,7 +173,7 @@ function CarCombobox({
 
       <AnimatePresence>
         {open && filtered.length > 0 && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
@@ -195,7 +195,7 @@ function CarCombobox({
                 </button>
               ))}
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
 
@@ -238,7 +238,7 @@ function PhotoUploader({
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {photos.map((src, i) => (
             <div key={i} className="relative aspect-square rounded-xl overflow-hidden bg-gray-100 group">
-              <img src={src} alt={`Foto ${i + 1}`} className="w-full h-full object-cover" />
+              <img src={src} alt={`Foto ${i + 1}`} className="w-full h-full object-cover" loading="lazy" decoding="async" />
               <button
                 type="button"
                 onClick={() => remove(i)}
@@ -364,7 +364,7 @@ export function LeadForm({ carOptions = [], carSlug, carName }: LeadFormProps) {
   // ── Success state ────────────────────────────────────────────────────────────
   if (status === "success") {
     return (
-      <motion.div
+      <m.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         className="bg-white rounded-2xl shadow-xl p-10 text-center"
@@ -376,7 +376,7 @@ export function LeadForm({ carOptions = [], carSlug, carName }: LeadFormProps) {
         <p className="text-text-muted">
           Nuestro equipo te contactará en 48 a 96 horas con la mejor oferta.
         </p>
-      </motion.div>
+      </m.div>
     );
   }
 
@@ -497,7 +497,7 @@ export function LeadForm({ carOptions = [], carSlug, carName }: LeadFormProps) {
         {/* ── 5. Datos del auto a entregar ─────────────────────────────── */}
         <AnimatePresence>
           {tradeIn === "si" && (
-            <motion.div
+            <m.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
@@ -610,7 +610,7 @@ export function LeadForm({ carOptions = [], carSlug, carName }: LeadFormProps) {
                 </div>
 
               </div>
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
 

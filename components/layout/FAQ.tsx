@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { Icon } from "@/components/ui/Icon";
 
 export interface FAQItem {
@@ -44,7 +44,7 @@ export function FAQ({ title = "Preguntas frecuentes", faqs }: FAQProps) {
 
             <div className="space-y-3" role="list">
               {displayFaqs.map((faq, i) => (
-                <motion.div
+                <m.div
                   key={i}
                   initial={{ opacity: 0, y: 12 }}
                   whileInView={{ opacity: 1, y: 0 }}
@@ -75,18 +75,18 @@ export function FAQ({ title = "Preguntas frecuentes", faqs }: FAQProps) {
                       {faq.question}
                     </span>
 
-                    <motion.span
+                    <m.span
                       animate={{ rotate: openIndex === i ? 45 : 0 }}
                       transition={{ duration: 0.2 }}
                       className="material-symbols-outlined text-[20px] text-gray-300 flex-shrink-0"
                     >
                       add
-                    </motion.span>
+                    </m.span>
                   </button>
 
                   <AnimatePresence>
                     {openIndex === i && (
-                      <motion.div
+                      <m.div
                         id={`faq-answer-${i}`}
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
@@ -97,17 +97,17 @@ export function FAQ({ title = "Preguntas frecuentes", faqs }: FAQProps) {
                         <p className="px-5 pb-5 pl-[4.5rem] text-sm text-text-muted leading-relaxed">
                           {faq.answer}
                         </p>
-                      </motion.div>
+                      </m.div>
                     )}
                   </AnimatePresence>
-                </motion.div>
+                </m.div>
               ))}
             </div>
           </div>
 
           {/* ── Right: photo card ───────────────────────────── */}
           <div className="lg:sticky lg:top-28 lg:self-start">
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -176,7 +176,7 @@ export function FAQ({ title = "Preguntas frecuentes", faqs }: FAQProps) {
                   </Link>
                 </div>
               </div>
-            </motion.div>
+            </m.div>
           </div>
 
         </div>

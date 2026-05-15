@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { Icon } from "@/components/ui/Icon";
 
 const features = [
@@ -30,7 +30,7 @@ export function Features() {
       <div className="max-w-7xl mx-auto px-4 md:px-8">
         <div className="grid md:grid-cols-3 gap-12">
           {features.map((f, i) => (
-            <motion.div
+            <m.div
               key={f.title}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -43,7 +43,7 @@ export function Features() {
               </div>
               <h3 className="text-xl font-headline font-bold">{f.title}</h3>
               <p className="text-text-muted leading-relaxed">{f.description}</p>
-            </motion.div>
+            </m.div>
           ))}
         </div>
       </div>

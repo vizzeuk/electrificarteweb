@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import type { BlogPreviewPost } from "@/components/layout/BlogPreview";
 
 // ─── Static fallback posts ────────────────────────────────────────────────────
@@ -188,7 +188,7 @@ export function BlogListingContent({ posts }: { posts: BlogPreviewPost[] }) {
             <>
               {/* Featured */}
               {featured && (
-                <motion.article
+                <m.article
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4 }}
@@ -231,14 +231,14 @@ export function BlogListingContent({ posts }: { posts: BlogPreviewPost[] }) {
                       <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
                     </Link>
                   </div>
-                </motion.article>
+                </m.article>
               )}
 
               {/* Grid */}
               {rest.length > 0 && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {rest.map((post, i) => (
-                    <motion.article
+                    <m.article
                       key={post._id}
                       initial={{ opacity: 0, y: 20 }}
                       whileInView={{ opacity: 1, y: 0 }}
@@ -284,7 +284,7 @@ export function BlogListingContent({ posts }: { posts: BlogPreviewPost[] }) {
                           </span>
                         </div>
                       </div>
-                    </motion.article>
+                    </m.article>
                   ))}
                 </div>
               )}

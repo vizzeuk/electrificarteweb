@@ -2,7 +2,7 @@
 
 import React, { useRef, useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -121,7 +121,7 @@ export function BlogPreview({ title, posts }: BlogPreviewProps) {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
           {/* Featured article (spans 2 cols) */}
-          <motion.article
+          <m.article
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -133,8 +133,7 @@ export function BlogPreview({ title, posts }: BlogPreviewProps) {
               <img
                 src={featured.coverImage.asset.url}
                 alt={featured.coverImage.alt ?? featured.title}
-                className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:opacity-50 transition-opacity duration-500"
-              />
+                className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:opacity-50 transition-opacity duration-500" loading="lazy" decoding="async" />
             ) : (
               <div className="absolute inset-0 bg-gradient-to-br from-primary-deep/30 via-black to-black" />
             )}
@@ -172,12 +171,12 @@ export function BlogPreview({ title, posts }: BlogPreviewProps) {
                 </Link>
               </div>
             </div>
-          </motion.article>
+          </m.article>
 
           {/* Side cards */}
           <div className="flex flex-col gap-6">
             {rest.map((post, i) => (
-              <motion.article
+              <m.article
                 key={post._id}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -191,8 +190,7 @@ export function BlogPreview({ title, posts }: BlogPreviewProps) {
                     <img
                       src={post.coverImage.asset.url}
                       alt={post.coverImage.alt ?? post.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" decoding="async" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
                       <span className="material-symbols-outlined text-[40px] text-gray-200">article</span>
@@ -222,7 +220,7 @@ export function BlogPreview({ title, posts }: BlogPreviewProps) {
                     </span>
                   </div>
                 </div>
-              </motion.article>
+              </m.article>
             ))}
           </div>
         </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { Icon } from "@/components/ui/Icon";
 import { LeadForm } from "@/components/forms/LeadForm";
 
@@ -10,7 +10,7 @@ export function ServiceSection() {
       <div className="max-w-7xl mx-auto px-4 md:px-8">
         <div className="grid lg:grid-cols-12 gap-16 items-start">
           {/* Service Info */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
@@ -48,7 +48,7 @@ export function ServiceSection() {
                 </div>
                 <div className="bg-surface p-4 rounded-lg">
                   <span className="block text-primary font-bold text-xl">
-                    24h
+                    48-96h
                   </span>
                   <span className="text-xs font-bold uppercase tracking-widest text-text-muted">
                     Respuesta
@@ -66,10 +66,10 @@ export function ServiceSection() {
                 </p>
               </div>
             </div>
-          </motion.div>
+          </m.div>
 
           {/* Form */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0, x: 20 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
@@ -77,7 +77,7 @@ export function ServiceSection() {
             className="lg:col-span-7"
           >
             <LeadForm />
-          </motion.div>
+          </m.div>
         </div>
       </div>
     </section>

@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { formatCLP } from "@/lib/utils";
 import { CarCard } from "@/components/car/CarCard";
 
@@ -200,7 +200,7 @@ export default function ColeccionPageContent({ col, cars }: Props) {
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {highlights.map((h, i) => (
-              <motion.div
+              <m.div
                 key={h.title}
                 initial={{ opacity: 0, y: 12 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -220,7 +220,7 @@ export default function ColeccionPageContent({ col, cars }: Props) {
                   <p className="font-headline font-bold text-sm leading-snug mb-1 text-text-main">{h.title}</p>
                   <p className="text-text-ghost text-[12px] leading-snug">{h.description}</p>
                 </div>
-              </motion.div>
+              </m.div>
             ))}
           </div>
         </div>

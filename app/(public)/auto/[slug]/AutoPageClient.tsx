@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { formatCLP } from "@/lib/utils";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -234,7 +234,7 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
       {/* ─── Sticky offer bar ────────────────────────────────────────── */}
       <AnimatePresence>
         {stickyVisible && (
-          <motion.div
+          <m.div
             initial={{ y: -60, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: -60, opacity: 0 }}
@@ -244,7 +244,7 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
             <div className="max-w-7xl mx-auto px-4 md:px-8 h-14 flex items-center justify-between gap-2 sm:gap-4">
               <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                 {car.brandLogoUrl ? (
-                  <img src={car.brandLogoUrl} alt={car.brand} className="h-5 sm:h-6 w-auto object-contain flex-shrink-0" />
+                  <img src={car.brandLogoUrl} alt={car.brand} className="h-5 sm:h-6 w-auto object-contain flex-shrink-0" loading="lazy" decoding="async" />
                 ) : (
                   <span className="material-symbols-outlined text-primary text-[18px] flex-shrink-0">electric_car</span>
                 )}
@@ -270,7 +270,7 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
                 </Link>
               </div>
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
 
@@ -291,6 +291,8 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
               src={galleryImages[0]}
               alt={`${car.brand} ${car.name}`}
               className="w-full h-full object-cover object-center"
+              fetchPriority="high"
+              decoding="async"
             />
           ) : (
             <span className="material-symbols-outlined text-[240px] text-white/5">electric_car</span>
@@ -326,7 +328,7 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-end">
 
             {/* Left: brand / name / tagline. CTAs hidden on mobile (shown below stats). */}
-            <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
+            <m.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
               <div className="flex flex-wrap items-center gap-2 mb-4">
                 {car.isHotDeal && <span className="bg-amber text-black text-[10px] font-black uppercase tracking-wide px-2.5 py-1 rounded-full">HOT DEAL</span>}
                 {car.isNew && <span className="bg-primary text-black text-[10px] font-black uppercase tracking-wide px-2.5 py-1 rounded-full">NUEVO</span>}
@@ -356,10 +358,10 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
                   Comparar
                 </Link>
               </div>
-            </motion.div>
+            </m.div>
 
             {/* Right: stats + price */}
-            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.15 }}>
+            <m.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.15 }}>
               {/* Stats — 2 cols on mobile, 4 on sm+ */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-5">
                 {(() => {
@@ -429,7 +431,7 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
                   </div>
                 )}
               </div>
-            </motion.div>
+            </m.div>
 
             {/* CTAs — mobile only (below stats). Hidden on lg+ where they appear in the left column. */}
             <div className="flex lg:hidden flex-col sm:flex-row gap-3">
@@ -544,7 +546,7 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
                 <div className={imgLeft ? "lg:order-1" : ""}>
                   <div className="rounded-2xl overflow-hidden aspect-[4/3] bg-gray-100">
                     {hl.imageUrl ? (
-                      <img src={hl.imageUrl} alt={hl.title} className="w-full h-full object-cover" />
+                      <img src={hl.imageUrl} alt={hl.title} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                     ) : (
                       <div className="w-full h-full flex flex-col items-center justify-center gap-3">
                         <span className="material-symbols-outlined text-[64px] text-gray-200">{hl.icon ?? "photo_camera"}</span>
@@ -730,9 +732,9 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
 
           <div className="relative aspect-[16/7] rounded-2xl overflow-hidden mb-4">
             <AnimatePresence mode="wait">
-              <motion.div key={galleryIndex} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} className="absolute inset-0">
+              <m.div key={galleryIndex} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} className="absolute inset-0">
                 {galleryImages[galleryIndex] ? (
-                  <img src={galleryImages[galleryIndex]} alt={`${car.brand} ${car.name} foto ${galleryIndex + 1}`} className="w-full h-full object-cover" />
+                  <img src={galleryImages[galleryIndex]} alt={`${car.brand} ${car.name} foto ${galleryIndex + 1}`} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                 ) : (
                   <div className={`w-full h-full bg-gradient-to-br ${galleryGradients[galleryIndex % galleryGradients.length]} flex items-center justify-center`}>
                     <div className="absolute inset-0 flex items-center justify-center">
@@ -742,7 +744,7 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
                     <span className="absolute bottom-4 right-4 text-white/20 text-xs uppercase tracking-widest font-bold">{galleryIndex + 1} / {galleryCount}</span>
                   </div>
                 )}
-              </motion.div>
+              </m.div>
             </AnimatePresence>
           </div>
 
@@ -751,7 +753,7 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
               <button key={i} onClick={() => setGalleryIndex(i)}
                 className={["aspect-video rounded-xl overflow-hidden border-2 transition-all", i === galleryIndex ? "border-primary scale-105" : "border-transparent opacity-50 hover:opacity-80"].join(" ")}>
                 {galleryImages[i] ? (
-                  <img src={galleryImages[i]} alt={`Foto ${i + 1}`} className="w-full h-full object-cover" />
+                  <img src={galleryImages[i]} alt={`Foto ${i + 1}`} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                 ) : (
                   <div className={`w-full h-full bg-gradient-to-br ${galleryGradients[i % galleryGradients.length]} flex items-center justify-center`}>
                     <span className="material-symbols-outlined text-white/20 text-[16px]">electric_car</span>
@@ -774,7 +776,7 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
                 <Link key={s.slug} href={`/auto/${s.slug}`} className="group bg-white border border-gray-100 rounded-2xl overflow-hidden hover:border-primary/40 hover:shadow-md transition-all duration-300">
                   <div className="aspect-[16/9] bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
                     {s.imageUrl ? (
-                      <img src={s.imageUrl} alt={`${s.brand} ${s.name}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      <img src={s.imageUrl} alt={`${s.brand} ${s.name}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" decoding="async" />
                     ) : (
                       <div className="w-full h-full flex flex-col items-center justify-center">
                         <span className="material-symbols-outlined text-[56px] text-gray-200">electric_car</span>

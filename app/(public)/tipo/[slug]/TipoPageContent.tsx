@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import Link from "next/link";
 import { formatCLP, calculateDiscount, carStats } from "@/lib/utils";
 import { CatalogFilters, type ActiveFilters } from "@/components/ui/CatalogFilters";
@@ -238,8 +238,7 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes, adCar, a
                         <img
                           src={adCar.imageUrl}
                           alt={`${adCar.brand} ${adCar.name}`}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        />
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" decoding="async" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
                           <span className="material-symbols-outlined text-[64px] text-white/10">electric_car</span>
@@ -283,7 +282,7 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes, adCar, a
           <div className="max-w-7xl mx-auto px-4 md:px-8">
             <div className="relative rounded-2xl overflow-hidden">
               {/* Sizer invisible — define la altura del contenedor según la imagen activa */}
-              <img src={plpBanners[activeSlide]?.imageUrl} alt="" aria-hidden className="w-full h-auto invisible" />
+              <img src={plpBanners[activeSlide]?.imageUrl} alt="" aria-hidden className="w-full h-auto invisible" loading="lazy" decoding="async" />
               {/* Slides con fade */}
               {plpBanners.map((b, i) => (
                 <div
@@ -294,10 +293,10 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes, adCar, a
                 >
                   {b.ctaHref ? (
                     <Link href={b.ctaHref} className="block w-full h-full">
-                      <img src={b.imageUrl} alt={b.altText ?? ""} className="w-full h-full object-cover" />
+                      <img src={b.imageUrl} alt={b.altText ?? ""} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                     </Link>
                   ) : (
-                    <img src={b.imageUrl} alt={b.altText ?? ""} className="w-full h-full object-cover" />
+                    <img src={b.imageUrl} alt={b.altText ?? ""} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                   )}
                 </div>
               ))}
@@ -337,7 +336,7 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes, adCar, a
                   <div className="lg:hidden px-4">
                     <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.10)", backgroundColor: "rgba(255,255,255,0.05)" }}>
                       {car.imageUrl ? (
-                        <img src={car.imageUrl} alt={`${car.brand} ${car.name}`} className="w-full h-40 object-cover" />
+                        <img src={car.imageUrl} alt={`${car.brand} ${car.name}`} className="w-full h-40 object-cover" loading="lazy" decoding="async" />
                       ) : (
                         <div className="w-full h-40 flex items-center justify-center">
                           <span className="material-symbols-outlined text-[64px] text-primary/30">electric_car</span>
@@ -413,7 +412,7 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes, adCar, a
 
                       <div className="bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 rounded-2xl overflow-hidden">
                         {car.imageUrl ? (
-                          <img src={car.imageUrl} alt={`${car.brand} ${car.name}`} className="w-full aspect-[16/9] object-cover" />
+                          <img src={car.imageUrl} alt={`${car.brand} ${car.name}`} className="w-full aspect-[16/9] object-cover" loading="lazy" decoding="async" />
                         ) : (
                           <div className="w-full aspect-[16/9] flex items-center justify-center flex-col gap-2">
                             <span className="material-symbols-outlined text-[80px] text-primary/30">electric_car</span>
@@ -511,7 +510,7 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes, adCar, a
               {visibleRest.map((car, i) => {
                 const pct = Math.round(((car.basePrice - car.discountPrice) / car.basePrice) * 100);
                 return (
-                  <motion.article
+                  <m.article
                     key={car.slug}
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -523,7 +522,7 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes, adCar, a
                     <div className="aspect-[16/9] bg-gradient-to-br from-gray-50 to-gray-100 relative flex flex-col items-center justify-center overflow-hidden">
                       {pct > 0 && <span className="absolute top-3 right-3 bg-black text-white text-[10px] font-black px-2 py-0.5 rounded-full">-{pct}%</span>}
                       {car.imageUrl ? (
-                        <img src={car.imageUrl} alt={`${car.brand} ${car.name}`} className="object-cover w-full h-full" />
+                        <img src={car.imageUrl} alt={`${car.brand} ${car.name}`} className="object-cover w-full h-full" loading="lazy" decoding="async" />
                       ) : (
                         <>
                           <span className="material-symbols-outlined text-[64px] text-gray-200">electric_car</span>
@@ -573,7 +572,7 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes, adCar, a
                         </Link>
                       </div>
                     </div>
-                  </motion.article>
+                  </m.article>
                 );
               })}
             </div>

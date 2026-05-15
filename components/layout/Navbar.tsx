@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { Icon } from "@/components/ui/Icon";
 
 export interface NavbarBrand {
@@ -233,7 +233,7 @@ export function Navbar({ brands = [], vehicleTypes = [], electricTypes = [] }: N
       {/* ── Mobile Menu ──────────────────────────────────────── */}
       <AnimatePresence>
         {mobileOpen && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
@@ -326,7 +326,7 @@ export function Navbar({ brands = [], vehicleTypes = [], electricTypes = [] }: N
                 </Link>
               </div>
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </header>
@@ -364,18 +364,18 @@ function Dropdown({
         aria-expanded={active}
       >
         {label}
-        <motion.span
+        <m.span
           animate={{ rotate: active ? 180 : 0 }}
           transition={{ duration: 0.2 }}
           className="material-symbols-outlined text-[16px] leading-none"
         >
           expand_more
-        </motion.span>
+        </m.span>
       </button>
 
       <AnimatePresence>
         {active && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: -8, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.97 }}
@@ -385,7 +385,7 @@ function Dropdown({
             <div className="bg-white rounded-2xl border border-gray-100 shadow-2xl shadow-black/10 overflow-hidden">
               {children}
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>
@@ -411,24 +411,24 @@ function MobileAccordion({
         onClick={onToggle}
       >
         {label}
-        <motion.span
+        <m.span
           animate={{ rotate: open ? 180 : 0 }}
           transition={{ duration: 0.2 }}
           className="material-symbols-outlined text-[18px]"
         >
           expand_more
-        </motion.span>
+        </m.span>
       </button>
       <AnimatePresence>
         {open && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             className="overflow-hidden"
           >
             <div className="pl-4 pb-2 space-y-0.5">{children}</div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>

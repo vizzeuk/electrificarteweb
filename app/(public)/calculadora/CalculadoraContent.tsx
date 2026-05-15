@@ -3,9 +3,9 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { formatCLP } from "@/lib/utils";
-import type { CalcCar } from "./page";
+import type { CalcCar, CalcVersion } from "./page";
 
 // ─── Constantes Chile ────────────────────────────────────────────────────────
 const ELECTRICITY_CLP_KWH  = 200;   // CLP/kWh tarifa residencial promedio
@@ -28,30 +28,49 @@ function getCarType(tag: string) {
   return "BEV";
 }
 
-function calcCarMonthlyCost(car: CalcCar, kmPerMonth: number): number {
-  const type = getCarType(car.electricTypeTag);
+interface ResolvedSpecs {
+  electricTypeTag: string;
+  batteryCapacity: number;
+  range: number;
+  electricRangeKm?: number | null;
+  fuelConsumption?: number | null;
+}
+
+function resolveSpecs(car: CalcCar, ver: CalcVersion | null): ResolvedSpecs {
+  return {
+    electricTypeTag: car.electricTypeTag,
+    batteryCapacity: ver?.batteryCapacity ?? car.batteryCapacity,
+    range:           ver?.range          ?? car.range,
+    electricRangeKm: ver?.electricRangeKm ?? car.electricRangeKm,
+    fuelConsumption: ver?.fuelConsumption  ?? car.fuelConsumption,
+  };
+}
+
+function calcCarMonthlyCost(car: CalcCar, kmPerMonth: number, ver: CalcVersion | null = null): number {
+  const specs = resolveSpecs(car, ver);
+  const type  = getCarType(specs.electricTypeTag);
 
   if (type === "BEV") {
-    if (car.batteryCapacity > 0 && car.range > 0)
-      return Math.round(kmPerMonth * (car.batteryCapacity / car.range) * ELECTRICITY_CLP_KWH);
+    if (specs.batteryCapacity > 0 && specs.range > 0)
+      return Math.round(kmPerMonth * (specs.batteryCapacity / specs.range) * ELECTRICITY_CLP_KWH);
     return 0;
   }
 
   if (type === "PHEV") {
-    const eRange = car.electricRangeKm ?? 0;
+    const eRange = specs.electricRangeKm ?? 0;
     if (eRange > 0) {
       const elecKmMonth = Math.min(kmPerMonth, eRange * 30);
       const fuelKmMonth = Math.max(0, kmPerMonth - eRange * 30);
-      const kWhPerKm    = car.batteryCapacity > 0 ? car.batteryCapacity / eRange : 0.20;
+      const kWhPerKm    = specs.batteryCapacity > 0 ? specs.batteryCapacity / eRange : 0.20;
       return Math.round(elecKmMonth * kWhPerKm * ELECTRICITY_CLP_KWH + (fuelKmMonth / PHEV_ICE_KM_L) * BENCINA_CLP_L);
     }
-    if (car.batteryCapacity > 0 && car.range > 0)
-      return Math.round(kmPerMonth * (car.batteryCapacity / car.range) * ELECTRICITY_CLP_KWH);
+    if (specs.batteryCapacity > 0 && specs.range > 0)
+      return Math.round(kmPerMonth * (specs.batteryCapacity / specs.range) * ELECTRICITY_CLP_KWH);
     return 0;
   }
 
   // HEV / MHEV
-  const kmL = (car.fuelConsumption && car.fuelConsumption <= 20) ? car.fuelConsumption : 15;
+  const kmL = (specs.fuelConsumption && specs.fuelConsumption <= 20) ? specs.fuelConsumption : 15;
   return Math.round((kmPerMonth / kmL) * BENCINA_CLP_L);
 }
 
@@ -138,7 +157,7 @@ function StatCard({
   highlight?: boolean; delay?: number;
 }) {
   return (
-    <motion.div
+    <m.div
       key={value}
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
@@ -160,7 +179,7 @@ function StatCard({
       <p className={["font-headline font-black text-2xl leading-tight",
         highlight ? "text-primary" : "text-text-main"].join(" ")}>{value}</p>
       {sub && <p className="text-text-ghost text-xs mt-0.5">{sub}</p>}
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -191,7 +210,7 @@ function CarPickerModal({
 
   return (
     <AnimatePresence>
-      <motion.div
+      <m.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -199,7 +218,7 @@ function CarPickerModal({
         onClick={onClose}
       >
         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 40 }}
@@ -293,8 +312,8 @@ function CarPickerModal({
               </div>
             )}
           </div>
-        </motion.div>
-      </motion.div>
+        </m.div>
+      </m.div>
     </AnimatePresence>
   );
 }
@@ -303,11 +322,12 @@ function CarPickerModal({
 interface Props { cars: CalcCar[] }
 
 export default function CalculadoraContent({ cars }: Props) {
-  const [kmPerMonth,      setKmPerMonth]      = useState(500);
-  const [rendimientoKmL,  setRendimientoKmL]  = useState(DEFAULT_RENDIMIENTO);
-  const [useDefaultRend,  setUseDefaultRend]  = useState(false);
-  const [selectedCar,     setSelectedCar]     = useState<CalcCar | null>(null);
-  const [pickerOpen,      setPickerOpen]      = useState(false);
+  const [kmPerMonth,        setKmPerMonth]        = useState(500);
+  const [rendimientoKmL,    setRendimientoKmL]    = useState(DEFAULT_RENDIMIENTO);
+  const [useDefaultRend,    setUseDefaultRend]    = useState(false);
+  const [selectedCar,       setSelectedCar]       = useState<CalcCar | null>(null);
+  const [selectedVersionIdx, setSelectedVersionIdx] = useState<number | null>(null);
+  const [pickerOpen,        setPickerOpen]        = useState(false);
 
   const efectiveRend = useDefaultRend ? DEFAULT_RENDIMIENTO : rendimientoKmL;
 
@@ -343,7 +363,15 @@ export default function CalculadoraContent({ cars }: Props) {
     selectedCar ? similarCars : validCars.slice(0, 5),
   [selectedCar, similarCars, validCars]);
 
-  const handleSelectCar = useCallback((car: CalcCar) => setSelectedCar(car), []);
+  const handleSelectCar = useCallback((car: CalcCar) => {
+    setSelectedCar(car);
+    setSelectedVersionIdx(null);
+  }, []);
+
+  const activeVersions = selectedCar?.versions?.filter(v => v.name && v.price > 0) ?? [];
+  const activeVersion  = activeVersions.length > 0 && selectedVersionIdx !== null
+    ? activeVersions[selectedVersionIdx] ?? null
+    : null;
 
   const gasCostMonth = Math.round((kmPerMonth / efectiveRend) * BENCINA_CLP_L);
 
@@ -356,7 +384,7 @@ export default function CalculadoraContent({ cars }: Props) {
     let isEstimate: boolean;
 
     if (selectedCar) {
-      newCarMonth = calcCarMonthlyCost(selectedCar, kmPerMonth);
+      newCarMonth = calcCarMonthlyCost(selectedCar, kmPerMonth, activeVersion);
       isEstimate  = false;
     } else {
       const avgCost = topCars.length > 0
@@ -381,8 +409,14 @@ export default function CalculadoraContent({ cars }: Props) {
       };
     });
 
-    const comparisonList = selectedCar
-      ? [{ ...selectedCar, newCarMonth, savingMonth, savingPct }, ...enriched(similarCars)]
+    const selectedEntry = selectedCar ? {
+      ...selectedCar,
+      basePrice:     activeVersion?.price ?? selectedCar.basePrice,
+      discountPrice: activeVersion?.discountPrice ?? activeVersion?.price ?? selectedCar.discountPrice,
+      newCarMonth, savingMonth, savingPct,
+    } : null;
+    const comparisonList = selectedEntry
+      ? [selectedEntry, ...enriched(similarCars)]
       : enriched(topCars);
 
     return { newCarMonth, savingMonth, savingYear, saving5yr, savingPct,
@@ -483,6 +517,39 @@ export default function CalculadoraContent({ cars }: Props) {
                 )}
               </div>
 
+              {/* Version selector — only shows when car has multiple versions */}
+              {selectedCar && activeVersions.length > 1 && (
+                <div className="mb-2">
+                  <p className="text-white/40 text-xs uppercase tracking-widest font-bold mb-2">Versión</p>
+                  <div className="flex flex-wrap gap-2">
+                    {activeVersions.map((v, i) => {
+                      const isActive = selectedVersionIdx === i;
+                      const price    = v.discountPrice ?? v.price;
+                      return (
+                        <button
+                          key={v._key}
+                          onClick={() => setSelectedVersionIdx(isActive ? null : i)}
+                          className="flex flex-col items-start px-3 py-2 rounded-xl border text-left transition-all duration-200"
+                          style={isActive
+                            ? { borderColor: "#00E5E5", backgroundColor: "rgba(0,229,229,0.10)" }
+                            : { borderColor: "rgba(255,255,255,0.12)", backgroundColor: "rgba(255,255,255,0.03)" }}
+                        >
+                          <span className="text-[11px] font-bold leading-tight" style={{ color: isActive ? "#00E5E5" : "rgba(255,255,255,0.75)" }}>
+                            {v.name}
+                          </span>
+                          <span className="text-[10px] mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>
+                            {formatCLP(price)}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {selectedVersionIdx === null && (
+                    <p className="text-white/25 text-[11px] mt-1.5">Selecciona una versión para calcular con sus specs exactas</p>
+                  )}
+                </div>
+              )}
+
               <div className="space-y-8">
                 <Slider
                   label="Kilómetros por mes"
@@ -540,14 +607,19 @@ export default function CalculadoraContent({ cars }: Props) {
             <div className="relative">
               <div className="rounded-2xl p-8 space-y-6" style={{ backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)" }}>
                 {selectedCar && (
-                  <div className="flex items-center gap-2 pb-2" style={{ borderBottom: "1px solid rgba(255,255,255,0.10)" }}>
-                    {selectedCar.brandLogoUrl ? (
-                      <img src={selectedCar.brandLogoUrl} alt={selectedCar.brand}
-                        className="h-5 w-auto max-w-[40px] object-contain opacity-70 flex-shrink-0" />
-                    ) : (
-                      <span className="material-symbols-outlined text-primary text-[16px] flex-shrink-0">electric_car</span>
+                  <div className="pb-2" style={{ borderBottom: "1px solid rgba(255,255,255,0.10)" }}>
+                    <div className="flex items-center gap-2">
+                      {selectedCar.brandLogoUrl ? (
+                        <img src={selectedCar.brandLogoUrl} alt={selectedCar.brand}
+                          className="h-5 w-auto max-w-[40px] object-contain opacity-70 flex-shrink-0" loading="lazy" decoding="async" />
+                      ) : (
+                        <span className="material-symbols-outlined text-primary text-[16px] flex-shrink-0">electric_car</span>
+                      )}
+                      <p className="text-primary text-sm font-bold truncate">{selectedCar.brand} {selectedCar.name}</p>
+                    </div>
+                    {activeVersion && (
+                      <p className="text-white/40 text-[11px] mt-1 ml-0.5">{activeVersion.name}</p>
                     )}
-                    <p className="text-primary text-sm font-bold truncate">{selectedCar.brand} {selectedCar.name}</p>
                   </div>
                 )}
 
@@ -558,7 +630,7 @@ export default function CalculadoraContent({ cars }: Props) {
                     <span className="text-white/40 text-base font-normal">/mes</span>
                   </p>
                   <p className="text-white/25 text-xs mt-0.5">
-                    {formatNum(kmPerMonth)} km ÷ {efectiveRend} km/L × $1.100/L
+                    {formatNum(kmPerMonth)} km ÷ {efectiveRend} km/L × $1.600/L
                   </p>
                 </div>
 
@@ -575,7 +647,16 @@ export default function CalculadoraContent({ cars }: Props) {
                     <span className="text-primary/60 text-base font-normal">/mes</span>
                   </p>
                   {selectedCar && (
-                    <p className="text-white/30 text-xs mt-1">{carSpecLabel(selectedCar)}</p>
+                    <p className="text-white/30 text-xs mt-1">
+                      {activeVersion
+                        ? carSpecLabel({ ...selectedCar,
+                            batteryCapacity: activeVersion.batteryCapacity ?? selectedCar.batteryCapacity,
+                            range:           activeVersion.range           ?? selectedCar.range,
+                            electricRangeKm: activeVersion.electricRangeKm ?? selectedCar.electricRangeKm,
+                            fuelConsumption: activeVersion.fuelConsumption  ?? selectedCar.fuelConsumption,
+                          })
+                        : carSpecLabel(selectedCar)}
+                    </p>
                   )}
                 </div>
 
@@ -653,7 +734,7 @@ export default function CalculadoraContent({ cars }: Props) {
               const isSelected = selectedCar?._id === car._id;
               const badge      = carTypeBadge(car.electricTypeTag);
               return (
-                <motion.div
+                <m.div
                   key={car._id}
                   initial={{ opacity: 0, x: -12 }}
                   whileInView={{ opacity: 1, x: 0 }}
@@ -738,7 +819,7 @@ export default function CalculadoraContent({ cars }: Props) {
                   </div>
 
                   <Link href={`/auto/${car.slug}`} className="absolute inset-0 rounded-2xl z-0" aria-label={`Ver ${car.brand} ${car.name}`} />
-                </motion.div>
+                </m.div>
               );
             })}
           </div>

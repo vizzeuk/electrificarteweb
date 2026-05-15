@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import { formatCLP } from "@/lib/utils";
 import type { HotDealCarData } from "@/components/layout/HotDeal";
 
@@ -57,7 +57,7 @@ export function PromoPopup({ car }: PromoPopupProps) {
   return (
     <AnimatePresence>
       {open && (
-        <motion.div
+        <m.div
           key="promo-overlay"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -69,7 +69,7 @@ export function PromoPopup({ car }: PromoPopupProps) {
           aria-modal="true"
           aria-labelledby="promo-title"
         >
-          <motion.div
+          <m.div
             key="promo-modal"
             initial={{ opacity: 0, scale: 0.94, y: 12 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -194,8 +194,8 @@ export function PromoPopup({ car }: PromoPopupProps) {
                 No gracias, seguir viendo
               </button>
             </div>
-          </motion.div>
-        </motion.div>
+          </m.div>
+        </m.div>
       )}
     </AnimatePresence>
   );

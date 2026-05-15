@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { Icon } from "@/components/ui/Icon";
 
 export interface TrustBadgeData {
@@ -38,7 +38,7 @@ export function TrustBadges({ badges }: TrustBadgesProps) {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {displayBadges.map((badge, i) => (
-            <motion.div
+            <m.div
               key={badge.title}
               initial={{ opacity: 0, y: 12 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -57,7 +57,7 @@ export function TrustBadges({ badges }: TrustBadgesProps) {
                   {badge.description}
                 </p>
               </div>
-            </motion.div>
+            </m.div>
           ))}
         </div>
 

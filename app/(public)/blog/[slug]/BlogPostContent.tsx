@@ -113,8 +113,7 @@ const ptComponents: PortableTextComponents = {
           <img
             src={value.asset.url}
             alt={value.alt ?? ""}
-            className="w-full rounded-2xl object-cover"
-          />
+            className="w-full rounded-2xl object-cover" loading="lazy" decoding="async" />
           {value.caption && (
             <figcaption className="text-center text-text-ghost text-xs mt-2">
               {value.caption}
@@ -258,7 +257,7 @@ export function BlogPostContent({ post }: { post: BlogPost }) {
           {post.author && (
             <div className="flex items-center gap-3 pb-8">
               {post.author.avatar?.url ? (
-                <img src={post.author.avatar.url} alt={post.author.name} className="w-9 h-9 rounded-full object-cover" />
+                <img src={post.author.avatar.url} alt={post.author.name} className="w-9 h-9 rounded-full object-cover" loading="lazy" decoding="async" />
               ) : (
                 <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center">
                   <span className="material-symbols-outlined text-white/40 text-[18px]">person</span>
@@ -279,8 +278,7 @@ export function BlogPostContent({ post }: { post: BlogPost }) {
               <img
                 src={post.coverImage.asset.url}
                 alt={post.coverImage.alt ?? post.title}
-                className="w-full h-full object-cover"
-              />
+                className="w-full h-full object-cover" loading="lazy" decoding="async" />
             </div>
           </div>
         )}
@@ -450,7 +448,7 @@ export function BlogPostContent({ post }: { post: BlogPost }) {
                         >
                           <div className="w-14 h-14 bg-gray-100 rounded-xl flex-shrink-0 overflow-hidden">
                             {rp.coverImage?.asset?.url ? (
-                              <img src={rp.coverImage.asset.url} alt={rp.title} className="w-full h-full object-cover" />
+                              <img src={rp.coverImage.asset.url} alt={rp.title} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center">
                                 <span className="material-symbols-outlined text-[20px] text-gray-300">article</span>

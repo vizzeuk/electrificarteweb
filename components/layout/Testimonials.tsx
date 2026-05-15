@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 
 export interface TestimonialData {
   name: string;
@@ -50,8 +50,7 @@ function Avatar({ name, imageUrl }: { name: string; imageUrl?: string }) {
       <img
         src={imageUrl}
         alt={name}
-        className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm flex-shrink-0"
-      />
+        className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm flex-shrink-0" loading="lazy" decoding="async" />
     );
   }
   return (
@@ -76,7 +75,7 @@ export function Testimonials({ title = "Lo que dicen nuestros clientes", testimo
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 items-stretch">
           {displayTestimonials.map((t, i) => (
-            <motion.div
+            <m.div
               key={t.name}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -91,8 +90,7 @@ export function Testimonials({ title = "Lo que dicen nuestros clientes", testimo
                   <img
                     src={t.imageUrl}
                     alt={t.car}
-                    style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", display: "block" }}
-                  />
+                    style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", display: "block" }} loading="lazy" decoding="async" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
                 </div>
               )}
@@ -116,7 +114,7 @@ export function Testimonials({ title = "Lo que dicen nuestros clientes", testimo
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </m.div>
           ))}
         </div>
       </div>
