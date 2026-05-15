@@ -90,13 +90,15 @@ export function Hero({ data }: HeroProps) {
       aria-label="Bienvenida"
     >
       <div className="absolute inset-0 z-0">
-        {/* Background video — decorative, plays silently */}
+        {/* Background video — decorative, plays silently. Poster (43 KB) shows
+            instantly so the hero is paintable before the 2 MB video buffers. */}
         <video
           autoPlay
           muted
           loop
           playsInline
           preload="metadata"
+          poster="/images/video-fondo-hero-poster.jpg"
           className="absolute inset-0 w-full h-full object-cover"
         >
           <source src="/images/video-fondo-hero.mp4" type="video/mp4" />
