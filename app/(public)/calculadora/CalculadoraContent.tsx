@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { m, AnimatePresence } from "framer-motion";
 import { formatCLP } from "@/lib/utils";
-import type { CalcCar, CalcVersion } from "./page";
+import type { CalcCar, CalcVersion } from "./types";
 
 // ─── Constantes Chile ────────────────────────────────────────────────────────
 const ELECTRICITY_CLP_KWH  = 200;   // CLP/kWh tarifa residencial promedio

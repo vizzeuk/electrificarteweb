@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { client } from "@/lib/sanity/client";
 import { groq } from "next-sanity";
 import CalculadoraContent from "./CalculadoraContent";
+import type { CalcCar } from "./types";
 
 export const revalidate = 3600;
 
@@ -9,25 +10,6 @@ export const metadata: Metadata = {
   title: "Calculadora de ahorro eléctrico | Electrificarte",
   description: "Descubre cuánto puedes ahorrar al cambiar tu auto a eléctrico. Calcula tu ahorro mensual, anual y reducción de CO₂ con autos disponibles en Chile.",
 };
-
-export interface CalcCar {
-  _id:                  string;
-  name:                 string;
-  slug:                 string;
-  brand:                string;
-  brandSlug:            string;
-  imageUrl?:            string;
-  basePrice:            number;
-  discountPrice:        number;
-  range:                number;
-  batteryCapacity:      number;
-  electricTypeTag:      string;
-  vehicleTypeSlug?:     string;
-  electricRangeKm?:     number | null;
-  fuelConsumption?:     number | null;
-  rendimientoElectrico?: number | null;
-  brandLogoUrl?:        string | null;
-}
 
 const carsForCalculatorQuery = groq`
   *[
@@ -55,6 +37,17 @@ const carsForCalculatorQuery = groq`
     "electricTypeTag":   electricType->tag,
     "vehicleTypeSlug":   vehicleType->slug.current,
     "brandLogoUrl":      brand->logo.asset->url,
+    "versions": versions[defined(price) && price > 0]{
+      _key,
+      name,
+      price,
+      discountPrice,
+      batteryCapacity,
+      range,
+      electricRangeKm,
+      fuelConsumption,
+      rendimientoElectrico,
+    },
   }
 `;
 

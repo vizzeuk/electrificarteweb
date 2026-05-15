@@ -90,19 +90,16 @@ export function Hero({ data }: HeroProps) {
       aria-label="Bienvenida"
     >
       <div className="absolute inset-0 z-0">
-        {/* Background video — decorative, plays silently. Poster shows
-            instantly so the hero is paintable before the video buffers. */}
+        {/* Background video — decorative, plays silently */}
         <video
           autoPlay
           muted
           loop
           playsInline
-          preload="none"
-          poster="/hero-video/hero-poster.jpg"
+          preload="metadata"
           className="absolute inset-0 w-full h-full object-cover"
         >
-          <source src="/hero-video/hero.webm" type="video/webm" />
-          <source src="/hero-video/hero.mp4"  type="video/mp4"  />
+          <source src="/images/video-fondo-hero.mp4" type="video/mp4" />
         </video>
         {/* Dark overlay keeps text readable */}
         <div className="absolute inset-0 bg-black/78" />
