@@ -45,11 +45,15 @@ export function LatestLaunches({ title = "Últimos lanzamientos", cars }: Latest
 
   const trackRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const [canLeft, setCanLeft] = useState(false);
+  const [canLeft,   setCanLeft]   = useState(false);
+  const [scrollPct, setScrollPct] = useState(0);
 
   const updateArrows = useCallback(() => {
-    setCanLeft((trackRef.current?.scrollLeft ?? 0) > 8);
-  }, []);
+    const el = trackRef.current;
+    if (!el) return;
+    setCanLeft(el.scrollLeft > 8);
+    setScrollPct(singleSetWidth > 0 ? Math.min(el.scrollLeft / singleSetWidth, 1) : 0);
+  }, [singleSetWidth]);
 
   // Silently reset when past the first copy — uses scrollend + fallback so it
   // never fires mid-animation and interrupts the smooth scroll.
@@ -183,6 +187,16 @@ export function LatestLaunches({ title = "Últimos lanzamientos", cars }: Latest
           >
             <span className="material-symbols-outlined text-[22px]">chevron_right</span>
           </button>
+        </div>
+      </div>
+
+      {/* Progress bar — mobile only */}
+      <div className="md:hidden mx-4 mt-5">
+        <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
+          <div
+            className="h-full rounded-full transition-all duration-150"
+            style={{ width: `${Math.max(scrollPct * 100, 8)}%`, backgroundColor: "#00E5E5" }}
+          />
         </div>
       </div>
     </section>

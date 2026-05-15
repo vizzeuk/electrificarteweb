@@ -17,11 +17,31 @@ export function StickyCTA() {
   }, []);
 
   useEffect(() => {
-    document.documentElement.style.setProperty("--sticky-h", visible ? "68px" : "0px");
-    document.documentElement.style.setProperty("--chat-bottom", visible ? "92px" : "24px");
+    const LIFTED = "92px";
+    const BASE   = "24px";
+
+    document.documentElement.style.setProperty("--sticky-h",    visible ? "68px" : "0px");
+    document.documentElement.style.setProperty("--chat-bottom", visible ? LIFTED : BASE);
+
+    // Direct shadow-DOM manipulation — CSS variable inheritance is unreliable in
+    // Safari/iOS web components, so we also set the inline style on the launcher
+    // element itself as a guaranteed fallback.
+    try {
+      const widget   = document.querySelector("ev-chat-widget");
+      const launcher = widget?.shadowRoot?.querySelector("#launcher") as HTMLElement | null;
+      const panel    = widget?.shadowRoot?.querySelector("#panel")    as HTMLElement | null;
+      if (launcher) launcher.style.bottom = visible ? LIFTED : "";
+      if (panel)    panel.style.setProperty("--chat-bottom", visible ? LIFTED : BASE);
+    } catch { /* non-blocking */ }
+
     return () => {
-      document.documentElement.style.setProperty("--sticky-h", "0px");
-      document.documentElement.style.setProperty("--chat-bottom", "24px");
+      document.documentElement.style.setProperty("--sticky-h",    "0px");
+      document.documentElement.style.setProperty("--chat-bottom", BASE);
+      try {
+        const widget   = document.querySelector("ev-chat-widget");
+        const launcher = widget?.shadowRoot?.querySelector("#launcher") as HTMLElement | null;
+        if (launcher) launcher.style.bottom = "";
+      } catch { /* non-blocking */ }
     };
   }, [visible]);
 
