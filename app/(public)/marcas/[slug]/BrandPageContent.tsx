@@ -269,14 +269,11 @@ export default function BrandPageContent({ slug, brand }: BrandPageContentProps)
       {brand.stats.length > 0 && (
         <section className="bg-black border-t border-white/[0.07]">
           <div className="max-w-7xl mx-auto px-4 md:px-8 py-10">
-            <div
-              className="grid gap-4"
-              style={{ gridTemplateColumns: `repeat(${Math.min(brand.stats.length, 4)}, 1fr)` }}
-            >
+            <div className={`grid gap-4 ${brand.stats.length <= 2 ? "grid-cols-2" : brand.stats.length === 3 ? "grid-cols-3" : "grid-cols-2 sm:grid-cols-4"}`}>
               {brand.stats.slice(0, 4).map((stat) => (
-                <div key={stat.label} className="bg-white/5 border border-white/10 rounded-2xl p-5 text-center">
-                  <p className="text-2xl md:text-3xl font-headline font-black mb-1 text-primary">{stat.value}</p>
-                  <p className="text-white/40 text-[11px] uppercase tracking-wide leading-snug">{stat.label}</p>
+                <div key={stat.label} className="bg-white/5 border border-white/10 rounded-2xl p-4 sm:p-5 text-center">
+                  <p className="text-lg sm:text-2xl md:text-3xl font-headline font-black mb-1 text-primary break-words">{stat.value}</p>
+                  <p className="text-white/40 text-[10px] sm:text-[11px] uppercase tracking-wide leading-snug">{stat.label}</p>
                 </div>
               ))}
             </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import { CarCard } from "@/components/car/CarCard";
 
 export interface LaunchCarData {
@@ -29,115 +29,160 @@ interface LatestLaunchesProps {
 }
 
 const FALLBACK_CARS: LaunchCarData[] = [
-  { name: "EX30 Pure Electric", slug: "volvo-ex30", brand: "Volvo", category: "SUV Compacto", batteryCapacity: 51, range: 480, basePrice: 40500000, discountPrice: 36900000, isNew: true },
-  { name: "Tavascan EV",        slug: "cupra-tavascan", brand: "Cupra", category: "SUV Coupé", batteryCapacity: 77, range: 520, basePrice: 47590000 },
-  { name: "Seal EV Pro",        slug: "byd-seal", brand: "BYD", category: "Sedán", batteryCapacity: 82.6, range: 570, basePrice: 45500000, discountPrice: 38990000 },
+  { name: "EX30 Pure Electric", slug: "volvo-ex30",     brand: "Volvo", category: "SUV Compacto", batteryCapacity: 51,   range: 480, basePrice: 40500000, discountPrice: 36900000, isNew: true },
+  { name: "Tavascan EV",        slug: "cupra-tavascan", brand: "Cupra", category: "SUV Coupé",    batteryCapacity: 77,   range: 520, basePrice: 47590000 },
+  { name: "Seal EV Pro",        slug: "byd-seal",       brand: "BYD",   category: "Sedán",        batteryCapacity: 82.6, range: 570, basePrice: 45500000, discountPrice: 38990000 },
 ];
 
-const CARD_W = 320;
-const GAP    = 24;
+const CARD_W  = 320;
+const GAP     = 24;
+const AUTO_MS = 5000;
 
 export function LatestLaunches({ title = "Últimos lanzamientos", cars }: LatestLaunchesProps) {
-  const displayCars = cars && cars.length > 0 ? cars : FALLBACK_CARS;
-  const trackRef    = useRef<HTMLDivElement>(null);
-  const [canLeft,  setCanLeft]  = useState(false);
-  const [canRight, setCanRight] = useState(true);
+  const displayCars    = cars && cars.length > 0 ? cars : FALLBACK_CARS;
+  const loopCars       = useMemo(() => [...displayCars, ...displayCars], [displayCars]);
+  const singleSetWidth = useMemo(() => displayCars.length * (CARD_W + GAP), [displayCars]);
+
+  const trackRef = useRef<HTMLDivElement>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [canLeft, setCanLeft] = useState(false);
+
+  const updateArrows = useCallback(() => {
+    setCanLeft((trackRef.current?.scrollLeft ?? 0) > 8);
+  }, []);
+
+  // Silently reset when past the first copy — uses scrollend + fallback so it
+  // never fires mid-animation and interrupts the smooth scroll.
+  const scheduleReset = useCallback((el: HTMLElement) => {
+    let fallback: ReturnType<typeof setTimeout>;
+    const onSettled = () => {
+      clearTimeout(fallback);
+      if (el.scrollLeft >= singleSetWidth) {
+        el.scrollLeft = el.scrollLeft - singleSetWidth;
+      }
+    };
+    el.addEventListener("scrollend", onSettled, { once: true });
+    fallback = setTimeout(onSettled, 900);
+  }, [singleSetWidth]);
+
+  const stopAuto = useCallback(() => {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+  }, []);
+
+  const startAuto = useCallback(() => {
+    stopAuto();
+    timerRef.current = setInterval(() => {
+      const el = trackRef.current;
+      if (!el) return;
+      el.scrollBy({ left: CARD_W + GAP, behavior: "smooth" });
+      scheduleReset(el);
+    }, AUTO_MS);
+  }, [stopAuto, scheduleReset]);
 
   useEffect(() => {
     const el = trackRef.current;
     if (!el) return;
-    function upd() {
-      const max = el!.scrollWidth - el!.clientWidth;
-      setCanLeft(el!.scrollLeft > 8);
-      setCanRight(el!.scrollLeft < max - 8);
-    }
-    upd();
-    el.addEventListener("scroll", upd, { passive: true });
-    return () => el.removeEventListener("scroll", upd);
-  }, [displayCars]);
+    el.addEventListener("scroll", updateArrows, { passive: true });
+    startAuto();
+    return () => {
+      el.removeEventListener("scroll", updateArrows);
+      stopAuto();
+    };
+  }, [loopCars, updateArrows, startAuto, stopAuto]);
 
-  function scroll(dir: "left" | "right") {
-    trackRef.current?.scrollBy({
-      left: dir === "right" ? CARD_W + GAP : -(CARD_W + GAP),
-      behavior: "smooth",
-    });
+  function handleArrow(dir: "left" | "right") {
+    const el = trackRef.current;
+    if (!el) return;
+    stopAuto();
+    if (dir === "left") {
+      if (el.scrollLeft <= 8) {
+        el.scrollLeft = singleSetWidth;
+      }
+      el.scrollBy({ left: -(CARD_W + GAP), behavior: "smooth" });
+    } else {
+      el.scrollBy({ left: CARD_W + GAP, behavior: "smooth" });
+      scheduleReset(el);
+    }
+    startAuto();
   }
 
   return (
     <section className="py-20 md:py-24 bg-surface overflow-hidden" aria-labelledby="latest-title">
       <div className="max-w-7xl mx-auto px-4 md:px-8">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-10 gap-4">
-          <div>
-            <p className="text-[11px] uppercase tracking-widest text-primary-deep font-bold mb-2">Novedades</p>
-            <h2 id="latest-title" className="text-3xl md:text-4xl font-headline font-black uppercase tracking-tight">
-              {title}
-            </h2>
-          </div>
-          <div className="flex items-center gap-3">
-            <a href="/marcas" className="text-sm font-medium text-primary-deep hover:text-primary transition-colors">
-              Ver todos &rarr;
-            </a>
-            {/* Nav arrows — desktop */}
-            <div className="hidden sm:flex items-center gap-2">
-              <button
-                onClick={() => scroll("left")}
-                disabled={!canLeft}
-                className="w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:enabled:border-primary/40 hover:enabled:bg-primary/5"
-                aria-label="Anterior"
-              >
-                <span className="material-symbols-outlined text-[18px]">chevron_left</span>
-              </button>
-              <button
-                onClick={() => scroll("right")}
-                disabled={!canRight}
-                className="w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:enabled:border-primary/40 hover:enabled:bg-primary/5"
-                aria-label="Siguiente"
-              >
-                <span className="material-symbols-outlined text-[18px]">chevron_right</span>
-              </button>
-            </div>
-          </div>
+        <div className="mb-10">
+          <p className="text-[11px] uppercase tracking-widest text-primary-deep font-bold mb-2">Novedades</p>
+          <h2 id="latest-title" className="text-3xl md:text-4xl font-headline font-black uppercase tracking-tight">
+            {title}
+          </h2>
         </div>
 
-        {/* Carousel track */}
-        <div
-          ref={trackRef}
-          className="flex gap-6 overflow-x-auto pb-2 -mx-4 px-4 md:-mx-8 md:px-8 hide-scrollbar scroll-smooth"
-          style={{ scrollSnapType: "x mandatory" }}
-        >
-          {displayCars.map((car, i) => {
-            const brandObj    = typeof car.brand === "string" ? { name: car.brand } : car.brand;
-            const categoryName = car.category ? (typeof car.category === "string" ? car.category : car.category.name) : undefined;
-            return (
-              <div
-                key={car._id ?? car.slug}
-                className="flex-shrink-0"
-                style={{ width: CARD_W, scrollSnapAlign: "start" }}
-              >
-                <CarCard
-                  name={car.name}
-                  brand={brandObj.name}
-                  brandLogo={brandObj.logoUrl}
-                  slug={car.slug}
-                  image={car.imageUrl}
-                  category={categoryName}
-                  batteryCapacity={car.batteryCapacity}
-                  range={car.range}
-                  maxVersionRange={car.maxVersionRange}
-                  electricRangeKm={car.electricRangeKm}
-                  fuelConsumption={car.fuelConsumption}
-                  rendimientoElectrico={car.rendimientoElectrico}
-                  electricTypeTag={car.electricType?.tag}
-                  power={car.power}
-                  basePrice={car.basePrice}
-                  discountPrice={car.discountPrice}
-                  isNew={car.isNew}
-                  index={i}
-                  compact
-                />
-              </div>
-            );
-          })}
+        {/* Flex row: [← button] [overflow-hidden track] [→ button] */}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => handleArrow("left")}
+            disabled={!canLeft}
+            aria-label="Anterior"
+            className="hidden sm:flex flex-shrink-0 w-11 h-11 rounded-full bg-black hover:bg-primary text-white hover:text-black items-center justify-center shadow-[0_4px_20px_rgba(0,0,0,0.35)] transition-all duration-200 disabled:opacity-0 disabled:pointer-events-none"
+          >
+            <span className="material-symbols-outlined text-[22px]">chevron_left</span>
+          </button>
+
+          <div className="flex-1 overflow-hidden">
+            <div
+              ref={trackRef}
+              className="flex gap-6 overflow-x-auto pb-2 hide-scrollbar"
+              style={{ scrollSnapType: "x mandatory" }}
+              onMouseEnter={stopAuto}
+              onMouseLeave={startAuto}
+              onTouchStart={stopAuto}
+              onTouchEnd={startAuto}
+            >
+              {loopCars.map((car, i) => {
+                const brandObj     = typeof car.brand === "string" ? { name: car.brand } : car.brand;
+                const categoryName = car.category
+                  ? typeof car.category === "string" ? car.category : car.category.name
+                  : undefined;
+                return (
+                  <div
+                    key={`${car._id ?? car.slug}-${i}`}
+                    className="flex-shrink-0"
+                    style={{ width: CARD_W, scrollSnapAlign: "start" }}
+                  >
+                    <CarCard
+                      name={car.name}
+                      brand={brandObj.name}
+                      brandLogo={brandObj.logoUrl}
+                      slug={car.slug}
+                      image={car.imageUrl}
+                      category={categoryName}
+                      batteryCapacity={car.batteryCapacity}
+                      range={car.range}
+                      maxVersionRange={car.maxVersionRange}
+                      electricRangeKm={car.electricRangeKm}
+                      fuelConsumption={car.fuelConsumption}
+                      rendimientoElectrico={car.rendimientoElectrico}
+                      electricTypeTag={car.electricType?.tag}
+                      power={car.power}
+                      basePrice={car.basePrice}
+                      discountPrice={car.discountPrice}
+                      isNew={car.isNew}
+                      index={i % displayCars.length}
+                      compact
+                      noAnimate
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <button
+            onClick={() => handleArrow("right")}
+            aria-label="Siguiente"
+            className="hidden sm:flex flex-shrink-0 w-11 h-11 rounded-full bg-black hover:bg-primary text-white hover:text-black items-center justify-center shadow-[0_4px_20px_rgba(0,0,0,0.35)] transition-all duration-200"
+          >
+            <span className="material-symbols-outlined text-[22px]">chevron_right</span>
+          </button>
         </div>
       </div>
     </section>

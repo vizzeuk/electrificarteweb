@@ -29,7 +29,6 @@ export function FeedbackWidget() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Closing without answering — just collapse to bubble, don't mark as seen
   function collapse() {
     setExpanded(false);
   }
@@ -44,7 +43,7 @@ export function FeedbackWidget() {
         body: JSON.stringify({ rating, comment: comment.trim() || undefined, page: window.location.pathname }),
       });
     } catch {
-      // silently ignore; user still sees thank-you
+      // silently ignore
     }
     setSending(false);
     localStorage.setItem(SEEN_KEY, Date.now().toString());
@@ -57,25 +56,28 @@ export function FeedbackWidget() {
 
   if (hidden) return null;
 
+  // Bubble sits to the LEFT of the chatbot button (chatbot is at right:24px, width:56px → bubble at right:92px)
+  const bubbleRight = "92px";
+  const bubbleBottom = "calc(var(--sticky-h, 0px) + 24px)";
+
   return (
-    <div
-      style={{
-        position: "fixed",
-        bottom: "calc(92px + var(--sticky-h, 0px))",
-        right: "24px",
-        zIndex: 50,
-        transition: "bottom 0.3s ease",
-      }}
-    >
-      {/* Collapsed bubble */}
+    <>
+      {/* Collapsed bubble — same size as chatbot (56px), left of chatbot */}
       {!expanded && (
         <button
           onClick={() => setExpanded(true)}
           title="Califica tu experiencia"
-          className="w-12 h-12 rounded-full bg-amber text-black flex items-center justify-center shadow-lg hover:scale-110 hover:shadow-xl transition-all duration-200"
+          style={{
+            position: "fixed",
+            bottom: bubbleBottom,
+            right: bubbleRight,
+            zIndex: 51,
+            transition: "bottom 0.3s ease",
+          }}
+          className="w-14 h-14 rounded-full bg-amber text-black flex items-center justify-center shadow-lg hover:scale-110 hover:shadow-xl transition-all duration-200"
         >
           <span
-            className="material-symbols-outlined text-[22px]"
+            className="material-symbols-outlined text-[24px]"
             style={{ fontVariationSettings: '"FILL" 1' }}
           >
             star
@@ -83,9 +85,19 @@ export function FeedbackWidget() {
         </button>
       )}
 
-      {/* Expanded card */}
+      {/* Expanded card — anchored to bottom-right of screen, safe width on mobile */}
       {expanded && (
-        <div className="w-72 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden">
+        <div
+          style={{
+            position: "fixed",
+            bottom: "calc(var(--sticky-h, 0px) + 96px)",
+            right: "16px",
+            zIndex: 51,
+            width: "min(288px, calc(100vw - 32px))",
+            transition: "bottom 0.3s ease",
+          }}
+          className="bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden"
+        >
           {submitted ? (
             <div className="px-5 py-8 text-center">
               <span
@@ -144,7 +156,6 @@ export function FeedbackWidget() {
                   ))}
                 </div>
 
-                {/* Optional comment */}
                 <textarea
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
@@ -165,6 +176,6 @@ export function FeedbackWidget() {
           )}
         </div>
       )}
-    </div>
+    </>
   );
 }

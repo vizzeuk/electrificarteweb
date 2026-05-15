@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
 import { formatCLP, carStats } from "@/lib/utils";
@@ -40,35 +40,78 @@ const FALLBACK: OpportunityCarData[] = [
   { name: "BYD Seal",         slug: "byd-seal",         brand: "BYD",   category: "Sedán",        basePrice: 42990000, discountPrice: 35990000, range: 570, batteryCapacity: 82,  power: 313 },
 ];
 
-const CARD_W = 280; // px — card width
-const GAP    = 16;  // px — gap between cards
+const CARD_W  = 280; // px — card width
+const GAP     = 16;  // px — gap between cards
+const AUTO_MS = 5000;
 
 export function Opportunities({ title = "Destacados Electrificarte", cars }: OpportunitiesProps) {
-  const displayCars = cars && cars.length > 0 ? cars : FALLBACK;
-  const trackRef    = useRef<HTMLDivElement>(null);
-  const [canLeft,  setCanLeft]  = useState(false);
-  const [canRight, setCanRight] = useState(true);
+  const displayCars    = cars && cars.length > 0 ? cars : FALLBACK;
+  // Double items for seamless infinite loop
+  const loopCars       = useMemo(() => [...displayCars, ...displayCars], [displayCars]);
+  const singleSetWidth = useMemo(() => displayCars.length * (CARD_W + GAP), [displayCars]);
+
+  const trackRef = useRef<HTMLDivElement>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [canLeft, setCanLeft]   = useState(false);
   const [scrollPct, setScrollPct] = useState(0);
+  const canRight = true; // always true — infinite carousel
+
+  const updateState = useCallback(() => {
+    const el = trackRef.current;
+    if (!el) return;
+    const max = el.scrollWidth - el.clientWidth;
+    setCanLeft(el.scrollLeft > 8);
+    setScrollPct(max > 0 ? Math.min(el.scrollLeft / singleSetWidth, 1) : 0);
+  }, [singleSetWidth]);
+
+  const scheduleReset = useCallback((el: HTMLElement) => {
+    let fallback: ReturnType<typeof setTimeout>;
+    const onSettled = () => {
+      clearTimeout(fallback);
+      if (el.scrollLeft >= singleSetWidth) {
+        el.scrollLeft = el.scrollLeft - singleSetWidth;
+      }
+    };
+    el.addEventListener("scrollend", onSettled, { once: true });
+    fallback = setTimeout(onSettled, 900);
+  }, [singleSetWidth]);
+
+  const stopAuto = useCallback(() => {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+  }, []);
+
+  const startAuto = useCallback(() => {
+    stopAuto();
+    timerRef.current = setInterval(() => {
+      const el = trackRef.current;
+      if (!el) return;
+      el.scrollBy({ left: (CARD_W + GAP) * 2, behavior: "smooth" });
+      scheduleReset(el);
+    }, AUTO_MS);
+  }, [stopAuto, scheduleReset]);
 
   useEffect(() => {
     const el = trackRef.current;
     if (!el) return;
-    function upd() {
-      const max = el!.scrollWidth - el!.clientWidth;
-      setCanLeft(el!.scrollLeft > 8);
-      setCanRight(el!.scrollLeft < max - 8);
-      setScrollPct(max > 0 ? el!.scrollLeft / max : 0);
-    }
-    upd();
-    el.addEventListener("scroll", upd, { passive: true });
-    return () => el.removeEventListener("scroll", upd);
-  }, [displayCars]);
+    updateState();
+    el.addEventListener("scroll", updateState, { passive: true });
+    startAuto();
+    return () => {
+      el.removeEventListener("scroll", updateState);
+      stopAuto();
+    };
+  }, [loopCars, updateState, startAuto, stopAuto]);
 
   function scroll(dir: "left" | "right") {
-    trackRef.current?.scrollBy({
-      left: dir === "right" ? (CARD_W + GAP) * 2 : -(CARD_W + GAP) * 2,
-      behavior: "smooth",
-    });
+    const el = trackRef.current;
+    if (!el) return;
+    if (dir === "left") {
+      if (el.scrollLeft <= 8) el.scrollLeft = singleSetWidth;
+      el.scrollBy({ left: -(CARD_W + GAP) * 2, behavior: "smooth" });
+    } else {
+      el.scrollBy({ left: (CARD_W + GAP) * 2, behavior: "smooth" });
+      scheduleReset(el);
+    }
   }
 
   return (
@@ -96,7 +139,7 @@ export function Opportunities({ title = "Destacados Electrificarte", cars }: Opp
           {/* Desktop nav arrows */}
           <div className="hidden md:flex gap-2 shrink-0">
             <button
-              onClick={() => scroll("left")}
+              onClick={() => { stopAuto(); scroll("left"); startAuto(); }}
               disabled={!canLeft}
               aria-label="Anterior"
               className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-text-muted hover:border-primary hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all"
@@ -104,7 +147,7 @@ export function Opportunities({ title = "Destacados Electrificarte", cars }: Opp
               <span className="material-symbols-outlined text-[20px]">chevron_left</span>
             </button>
             <button
-              onClick={() => scroll("right")}
+              onClick={() => { stopAuto(); scroll("right"); startAuto(); }}
               disabled={!canRight}
               aria-label="Siguiente"
               className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-text-muted hover:border-primary hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all"
@@ -145,8 +188,12 @@ export function Opportunities({ title = "Destacados Electrificarte", cars }: Opp
             msOverflowStyle: "none",
             scrollbarWidth: "none",
           }}
+          onMouseEnter={stopAuto}
+          onMouseLeave={startAuto}
+          onTouchStart={stopAuto}
+          onTouchEnd={startAuto}
         >
-          {displayCars.map((deal) => {
+          {loopCars.map((deal, loopIdx) => {
             const brandName    = deal.brand    ? (typeof deal.brand    === "string" ? deal.brand    : deal.brand.name)    : "";
             const categoryName = deal.category ? (typeof deal.category === "string" ? deal.category : deal.category.name) : "";
             const hasDiscount  = deal.discountPrice && deal.discountPrice < deal.basePrice;
@@ -156,7 +203,7 @@ export function Opportunities({ title = "Destacados Electrificarte", cars }: Opp
 
             return (
               <article
-                key={deal._id ?? deal.slug}
+                key={`${deal._id ?? deal.slug}-${loopIdx}`}
                 style={{ minWidth: CARD_W, scrollSnapAlign: "start" }}
                 className="group relative border border-gray-100 bg-white rounded-xl flex flex-col hover:border-primary/40 hover:shadow-md transition-all duration-300"
               >

@@ -20,8 +20,9 @@ interface ElectricTypeGridProps {
   types: ElectricTypeItem[];
 }
 
-const CARD_W = 360;
-const GAP    = 16;
+const CARD_W_MAX = 360;
+const CARD_W     = 300; // desktop fallback for JS scroll calc; actual width driven by CSS
+const GAP        = 16;
 
 export function VehicleTypeGrid({ types }: ElectricTypeGridProps) {
   if (!types || types.length === 0) return null;
@@ -44,10 +45,10 @@ export function VehicleTypeGrid({ types }: ElectricTypeGridProps) {
   }, [types]);
 
   function scroll(dir: "left" | "right") {
-    trackRef.current?.scrollBy({
-      left: dir === "right" ? CARD_W + GAP : -(CARD_W + GAP),
-      behavior: "smooth",
-    });
+    const el = trackRef.current;
+    if (!el) return;
+    const w = (el.firstElementChild as HTMLElement | null)?.offsetWidth ?? CARD_W;
+    el.scrollBy({ left: dir === "right" ? w + GAP : -(w + GAP), behavior: "smooth" });
   }
 
   return (
@@ -90,7 +91,7 @@ export function VehicleTypeGrid({ types }: ElectricTypeGridProps) {
         </div>
       </div>
 
-      {/* Carousel track */}
+      {/* Carousel track — full-bleed */}
       <div
         ref={trackRef}
         className="flex gap-4 overflow-x-auto pb-2 scroll-smooth"
@@ -112,11 +113,18 @@ export function VehicleTypeGrid({ types }: ElectricTypeGridProps) {
             <Link
               key={type._id}
               href={`/electrico/${type.slug}`}
-              style={{ width: CARD_W, minWidth: CARD_W, maxWidth: CARD_W, height: 460, scrollSnapAlign: "start" }}
+              style={{
+                width: `min(${CARD_W_MAX}px, calc(100vw - 80px))`,
+                minWidth: `min(${CARD_W_MAX}px, calc(100vw - 80px))`,
+                maxWidth: CARD_W_MAX,
+                height: 420,
+                scrollSnapAlign: "start",
+              }}
               className="group relative flex flex-col rounded-2xl overflow-hidden flex-shrink-0"
             >
               {/* Background — photo or gradient */}
               {hasImage ? (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={type.cardImageUrl}
                   alt=""
@@ -126,13 +134,11 @@ export function VehicleTypeGrid({ types }: ElectricTypeGridProps) {
               ) : (
                 <div
                   className="absolute inset-0"
-                  style={{
-                    background: `linear-gradient(135deg, ${accent}22 0%, #0a0a0a 60%)`,
-                  }}
+                  style={{ background: `linear-gradient(135deg, ${accent}22 0%, #0a0a0a 60%)` }}
                 />
               )}
 
-              {/* Dark overlay — stronger at bottom */}
+              {/* Dark overlay */}
               <div
                 className="absolute inset-0"
                 style={{
@@ -146,23 +152,15 @@ export function VehicleTypeGrid({ types }: ElectricTypeGridProps) {
               <div className="relative flex items-start justify-between p-4">
                 <span
                   className="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full backdrop-blur-sm"
-                  style={{
-                    backgroundColor: `${accent}30`,
-                    color: accent,
-                    border: `1px solid ${accent}50`,
-                  }}
+                  style={{ backgroundColor: `${accent}30`, color: accent, border: `1px solid ${accent}50` }}
                 >
                   {type.tag}
                 </span>
-                <span
-                  className="material-symbols-outlined text-[26px] opacity-80"
-                  style={{ color: accent }}
-                >
+                <span className="material-symbols-outlined text-[26px] opacity-80" style={{ color: accent }}>
                   {type.icon ?? "bolt"}
                 </span>
               </div>
 
-              {/* Spacer */}
               <div className="flex-1" />
 
               {/* Bottom content */}
@@ -177,8 +175,6 @@ export function VehicleTypeGrid({ types }: ElectricTypeGridProps) {
                     </p>
                   )}
                 </div>
-
-                {/* Footer */}
                 <div className="flex items-center justify-between pt-2 border-t" style={{ borderColor: "rgba(255,255,255,0.15)" }}>
                   {type.carCount > 0 ? (
                     <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.50)" }}>
@@ -187,10 +183,7 @@ export function VehicleTypeGrid({ types }: ElectricTypeGridProps) {
                   ) : (
                     <span />
                   )}
-                  <span
-                    className="text-[11px] font-bold flex items-center gap-0.5"
-                    style={{ color: accent }}
-                  >
+                  <span className="text-[11px] font-bold flex items-center gap-0.5" style={{ color: accent }}>
                     Ver todos
                     <span className="material-symbols-outlined text-[13px] transition-transform group-hover:translate-x-0.5">
                       arrow_forward

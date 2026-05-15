@@ -26,6 +26,7 @@ interface CarCardProps {
   isNew?: boolean;
   index?: number;
   compact?: boolean;
+  noAnimate?: boolean;
 }
 
 export function CarCard({
@@ -48,6 +49,7 @@ export function CarCard({
   isNew,
   index = 0,
   compact = false,
+  noAnimate = false,
 }: CarCardProps) {
   const hasDiscount = discountPrice && discountPrice < basePrice;
   const discountPct = hasDiscount ? calculateDiscount(basePrice, discountPrice) : 0;
@@ -71,12 +73,18 @@ export function CarCard({
     return out;
   })() : carStats({ battery: batteryCapacity, range, maxVersionRange, electricRangeKm, fuelConsumption, rendimientoElectrico, electricTypeTag, power });
 
+  const animProps = noAnimate
+    ? {}
+    : {
+        initial: { opacity: 0, y: 20 },
+        whileInView: { opacity: 1, y: 0 },
+        viewport: { once: true, margin: "-50px" },
+        transition: { duration: 0.4, delay: index * 0.1 },
+      };
+
   return (
     <motion.article
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-50px" }}
-      transition={{ duration: 0.4, delay: index * 0.1 }}
+      {...animProps}
       className="group border border-border bg-white rounded-2xl overflow-hidden flex flex-col hover:border-primary hover:shadow-lg hover:shadow-primary/5 transition-all duration-300"
     >
       <Link href={`/auto/${slug}`} aria-label={`Ver ${brand} ${name}`}>

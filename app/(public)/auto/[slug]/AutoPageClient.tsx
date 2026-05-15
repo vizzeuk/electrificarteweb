@@ -101,6 +101,13 @@ const galleryGradients = [
   "from-gray-900 to-black",
 ];
 
+function validCharge(val: string | null | undefined): string | null {
+  if (!val) return null;
+  const v = val.trim().toUpperCase();
+  if (v === "N/D" || v === "N/A" || v === "-" || v === "") return null;
+  return val;
+}
+
 function buildFallbackHighlights(car: CarData) {
   const gallery = car.gallery ?? [];
   const tag = (car.electricTypeTag ?? "").toUpperCase();
@@ -134,7 +141,7 @@ function buildFallbackHighlights(car: CarData) {
         imagePosition: "right" as const,
       },
       {
-        title:         car.chargeTimeDC ? `Carga rápida en ${car.chargeTimeDC}` : "Carga inteligente y flexible",
+        title:         validCharge(car.chargeTimeDC) ? `Carga rápida en ${car.chargeTimeDC}` : "Carga inteligente y flexible",
         description:   `Olvídate de las esperas largas. ${car.chargeType ? `Compatible con ${car.chargeType}, ` : ""}el ${car.name} se adapta tanto a cargadores domésticos como a puntos de carga rápida DC para que siempre estés listo para salir.`,
         badge:         "Carga",
         icon:          "bolt",
@@ -157,7 +164,7 @@ function buildFallbackHighlights(car: CarData) {
       },
       {
         title:         car.rendimientoElectrico ? `${car.rendimientoElectrico} km/kWh de eficiencia eléctrica` : "Carga inteligente para ciudad y carretera",
-        description:   `Con su sistema híbrido enchufable, el ${car.name} optimiza automáticamente el uso de energía según tu forma de conducir. ${car.chargeTimeDC ? `Carga rápida en ${car.chargeTimeDC}.` : car.chargeTimeAC ? `Carga completa en ${car.chargeTimeAC}.` : ""}`,
+        description:   `Con su sistema híbrido enchufable, el ${car.name} optimiza automáticamente el uso de energía según tu forma de conducir. ${validCharge(car.chargeTimeDC) ? `Carga rápida en ${car.chargeTimeDC}.` : validCharge(car.chargeTimeAC) ? `Carga completa en ${car.chargeTimeAC}.` : ""}`,
         badge:         "Eficiencia",
         icon:          "savings",
         imageUrl:      gallery[2] ?? gallery[0] ?? undefined,
@@ -234,30 +241,30 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
             transition={{ duration: 0.25 }}
             className="fixed top-16 md:top-20 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm"
           >
-            <div className="max-w-7xl mx-auto px-4 md:px-8 h-14 flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3 min-w-0">
+            <div className="max-w-7xl mx-auto px-4 md:px-8 h-14 flex items-center justify-between gap-2 sm:gap-4">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                 {car.brandLogoUrl ? (
-                  <img src={car.brandLogoUrl} alt={car.brand} className="h-6 w-auto object-contain flex-shrink-0" />
+                  <img src={car.brandLogoUrl} alt={car.brand} className="h-5 sm:h-6 w-auto object-contain flex-shrink-0" />
                 ) : (
                   <span className="material-symbols-outlined text-primary text-[18px] flex-shrink-0">electric_car</span>
                 )}
                 <div className="min-w-0">
-                  <span className="font-headline font-bold text-sm truncate">{car.brand} {car.name}</span>
-                  <span className="text-text-ghost text-xs ml-2 hidden sm:inline">{ver.name}</span>
+                  <p className="font-headline font-bold text-xs sm:text-sm truncate leading-tight">{car.brand} {car.name}</p>
+                  <span className="text-text-ghost text-[10px] hidden sm:block truncate">{ver.name}</span>
                 </div>
               </div>
-              <div className="flex items-center gap-3 flex-shrink-0">
+              <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
                 <div className="hidden sm:block text-right">
                   {car.isHotDeal && savingsPct > 0 && (
                     <p className="text-xs text-text-ghost line-through">{formatCLP(ver.price)}</p>
                   )}
-                  <p className="font-headline font-black text-primary-deep text-base leading-none">
+                  <p className="font-headline font-black text-primary-deep text-sm sm:text-base leading-none">
                     {formatCLP(car.isHotDeal && savingsPct > 0 ? ver.discountPrice : ver.price)}
                   </p>
                 </div>
                 <Link
                   href={`/solicitar?auto=${car.slug}&nombre=${encodeURIComponent(car.brand + " " + car.name)}`}
-                  className="bg-primary hover:bg-primary-dark text-black font-bold px-4 py-2 rounded-lg text-sm transition-colors whitespace-nowrap"
+                  className="bg-primary hover:bg-primary-dark text-black font-bold px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm transition-colors whitespace-nowrap"
                 >
                   Solicitar oferta
                 </Link>
@@ -316,23 +323,24 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
           <div className="flex-1" />
 
           {/* Bottom info row */}
-          <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-end">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-end">
 
-            {/* Left: brand / name / tagline / CTA */}
+            {/* Left: brand / name / tagline. CTAs hidden on mobile (shown below stats). */}
             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
-              <div className="flex items-center gap-2 mb-4">
+              <div className="flex flex-wrap items-center gap-2 mb-4">
                 {car.isHotDeal && <span className="bg-amber text-black text-[10px] font-black uppercase tracking-wide px-2.5 py-1 rounded-full">HOT DEAL</span>}
                 {car.isNew && <span className="bg-primary text-black text-[10px] font-black uppercase tracking-wide px-2.5 py-1 rounded-full">NUEVO</span>}
-                {car.isTopSeller && <span className="bg-white text-black text-[10px] font-black uppercase tracking-wide px-2.5 py-1 rounded-full">🏆 MÁS VENDIDO</span>}
+                {car.isTopSeller && <span className="bg-white text-black text-[10px] font-black uppercase tracking-wide px-2.5 py-1 rounded-full">MÁS VENDIDO</span>}
                 <span className="text-white/30 text-xs uppercase tracking-widest">{car.category}</span>
               </div>
               <p className="text-white/40 text-sm font-semibold mb-1">{car.brand}</p>
-              <h1 className="text-5xl md:text-7xl font-headline font-black text-white tracking-tighter leading-[0.9] mb-4">
+              <h1 className="text-4xl sm:text-5xl md:text-7xl font-headline font-black text-white tracking-tighter leading-[0.9] mb-4">
                 {car.name}<span className="text-primary">.</span>
               </h1>
-              <p className="text-white/60 text-base mb-8 max-w-sm leading-relaxed">{car.tagline}</p>
+              <p className="text-white/60 text-base mb-6 max-w-sm leading-relaxed">{car.tagline}</p>
 
-              <div className="flex flex-col sm:flex-row gap-3">
+              {/* CTAs — desktop only (lg+). On mobile they appear below the stats block. */}
+              <div className="hidden lg:flex flex-col sm:flex-row gap-3">
                 <Link
                   href={`/solicitar?auto=${car.slug}&nombre=${encodeURIComponent(car.brand + " " + car.name)}`}
                   className="flex-1 inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-black font-black px-7 py-4 rounded-xl transition-colors"
@@ -352,7 +360,8 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
 
             {/* Right: stats + price */}
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.15 }}>
-              <div className="grid grid-cols-4 gap-2 mb-5">
+              {/* Stats — 2 cols on mobile, 4 on sm+ */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-5">
                 {(() => {
                   const tag = (car.electricTypeTag ?? "").toUpperCase();
                   const isBEV  = tag === "BEV"  || (!car.fuelConsumption && (car.battery ?? 0) >= 10 && tag !== "PHEV" && tag !== "HEV" && tag !== "MHEV" && tag !== "REEV");
@@ -365,7 +374,7 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
                   const stat2 = isBEV
                     ? { label: "Batería",     value: ver.battery ? `${ver.battery} kWh` : "—" }
                     : isPHEV
-                      ? { label: "Eficiencia e-", value: (ver.rendimientoElectrico ?? car.rendimientoElectrico) ? `${ver.rendimientoElectrico ?? car.rendimientoElectrico} km/kWh` : "—" }
+                      ? { label: "Efic. e-",    value: (ver.rendimientoElectrico ?? car.rendimientoElectrico) ? `${ver.rendimientoElectrico ?? car.rendimientoElectrico} km/kWh` : "—" }
                       : { label: "Potencia",    value: ver.power ? `${ver.power} CV` : "—" };
                   return [
                     stat1,
@@ -373,40 +382,41 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
                     { label: "0–100",  value: ver.acceleration ? `${ver.acceleration}s` : "—" },
                     { label: "Plazas", value: `${car.seats || 5} plz` },
                   ].map((s) => (
-                    <div key={s.label} className="rounded-xl p-3 text-center" style={{ backgroundColor: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.10)", backdropFilter: "blur(8px)" }}>
-                      <p className="text-primary font-headline font-black text-lg leading-none">{s.value}</p>
-                      <p className="text-[10px] mt-1 uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.40)" }}>{s.label}</p>
+                    <div key={s.label} className="rounded-xl p-2.5 sm:p-3 text-center" style={{ backgroundColor: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.10)", backdropFilter: "blur(8px)" }}>
+                      <p className="text-primary font-headline font-black text-base sm:text-lg leading-none">{s.value}</p>
+                      <p className="text-[9px] sm:text-[10px] mt-1 uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.40)" }}>{s.label}</p>
                     </div>
                   ));
                 })()}
               </div>
 
-              <div className="rounded-2xl p-5" style={{ backgroundColor: "rgba(0,0,0,0.65)", backdropFilter: "blur(12px)", border: "1px solid rgba(255,255,255,0.10)" }}>
+              {/* Price box */}
+              <div className="relative rounded-2xl p-4 sm:p-5" style={{ backgroundColor: "rgba(0,0,0,0.65)", backdropFilter: "blur(12px)", border: "1px solid rgba(255,255,255,0.10)" }}>
                 {car.isHotDeal && savingsPct > 0 ? (
                   <>
                     <div className="flex justify-between items-baseline mb-1">
                       <span className="text-white/40 text-sm">Precio lista</span>
                       <span className="text-white/40 line-through text-sm">{formatCLP(ver.price)}</span>
                     </div>
-                    <div className="flex justify-between items-baseline">
-                      <span className="text-white font-medium">Con bono Electrificarte</span>
-                      <span className="text-primary text-3xl font-headline font-black">{formatCLP(ver.discountPrice)}</span>
+                    <div className="flex justify-between items-end gap-2">
+                      <span className="text-white text-sm font-medium leading-tight">Con bono Electrificarte</span>
+                      <span className="text-primary text-xl sm:text-3xl font-headline font-black flex-shrink-0">{formatCLP(ver.discountPrice)}</span>
                     </div>
                     <div className="flex items-center gap-2 mt-3 pt-3" style={{ borderTop: "1px solid rgba(255,255,255,0.10)" }}>
                       <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
                       <span className="text-xs" style={{ color: "rgba(255,255,255,0.40)" }}>
                         Ahorras {formatCLP(savings)} ({savingsPct}%)
-                        {car.hotDealBonus ? ` · Bono adicional ${formatCLP(car.hotDealBonus)}` : ""}
+                        {car.hotDealBonus ? ` · Bono ${formatCLP(car.hotDealBonus)}` : ""}
                       </span>
                     </div>
                   </>
                 ) : (
                   <>
-                    <div className="flex justify-between items-baseline mb-1">
+                    <div className="mb-1">
                       <span className="text-white/40 text-sm">Precio Electrificarte</span>
                     </div>
-                    <div className="flex justify-between items-baseline">
-                      <span className="text-primary text-3xl font-headline font-black">{formatCLP(ver.price)}</span>
+                    <div>
+                      <span className="text-primary text-2xl sm:text-3xl font-headline font-black">{formatCLP(ver.price)}</span>
                     </div>
                     <p className="text-xs mt-3 pt-3" style={{ color: "rgba(255,255,255,0.30)", borderTop: "1px solid rgba(255,255,255,0.10)" }}>
                       *Precio referencial. Consulta por financiamiento y bonos disponibles.
@@ -414,12 +424,30 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
                   </>
                 )}
                 {car.isHotDeal && savingsPct > 0 && (
-                  <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-primary text-black text-xs font-black px-3 py-1.5 rounded-full">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-black text-xs font-black px-3 py-1.5 rounded-full whitespace-nowrap">
                     -{savingsPct}% con Electrificarte
                   </div>
                 )}
               </div>
             </motion.div>
+
+            {/* CTAs — mobile only (below stats). Hidden on lg+ where they appear in the left column. */}
+            <div className="flex lg:hidden flex-col sm:flex-row gap-3">
+              <Link
+                href={`/solicitar?auto=${car.slug}&nombre=${encodeURIComponent(car.brand + " " + car.name)}`}
+                className="flex-1 inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-black font-black px-7 py-4 rounded-xl transition-colors"
+              >
+                Obtén la mejor oferta
+                <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+              </Link>
+              <Link
+                href={`/comparador?add=${car.slug}`}
+                className="inline-flex items-center justify-center gap-2 border border-white/20 hover:border-white/40 text-white font-medium px-5 py-4 rounded-xl transition-colors"
+              >
+                <span className="material-symbols-outlined text-[18px]">compare</span>
+                Comparar
+              </Link>
+            </div>
           </div>
         </div>
       </section>
@@ -549,7 +577,7 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
                   ? { icon: "electric_car", text: [car.electricRangeKm ? `${car.electricRangeKm} km eléctrico` : null, car.rendimientoElectrico ? `${car.rendimientoElectrico} km/kWh eficiencia` : null].filter(Boolean).join(" · ") || "Híbrido enchufable" }
                   : { icon: "savings",      text: car.fuelConsumption ? `Rendimiento ${car.fuelConsumption} km/L · auto-recarga` : "Híbrido de auto-recarga" };
                 const charge = isBEV || isPHEV
-                  ? { icon: "bolt", text: [car.chargeType, car.chargeTimeDC ? `carga DC en ${car.chargeTimeDC}` : null].filter(Boolean).join(" · ") || "Carga eléctrica compatible" }
+                  ? { icon: "bolt", text: [car.chargeType, validCharge(car.chargeTimeDC) ? `carga DC en ${car.chargeTimeDC}` : null].filter(Boolean).join(" · ") || "Carga eléctrica compatible" }
                   : { icon: "bolt", text: "Sin necesidad de enchufarse · auto-recarga" };
                 return [
                   charge,
@@ -646,8 +674,8 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
                 { label: "Autonomía WLTP",       value: ver.range   ? `${ver.range} km`    : null },
                 { label: "Eficiencia eléctrica", value: (ver.rendimientoElectrico ?? car.rendimientoElectrico) ? `${ver.rendimientoElectrico ?? car.rendimientoElectrico} km/kWh` : null },
                 { label: "Rendimiento híbrido",  value: (["PHEV","REEV"].includes((car.electricTypeTag ?? "").toUpperCase())) ? null : ((ver.fuelConsumption ?? car.fuelConsumption) ? `${ver.fuelConsumption ?? car.fuelConsumption} km/L` : null) },
-                { label: "Carga rápida DC",      value: ver.chargeTimeDC || null },
-                { label: "Carga AC",             value: ver.chargeTimeAC || null },
+                { label: "Carga rápida DC",      value: validCharge(ver.chargeTimeDC) },
+                { label: "Carga AC",             value: validCharge(ver.chargeTimeAC) },
                 { label: "Tipo de conector",     value: car.chargeType   || null },
               ]},
               { section: "Motor y Rendimiento", rows: [
@@ -718,7 +746,7 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
             </AnimatePresence>
           </div>
 
-          <div className="grid grid-cols-6 gap-2">
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
             {Array.from({ length: galleryCount }).map((_, i) => (
               <button key={i} onClick={() => setGalleryIndex(i)}
                 className={["aspect-video rounded-xl overflow-hidden border-2 transition-all", i === galleryIndex ? "border-primary scale-105" : "border-transparent opacity-50 hover:opacity-80"].join(" ")}>

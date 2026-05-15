@@ -18,7 +18,11 @@ export function StickyCTA() {
 
   useEffect(() => {
     document.documentElement.style.setProperty("--sticky-h", visible ? "68px" : "0px");
-    return () => document.documentElement.style.setProperty("--sticky-h", "0px");
+    document.documentElement.style.setProperty("--chat-bottom", visible ? "92px" : "24px");
+    return () => {
+      document.documentElement.style.setProperty("--sticky-h", "0px");
+      document.documentElement.style.setProperty("--chat-bottom", "24px");
+    };
   }, [visible]);
 
   return (

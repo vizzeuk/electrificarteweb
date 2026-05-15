@@ -198,9 +198,10 @@ export const homePage = defineType({
           defineField({ name: "savings",   title: "Ahorro logrado",     type: "string", description: 'Ej: "$5.200.000"' }),
           defineField({ name: "quote",     title: "Opinión",            type: "text", rows: 3 }),
           defineField({ name: "rating",    title: "Calificación (1-5)", type: "number", initialValue: 5, validation: (r) => r.min(1).max(5) }),
-          defineField({ name: "cardImage", title: "Foto del auto (opcional)", type: "image", options: { hotspot: true }, description: "Imagen de fondo en la parte superior de la tarjeta. Formato recomendado: 16:9, al menos 600×338px." }),
+          defineField({ name: "cardImage",   title: "Foto del auto (opcional)",  type: "image", options: { hotspot: true }, description: "Imagen de fondo en la parte superior de la tarjeta. Formato recomendado: 16:9, al menos 600×338px." }),
+          defineField({ name: "personImage", title: "Foto del cliente (avatar)", type: "image", options: { hotspot: true }, description: "Foto circular de la persona. Formato recomendado: cuadrada, al menos 200×200px." }),
         ],
-        preview: { select: { title: "name", subtitle: "car", media: "cardImage" } },
+        preview: { select: { title: "name", subtitle: "car", media: "personImage" } },
       })],
     }),
 
