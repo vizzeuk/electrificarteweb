@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { Icon } from "@/components/ui/Icon";
 import { HeroVideoPlayer } from "@/components/layout/HeroVideoPlayer";
+import { HeroBgVideo } from "@/components/layout/HeroBgVideo";
 
 export interface HeroData {
   badge?: string;
@@ -90,19 +91,13 @@ export function Hero({ data }: HeroProps) {
       aria-label="Bienvenida"
     >
       <div className="absolute inset-0 z-0">
-        {/* Background video — decorative, plays silently. Poster (43 KB) shows
-            instantly so the hero is paintable before the 2 MB video buffers. */}
-        <video
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="metadata"
+        {/* Background — poster as <img> for instant paint, video mounted only
+            after the page is idle so it doesn't compete with critical
+            resources on mobile networks. */}
+        <HeroBgVideo
           poster="/images/video-fondo-hero-poster.jpg"
-          className="absolute inset-0 w-full h-full object-cover"
-        >
-          <source src="/images/video-fondo-hero.mp4" type="video/mp4" />
-        </video>
+          srcMp4="/images/video-fondo-hero.mp4"
+        />
         {/* Dark overlay keeps text readable */}
         <div className="absolute inset-0 bg-black/78" />
         <div
