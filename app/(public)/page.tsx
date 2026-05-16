@@ -10,22 +10,20 @@ import {
   featuredCarsForHomeQuery,
 } from "@/lib/queries/car";
 import { collectionsForHomeQuery } from "@/lib/queries/collections";
+
+// Above-the-fold + SEO-critical: render server-side.
 import { Hero }             from "@/components/layout/Hero";
 import { BrandStrip }       from "@/components/layout/BrandStrip";
 import { LatestLaunches }   from "@/components/layout/LatestLaunches";
-import { CollectionsSlideshow } from "@/components/layout/CollectionsSlideshow";
+import { VehicleTypeGrid }  from "@/components/layout/VehicleTypeGrid";
 import { HotDeal }          from "@/components/layout/HotDeal";
 import { Opportunities }    from "@/components/layout/Opportunities";
-import { ServiciosExtras }  from "@/components/layout/ServiciosExtras";
-import { VehicleTypeGrid }  from "@/components/layout/VehicleTypeGrid";
-import { HowItWorks }       from "@/components/layout/HowItWorks";
-import { TrustBadges }      from "@/components/layout/TrustBadges";
-import { Testimonials }     from "@/components/layout/Testimonials";
-import { BlogPreview }      from "@/components/layout/BlogPreview";
-import { FAQ }              from "@/components/layout/FAQ";
-import { StickyCTA }        from "@/components/layout/StickyCTA";
-import { PromoPopup }       from "@/components/layout/PromoPopup";
 import { HomeStructuredData } from "@/components/layout/StructuredData";
+
+// Below-the-fold sections are bundled into a client wrapper that lazy-loads
+// each one with next/dynamic ssr:false. Keeps the initial HTML small so the
+// hero paints fast on mobile.
+import { HomeDeferred }     from "@/components/layout/HomeDeferred";
 
 // ISR: revalidar cada 60 segundos cuando haya cambios en Sanity
 export const revalidate = 60;
@@ -126,47 +124,40 @@ export default async function HomePage() {
 
       <BrandStrip brands={brands} />
 
-      <LatestLaunches
-        title={page?.latestLaunchesTitle}
-        cars={latestCars}
+      {/* Below-the-fold on mobile — content-visibility:auto skips paint/layout
+          for these sections while they're off-screen. Combined with an
+          intrinsic-size hint so the scrollbar is honest. */}
+      <div style={{ contentVisibility: "auto", containIntrinsicSize: "0 720px" }}>
+        <LatestLaunches title={page?.latestLaunchesTitle} cars={latestCars} />
+      </div>
+      <div style={{ contentVisibility: "auto", containIntrinsicSize: "0 720px" }}>
+        <VehicleTypeGrid types={vehicleTypes ?? []} />
+      </div>
+      <div style={{ contentVisibility: "auto", containIntrinsicSize: "0 880px" }}>
+        <HotDeal cars={hotDeals?.length ? hotDeals : (page?.hotDealCar ? [page.hotDealCar] : null)} />
+      </div>
+      <div style={{ contentVisibility: "auto", containIntrinsicSize: "0 800px" }}>
+        <Opportunities
+          title={page?.opportunitiesTitle ?? "Destacados Electrificarte"}
+          cars={opportunityCars}
+        />
+      </div>
+
+      <HomeDeferred
+        collections={collections ?? []}
+        servicios={page?.serviciosExtras}
+        howItWorks={{
+          title:    page?.howItWorksTitle,
+          subtitle: page?.howItWorksSubtitle,
+          steps:    page?.howItWorksSteps,
+          videoUrl: page?.howItWorksVideoUrl,
+        }}
+        trustBadges={page?.trustBadges}
+        testimonials={{ title: page?.testimonialsTitle, items: page?.testimonials }}
+        blogPosts={blogPosts ?? []}
+        faq={{ title: page?.faqTitle, faqs: page?.faqs }}
+        hotDealCar={page?.hotDealCar ?? null}
       />
-
-      <VehicleTypeGrid types={vehicleTypes ?? []} />
-
-      <HotDeal cars={hotDeals?.length ? hotDeals : (page?.hotDealCar ? [page.hotDealCar] : null)} />
-
-      <Opportunities
-        title={page?.opportunitiesTitle ?? "Destacados Electrificarte"}
-        cars={opportunityCars}
-      />
-
-      <CollectionsSlideshow collections={collections} />
-
-      <ServiciosExtras items={page?.serviciosExtras} />
-
-      <HowItWorks
-        title={page?.howItWorksTitle}
-        subtitle={page?.howItWorksSubtitle}
-        steps={page?.howItWorksSteps}
-        videoUrl={page?.howItWorksVideoUrl}
-      />
-
-      <TrustBadges badges={page?.trustBadges} />
-
-      <Testimonials
-        title={page?.testimonialsTitle}
-        testimonials={page?.testimonials}
-      />
-
-      <BlogPreview posts={blogPosts ?? []} />
-
-      <FAQ
-        title={page?.faqTitle}
-        faqs={page?.faqs}
-      />
-
-      <StickyCTA />
-      <PromoPopup car={page?.hotDealCar ?? null} />
     </>
   );
 }
