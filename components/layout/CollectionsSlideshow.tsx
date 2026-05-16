@@ -2,6 +2,7 @@
 
 import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
+import { sanityImg } from "@/lib/sanityImage";
 
 export interface CollectionCardData {
   _id:           string;
@@ -152,10 +153,11 @@ export function CollectionsSlideshow({ collections }: CollectionsSlideshowProps)
               <div className="relative rounded-2xl overflow-hidden h-52">
                 {col.heroImageUrl ? (
                   <img
-                    src={col.heroImageUrl}
+                    src={sanityImg(col.heroImageUrl, { w: 800, q: 75 })}
                     alt={col.title}
                     className="absolute inset-0 w-full h-full object-cover"
                     loading="lazy"
+                    decoding="async"
                   />
                 ) : (
                   <div className={`absolute inset-0 bg-gradient-to-br ${GRADIENTS[i % GRADIENTS.length]}`} />
@@ -239,10 +241,11 @@ export function CollectionsSlideshow({ collections }: CollectionsSlideshowProps)
               <div className="relative h-[220px] w-full">
                 {col.heroImageUrl ? (
                   <img
-                    src={col.heroImageUrl}
+                    src={sanityImg(col.heroImageUrl, { w: 720, q: 75 })}
                     alt={col.title}
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     loading="lazy"
+                    decoding="async"
                   />
                 ) : (
                   <div className={`absolute inset-0 bg-gradient-to-br ${GRADIENTS[i % GRADIENTS.length]}`} />

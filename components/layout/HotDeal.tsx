@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { Icon } from "@/components/ui/Icon";
 import { formatCLP } from "@/lib/utils";
+import { sanityImg } from "@/lib/sanityImage";
 
 export interface HotDealCarData {
   slug: string;
@@ -52,9 +53,11 @@ function HotDealMobile({ c, brandDisplay, modelDisplay, bonusAmt, savingsPct }: 
         {/* Imagen */}
         {c.imageUrl ? (
           <img
-            src={c.imageUrl}
+            src={sanityImg(c.imageUrl, { w: 720, q: 75 })}
             alt={`${brandDisplay} ${modelDisplay}`}
             className="w-full h-40 object-cover"
+            loading="lazy"
+            decoding="async"
           />
         ) : (
           <div className="w-full h-40 flex items-center justify-center">
@@ -179,9 +182,11 @@ function HotDealDesktop({ c, brandDisplay, modelDisplay, bonusAmt, savingsPct }:
           <div className="bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 rounded-2xl overflow-hidden">
             {c.imageUrl ? (
               <img
-                src={c.imageUrl}
+                src={sanityImg(c.imageUrl, { w: 960, q: 78 })}
                 alt={`${brandDisplay} ${modelDisplay}`}
                 className="w-full aspect-[16/9] object-cover"
+                loading="lazy"
+                decoding="async"
               />
             ) : (
               <div className="w-full aspect-[16/9] flex items-center justify-center flex-col gap-3">

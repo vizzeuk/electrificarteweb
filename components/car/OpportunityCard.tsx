@@ -3,6 +3,7 @@
 import { m } from "framer-motion";
 import Link from "next/link";
 import { formatCLP } from "@/lib/utils";
+import { sanityImg } from "@/lib/sanityImage";
 
 interface OpportunityCardProps {
   name: string;
@@ -32,10 +33,11 @@ export function OpportunityCard({
       <Link href={`/auto/${slug}`} aria-label={`Ver oferta ${name}`}>
         <div className="aspect-[4/3] bg-gray-50 rounded-lg mb-4 overflow-hidden">
           <img
-            src={image}
+            src={sanityImg(image, { w: 480, q: 75 })}
             alt={`${name} - Oferta auto electrico Chile`}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             loading="lazy"
+            decoding="async"
           />
         </div>
       </Link>

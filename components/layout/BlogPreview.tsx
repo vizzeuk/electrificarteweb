@@ -3,6 +3,7 @@
 import React, { useRef, useState } from "react";
 import Link from "next/link";
 import { m } from "framer-motion";
+import { sanityImg } from "@/lib/sanityImage";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -131,7 +132,7 @@ export function BlogPreview({ title, posts }: BlogPreviewProps) {
             {/* Background image or gradient */}
             {featured.coverImage?.asset?.url ? (
               <img
-                src={featured.coverImage.asset.url}
+                src={sanityImg(featured.coverImage.asset.url, { w: 960, q: 75 })}
                 alt={featured.coverImage.alt ?? featured.title}
                 className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:opacity-50 transition-opacity duration-500" loading="lazy" decoding="async" />
             ) : (
@@ -188,7 +189,7 @@ export function BlogPreview({ title, posts }: BlogPreviewProps) {
                 <div className="aspect-[16/8] bg-gradient-to-br from-gray-50 to-gray-100 relative overflow-hidden flex-shrink-0">
                   {post.coverImage?.asset?.url ? (
                     <img
-                      src={post.coverImage.asset.url}
+                      src={sanityImg(post.coverImage.asset.url, { w: 480, q: 75 })}
                       alt={post.coverImage.alt ?? post.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" decoding="async" />
                   ) : (

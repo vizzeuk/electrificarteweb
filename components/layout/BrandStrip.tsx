@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import Link from "next/link";
+import { sanityImg } from "@/lib/sanityImage";
 
 export interface BrandStripItem {
   slug: string;
@@ -59,9 +60,13 @@ function BrandLogo({ brand }: { brand: BrandStripItem }) {
     >
       {brand.logoUrl ? (
         <img
-          src={brand.logoUrl}
+          src={sanityImg(brand.logoUrl, { w: 200, q: 85 })}
           alt={brand.name}
+          width={120}
+          height={40}
           className="max-h-10 max-w-full w-auto object-contain transition-all duration-300"
+          loading="lazy"
+          decoding="async"
           style={{ opacity: 0.65 }}
           onMouseEnter={e => {
             const img = e.currentTarget as HTMLImageElement;
@@ -73,7 +78,6 @@ function BrandLogo({ brand }: { brand: BrandStripItem }) {
             img.style.opacity = "0.65";
             img.style.filter = "";
           }}
-          loading="lazy"
         />
       ) : (
         <span className="text-black/40 group-hover:text-primary-deep text-[11px] font-headline font-black uppercase tracking-widest text-center leading-tight transition-colors duration-200">

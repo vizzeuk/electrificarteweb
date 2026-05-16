@@ -15,18 +15,41 @@ export function FeedbackWidget() {
   const [sending, setSending]     = useState(false);
 
   useEffect(() => {
-    const ts = localStorage.getItem(SEEN_KEY);
-    if (ts) {
-      const daysSince = (Date.now() - parseInt(ts)) / 86_400_000;
-      if (daysSince < DAYS_UNTIL_RESHOWN) return;
+    // Defer all setup until the browser is idle so we don't compete with
+    // the initial paint. The widget is below-the-fold and never shown
+    // before user interaction; pushing it past LCP is free perf.
+    let cancelled = false;
+    let mountTimer: ReturnType<typeof setTimeout> | null = null;
+    let popTimer:   ReturnType<typeof setTimeout> | null = null;
+    let idleId: number | null = null;
+
+    function init() {
+      if (cancelled) return;
+      const ts = localStorage.getItem(SEEN_KEY);
+      if (ts) {
+        const daysSince = (Date.now() - parseInt(ts)) / 86_400_000;
+        if (daysSince < DAYS_UNTIL_RESHOWN) return;
+      }
+      setHidden(false);
+      popTimer = setTimeout(() => {
+        setExpanded(prev => (!prev ? true : prev));
+      }, 5 * 60 * 1000);
     }
-    setHidden(false);
 
-    const timer = setTimeout(() => {
-      setExpanded(prev => (!prev ? true : prev));
-    }, 5 * 60 * 1000);
+    if (typeof (window as any).requestIdleCallback === "function") {
+      idleId = (window as any).requestIdleCallback(init, { timeout: 4000 });
+    } else {
+      mountTimer = setTimeout(init, 2500);
+    }
 
-    return () => clearTimeout(timer);
+    return () => {
+      cancelled = true;
+      if (mountTimer) clearTimeout(mountTimer);
+      if (popTimer)   clearTimeout(popTimer);
+      if (idleId && typeof (window as any).cancelIdleCallback === "function") {
+        (window as any).cancelIdleCallback(idleId);
+      }
+    };
   }, []);
 
   function collapse() {
