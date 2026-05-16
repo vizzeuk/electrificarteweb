@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import { sanityImg } from "@/lib/sanityImage";
 
@@ -15,11 +15,48 @@ interface BrandStripProps {
   brands: BrandStripItem[];
 }
 
+// Show the first N brands immediately; defer the rest until the browser is
+// idle. On mobile Safari, rendering 98 logo nodes (49 × 2 for the marquee
+// duplication) blocks the initial paint and dominates layout time on the
+// main thread. Showing 24 first (12 × 2 duplicated) keeps the marquee
+// visually continuous while cutting the initial DOM by ~75%.
+const INITIAL_COUNT = 12;
+
 export function BrandStrip({ brands }: BrandStripProps) {
   if (brands.length === 0) return null;
 
-  const items = [...brands, ...brands];
   const trackRef = useRef<HTMLDivElement>(null);
+  const [visibleBrands, setVisibleBrands] = useState<BrandStripItem[]>(
+    () => brands.slice(0, INITIAL_COUNT),
+  );
+
+  useEffect(() => {
+    if (brands.length <= INITIAL_COUNT) return;
+    let cancelled = false;
+    let idleId: number | null = null;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+    const mountAll = () => {
+      if (cancelled) return;
+      setVisibleBrands(brands);
+    };
+
+    if (typeof (window as any).requestIdleCallback === "function") {
+      idleId = (window as any).requestIdleCallback(mountAll, { timeout: 3000 });
+    } else {
+      timeoutId = setTimeout(mountAll, 2000);
+    }
+
+    return () => {
+      cancelled = true;
+      if (timeoutId) clearTimeout(timeoutId);
+      if (idleId && typeof (window as any).cancelIdleCallback === "function") {
+        (window as any).cancelIdleCallback(idleId);
+      }
+    };
+  }, [brands]);
+
+  const items = [...visibleBrands, ...visibleBrands];
 
   return (
     <section className="bg-white py-10 border-t border-gray-100" aria-label="Marcas con las que trabajamos">
