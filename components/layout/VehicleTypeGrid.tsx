@@ -2,6 +2,7 @@
 
 import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
+import { sanityImg } from "@/lib/sanityImage";
 
 export interface ElectricTypeItem {
   _id: string;
@@ -126,10 +127,12 @@ export function VehicleTypeGrid({ types }: ElectricTypeGridProps) {
               {hasImage ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={type.cardImageUrl}
+                  src={sanityImg(type.cardImageUrl, { w: 480, q: 75 })}
                   alt=""
                   aria-hidden
                   className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  loading="lazy"
+                  decoding="async"
                 />
               ) : (
                 <div

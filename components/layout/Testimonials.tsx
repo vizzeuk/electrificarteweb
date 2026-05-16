@@ -1,6 +1,7 @@
 "use client";
 
 import { m } from "framer-motion";
+import { sanityImg } from "@/lib/sanityImage";
 
 export interface TestimonialData {
   name: string;
@@ -48,7 +49,7 @@ function Avatar({ name, imageUrl }: { name: string; imageUrl?: string }) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
-        src={imageUrl}
+        src={sanityImg(imageUrl, { w: 96, q: 85 })}
         alt={name}
         className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm flex-shrink-0" loading="lazy" decoding="async" />
     );
@@ -88,7 +89,7 @@ export function Testimonials({ title = "Lo que dicen nuestros clientes", testimo
                 <div className="relative w-full flex-shrink-0" style={{ height: "200px" }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={t.imageUrl}
+                    src={sanityImg(t.imageUrl, { w: 480, q: 75 })}
                     alt={t.car}
                     style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", display: "block" }} loading="lazy" decoding="async" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />

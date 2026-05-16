@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { Icon } from "@/components/ui/Icon";
 import { formatCLP, calculateDiscount, carStats } from "@/lib/utils";
+import { sanityImg } from "@/lib/sanityImage";
 
 interface CarCardProps {
   name: string;
@@ -91,10 +92,11 @@ export function CarCard({
         <div className="aspect-[16/10] bg-gradient-to-br from-gray-100 to-gray-50 relative overflow-hidden">
           {image ? (
             <img
-              src={image}
+              src={sanityImg(image, { w: 480, q: 75 })}
               alt={`${brand} ${name} - Auto electrico disponible en Chile`}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               loading="lazy"
+              decoding="async"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
@@ -132,9 +134,11 @@ export function CarCard({
           </div>
           {brandLogo ? (
             <img
-              src={brandLogo}
+              src={sanityImg(brandLogo, { w: 112, q: 85 })}
               alt={brand}
               className="h-7 w-auto max-w-[56px] object-contain opacity-60"
+              loading="lazy"
+              decoding="async"
             />
           ) : (
             <Icon name="electric_car" className="text-gray-200" size="sm" />

@@ -4,6 +4,7 @@ import { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
 import { formatCLP, carStats } from "@/lib/utils";
+import { sanityImg } from "@/lib/sanityImage";
 
 export interface OpportunityCarData {
   _id?: string;
@@ -211,10 +212,11 @@ export function Opportunities({ title = "Destacados Electrificarte", cars }: Opp
                 <div className="aspect-[16/9] bg-gradient-to-br from-gray-50 to-gray-100 rounded-t-xl overflow-hidden relative">
                   {deal.imageUrl ? (
                     <img
-                      src={deal.imageUrl}
+                      src={sanityImg(deal.imageUrl, { w: 480, q: 75 })}
                       alt={`${brandName} ${deal.name}`}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       loading="lazy"
+                      decoding="async"
                     />
                   ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center">
