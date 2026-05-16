@@ -2,6 +2,7 @@
 
 import { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import { CarCard } from "@/components/car/CarCard";
+import { useInViewport } from "@/lib/useInViewport";
 
 export interface LaunchCarData {
   _id?: string;
@@ -43,10 +44,12 @@ export function LatestLaunches({ title = "Últimos lanzamientos", cars }: Latest
   const loopCars       = useMemo(() => [...displayCars, ...displayCars], [displayCars]);
   const singleSetWidth = useMemo(() => displayCars.length * (CARD_W + GAP), [displayCars]);
 
-  const trackRef = useRef<HTMLDivElement>(null);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const sectionRef = useRef<HTMLElement>(null);
+  const trackRef   = useRef<HTMLDivElement>(null);
+  const timerRef   = useRef<ReturnType<typeof setInterval> | null>(null);
   const [canLeft,   setCanLeft]   = useState(false);
   const [scrollPct, setScrollPct] = useState(0);
+  const inView = useInViewport(sectionRef);
 
   const updateArrows = useCallback(() => {
     const el = trackRef.current;
@@ -87,12 +90,13 @@ export function LatestLaunches({ title = "Últimos lanzamientos", cars }: Latest
     const el = trackRef.current;
     if (!el) return;
     el.addEventListener("scroll", updateArrows, { passive: true });
-    startAuto();
+    if (inView) startAuto();
+    else        stopAuto();
     return () => {
       el.removeEventListener("scroll", updateArrows);
       stopAuto();
     };
-  }, [loopCars, updateArrows, startAuto, stopAuto]);
+  }, [loopCars, updateArrows, startAuto, stopAuto, inView]);
 
   function handleArrow(dir: "left" | "right") {
     const el = trackRef.current;
@@ -111,7 +115,7 @@ export function LatestLaunches({ title = "Últimos lanzamientos", cars }: Latest
   }
 
   return (
-    <section className="py-20 md:py-24 bg-surface overflow-hidden" aria-labelledby="latest-title">
+    <section ref={sectionRef} className="py-20 md:py-24 bg-surface overflow-hidden" aria-labelledby="latest-title">
       <div className="max-w-7xl mx-auto px-4 md:px-8">
         <div className="mb-10">
           <p className="text-[11px] uppercase tracking-widest text-primary-deep font-bold mb-2">Novedades</p>

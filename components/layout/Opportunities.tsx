@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
 import { formatCLP, carStats } from "@/lib/utils";
 import { sanityImg } from "@/lib/sanityImage";
+import { useInViewport } from "@/lib/useInViewport";
 
 export interface OpportunityCarData {
   _id?: string;
@@ -51,11 +52,13 @@ export function Opportunities({ title = "Destacados Electrificarte", cars }: Opp
   const loopCars       = useMemo(() => [...displayCars, ...displayCars], [displayCars]);
   const singleSetWidth = useMemo(() => displayCars.length * (CARD_W + GAP), [displayCars]);
 
-  const trackRef = useRef<HTMLDivElement>(null);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const sectionRef = useRef<HTMLElement>(null);
+  const trackRef   = useRef<HTMLDivElement>(null);
+  const timerRef   = useRef<ReturnType<typeof setInterval> | null>(null);
   const [canLeft, setCanLeft]   = useState(false);
   const [scrollPct, setScrollPct] = useState(0);
   const canRight = true; // always true — infinite carousel
+  const inView = useInViewport(sectionRef);
 
   const updateState = useCallback(() => {
     const el = trackRef.current;
@@ -96,12 +99,13 @@ export function Opportunities({ title = "Destacados Electrificarte", cars }: Opp
     if (!el) return;
     updateState();
     el.addEventListener("scroll", updateState, { passive: true });
-    startAuto();
+    if (inView) startAuto();
+    else        stopAuto();
     return () => {
       el.removeEventListener("scroll", updateState);
       stopAuto();
     };
-  }, [loopCars, updateState, startAuto, stopAuto]);
+  }, [loopCars, updateState, startAuto, stopAuto, inView]);
 
   function scroll(dir: "left" | "right") {
     const el = trackRef.current;
@@ -116,7 +120,7 @@ export function Opportunities({ title = "Destacados Electrificarte", cars }: Opp
   }
 
   return (
-    <section className="py-20 md:py-24 overflow-hidden" aria-labelledby="opportunities-title">
+    <section ref={sectionRef} className="py-20 md:py-24 overflow-hidden" aria-labelledby="opportunities-title">
       {/* Header */}
       <div className="max-w-7xl mx-auto px-4 md:px-8 mb-10">
         <div className="flex items-end justify-between gap-4">

@@ -4,12 +4,14 @@
 // - Static assets under /_next/static (immutable, hashed): cache-first, forever.
 // - Sanity CDN images (cdn.sanity.io): cache-first, with a soft 30-day expiry
 //   handled by the cache name version.
-// - HTML pages: network-first with a cache fallback for offline.
+// - HTML pages: stale-while-revalidate — serve the cached page immediately so
+//   repeat visits feel instant, then update the cache from the network in the
+//   background for the next visit.
 // - Everything else: passes through to the network.
 //
 // Bump CACHE_VERSION any time the shape changes to force-clear old caches.
 
-const CACHE_VERSION = "ev-v1";
+const CACHE_VERSION = "ev-v2";
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const IMG_CACHE     = `${CACHE_VERSION}-img`;
 const PAGES_CACHE   = `${CACHE_VERSION}-pages`;
@@ -57,9 +59,10 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // 4. HTML navigations — network-first with cache fallback.
+  // 4. HTML navigations — stale-while-revalidate. Returns cache instantly,
+  //    refreshes in background so the next visit has the latest.
   if (req.mode === "navigate" || req.headers.get("accept")?.includes("text/html")) {
-    event.respondWith(networkFirst(req, PAGES_CACHE));
+    event.respondWith(staleWhileRevalidate(req, PAGES_CACHE));
     return;
   }
 
@@ -80,15 +83,20 @@ async function cacheFirst(req, cacheName) {
   }
 }
 
-async function networkFirst(req, cacheName) {
+async function staleWhileRevalidate(req, cacheName) {
   const cache = await caches.open(cacheName);
-  try {
-    const res = await fetch(req);
-    if (res.ok) cache.put(req, res.clone());
-    return res;
-  } catch (e) {
-    const cached = await cache.match(req);
-    if (cached) return cached;
-    throw e;
-  }
+  const cached = await cache.match(req);
+  // Kick off the network refresh in parallel; don't await it before returning.
+  const networkFetch = fetch(req)
+    .then((res) => {
+      if (res.ok) cache.put(req, res.clone());
+      return res;
+    })
+    .catch(() => null);
+  // Return cache immediately when available; otherwise wait for network.
+  if (cached) return cached;
+  const networkRes = await networkFetch;
+  if (networkRes) return networkRes;
+  // Both cache and network failed — throw to surface the error.
+  throw new Error("network and cache both failed");
 }

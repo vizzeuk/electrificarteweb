@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Icon } from "@/components/ui/Icon";
 import { formatCLP } from "@/lib/utils";
 import { sanityImg } from "@/lib/sanityImage";
+import { useInViewport } from "@/lib/useInViewport";
 
 export interface HotDealCarData {
   slug: string;
@@ -236,9 +237,11 @@ function HotDealCard({ c }: { c: HotDealCarData }) {
 export function HotDeal({ car, cars }: HotDealProps) {
   const list = cars?.length ? cars : car ? [car] : [FALLBACK];
 
+  const sectionRef = useRef<HTMLElement>(null);
   const trackRef   = useRef<HTMLDivElement>(null);
   const pausedRef  = useRef(false);
   const [activeIdx, setActiveIdx] = useState(0);
+  const inView = useInViewport(sectionRef);
 
   useEffect(() => {
     const el = trackRef.current;
@@ -251,9 +254,12 @@ export function HotDeal({ car, cars }: HotDealProps) {
     return () => el.removeEventListener("scroll", upd);
   }, [list]);
 
-  // Auto-avance cada 4 s — pausa al hover
+  // Auto-avance — pausa al hover y cuando la sección está fuera del viewport
+  // (gating crítico en mobile: 4 carruseles corriendo intervals en paralelo
+  // monopolizan el main thread de iOS Safari).
   useEffect(() => {
     if (list.length < 2) return;
+    if (!inView) return;
     const id = setInterval(() => {
       if (pausedRef.current) return;
       const el = trackRef.current;
@@ -262,7 +268,7 @@ export function HotDeal({ car, cars }: HotDealProps) {
       el.scrollTo({ left: el.clientWidth * (next >= list.length ? 0 : next), behavior: "smooth" });
     }, 7000);
     return () => clearInterval(id);
-  }, [list.length]);
+  }, [list.length, inView]);
 
   function goTo(i: number) {
     trackRef.current?.scrollTo({ left: (trackRef.current?.clientWidth ?? 0) * i, behavior: "smooth" });
@@ -310,6 +316,7 @@ export function HotDeal({ car, cars }: HotDealProps) {
 
   return (
     <section
+      ref={sectionRef}
       className="bg-black py-6 sm:py-10 md:py-14"
       aria-label="Hot Deals"
       onMouseEnter={() => { pausedRef.current = true; }}
