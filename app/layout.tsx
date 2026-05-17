@@ -97,15 +97,22 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link rel="preconnect" href="https://cdn.sanity.io" crossOrigin="" />
 
-        {/* DIAGNOSTIC: Material Symbols disabled to test the ITP/third-party
-            throttling hypothesis. Safari and Chrome iOS may be throttling
-            connections to fonts.googleapis.com (Google-owned domain) while
-            Brave skips this entirely. Icons will render as their textual
-            names (e.g. "electric_car", "chevron_left") until we re-enable
-            or self-host. After the user tests this build:
-              - If Safari speeds up → ITP/Google Fonts was the cause; we
-                re-enable via self-hosting (same-origin = no ITP).
-              - If Safari is still slow → it's something else and we revert. */}
+        {/* Material Symbols — load non-blocking via the print-media trick. */}
+        <link
+          rel="preload"
+          as="style"
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700&display=swap"
+        />
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700&display=swap"
+          media="print"
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `document.querySelectorAll('link[rel="stylesheet"][media="print"]').forEach(function(l){if(l.sheet){l.media='all';}else{l.addEventListener('load',function(){l.media='all';});}});`,
+          }}
+        />
 
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <meta name="theme-color" content="#00E5E5" />
