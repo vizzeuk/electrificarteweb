@@ -64,7 +64,9 @@ export function HeroBgVideo({ poster, srcMp4 }: { poster: string; srcMp4: string
           muted
           loop
           playsInline
-          preload="auto"
+          // @ts-expect-error — legacy iOS attribute, harmless on modern Safari
+          webkit-playsinline="true"
+          preload="metadata"
           poster={poster}
           className="absolute inset-0 w-full h-full object-cover"
         >

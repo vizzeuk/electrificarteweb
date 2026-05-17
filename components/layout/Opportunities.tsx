@@ -46,8 +46,24 @@ const CARD_W  = 280; // px — card width
 const GAP     = 16;  // px — gap between cards
 const AUTO_MS = 5000;
 
+// Mobile cap: iOS WebKit may OOM with 8 decoded car images simultaneously.
+// SSR keeps the full set for SEO; client reduces after hydration on mobile.
+const MOBILE_LIMIT = 4;
+
 export function Opportunities({ title = "Destacados Electrificarte", cars }: OpportunitiesProps) {
-  const displayCars    = cars && cars.length > 0 ? cars : FALLBACK;
+  const allCars = cars && cars.length > 0 ? cars : FALLBACK;
+  const [limit, setLimit] = useState<number>(allCars.length);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mql = window.matchMedia("(max-width: 767px)");
+    const apply = () => setLimit(mql.matches ? MOBILE_LIMIT : allCars.length);
+    apply();
+    mql.addEventListener("change", apply);
+    return () => mql.removeEventListener("change", apply);
+  }, [allCars.length]);
+
+  const displayCars    = useMemo(() => allCars.slice(0, limit), [allCars, limit]);
   // Double items for seamless infinite loop
   const loopCars       = useMemo(() => [...displayCars, ...displayCars], [displayCars]);
   const singleSetWidth = useMemo(() => displayCars.length * (CARD_W + GAP), [displayCars]);

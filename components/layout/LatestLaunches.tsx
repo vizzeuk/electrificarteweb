@@ -39,8 +39,27 @@ const CARD_W  = 320;
 const GAP     = 24;
 const AUTO_MS = 5000;
 
+// On mobile (iOS WebKit specifically) we cap the cards rendered initially.
+// iOS Safari has been seen to OOM-crash with 6 carousel cards × decoded
+// images in memory. Brave skips speculative decoding so it survives 6 fine.
+// Server-rendered count stays at the full set for SEO; client reduces post-
+// hydration when matchMedia matches mobile.
+const MOBILE_LIMIT = 3;
+
 export function LatestLaunches({ title = "Últimos lanzamientos", cars }: LatestLaunchesProps) {
-  const displayCars    = cars && cars.length > 0 ? cars : FALLBACK_CARS;
+  const allCars = cars && cars.length > 0 ? cars : FALLBACK_CARS;
+  const [limit, setLimit] = useState<number>(allCars.length);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mql = window.matchMedia("(max-width: 767px)");
+    const apply = () => setLimit(mql.matches ? MOBILE_LIMIT : allCars.length);
+    apply();
+    mql.addEventListener("change", apply);
+    return () => mql.removeEventListener("change", apply);
+  }, [allCars.length]);
+
+  const displayCars    = useMemo(() => allCars.slice(0, limit), [allCars, limit]);
   const loopCars       = useMemo(() => [...displayCars, ...displayCars], [displayCars]);
   const singleSetWidth = useMemo(() => displayCars.length * (CARD_W + GAP), [displayCars]);
 
