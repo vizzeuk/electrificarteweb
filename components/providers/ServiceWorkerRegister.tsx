@@ -3,46 +3,46 @@
 import { useEffect } from "react";
 
 /**
- * Registers /sw.js once the page has finished loading and the browser is
- * idle. Skips registration in dev so HMR isn't interfered with.
+ * NUCLEAR SW CLEANUP — diagnostic only.
  *
- * When a new SW takes control (`controllerchange`), the page does a soft
- * reload so the user immediately sees the new assets. The first install
- * never triggers a reload because controller is null at that moment.
+ * The user's iPhone Safari has been showing a "problem" error message
+ * even on a totally bare HTML page (/raw). One plausible cause is a
+ * stale, partially-broken Service Worker from an earlier deploy still
+ * intercepting every request. Even when we later "disabled" SW, the
+ * old SW could remain installed because unregister was racing with
+ * registration in the same useEffect.
+ *
+ * This version: actively unregisters every registered SW on every page
+ * load, deletes every cache from any of our versions, and never
+ * registers a new SW. If a corrupt SW is the cause, this cleans it out.
+ *
+ * After the user confirms the home is fast again we'll either keep this
+ * (and ship without an SW) or rebuild the SW from scratch.
  */
 export function ServiceWorkerRegister() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (!("serviceWorker" in navigator)) return;
-    if (process.env.NODE_ENV !== "production") return;
 
-    let cancelled = false;
+    // 1) Unregister anything currently registered for our origin.
+    navigator.serviceWorker
+      .getRegistrations()
+      .then((regs) => Promise.all(regs.map((r) => r.unregister().catch(() => false))))
+      .catch(() => { /* ignore */ });
 
-    function register() {
-      if (cancelled) return;
-      navigator.serviceWorker
-        .register("/sw.js", { scope: "/" })
-        .catch(() => { /* swallow — SW is a progressive enhancement */ });
+    // 2) Wipe every CacheStorage entry whose key looks like ours.
+    if (typeof caches !== "undefined") {
+      caches
+        .keys()
+        .then((keys) =>
+          Promise.all(
+            keys
+              .filter((k) => k.startsWith("ev-v") || k.includes("electrificarte"))
+              .map((k) => caches.delete(k)),
+          ),
+        )
+        .catch(() => { /* ignore */ });
     }
-
-    if (document.readyState === "complete") {
-      register();
-    } else {
-      window.addEventListener("load", register, { once: true });
-    }
-
-    let reloaded = false;
-    function onControllerChange() {
-      if (reloaded) return;
-      reloaded = true;
-      window.location.reload();
-    }
-    navigator.serviceWorker.addEventListener("controllerchange", onControllerChange);
-
-    return () => {
-      cancelled = true;
-      navigator.serviceWorker.removeEventListener("controllerchange", onControllerChange);
-    };
   }, []);
 
   return null;
