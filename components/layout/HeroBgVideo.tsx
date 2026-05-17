@@ -3,23 +3,36 @@
 import { useEffect, useState } from "react";
 
 /**
- * Hero background video that does NOT compete with first paint.
+ * Hero background video — desktop only.
  *
- * Renders the poster as a plain <img fetchPriority="high"> initially, so iOS
- * Safari paints the hero immediately. Once the page is idle (requestIdleCallback
- * or 1.5s fallback), and only when the network looks healthy, mounts the <video>
- * which fades in on top of the poster.
+ * On mobile this component renders absolutely nothing: no <img> poster,
+ * no <video>, no useEffect, no state changes after mount. The parent
+ * Hero <section> already has bg-black so the visual hole is just a
+ * solid black hero — no broken-looking gap. This is a deliberate
+ * mobile-only sacrifice: we lose the video motion under the hero copy
+ * on phones, in exchange for cutting whatever combo of <img> decoding,
+ * <video> element machinery, and post-mount state changes was costing
+ * iOS Safari several seconds during hydration.
  *
- * Why not autoplay <video> directly: iOS Safari ignores preload="none" when
- * autoplay is set and starts buffering the video immediately, competing for
- * bandwidth with critical resources. The result on slow mobile is the bare
- * "hero without text + photos blank" state the user reported.
+ * Desktop unchanged: poster paints instantly, video fades in after idle.
  */
 export function HeroBgVideo({ poster, srcMp4 }: { poster: string; srcMp4: string }) {
+  // SSR-safe mobile flag. Starts false so the SSR HTML always includes
+  // the poster <img>; the first client effect flips it on mobile and the
+  // component unmounts the poster + skips video.
+  const [hidden, setHidden] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
 
   useEffect(() => {
-    // Save-data / slow connection? Don't load the video at all.
+    if (typeof window === "undefined") return;
+
+    const isMobile = window.matchMedia("(max-width: 767px)").matches;
+    if (isMobile) {
+      setHidden(true);
+      return; // No video, no scheduling, no nothing on mobile.
+    }
+
+    // Desktop only: respect save-data + slow connections.
     const conn = (navigator as any).connection;
     if (conn?.saveData) return;
     if (conn?.effectiveType && /(^|-)(2g|slow)/i.test(conn.effectiveType)) return;
@@ -45,10 +58,10 @@ export function HeroBgVideo({ poster, srcMp4 }: { poster: string; srcMp4: string
     };
   }, []);
 
+  if (hidden) return null;
+
   return (
     <>
-      {/* Poster always rendered. Stays visible as a fallback if the video
-          fails to load (slow network, save-data, format unsupported). */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={poster}
