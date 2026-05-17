@@ -133,6 +133,8 @@ export function Footer() {
                 src="/logos-electrificarte/logo-elec-sin auto.png"
                 alt="Electrificarte"
                 className="h-8 w-auto object-contain brightness-0 invert"
+                loading="lazy"
+                decoding="async"
               />
             </Link>
             <p className="text-white/50 text-sm mb-6 leading-relaxed">

@@ -3,49 +3,37 @@
 import { useEffect } from "react";
 
 /**
- * Registers /sw.js once the page has finished loading and the browser is
- * idle. Skips registration in dev so HMR isn't interfered with.
+ * TEMPORARILY DISABLED for mobile diagnostic.
  *
- * When a new SW takes control (`controllerchange`), the page does a soft
- * reload so the user immediately sees the new assets. The first install
- * never triggers a reload because controller is null at that moment.
+ * iOS Safari + iOS Chrome both show 8 s blank-screen pauses on the home
+ * while Brave (also WebKit on iOS) loads instantly. Service Worker is the
+ * top suspect because Brave is known to opt-out of SW. We unregister any
+ * existing SW on every visit so the user's iPhone clears the previously
+ * cached / intercepting SW the next time they open the site.
+ *
+ * If Safari/Chrome become fast after this deploy → SW was the culprit
+ * and we'll redesign the caching strategy (HTTP cache headers instead).
  */
 export function ServiceWorkerRegister() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (!("serviceWorker" in navigator)) return;
-    if (process.env.NODE_ENV !== "production") return;
 
-    let cancelled = false;
+    // Unregister any previously installed SW so it stops intercepting.
+    navigator.serviceWorker
+      .getRegistrations()
+      .then((regs) => {
+        regs.forEach((reg) => reg.unregister().catch(() => { /* ignore */ }));
+      })
+      .catch(() => { /* swallow */ });
 
-    function register() {
-      if (cancelled) return;
-      navigator.serviceWorker
-        .register("/sw.js", { scope: "/" })
-        .catch(() => { /* swallow — SW is a progressive enhancement */ });
+    // Clear all caches the SW had created so the next navigation goes to
+    // the network fresh.
+    if (typeof caches !== "undefined") {
+      caches.keys().then((keys) => {
+        keys.filter((k) => k.startsWith("ev-v")).forEach((k) => caches.delete(k));
+      }).catch(() => { /* ignore */ });
     }
-
-    // Defer until the page is fully loaded so SW install doesn't compete
-    // with first-paint network/CPU.
-    if (document.readyState === "complete") {
-      register();
-    } else {
-      window.addEventListener("load", register, { once: true });
-    }
-
-    // Soft reload when a fresh SW takes over an already-loaded page.
-    let reloaded = false;
-    function onControllerChange() {
-      if (reloaded) return;
-      reloaded = true;
-      window.location.reload();
-    }
-    navigator.serviceWorker.addEventListener("controllerchange", onControllerChange);
-
-    return () => {
-      cancelled = true;
-      navigator.serviceWorker.removeEventListener("controllerchange", onControllerChange);
-    };
   }, []);
 
   return null;

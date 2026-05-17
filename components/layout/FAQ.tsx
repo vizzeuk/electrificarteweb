@@ -115,12 +115,16 @@ export function FAQ({ title = "Preguntas frecuentes", faqs }: FAQProps) {
               className="relative rounded-2xl overflow-hidden flex flex-col justify-end"
               style={{ minHeight: "520px" }}
             >
-              {/* Background car photo */}
+              {/* Background car photo — lazy-loaded so Next.js doesn't auto-
+                  preload it. The FAQ is below the fold; preloading this image
+                  was burning mobile bandwidth during the hero's first paint. */}
               <img
                 src="/images/coleccion-byd-electrico.jpg"
                 alt=""
                 aria-hidden="true"
                 className="absolute inset-0 w-full h-full object-cover"
+                loading="lazy"
+                decoding="async"
               />
               {/* Dark gradient overlay — stronger at bottom */}
               <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.60) 45%, rgba(0,0,0,0.20) 100%)" }} />
