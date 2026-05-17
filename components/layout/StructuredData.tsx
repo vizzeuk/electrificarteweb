@@ -116,7 +116,7 @@ export function HomeStructuredData() {
     name: "Como comprar un auto electrico al mejor precio en Chile con Electrificarte",
     description:
       "Guia paso a paso para obtener el mejor precio en un vehiculo electrico en Chile.",
-    totalTime: "PT24H",
+    totalTime: "PT96H",
     estimatedCost: {
       "@type": "MonetaryAmount",
       currency: "CLP",
@@ -138,7 +138,7 @@ export function HomeStructuredData() {
       {
         "@type": "HowToStep",
         position: 3,
-        name: "Recibe tu oferta en 24 horas",
+        name: "Recibe tu oferta en 48-96 horas",
         text: "Te presentamos la mejor oferta con bonos y financiamiento incluido.",
       },
       {

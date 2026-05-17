@@ -45,7 +45,7 @@ function SolicitarInner({ carOptions }: SolicitarContentProps) {
             </h1>
             <div className="flex flex-wrap gap-x-6 gap-y-2">
               {[
-                { icon: "schedule", label: "Respuesta en 24 h" },
+                { icon: "schedule", label: "Respuesta en 48-96 h" },
                 { icon: "verified", label: "Garantía de devolución" },
                 { icon: "lock",     label: "Sin costos ocultos" },
               ].map((item) => (
@@ -62,7 +62,7 @@ function SolicitarInner({ carOptions }: SolicitarContentProps) {
             {[
               { n: "01", icon: "edit_note",        title: "Completa tu solicitud",      desc: "Cuéntanos qué auto te interesa y tu presupuesto." },
               { n: "02", icon: "payments",          title: "Activa tu búsqueda",         desc: "Un pago único de $19.990 por WebPay activa la búsqueda exclusiva." },
-              { n: "03", icon: "mark_email_read",   title: "Recibe tu oferta en 24h",   desc: "La mejor oferta con bonos y financiamiento incluido." },
+              { n: "03", icon: "mark_email_read",   title: "Recibe tu oferta en 48-96h",   desc: "La mejor oferta con bonos y financiamiento incluido." },
             ].map((s, i, arr) => (
               <div key={s.n} className="flex items-start gap-3 relative">
                 {i < arr.length - 1 && (

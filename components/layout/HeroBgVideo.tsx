@@ -19,17 +19,6 @@ export function HeroBgVideo({ poster, srcMp4 }: { poster: string; srcMp4: string
   const [showVideo, setShowVideo] = useState(false);
 
   useEffect(() => {
-    // TEMPORARILY DISABLED on mobile for diagnostic. iOS Safari decodes
-    // the autoplay <video> on the main thread once it mounts, which can
-    // freeze the page for several seconds even after the poster is shown.
-    // Brave on iOS may pause autoplay videos by default which would
-    // explain why it loads instantly. With the video skipped on mobile,
-    // users just see the poster image (which is the first frame of the
-    // same video anyway — visually identical, statically rendered).
-    if (typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches) {
-      return;
-    }
-
     // Save-data / slow connection? Don't load the video at all.
     const conn = (navigator as any).connection;
     if (conn?.saveData) return;

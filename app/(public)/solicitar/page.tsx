@@ -7,11 +7,11 @@ import { SolicitarContent } from "./SolicitarContent";
 export const metadata: Metadata = {
   title: "Solicitar oferta | Asesoria para tu auto electrico",
   description:
-    "Completa tu solicitud y recibe en 24 horas la mejor oferta del mercado para tu auto electrico en Chile. Pago unico de $19.990. Garantia de devolucion.",
+    "Completa tu solicitud y recibe en 48 a 96 horas la mejor oferta del mercado para tu auto electrico en Chile. Pago unico de $19.990. Garantia de devolucion.",
   openGraph: {
     title: "Solicitar oferta | Electrificarte",
     description:
-      "Recibe la mejor oferta para tu auto electrico en 24 horas. Pago unico $19.990.",
+      "Recibe la mejor oferta para tu auto electrico en 48 a 96 horas. Pago unico $19.990.",
   },
 };
 

@@ -45,7 +45,7 @@ export default function TerminosPage() {
             <ul>
               <li>Recepción de solicitudes de oferta a través del formulario del sitio web.</li>
               <li>Negociación con la red de concesionarios para obtener el mejor precio disponible.</li>
-              <li>Entrega de una oferta formal al solicitante en un plazo máximo de 24 horas hábiles.</li>
+              <li>Entrega de una oferta formal al solicitante en un plazo máximo de 96 horas hábiles.</li>
             </ul>
             <p>
               Electrificarte no comercializa vehículos directamente ni actúa como concesionario. La decisión final de compra corresponde exclusivamente al cliente.

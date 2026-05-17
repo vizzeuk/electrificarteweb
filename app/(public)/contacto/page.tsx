@@ -54,7 +54,7 @@ export default function ContactoPage() {
             <span className="text-primary">Hablemos.</span>
           </h1>
           <p className="text-white/50 text-lg">
-            Déjanos tu mensaje y te contactamos en menos de 24 horas.
+            Déjanos tu mensaje y te contactamos en 48 a 96 horas.
           </p>
         </div>
       </section>

@@ -1,4 +1,3 @@
-import Link from "next/link";
 import Image from "next/image";
 
 interface ServicioExtra {
@@ -19,16 +18,16 @@ const DEFAULTS: ServicioExtra[] = [
     badge:       "Domicilio",
     title:       "Adquiere tu Wallbox domiciliario con descuento",
     description: "Cotiza e instala tu cargador en casa con los mejores precios del mercado y técnicos certificados.",
-    ctaText:     "Cotiza aquí",
-    ctaHref:     "/solicitar?servicio=wallbox",
+    ctaText:     "Ver cargadores",
+    ctaHref:     "https://copecvoltex.cl/collections/cargadores-y-cables",
     imageUrl:    "/images/cargadores.webp",
   },
   {
     badge:       "Preferencial",
     title:       "Contrata el seguro de tu auto eléctrico a valores preferenciales",
     description: "Seguros especializados para vehículos eléctricos con coberturas exclusivas y precios únicos en Chile.",
-    ctaText:     "Cotiza aquí",
-    ctaHref:     "/solicitar?servicio=seguro",
+    ctaText:     "Cotizar seguro",
+    ctaHref:     "https://seguro-auto.comparaonline.cl/quote",
     imageUrl:    "/images/seguros.webp",
   },
 ];
@@ -97,13 +96,15 @@ export function ServiciosExtras({ items }: ServiciosExtrasProps) {
                 </div>
 
                 <div className="mt-8">
-                  <Link
+                  <a
                     href={card.ctaHref}
+                    target={card.ctaHref.startsWith("http") ? "_blank" : undefined}
+                    rel={card.ctaHref.startsWith("http") ? "noopener noreferrer" : undefined}
                     className="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold text-sm px-6 py-3 rounded-xl transition-colors duration-200"
                   >
                     {card.ctaText}
                     <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
-                  </Link>
+                  </a>
                 </div>
               </div>
             </div>

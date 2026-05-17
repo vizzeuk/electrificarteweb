@@ -23,7 +23,7 @@ export function ContactSection({ phone, email }: ContactSectionProps) {
               ¿Tienes dudas? Hablemos.
             </h2>
             <p className="text-white/50 text-sm mt-2">
-              Nuestro equipo responde en menos de 24 horas.
+              Nuestro equipo responde en 48 a 96 horas.
             </p>
           </div>
 

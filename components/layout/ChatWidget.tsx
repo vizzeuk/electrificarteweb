@@ -18,20 +18,10 @@ declare module "react" {
 }
 
 export function ChatWidget() {
-  // TEMPORARILY DISABLED on mobile for diagnostic. The chatbot is a custom
-  // element (<ev-chat-widget>) backed by a 23 KB script that builds a shadow
-  // DOM with inputs, buttons, etc. iOS Safari has historical bugs with custom
-  // elements during initial paint; Brave (which loads instantly) may handle
-  // them differently. If Safari is fast after this deploy with the widget
-  // hidden, the chatbot was the culprit on mobile and we'll redesign.
+  // Defer mounting and script loading until the browser is idle.
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    // Skip the widget entirely on mobile.
-    if (window.matchMedia("(max-width: 767px)").matches) return;
-
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
     let idleId: number | null = null;
 

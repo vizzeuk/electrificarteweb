@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npx tsx --env-file=.env.local -e ':*)"
+      "Bash(npx tsx --env-file=.env.local -e ':*)",
+      "Bash(npx tsc *)",
+      "Read(//Users/vizzeuk/Downloads/electrificarteweb-master-local/**)",
+      "WebSearch",
+      "WebFetch"
     ]
   }
 }

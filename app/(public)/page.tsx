@@ -127,13 +127,21 @@ export default async function HomePage() {
       {/* Below-the-fold on mobile — content-visibility:auto skips paint/layout
           for these sections while they're off-screen. Combined with an
           intrinsic-size hint so the scrollbar is honest. */}
-      <LatestLaunches title={page?.latestLaunchesTitle} cars={latestCars} />
-      <VehicleTypeGrid types={vehicleTypes ?? []} />
-      <HotDeal cars={hotDeals?.length ? hotDeals : (page?.hotDealCar ? [page.hotDealCar] : null)} />
-      <Opportunities
-        title={page?.opportunitiesTitle ?? "Destacados Electrificarte"}
-        cars={opportunityCars}
-      />
+      <div style={{ contentVisibility: "auto", containIntrinsicSize: "0 720px" }}>
+        <LatestLaunches title={page?.latestLaunchesTitle} cars={latestCars} />
+      </div>
+      <div style={{ contentVisibility: "auto", containIntrinsicSize: "0 720px" }}>
+        <VehicleTypeGrid types={vehicleTypes ?? []} />
+      </div>
+      <div style={{ contentVisibility: "auto", containIntrinsicSize: "0 880px" }}>
+        <HotDeal cars={hotDeals?.length ? hotDeals : (page?.hotDealCar ? [page.hotDealCar] : null)} />
+      </div>
+      <div style={{ contentVisibility: "auto", containIntrinsicSize: "0 800px" }}>
+        <Opportunities
+          title={page?.opportunitiesTitle ?? "Destacados Electrificarte"}
+          cars={opportunityCars}
+        />
+      </div>
 
       <HomeDeferred
         collections={collections ?? []}

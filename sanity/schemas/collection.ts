@@ -106,10 +106,10 @@ export const collection = defineType({
 
     // ─── Modo automático (filtros) ──────────────────────────────────
     defineField({
-      name: "filterBrand", title: "Filtrar por marca", type: "reference",
-      to: [{ type: "brand" }],
+      name: "filterBrands", title: "Filtrar por marcas", type: "array",
       group: "cars",
-      description: "Solo cuando el modo es Automático. Deja vacío para todas las marcas.",
+      description: "Solo cuando el modo es Automático. Puedes elegir una o varias marcas. Deja vacío para todas.",
+      of: [defineArrayMember({ type: "reference", to: [{ type: "brand" }] })],
     }),
     defineField({
       name: "filterVehicleType", title: "Filtrar por tipo de vehículo", type: "reference",
