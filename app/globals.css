@@ -103,3 +103,21 @@ ev-chat-widget {
   0%   { background-position:  200% 0; }
   100% { background-position: -200% 0; }
 }
+
+/* Hero entry animation — pure CSS so we don't mount a framer-motion
+   component for it. On mobile we skip the animation entirely; iOS
+   Safari combined with the rest of the layout's framer-motion tree
+   was visibly choking on this single m.div for ~15 s. Same visual
+   on desktop, instant on mobile. */
+@keyframes hero-fade-in {
+  from { opacity: 0; transform: translateY(30px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.hero-fade-in {
+  animation: hero-fade-in 0.7s ease-out both;
+}
+@media (max-width: 767px) {
+  .hero-fade-in {
+    animation: none;
+  }
+}

@@ -113,12 +113,12 @@ export function Hero({ data }: HeroProps) {
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 py-12 md:py-24 lg:py-32 w-full">
         <div className="grid gap-12 items-center max-w-3xl">
-          {/* Left: Copy */}
-          <m.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, ease: "easeOut" }}
-          >
+          {/* Left: Copy. Plain <div> instead of m.div so we don't add another
+              framer-motion consumer to MotionProvider's tree — that combo was
+              choking iOS Safari hard. CSS .hero-fade-in keeps the desktop
+              animation identical; on mobile the rule is `animation:none` so
+              paint is instant. */}
+          <div className="hero-fade-in">
             <Badge variant="primary" className="mb-6">{badge}</Badge>
 
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-headline font-extrabold text-white leading-[1.05] mb-6">
@@ -146,7 +146,7 @@ export function Hero({ data }: HeroProps) {
                 <Icon name="expand_more" size="sm" />
               </a>
             </div>
-          </m.div>
+          </div>
 
           {/* Right: Sanity video > animated demo — temporalmente deshabilitado */}
           {false && (
