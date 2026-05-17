@@ -1,6 +1,5 @@
 "use client";
 
-import { m } from "framer-motion";
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { Icon } from "@/components/ui/Icon";
@@ -74,19 +73,18 @@ export function CarCard({
     return out;
   })() : carStats({ battery: batteryCapacity, range, maxVersionRange, electricRangeKm, fuelConsumption, rendimientoElectrico, electricTypeTag, power });
 
-  const animProps = noAnimate
-    ? {}
-    : {
-        initial: { opacity: 0, y: 20 },
-        whileInView: { opacity: 1, y: 0 },
-        viewport: { once: true, margin: "-50px" },
-        transition: { duration: 0.4, delay: index * 0.1 },
-      };
+  // CSS-based entry animation (replaces framer-motion m.article).
+  // Desktop: .card-fade-in runs the same 0.4 s fade+slide as before.
+  // Mobile (@media ≤767 px): animation:none, instant render — same as the
+  // reducedMotion="always" we apply to framer-motion mobile elsewhere.
+  // noAnimate (carousel context) → no animation either way, like before.
+  const animClass = noAnimate ? "" : "card-fade-in";
+  const animStyle = noAnimate ? undefined : { animationDelay: `${index * 0.1}s` };
 
   return (
-    <m.article
-      {...animProps}
-      className="group border border-border bg-white rounded-2xl overflow-hidden flex flex-col hover:border-primary hover:shadow-lg hover:shadow-primary/5 transition-all duration-300"
+    <article
+      className={`${animClass} group border border-border bg-white rounded-2xl overflow-hidden flex flex-col hover:border-primary hover:shadow-lg hover:shadow-primary/5 transition-all duration-300`}
+      style={animStyle}
     >
       <Link href={`/auto/${slug}`} aria-label={`Ver ${brand} ${name}`}>
         <div className="aspect-[16/10] skeleton-shimmer relative overflow-hidden">
@@ -191,6 +189,6 @@ export function CarCard({
           <span className="material-symbols-outlined text-[18px]">compare</span>
         </Link>
       </div>
-    </m.article>
+    </article>
   );
 }
