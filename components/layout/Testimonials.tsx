@@ -1,6 +1,5 @@
 "use client";
 
-import { m } from "framer-motion";
 import { sanityImg } from "@/lib/sanityImage";
 
 export interface TestimonialData {
@@ -76,13 +75,10 @@ export function Testimonials({ title = "Lo que dicen nuestros clientes", testimo
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 items-stretch">
           {displayTestimonials.map((t, i) => (
-            <m.div
+            <div
               key={t.name}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: i * 0.1 }}
-              className="bg-white rounded-2xl border border-gray-100 flex flex-col overflow-hidden"
+              className="fade-in-up bg-white rounded-2xl border border-gray-100 flex flex-col overflow-hidden"
+              style={{ animationDelay: `${i * 0.1}s` }}
             >
               {/* Car photo */}
               {t.imageUrl && (
@@ -115,7 +111,7 @@ export function Testimonials({ title = "Lo que dicen nuestros clientes", testimo
                   </div>
                 </div>
               </div>
-            </m.div>
+            </div>
           ))}
         </div>
       </div>

@@ -2,7 +2,6 @@
 
 import React, { useRef, useState } from "react";
 import Link from "next/link";
-import { m } from "framer-motion";
 import { sanityImg } from "@/lib/sanityImage";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -122,13 +121,7 @@ export function BlogPreview({ title, posts }: BlogPreviewProps) {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
           {/* Featured article (spans 2 cols) */}
-          <m.article
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.45 }}
-            className="lg:col-span-2 group relative bg-black rounded-2xl overflow-hidden min-h-[340px] flex flex-col justify-end cursor-pointer"
-          >
+          <article className="fade-in-up lg:col-span-2 group relative bg-black rounded-2xl overflow-hidden min-h-[340px] flex flex-col justify-end cursor-pointer">
             {/* Background image or gradient */}
             {featured.coverImage?.asset?.url ? (
               <img
@@ -172,18 +165,15 @@ export function BlogPreview({ title, posts }: BlogPreviewProps) {
                 </Link>
               </div>
             </div>
-          </m.article>
+          </article>
 
           {/* Side cards */}
           <div className="flex flex-col gap-6">
             {rest.map((post, i) => (
-              <m.article
+              <article
                 key={post._id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: (i + 1) * 0.1 }}
-                className="group bg-white border border-gray-100 rounded-2xl overflow-hidden hover:border-primary/40 hover:shadow-md transition-all duration-300 flex flex-col"
+                className="fade-in-up group bg-white border border-gray-100 rounded-2xl overflow-hidden hover:border-primary/40 hover:shadow-md transition-all duration-300 flex flex-col"
+                style={{ animationDelay: `${(i + 1) * 0.1}s` }}
               >
                 {/* Image area */}
                 <div className="aspect-[16/8] bg-gradient-to-br from-gray-50 to-gray-100 relative overflow-hidden flex-shrink-0">
@@ -221,7 +211,7 @@ export function BlogPreview({ title, posts }: BlogPreviewProps) {
                     </span>
                   </div>
                 </div>
-              </m.article>
+              </article>
             ))}
           </div>
         </div>

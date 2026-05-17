@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { m } from "framer-motion";
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
 
@@ -109,13 +108,10 @@ export function HowItWorks({ title = "Cómo funciona Electrificarte", subtitle, 
               />
 
               {displaySteps.map((step, i) => (
-                <m.div
+                <div
                   key={step.title}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: i * 0.12 }}
-                  className="flex-1 flex flex-col items-center z-10"
+                  className="fade-in-up flex-1 flex flex-col items-center z-10"
+                  style={{ animationDelay: `${i * 0.12}s` }}
                 >
                   <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border-2 border-primary/40 flex items-center justify-center mb-6 shadow-[0_0_24px_rgba(0,229,229,0.12)]">
                     <Icon name={step.icon} className="text-primary-deep" />
@@ -129,7 +125,7 @@ export function HowItWorks({ title = "Cómo funciona Electrificarte", subtitle, 
                     <h3 className="font-headline font-bold text-base mb-2">{step.title}</h3>
                     <p className="text-sm text-text-muted leading-relaxed">{step.description}</p>
                   </div>
-                </m.div>
+                </div>
               ))}
             </div>
           </div>
@@ -139,13 +135,10 @@ export function HowItWorks({ title = "Cómo funciona Electrificarte", subtitle, 
             <div className="absolute left-4 top-4 bottom-4 w-px border-l-2 border-dashed border-primary/30" />
 
             {displaySteps.map((step, i) => (
-              <m.div
+              <div
                 key={step.title}
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.1 }}
-                className="relative mb-6 last:mb-0"
+                className="fade-in-up relative mb-6 last:mb-0"
+                style={{ animationDelay: `${i * 0.1}s` }}
               >
                 <div className="absolute -left-8 top-4 w-8 h-8 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border-2 border-primary/40 flex items-center justify-center">
                   <Icon name={step.icon} className="text-primary-deep" size="sm" />
@@ -159,7 +152,7 @@ export function HowItWorks({ title = "Cómo funciona Electrificarte", subtitle, 
                   <h3 className="font-headline font-bold mb-1">{step.title}</h3>
                   <p className="text-sm text-text-muted leading-relaxed">{step.description}</p>
                 </div>
-              </m.div>
+              </div>
             ))}
           </div>
 

@@ -1,6 +1,3 @@
-"use client";
-
-import { m } from "framer-motion";
 import { Icon } from "@/components/ui/Icon";
 
 export interface TrustBadgeData {
@@ -38,13 +35,10 @@ export function TrustBadges({ badges }: TrustBadgesProps) {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {displayBadges.map((badge, i) => (
-            <m.div
+            <div
               key={badge.title}
-              initial={{ opacity: 0, y: 12 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: i * 0.08 }}
-              className="flex items-start gap-5 bg-white border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-primary/20 transition-all duration-300"
+              className="fade-in-up flex items-start gap-5 bg-white border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-primary/20 transition-all duration-300"
+              style={{ animationDelay: `${i * 0.08}s` }}
             >
               <div className="flex-shrink-0 w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mt-0.5">
                 <Icon name={badge.icon} className="text-primary-deep" />
@@ -57,7 +51,7 @@ export function TrustBadges({ badges }: TrustBadgesProps) {
                   {badge.description}
                 </p>
               </div>
-            </m.div>
+            </div>
           ))}
         </div>
 
