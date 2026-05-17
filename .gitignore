@@ -53,3 +53,8 @@ next-env.d.ts
 /public/brand-logos/
 /public/logos_electrificarte/
 /public/logos_electrificarte.zip
+
+# Source assets fuera del bundle de producción — viven solo localmente
+FOTOS WEBP/
+public/CONTENIDO AGREGAR/
+public/JSON/json-antiguo.json.txt
