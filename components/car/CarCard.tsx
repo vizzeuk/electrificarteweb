@@ -89,7 +89,7 @@ export function CarCard({
       className="group border border-border bg-white rounded-2xl overflow-hidden flex flex-col hover:border-primary hover:shadow-lg hover:shadow-primary/5 transition-all duration-300"
     >
       <Link href={`/auto/${slug}`} aria-label={`Ver ${brand} ${name}`}>
-        <div className="aspect-[16/10] bg-gradient-to-br from-gray-100 to-gray-50 relative overflow-hidden">
+        <div className="aspect-[16/10] skeleton-shimmer relative overflow-hidden">
           {image ? (
             <img
               src={sanityImg(image, { w: 480, q: 75 })}

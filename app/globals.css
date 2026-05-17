@@ -59,3 +59,33 @@ html {
 ev-chat-widget {
   --chat-bottom: calc(24px + var(--sticky-h, 0px));
 }
+
+/* ─── Skeleton shimmer — MOBILE ONLY ─────────────────────────────────────
+   Adds a subtle gradient sweep on image placeholders while images are
+   loading. The class compiles to a static gray on desktop so PC users
+   see zero perf cost and zero visual change; only screens ≤767 px get
+   the animated shimmer that gives the home a less "broken" feel while
+   the Sanity images stream in over slow mobile connections.
+   The animation respects prefers-reduced-motion.
+*/
+.skeleton-shimmer {
+  background-color: #f3f4f6;
+}
+@media (max-width: 767px) {
+  @media (prefers-reduced-motion: no-preference) {
+    .skeleton-shimmer {
+      background-image: linear-gradient(
+        90deg,
+        rgba(243, 244, 246, 1) 0%,
+        rgba(229, 231, 235, 1) 50%,
+        rgba(243, 244, 246, 1) 100%
+      );
+      background-size: 200% 100%;
+      animation: skeleton-sweep 1.6s ease-in-out infinite;
+    }
+  }
+}
+@keyframes skeleton-sweep {
+  0%   { background-position:  200% 0; }
+  100% { background-position: -200% 0; }
+}

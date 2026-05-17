@@ -31,7 +31,7 @@ export function OpportunityCard({
       className="group border border-border p-4 rounded-xl flex flex-col hover:border-primary transition-colors"
     >
       <Link href={`/auto/${slug}`} aria-label={`Ver oferta ${name}`}>
-        <div className="aspect-[4/3] bg-gray-50 rounded-lg mb-4 overflow-hidden">
+        <div className="aspect-[4/3] skeleton-shimmer rounded-lg mb-4 overflow-hidden">
           <img
             src={sanityImg(image, { w: 480, q: 75 })}
             alt={`${name} - Oferta auto electrico Chile`}
