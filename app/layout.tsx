@@ -97,10 +97,14 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link rel="preconnect" href="https://cdn.sanity.io" crossOrigin="" />
 
-        {/* Material Symbols — load non-blocking. We start the fetch with
-            preload, attach the stylesheet with media="print" so it doesn't
-            block paint, then swap its media to "all" once loaded so icons
-            get styled. */}
+        {/* Material Symbols — load non-blocking via the print-media trick.
+            CRITICAL: do NOT wrap a <link rel="stylesheet"> fallback inside
+            <noscript> here. Next.js's RSC pipeline detects stylesheets
+            inside <noscript> and hoists them out into the live <head> as
+            regular render-blocking <link>s — which on iOS Safari on a slow
+            mobile connection produces 15-20 s of blank page while it waits
+            for the Google Fonts CSS to download. The print-media pattern
+            alone is enough for the 99.9 % of users with JS enabled. */}
         <link
           rel="preload"
           as="style"
@@ -116,12 +120,6 @@ export default function RootLayout({
             __html: `document.querySelectorAll('link[rel="stylesheet"][media="print"]').forEach(function(l){if(l.sheet){l.media='all';}else{l.addEventListener('load',function(){l.media='all';});}});`,
           }}
         />
-        <noscript>
-          <link
-            rel="stylesheet"
-            href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700&display=swap"
-          />
-        </noscript>
 
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <meta name="theme-color" content="#00E5E5" />
