@@ -229,7 +229,7 @@ export function Opportunities({ title = "Destacados Electrificarte", cars }: Opp
                 className="group relative border border-gray-100 bg-white rounded-xl flex flex-col hover:border-primary/40 hover:shadow-md transition-all duration-300"
               >
                 {/* Image */}
-                <div className="aspect-[16/9] bg-gradient-to-br from-gray-50 to-gray-100 rounded-t-xl overflow-hidden relative">
+                <div className="aspect-[16/9] skeleton-shimmer rounded-t-xl overflow-hidden relative">
                   {deal.imageUrl ? (
                     <img
                       src={sanityImg(deal.imageUrl, { w: 480, q: 75 })}
