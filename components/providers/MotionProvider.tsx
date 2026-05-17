@@ -1,33 +1,30 @@
 "use client";
 
 import { LazyMotion, domAnimation, MotionConfig } from "framer-motion";
-import { useEffect, useState } from "react";
 
 /**
- * On mobile, skip every framer-motion entry transition. The visual effect is
- * negligible but the cost is real: every m.div with `initial` schedules a rAF
- * tick during hydration, and on iOS Safari the cumulative cost of dozens of
- * them contributes to the "stuck" feeling. We pass reducedMotion="always" so
- * framer-motion treats every transition as instant.
+ * MotionProvider — static, no runtime matchMedia.
  *
- * Detection is done client-side after mount so SSR HTML stays identical on
- * mobile and desktop — only the JS behavior differs.
+ * Earlier this component used useState + useEffect + matchMedia to detect
+ * mobile after hydration and flip MotionConfig's reducedMotion. That worked
+ * (animations were skipped on mobile) BUT every change to MotionConfig's
+ * context value re-renders every framer-motion consumer in the tree — a
+ * cascade that was visible on iPhone Safari but invisible on iPad / desktop
+ * because those don't enter the mobile branch.
+ *
+ * Now we pass a static reducedMotion="user": framer-motion respects the OS
+ * setting (Accessibility → Motion → Reduce Motion). No JS state, no cascade.
+ *
+ * Trade-off: on iPhone Safari, framer-motion entry animations will play
+ * (~0.4 s). Most have already been migrated to CSS keyframes in the codebase
+ * (Hero, CarCard, Testimonials, HowItWorks, TrustBadges, BlogPreview), so
+ * the remaining motion consumers are mostly interactive (modals, accordion,
+ * mobile menu) and don't run on first paint anyway.
  */
 export function MotionProvider({ children }: { children: React.ReactNode }) {
-  const [reducedMotion, setReducedMotion] = useState<"always" | "never">("never");
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const mql = window.matchMedia("(max-width: 767px)");
-    const update = () => setReducedMotion(mql.matches ? "always" : "never");
-    update();
-    mql.addEventListener("change", update);
-    return () => mql.removeEventListener("change", update);
-  }, []);
-
   return (
     <LazyMotion features={domAnimation} strict={false}>
-      <MotionConfig reducedMotion={reducedMotion}>
+      <MotionConfig reducedMotion="user">
         {children}
       </MotionConfig>
     </LazyMotion>
