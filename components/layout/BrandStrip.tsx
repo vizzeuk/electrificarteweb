@@ -3,6 +3,7 @@
 import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import { sanityImg } from "@/lib/sanityImage";
+import { useInViewport } from "@/lib/useInViewport";
 
 export interface BrandStripItem {
   slug: string;
@@ -25,7 +26,9 @@ const INITIAL_COUNT = 12;
 export function BrandStrip({ brands }: BrandStripProps) {
   if (brands.length === 0) return null;
 
-  const trackRef = useRef<HTMLDivElement>(null);
+  const sectionRef = useRef<HTMLElement>(null);
+  const trackRef   = useRef<HTMLDivElement>(null);
+  const inView     = useInViewport(sectionRef);
   const [visibleBrands, setVisibleBrands] = useState<BrandStripItem[]>(
     () => brands.slice(0, INITIAL_COUNT),
   );
@@ -59,7 +62,7 @@ export function BrandStrip({ brands }: BrandStripProps) {
   const items = [...visibleBrands, ...visibleBrands];
 
   return (
-    <section className="bg-white py-10 border-t border-gray-100" aria-label="Marcas con las que trabajamos">
+    <section ref={sectionRef} className="bg-white py-10 border-t border-gray-100" aria-label="Marcas con las que trabajamos">
       <div className="max-w-7xl mx-auto px-4 md:px-8 mb-7">
         <div className="flex items-center gap-3">
           <span className="text-black/25 text-[10px] uppercase tracking-widest font-bold whitespace-nowrap">
@@ -77,7 +80,7 @@ export function BrandStrip({ brands }: BrandStripProps) {
         onMouseEnter={() => trackRef.current?.classList.add("marquee-paused")}
         onMouseLeave={() => trackRef.current?.classList.remove("marquee-paused")}
       >
-        <div ref={trackRef} className="marquee-left" style={{ display: "flex", width: "max-content", alignItems: "center" }}>
+        <div ref={trackRef} className={`marquee-left ${inView ? "marquee-in-view" : ""}`} style={{ display: "flex", width: "max-content", alignItems: "center" }}>
           {items.map((brand, i) => (
             <BrandLogo key={`${brand.slug}-${i}`} brand={brand} />
           ))}

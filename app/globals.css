@@ -55,6 +55,20 @@ html {
   animation-play-state: paused;
 }
 
+/* On mobile, also pause the marquee whenever it isn't in the viewport.
+   A 24/7 CSS animation triggers continuous repaints on iOS Safari even
+   when other content is hidden by content-visibility:auto. */
+@media (max-width: 767px) {
+  .marquee-left,
+  .marquee-right {
+    animation-play-state: paused;
+  }
+  .marquee-left.marquee-in-view,
+  .marquee-right.marquee-in-view {
+    animation-play-state: running;
+  }
+}
+
 /* Sticky-bar-aware widget positioning */
 ev-chat-widget {
   --chat-bottom: calc(24px + var(--sticky-h, 0px));
