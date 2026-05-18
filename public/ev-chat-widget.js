@@ -34,6 +34,10 @@
       transition: transform 0.2s ease, box-shadow 0.2s ease, bottom 0.3s ease;
       z-index: 9999;
     }
+    @media (max-width: 767px) {
+      #launcher { width: 48px; height: 48px; }
+      #launcher svg.icon-close { width: 22px; height: 22px; }
+    }
     #launcher:hover { transform: scale(1.08); box-shadow: 0 8px 32px rgba(0,229,229,0.5); }
     #launcher img.icon-chat { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 50%; object-fit: cover; object-position: center top; }
     #launcher svg.icon-close { width: 26px; height: 26px; fill: #000000; }

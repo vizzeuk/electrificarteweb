@@ -79,13 +79,16 @@ export function FeedbackWidget() {
 
   if (hidden) return null;
 
-  // Bubble sits to the LEFT of the chatbot button (chatbot is at right:24px, width:56px → bubble at right:92px)
-  const bubbleRight = "92px";
+  // Bubble lives on the OPPOSITE side from the chatbot (chatbot is at
+  // right:24px). We anchor the feedback bubble to left:24px so the two
+  // float icons frame the viewport — one each side. Size matches the
+  // chatbot on desktop (56 px) but shrinks on mobile (48 px) so it doesn't
+  // dominate the small screen.
   const bubbleBottom = "calc(var(--sticky-h, 0px) + 24px)";
 
   return (
     <>
-      {/* Collapsed bubble — same size as chatbot (56px), left of chatbot */}
+      {/* Collapsed bubble — opposite side from chatbot, smaller on mobile */}
       {!expanded && (
         <button
           onClick={() => setExpanded(true)}
@@ -93,14 +96,14 @@ export function FeedbackWidget() {
           style={{
             position: "fixed",
             bottom: bubbleBottom,
-            right: bubbleRight,
+            left: "24px",
             zIndex: 51,
             transition: "bottom 0.3s ease",
           }}
-          className="w-14 h-14 rounded-full bg-amber text-black flex items-center justify-center shadow-lg hover:scale-110 hover:shadow-xl transition-all duration-200"
+          className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-amber text-black flex items-center justify-center shadow-lg hover:scale-110 hover:shadow-xl transition-all duration-200"
         >
           <span
-            className="material-symbols-outlined text-[24px]"
+            className="material-symbols-outlined text-[20px] sm:text-[24px]"
             style={{ fontVariationSettings: '"FILL" 1' }}
           >
             star
@@ -108,13 +111,13 @@ export function FeedbackWidget() {
         </button>
       )}
 
-      {/* Expanded card — anchored to bottom-right of screen, safe width on mobile */}
+      {/* Expanded card — anchored to bottom-LEFT now */}
       {expanded && (
         <div
           style={{
             position: "fixed",
-            bottom: "calc(var(--sticky-h, 0px) + 96px)",
-            right: "16px",
+            bottom: "calc(var(--sticky-h, 0px) + 80px)",
+            left: "16px",
             zIndex: 51,
             width: "min(288px, calc(100vw - 32px))",
             transition: "bottom 0.3s ease",

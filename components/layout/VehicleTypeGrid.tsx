@@ -127,7 +127,7 @@ export function VehicleTypeGrid({ types }: ElectricTypeGridProps) {
               {hasImage ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={sanityImg(type.cardImageUrl, { w: 480, q: 75 })}
+                  src={sanityImg(type.cardImageUrl, { w: 800, q: 85 })}
                   alt=""
                   aria-hidden
                   className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
