@@ -462,7 +462,7 @@ export default function CalculadoraContent({ cars }: Props) {
               </div>
 
               <h1 className="text-5xl md:text-6xl font-headline font-black text-white tracking-tighter leading-[0.92] mb-4">
-                ¿Cuánto puedes<br /><span className="text-primary">ahorrar?</span>
+                ¿Cuánto puedes<br /><span className="text-primary">ahorrar con un electrico?</span>
               </h1>
               <p className="text-white/60 text-base leading-relaxed max-w-md mb-8">
                 Ingresa tu uso mensual y tu consumo actual, elige el auto que te interesa y calcula tu ahorro real.
@@ -851,7 +851,7 @@ export default function CalculadoraContent({ cars }: Props) {
                   : "Solicita tu oferta y empieza a ahorrar"}
               </h2>
               <p className="text-white/50 text-sm mt-1">
-                Negociamos por ti con nuestra red exclusiva de concesionarios en Chile.
+                Negociamos por ti con nuestra red exclusiva de vendedores en Chile.
               </p>
             </div>
             <Link
