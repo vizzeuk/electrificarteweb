@@ -74,7 +74,7 @@ export function Navbar({ brands = [], vehicleTypes = [], electricTypes = [] }: N
             aria-label="Electrificarte - Inicio"
           >
             <img
-              src="/logos-electrificarte/logo-elec-sin auto.png"
+              src="/logos-electrificarte/logo-elec-sin auto.webp"
               alt="Electrificarte"
               className={[
                 "h-7 md:h-8 w-auto object-contain transition-all duration-300",

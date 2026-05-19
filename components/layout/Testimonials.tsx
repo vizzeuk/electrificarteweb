@@ -18,9 +18,9 @@ interface TestimonialsProps {
 }
 
 const DEFAULT_TESTIMONIALS: TestimonialData[] = [
-  { name: "Francisco M.", car: "Tesla Model 3",  savings: "$5.200.000", rating: 4, imageUrl: "/images/testimonial-tesla-model3.png", quote: "Llevaba meses mirando el Model 3. Electrificarte consiguió un precio que no encontré en ningún concesionario. En dos semanas ya manejaba con 500 km de autonomía." },
-  { name: "Sofía R.",     car: "Kia EV6",        savings: "$3.800.000", rating: 5, imageUrl: "/images/testimonial-kia-ev6.png",      quote: "Quería carga rápida para el día a día y autonomía para los fines de semana. Me trajeron una oferta con bono incluido que no habría conseguido negociando sola." },
-  { name: "Pablo V.",     car: "BYD Tang Pro",   savings: "$6.100.000", rating: 4, imageUrl: "/images/testimonial-byd-tang.png",     quote: "Para un auto de ese precio esperaba un proceso largo. Todo lo contrario: oferta en 48 horas, sin pisar concesionarias. El ahorro en un auto así es muy significativo." },
+  { name: "Francisco M.", car: "Tesla Model 3",  savings: "$5.200.000", rating: 4, imageUrl: "/images/testimonial-tesla-model3.webp", quote: "Llevaba meses mirando el Model 3. Electrificarte consiguió un precio que no encontré en ningún concesionario. En dos semanas ya manejaba con 500 km de autonomía." },
+  { name: "Sofía R.",     car: "Kia EV6",        savings: "$3.800.000", rating: 5, imageUrl: "/images/testimonial-kia-ev6.webp",      quote: "Quería carga rápida para el día a día y autonomía para los fines de semana. Me trajeron una oferta con bono incluido que no habría conseguido negociando sola." },
+  { name: "Pablo V.",     car: "BYD Tang Pro",   savings: "$6.100.000", rating: 4, imageUrl: "/images/testimonial-byd-tang.webp",     quote: "Para un auto de ese precio esperaba un proceso largo. Todo lo contrario: oferta en 48 horas, sin pisar concesionarias. El ahorro en un auto así es muy significativo." },
 ];
 
 function StarRating({ rating }: { rating: number }) {

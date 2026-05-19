@@ -130,7 +130,7 @@ export function Footer() {
               aria-label="Electrificarte - Inicio"
             >
               <img
-                src="/logos-electrificarte/logo-elec-sin auto.png"
+                src="/logos-electrificarte/logo-elec-sin auto.webp"
                 alt="Electrificarte"
                 className="h-8 w-auto object-contain brightness-0 invert"
                 loading="lazy"
