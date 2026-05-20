@@ -205,6 +205,38 @@ function CarCombobox({
 }
 
 // ─── Photo uploader ───────────────────────────────────────────────────────────
+// Downscales to max 1280px wide and re-encodes as JPEG q0.7 before base64.
+// A 6 MB phone photo lands around ~200-300 KB — without this a 10-photo
+// trade-in could push a 60-100 MB payload through the webhook and break
+// the submit. createImageBitmap with imageOrientation:"from-image" applies
+// EXIF rotation so portrait shots don't come out sideways. If anything
+// fails it falls back to the raw file so the user never loses a photo.
+async function compressImage(file: File): Promise<string> {
+  const MAX_W = 1280;
+  const QUALITY = 0.7;
+  try {
+    const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+    const scale  = Math.min(1, MAX_W / bitmap.width);
+    const w = Math.round(bitmap.width * scale);
+    const h = Math.round(bitmap.height * scale);
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("no 2d context");
+    ctx.drawImage(bitmap, 0, 0, w, h);
+    bitmap.close();
+    return canvas.toDataURL("image/jpeg", QUALITY);
+  } catch {
+    return new Promise<string>((res, rej) => {
+      const reader = new FileReader();
+      reader.onload  = () => res(reader.result as string);
+      reader.onerror = rej;
+      reader.readAsDataURL(file);
+    });
+  }
+}
+
 function PhotoUploader({
   photos,
   onChange,
@@ -213,18 +245,17 @@ function PhotoUploader({
   onChange: (photos: string[]) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const [processing, setProcessing] = useState(false);
 
   async function handleFiles(files: FileList | null) {
-    if (!files) return;
-    const toBase64 = (file: File): Promise<string> =>
-      new Promise((res, rej) => {
-        const reader = new FileReader();
-        reader.onload = () => res(reader.result as string);
-        reader.onerror = rej;
-        reader.readAsDataURL(file);
-      });
-    const newB64 = await Promise.all(Array.from(files).map(toBase64));
-    onChange([...photos, ...newB64].slice(0, 10)); // max 10
+    if (!files || files.length === 0) return;
+    setProcessing(true);
+    try {
+      const compressed = await Promise.all(Array.from(files).map(compressImage));
+      onChange([...photos, ...compressed].slice(0, 10)); // max 10
+    } finally {
+      setProcessing(false);
+    }
   }
 
   function remove(idx: number) {
@@ -255,16 +286,22 @@ function PhotoUploader({
       <button
         type="button"
         onClick={() => inputRef.current?.click()}
+        disabled={processing}
         className={[
           "w-full border-2 border-dashed rounded-xl py-5 flex flex-col items-center gap-1.5 transition-colors",
+          processing ? "opacity-60 cursor-wait" : "",
           photos.length < 4
             ? "border-amber/50 bg-amber/5 hover:bg-amber/10"
             : "border-gray-200 bg-gray-50 hover:bg-gray-100",
         ].join(" ")}
       >
-        <span className="material-symbols-outlined text-[28px] text-text-ghost">add_photo_alternate</span>
+        <span className="material-symbols-outlined text-[28px] text-text-ghost">
+          {processing ? "hourglass_top" : "add_photo_alternate"}
+        </span>
         <span className="text-sm font-semibold text-text-muted">
-          {photos.length === 0 ? "Sube fotos de tu auto" : "Agregar más fotos"}
+          {processing
+            ? "Procesando fotos…"
+            : photos.length === 0 ? "Sube fotos de tu auto" : "Agregar más fotos"}
         </span>
         <span className={["text-[10px] font-bold uppercase tracking-wide", photos.length < 4 ? "text-amber-600" : "text-text-ghost"].join(" ")}>
           {photos.length < 4
