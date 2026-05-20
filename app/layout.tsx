@@ -114,7 +114,7 @@ export default function RootLayout({
           }}
         />
 
-        <link rel="icon" href="/favicon.ico" sizes="any" />
+        {/* Favicon is auto-wired by Next.js from app/icon.svg */}
         <meta name="theme-color" content="#00E5E5" />
       </head>
       <body className="font-body antialiased bg-white text-text-main">
