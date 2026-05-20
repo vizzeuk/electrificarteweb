@@ -391,6 +391,7 @@ export const brandBySlugQuery = groq`
       discountPrice,
     },
     "plpBanners": plpBanners[active != false]{
+      "mobileImageUrl": mobileImage.asset->url,
       "imageUrl": image.asset->url,
       ctaHref,
       altText
@@ -447,6 +448,7 @@ export const vehicleTypeBySlugQuery = groq`
       "brand": brand->{ name }
     },
     "plpBanners": plpBanners[active != false]{
+      "mobileImageUrl": mobileImage.asset->url,
       "imageUrl": image.asset->url,
       ctaHref,
       altText
@@ -497,6 +499,7 @@ export const electricTypeBySlugQuery = groq`
       "brand": brand->{ name }
     },
     "plpBanners": plpBanners[active != false]{
+      "mobileImageUrl": mobileImage.asset->url,
       "imageUrl": image.asset->url,
       ctaHref,
       altText

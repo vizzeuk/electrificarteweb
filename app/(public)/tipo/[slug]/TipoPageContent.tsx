@@ -55,6 +55,7 @@ export interface AdCarData {
 }
 
 export interface PlpBannerData {
+  mobileImageUrl?: string;
   imageUrl: string;
   ctaHref?: string;
   altText?: string;
@@ -282,7 +283,12 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes, adCar, a
           <div className="max-w-7xl mx-auto px-4 md:px-8">
             <div className="relative rounded-2xl overflow-hidden">
               {/* Sizer invisible — define la altura del contenedor según la imagen activa */}
-              <img src={plpBanners[activeSlide]?.imageUrl} alt="" aria-hidden className="w-full h-auto invisible" loading="lazy" decoding="async" />
+              <picture>
+                {plpBanners[activeSlide]?.mobileImageUrl && (
+                  <source media="(max-width: 767px)" srcSet={plpBanners[activeSlide].mobileImageUrl} />
+                )}
+                <img src={plpBanners[activeSlide]?.imageUrl} alt="" aria-hidden className="w-full h-auto invisible" loading="lazy" decoding="async" />
+              </picture>
               {/* Slides con fade */}
               {plpBanners.map((b, i) => (
                 <div
@@ -293,10 +299,16 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes, adCar, a
                 >
                   {b.ctaHref ? (
                     <Link href={b.ctaHref} className="block w-full h-full">
-                      <img src={b.imageUrl} alt={b.altText ?? ""} className="w-full h-full object-cover" loading="lazy" decoding="async" />
+                      <picture>
+                        {b.mobileImageUrl && <source media="(max-width: 767px)" srcSet={b.mobileImageUrl} />}
+                        <img src={b.imageUrl} alt={b.altText ?? ""} className="w-full h-full object-cover" loading="lazy" decoding="async" />
+                      </picture>
                     </Link>
                   ) : (
-                    <img src={b.imageUrl} alt={b.altText ?? ""} className="w-full h-full object-cover" loading="lazy" decoding="async" />
+                    <picture>
+                      {b.mobileImageUrl && <source media="(max-width: 767px)" srcSet={b.mobileImageUrl} />}
+                      <img src={b.imageUrl} alt={b.altText ?? ""} className="w-full h-full object-cover" loading="lazy" decoding="async" />
+                    </picture>
                   )}
                 </div>
               ))}

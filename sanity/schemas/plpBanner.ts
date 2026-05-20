@@ -14,11 +14,18 @@ export const plpBanner = defineType({
     }),
     defineField({
       name: "image",
-      title: "Imagen del banner",
+      title: "Imagen del banner (Desktop)",
       type: "image",
       options: { hotspot: true },
       validation: (r) => r.required(),
-      description: "La imagen debe contener toda la información (título, precio, etc.). Recomendado: 1440×320px, JPG/WebP.",
+      description: "Versión desktop. Si NO subís imagen mobile, esta se usa en ambos. Recomendado: 1440×320px, JPG/WebP.",
+    }),
+    defineField({
+      name: "mobileImage",
+      title: "Imagen del banner (Mobile) — opcional",
+      type: "image",
+      options: { hotspot: true },
+      description: "Versión mobile (vertical/cuadrada). Solo se usa en pantallas ≤767px. Si la dejás vacía, se usa la desktop también en mobile. Recomendado: 750×900px o 1080×1080px.",
     }),
     defineField({
       name: "ctaHref",
