@@ -5,6 +5,7 @@ import Link from "next/link";
 import { client } from "@/lib/sanity/client";
 import { carBySlugQuery, similarCarsQuery } from "@/lib/queries/car";
 import AutoPageClient, { type CarData, type SimilarCarData } from "./AutoPageClient";
+import { CarStructuredData } from "@/components/car/CarStructuredData";
 
 export const revalidate = 60;
 
@@ -16,11 +17,12 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const car = await client.fetch(carBySlugQuery, { slug }).catch(() => null);
-  if (!car) return { title: "Auto no encontrado | Electrificarte" };
+  if (!car || car.hidden) return { title: "Auto no encontrado | Electrificarte" };
   const brandName = car.brand?.name ?? "";
   return {
     title: car.metaTitle ?? `${brandName} ${car.name} | Oferta exclusiva Electrificarte`,
     description: car.metaDescription ?? car.tagline ?? `Consigue el mejor precio en el ${brandName} ${car.name} en Chile.`,
+    alternates: { canonical: `/auto/${slug}` },
   };
 }
 
@@ -30,6 +32,9 @@ export default async function CarDetailPage({ params }: PageProps) {
 
   // Fetch car from Sanity
   const sanity = await client.fetch(carBySlugQuery, { slug }).catch(() => null);
+
+  // Auto descontinuado / oculto → 404 real
+  if (sanity?.hidden) notFound();
 
   if (!sanity) {
     // Graceful fallback for slugs not in Sanity yet
@@ -157,5 +162,24 @@ export default async function CarDetailPage({ params }: PageProps) {
     imageUrl:      s.imageUrl,
   }));
 
-  return <AutoPageClient car={car} similarCars={similarCars} />;
+  return (
+    <>
+      <CarStructuredData
+        name={car.name}
+        brand={car.brand}
+        brandSlug={car.brandSlug}
+        slug={car.slug}
+        description={car.description}
+        image={car.gallery?.[0]}
+        basePrice={car.basePrice}
+        discountPrice={car.discountPrice}
+        range={car.range}
+        battery={car.battery}
+        power={car.power}
+        seats={car.seats}
+        electricTypeTag={car.electricTypeTag}
+      />
+      <AutoPageClient car={car} similarCars={similarCars} />
+    </>
+  );
 }

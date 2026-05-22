@@ -25,8 +25,9 @@ interface CarCardProps {
   discountPrice?: number;
   isNew?: boolean;
   index?: number;
-  compact?: boolean;
   noAnimate?: boolean;
+  /** Cuántas specs mostrar en el bloque de stats (default 3). */
+  maxStats?: number;
 }
 
 export function CarCard({
@@ -48,30 +49,13 @@ export function CarCard({
   discountPrice,
   isNew,
   index = 0,
-  compact = false,
   noAnimate = false,
+  maxStats = 3,
 }: CarCardProps) {
   const hasDiscount = discountPrice && discountPrice < basePrice;
   const discountPct = hasDiscount ? calculateDiscount(basePrice, discountPrice) : 0;
 
-  const stats = compact ? (() => {
-    const tag = (electricTypeTag ?? "").toUpperCase();
-    const isPHEV = tag === "PHEV" || tag === "REEV";
-    const isHEV  = tag === "HEV"  || tag === "MHEV";
-    const isBEV  = !isPHEV && !isHEV;
-    type S = { label: string; value: string };
-    const out: S[] = [];
-    if (isBEV) {
-      const rv = (maxVersionRange && maxVersionRange > (range ?? 0)) ? maxVersionRange : range;
-      if (rv) out.push({ label: "Autonomía", value: `${rv} km` });
-    } else if (isPHEV) {
-      if (electricRangeKm) out.push({ label: "Autonomía e-", value: `${electricRangeKm} km` });
-    } else {
-      if (fuelConsumption) out.push({ label: "Rendimiento", value: `${fuelConsumption} km/L` });
-    }
-    if ((batteryCapacity ?? 0) >= 1) out.push({ label: "Batería", value: `${batteryCapacity} kWh` });
-    return out;
-  })() : carStats({ battery: batteryCapacity, range, maxVersionRange, electricRangeKm, fuelConsumption, rendimientoElectrico, electricTypeTag, power });
+  const stats = carStats({ battery: batteryCapacity, range, maxVersionRange, electricRangeKm, fuelConsumption, rendimientoElectrico, electricTypeTag, power }).slice(0, maxStats);
 
   // CSS-based entry animation (replaces framer-motion m.article).
   // Desktop: .card-fade-in runs the same 0.4 s fade+slide as before.

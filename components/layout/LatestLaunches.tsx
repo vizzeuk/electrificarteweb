@@ -194,7 +194,7 @@ export function LatestLaunches({ title = "Últimos lanzamientos", cars }: Latest
                       discountPrice={car.discountPrice}
                       isNew={car.isNew}
                       index={i % displayCars.length}
-                      compact
+                      maxStats={2}
                       noAnimate
                     />
                   </div>

@@ -335,12 +335,12 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes, adCar, a
           >
             {hotDeals.map((car) => {
               const discountPct = Math.round(((car.basePrice - car.discountPrice) / car.basePrice) * 100);
-              const primaryStats = carStats({ battery: car.battery, range: car.range, maxVersionRange: car.maxVersionRange, electricRangeKm: car.electricRangeKm, fuelConsumption: car.fuelConsumption, rendimientoElectrico: car.rendimientoElectrico, electricTypeTag: car.electricTypeTag, power: car.power });
+              const primaryStats = carStats({ battery: car.battery, range: car.range, maxVersionRange: car.maxVersionRange, electricRangeKm: car.electricRangeKm, fuelConsumption: car.fuelConsumption, rendimientoElectrico: car.rendimientoElectrico, electricTypeTag: car.electricTypeTag, power: car.power, acceleration: car.acceleration, traction: car.traction });
               const specs = [
                 ...primaryStats,
                 { label: "Potencia",   value: `${car.power} CV` },
                 { label: "Tracción",   value: car.traction },
-                { label: "0-100 km/h", value: car.acceleration ? `${car.acceleration} seg` : "–" },
+                { label: "0-100 km/h", value: car.acceleration ? `${car.acceleration} seg` : null },
               ].filter((s, i, arr) => s.value && arr.findIndex(x => x.label === s.label) === i).slice(0, 4);
               return (
                 <div key={car.slug} style={{ flex: "0 0 100%", scrollSnapAlign: "start" }}>
@@ -551,7 +551,7 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes, adCar, a
 
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-1 sm:gap-2 mb-2 sm:mb-4">
                         {(() => {
-                          const cs = carStats({ battery: car.battery, range: car.range, maxVersionRange: car.maxVersionRange, electricRangeKm: car.electricRangeKm, fuelConsumption: car.fuelConsumption, rendimientoElectrico: car.rendimientoElectrico, electricTypeTag: car.electricTypeTag, power: car.power });
+                          const cs = carStats({ battery: car.battery, range: car.range, maxVersionRange: car.maxVersionRange, electricRangeKm: car.electricRangeKm, fuelConsumption: car.fuelConsumption, rendimientoElectrico: car.rendimientoElectrico, electricTypeTag: car.electricTypeTag, power: car.power, acceleration: car.acceleration, traction: car.traction });
                           const extra = { label: "Potencia", value: car.power ? `${car.power} CV` : null };
                           const all = [...cs, extra].filter((s, i, arr) => s.value && arr.findIndex(x => x.label === s.label) === i).slice(0, 3);
                           return all.map((s, i) => (

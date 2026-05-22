@@ -3,6 +3,7 @@
 import React, { useRef, useState } from "react";
 import Link from "next/link";
 import { sanityImg } from "@/lib/sanityImage";
+import { formatFecha } from "@/lib/utils";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -152,9 +153,7 @@ export function BlogPreview({ title, posts }: BlogPreviewProps) {
               </p>
               <div className="flex items-center justify-between">
                 <span className="text-white/30 text-xs">
-                  {new Date(featured.publishedAt).toLocaleDateString("es-CL", {
-                    day: "numeric", month: "long", year: "numeric",
-                  })}
+                  {formatFecha(featured.publishedAt, true)}
                 </span>
                 <Link
                   href={`/blog/${featured.slug}`}
@@ -207,7 +206,7 @@ export function BlogPreview({ title, posts }: BlogPreviewProps) {
                       {post.readingTime} min
                     </span>
                     <span className="text-text-ghost text-[11px]">
-                      {new Date(post.publishedAt).toLocaleDateString("es-CL", { day: "numeric", month: "short" })}
+                      {formatFecha(post.publishedAt)}
                     </span>
                   </div>
                 </div>

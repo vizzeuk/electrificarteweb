@@ -1,0 +1,29 @@
+# Electrificarte
+
+> Marketplace de autos eléctricos e híbridos en Chile. Electrificarte es un intermediario entre el comprador y la red de concesionarios: agrupa la demanda y negocia precios por volumen para conseguirle al cliente el precio más bajo del mercado. El comprador paga un único cargo de asesoría de $19.990 CLP; si no se logra un descuento significativo, se devuelve el 100%.
+
+## Qué es Electrificarte
+
+Electrificarte S.P.A. es una empresa chilena (Santiago, Región Metropolitana) que opera un marketplace de vehículos eléctricos (EV), híbridos enchufables (PHEV), híbridos (HEV), micro-híbridos (MHEV) y de rango extendido (EREV). No vende autos directamente: conecta al comprador con el concesionario que ofrezca la mejor oferta y lo acompaña durante todo el proceso de compra.
+
+## Cómo funciona
+
+1. El usuario elige un modelo del catálogo o indica qué auto le interesa.
+2. Paga una asesoría única de $19.990 CLP que activa la búsqueda exclusiva.
+3. En 48 a 96 horas recibe la mejor oferta del mercado, con bonos y financiamiento incluidos.
+4. Electrificarte lo conecta con el concesionario y lo acompaña hasta retirar el vehículo.
+
+## Páginas principales
+
+- [Marcas](https://electrificarte.com/marcas): catálogo completo de marcas de autos eléctricos e híbridos disponibles en Chile.
+- [Comparador](https://electrificarte.com/comparador): compara modelos lado a lado por precio, autonomía, batería, carga y equipamiento.
+- [Calculadora de ahorro](https://electrificarte.com/calculadora): estima el ahorro mensual y anual al cambiar a un auto eléctrico.
+- [Solicitar oferta](https://electrificarte.com/solicitar): formulario para recibir la mejor oferta de un modelo.
+- [Blog](https://electrificarte.com/blog): guías de compra, comparativas y noticias de electromovilidad en Chile.
+- [Contacto](https://electrificarte.com/contacto): canal de contacto con el equipo.
+
+## Cobertura
+
+- País: Chile.
+- Tipos de vehículo: SUV, sedán, hatchback, city car y pickup.
+- Tecnologías: 100% eléctrico (EV), híbrido enchufable (PHEV), híbrido (HEV), micro-híbrido (MHEV) y rango extendido (EREV).

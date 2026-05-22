@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { PortableText, type PortableTextComponents } from "@portabletext/react";
-import { formatCLP } from "@/lib/utils";
+import { formatCLP, formatFecha } from "@/lib/utils";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -239,9 +239,7 @@ export function BlogPostContent({ post }: { post: BlogPost }) {
               {post.readingTime} min de lectura
             </span>
             <span className="text-white/40 text-xs">
-              {new Date(post.publishedAt).toLocaleDateString("es-CL", {
-                day: "numeric", month: "long", year: "numeric",
-              })}
+              {formatFecha(post.publishedAt, true)}
             </span>
           </div>
 

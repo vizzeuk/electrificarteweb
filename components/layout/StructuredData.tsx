@@ -4,8 +4,8 @@ export function HomeStructuredData() {
     "@type": "Organization",
     name: "Electrificarte",
     alternateName: "Electrificarte S.P.A.",
-    url: "https://electrificarte.cl",
-    logo: "https://electrificarte.cl/icons/logo.svg",
+    url: "https://electrificarte.com",
+    logo: "https://electrificarte.com/logos-electrificarte/logo-elec-sin%20auto.webp",
     description:
       "Marketplace de autos electricos en Chile. Intermediario entre compradores y concesionarios que garantiza el mejor precio del mercado.",
     foundingDate: "2023",
@@ -33,7 +33,7 @@ export function HomeStructuredData() {
       "@type": "ContactPoint",
       contactType: "sales",
       availableLanguage: "Spanish",
-      url: "https://electrificarte.cl/contacto",
+      url: "https://electrificarte.com/contacto",
     },
     hasOfferCatalog: {
       "@type": "OfferCatalog",
@@ -59,13 +59,13 @@ export function HomeStructuredData() {
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: "Electrificarte",
-    url: "https://electrificarte.cl",
+    url: "https://electrificarte.com",
     inLanguage: "es-CL",
     potentialAction: {
       "@type": "SearchAction",
       target: {
         "@type": "EntryPoint",
-        urlTemplate: "https://electrificarte.cl/marcas?q={search_term_string}",
+        urlTemplate: "https://electrificarte.com/marcas?q={search_term_string}",
       },
       "query-input": "required name=search_term_string",
     },
@@ -152,11 +152,11 @@ export function HomeStructuredData() {
 
   const localBusinessSchema = {
     "@context": "https://schema.org",
-    "@type": "LocalBusiness",
+    "@type": "AutoDealer",
     name: "Electrificarte",
     description:
       "Marketplace de autos electricos en Chile con asesoria personalizada para obtener el mejor precio del mercado.",
-    url: "https://electrificarte.cl",
+    url: "https://electrificarte.com",
     address: {
       "@type": "PostalAddress",
       addressLocality: "Santiago",
@@ -175,12 +175,6 @@ export function HomeStructuredData() {
       dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
       opens: "09:00",
       closes: "18:00",
-    },
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: "4.9",
-      reviewCount: "127",
-      bestRating: "5",
     },
   };
 

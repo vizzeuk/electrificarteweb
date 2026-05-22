@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { m, AnimatePresence } from "framer-motion";
 import { formatCLP } from "@/lib/utils";
+import { ComparePromo } from "@/components/car/ComparePromo";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export interface VersionData {
@@ -378,10 +379,21 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
                     : isPHEV
                       ? { label: "Efic. e-",    value: (ver.rendimientoElectrico ?? car.rendimientoElectrico) ? `${ver.rendimientoElectrico ?? car.rendimientoElectrico} km/kWh` : "—" }
                       : { label: "Potencia",    value: ver.power ? `${ver.power} CV` : "—" };
+                  // 3er stat: 0–100 si hay dato; si no, la siguiente spec
+                  // disponible que no repita stat1/stat2.
+                  const used = new Set([stat1.label, stat2.label]);
+                  const stat3 = [
+                    ver.acceleration ? { label: "0–100",    value: `${ver.acceleration}s` } : null,
+                    (ver.power ?? car.power)       ? { label: "Potencia", value: `${ver.power ?? car.power} CV` } : null,
+                    (ver.topSpeed ?? car.topSpeed) ? { label: "Vel. máx", value: `${ver.topSpeed ?? car.topSpeed} km/h` } : null,
+                    (ver.torque ?? car.torque)     ? { label: "Torque",   value: `${ver.torque ?? car.torque} Nm` } : null,
+                    (ver.traction ?? car.traction) ? { label: "Tracción", value: `${ver.traction ?? car.traction}` } : null,
+                    car.range ? { label: "Autonomía", value: `${car.range} km` } : null,
+                  ].find((s) => s && !used.has(s.label)) ?? { label: "0–100", value: "—" };
                   return [
                     stat1,
                     stat2,
-                    { label: "0–100",  value: ver.acceleration ? `${ver.acceleration}s` : "—" },
+                    stat3,
                     { label: "Plazas", value: `${car.seats || 5} plz` },
                   ].map((s) => (
                     <div key={s.label} className="rounded-xl p-2.5 sm:p-3 text-center" style={{ backgroundColor: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.10)", backdropFilter: "blur(8px)" }}>
@@ -608,7 +620,8 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
               <p className="text-[11px] uppercase tracking-widest text-primary-deep font-bold mb-2">Equipamiento</p>
               <h2 className="text-3xl md:text-4xl font-headline font-black tracking-tighter uppercase">Seguridad, tecnología y confort</h2>
             </div>
-            <div className="divide-y divide-gray-100 border border-gray-100 rounded-2xl overflow-hidden bg-white max-w-3xl">
+            <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start">
+              <div className="divide-y divide-gray-100 border border-gray-100 rounded-2xl overflow-hidden bg-white">
               {[
                 { key: "safety",  icon: "shield",  label: "Seguridad",  iconCls: "text-red-500",      bgCls: "bg-red-50",      dotCls: "bg-red-400",    features: car.safetyFeatures },
                 { key: "tech",    icon: "memory",  label: "Tecnología", iconCls: "text-primary-deep", bgCls: "bg-primary/10",  dotCls: "bg-primary",    features: car.techFeatures },
@@ -646,6 +659,14 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
                   )}
                 </div>
               ))}
+              </div>
+
+              <ComparePromo
+                carName={car.name}
+                carBrand={car.brand}
+                carSlug={car.slug}
+                rivals={similarCars.map((s) => ({ slug: s.slug, name: s.name, brand: s.brand, basePrice: s.basePrice, discountPrice: s.discountPrice }))}
+              />
             </div>
           </div>
         </section>

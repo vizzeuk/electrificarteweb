@@ -23,6 +23,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: meta.metaTitle ?? `${meta.label} eléctricos en Chile | Electrificarte`,
     description: meta.metaDescription ?? `Encuentra los mejores precios en autos ${meta.label} eléctricos en Chile.`,
+    alternates: { canonical: `/tipo/${slug}` },
   };
 }
 

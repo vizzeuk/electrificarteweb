@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     description: post.metaDescription ?? post.excerpt,
     keywords:    post.keywords?.join(", "),
     robots:      post.noIndex ? "noindex,nofollow" : "index,follow",
-    alternates:  post.canonicalUrl ? { canonical: post.canonicalUrl } : undefined,
+    alternates:  { canonical: post.canonicalUrl ?? `/blog/${slug}` },
     openGraph: {
       title:       post.metaTitle ?? post.title,
       description: post.metaDescription ?? post.excerpt,

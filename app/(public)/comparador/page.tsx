@@ -1,8 +1,16 @@
+import type { Metadata } from "next";
 import { client } from "@/lib/sanity/client";
 import { allCarsForComparadorQuery } from "@/lib/queries/car";
 import ComparadorClient, { type Car } from "./ComparadorClient";
 
 export const revalidate = 60;
+
+export const metadata: Metadata = {
+  title: "Comparador de autos eléctricos e híbridos | Electrificarte",
+  description:
+    "Compará autos eléctricos e híbridos lado a lado: precio, autonomía, batería, carga y equipamiento. Encontrá el auto ideal al mejor precio en Chile.",
+  alternates: { canonical: "/comparador" },
+};
 
 interface PageProps {
   searchParams: Promise<{ add?: string }>;

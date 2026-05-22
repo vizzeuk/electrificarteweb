@@ -4,6 +4,7 @@ import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import { m } from "framer-motion";
 import type { BlogPreviewPost } from "@/components/layout/BlogPreview";
+import { formatFecha } from "@/lib/utils";
 
 // ─── Static fallback posts ────────────────────────────────────────────────────
 const FALLBACK_POSTS: BlogPreviewPost[] = [
@@ -212,7 +213,7 @@ export function BlogListingContent({ posts }: { posts: BlogPreviewPost[] }) {
                       </span>
                       <span className="text-white/40 text-xs">{featured.readingTime} min lectura</span>
                       <span className="text-white/40 text-xs">
-                        {new Date(featured.publishedAt).toLocaleDateString("es-CL", { day: "numeric", month: "long", year: "numeric" })}
+                        {formatFecha(featured.publishedAt, true)}
                       </span>
                     </div>
                     <Link href={`/blog/${featured.slug}`}>
@@ -280,7 +281,7 @@ export function BlogListingContent({ posts }: { posts: BlogPreviewPost[] }) {
                             {post.readingTime} min
                           </span>
                           <span className="text-text-ghost text-[11px]">
-                            {new Date(post.publishedAt).toLocaleDateString("es-CL", { day: "numeric", month: "short", year: "numeric" })}
+                            {formatFecha(post.publishedAt, true)}
                           </span>
                         </div>
                       </div>

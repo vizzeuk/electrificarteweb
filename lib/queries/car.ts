@@ -50,14 +50,14 @@ const CAR_CARD_FIELDS = groq`
 
 // ─── Todos los autos (para comparador y PLP genérico) ─────────────────────────
 export const allCarsQuery = groq`
-  *[_type == "car"] | order(coalesce(discountPrice, basePrice) asc) {
+  *[_type == "car" && hidden != true] | order(coalesce(discountPrice, basePrice) asc) {
     ${CAR_CARD_FIELDS}
   }
 `;
 
 // ─── Autos destacados (isFeatured) ───────────────────────────────────────────
 export const featuredCarsQuery = groq`
-  *[_type == "car" && isFeatured == true] | order(coalesce(discountPrice, basePrice) asc) {
+  *[_type == "car" && isFeatured == true && hidden != true] | order(coalesce(discountPrice, basePrice) asc) {
     ${CAR_CARD_FIELDS}
   }
 `;
@@ -65,7 +65,7 @@ export const featuredCarsQuery = groq`
 // ─── Autos recientes — fallback para Últimos Lanzamientos ────────────────────
 // isNew=true primero, luego por fecha — evita concatenación GROQ que rompe asset->url
 export const newCarsForHomeQuery = groq`
-  *[_type == "car"] | order(isNew desc, _createdAt desc) [0...6] {
+  *[_type == "car" && hidden != true] | order(isNew desc, _createdAt desc) [0...6] {
     _id,
     name,
     "slug": slug.current,
@@ -89,7 +89,7 @@ export const newCarsForHomeQuery = groq`
 // ─── Autos destacados — fallback para Oportunidades ──────────────────────────
 // isFeatured=true primero, luego por precio — evita concatenación GROQ que rompe asset->url
 export const featuredCarsForHomeQuery = groq`
-  *[_type == "car"] | order(isFeatured desc, coalesce(discountPrice, basePrice) asc) [0...8] {
+  *[_type == "car" && hidden != true] | order(isFeatured desc, coalesce(discountPrice, basePrice) asc) [0...8] {
     _id,
     name,
     "slug": slug.current,
@@ -113,7 +113,7 @@ export const featuredCarsForHomeQuery = groq`
 
 // ─── Todos los Hot Deals (isHotDeal) — para carrusel ─────────────────────────
 export const allHotDealsQuery = groq`
-  *[_type == "car" && isHotDeal == true] | order(coalesce(discountPrice, basePrice) asc) {
+  *[_type == "car" && isHotDeal == true && hidden != true] | order(coalesce(discountPrice, basePrice) asc) {
     _id,
     name,
     "slug": slug.current,
@@ -132,7 +132,7 @@ export const allHotDealsQuery = groq`
 
 // ─── Hot Deal único (isHotDeal) ───────────────────────────────────────────────
 export const hotDealQuery = groq`
-  *[_type == "car" && isHotDeal == true][0] {
+  *[_type == "car" && isHotDeal == true && hidden != true][0] {
     _id,
     name,
     "slug": slug.current,
@@ -162,6 +162,7 @@ export const carBySlugQuery = groq`
     tagline,
     description,
     modelYear,
+    hidden,
     mainImage,
     "gallery": gallery[]{ "url": asset->url, alt, caption },
     "highlights": highlights[]{
@@ -257,13 +258,14 @@ export const carBySlugQuery = groq`
 
 // ─── Slugs de todos los autos (para generateStaticParams) ────────────────────
 export const allCarSlugsQuery = groq`
-  *[_type == "car"]{ "slug": slug.current }
+  *[_type == "car" && hidden != true]{ "slug": slug.current }
 `;
 
 // ─── Autos similares — candidatos para scoring (misma marca / tipo / eléctrico) ─
 export const similarCarsQuery = groq`
   *[
     _type == "car" &&
+    hidden != true &&
     slug.current != $excludeSlug &&
     (brand._ref == $brandId || vehicleType._ref == $vehicleTypeId || electricType._ref == $electricTypeId)
   ] {
@@ -284,28 +286,28 @@ export const similarCarsQuery = groq`
 
 // ─── Autos por marca – PLP Marca ─────────────────────────────────────────────
 export const carsByBrandQuery = groq`
-  *[_type == "car" && brand->slug.current == $brandSlug] | order(coalesce(discountPrice, basePrice) asc) {
+  *[_type == "car" && brand->slug.current == $brandSlug && hidden != true] | order(coalesce(discountPrice, basePrice) asc) {
     ${CAR_CARD_FIELDS}
   }
 `;
 
 // ─── Autos por tipo de vehículo – PLP Tipo ───────────────────────────────────
 export const carsByVehicleTypeQuery = groq`
-  *[_type == "car" && vehicleType->slug.current == $typeSlug] | order(coalesce(discountPrice, basePrice) asc) {
+  *[_type == "car" && vehicleType->slug.current == $typeSlug && hidden != true] | order(coalesce(discountPrice, basePrice) asc) {
     ${CAR_CARD_FIELDS}
   }
 `;
 
 // ─── Autos por tipo eléctrico – PLP Eléctrico ────────────────────────────────
 export const carsByElectricTypeQuery = groq`
-  *[_type == "car" && electricType->slug.current == $electricSlug] | order(coalesce(discountPrice, basePrice) asc) {
+  *[_type == "car" && electricType->slug.current == $electricSlug && hidden != true] | order(coalesce(discountPrice, basePrice) asc) {
     ${CAR_CARD_FIELDS}
   }
 `;
 
 // ─── Comparador – múltiples slugs ────────────────────────────────────────────
 export const compareCarsQuery = groq`
-  *[_type == "car" && slug.current in $slugs] {
+  *[_type == "car" && slug.current in $slugs && hidden != true] {
     _id,
     name,
     "slug": slug.current,
@@ -363,7 +365,7 @@ export const allBrandsQuery = groq`
     foundedYear,
     accentColor,
     isFeatured,
-    "carCount": count(*[_type == "car" && brand._ref == ^._id])
+    "carCount": count(*[_type == "car" && brand._ref == ^._id && hidden != true])
   }
 `;
 
@@ -423,7 +425,7 @@ export const electricTypesForHomeQuery = groq`
     tagline,
     idealFor,
     "cardImageUrl": cardImage.asset->url,
-    "carCount": count(*[_type == "car" && electricType._ref == ^._id])
+    "carCount": count(*[_type == "car" && electricType._ref == ^._id && hidden != true])
   }
 `;
 
@@ -511,7 +513,7 @@ export const electricTypeBySlugQuery = groq`
 
 // ─── Autos para el dropdown del formulario ───────────────────────────────────
 export const carNamesForFormQuery = groq`
-  *[_type == "car"] | order(name asc) {
+  *[_type == "car" && hidden != true] | order(name asc) {
     "label": name,
     "brand": brand->name
   }
@@ -529,7 +531,7 @@ export const allBrandsStripQuery = groq`
 
 // ─── Autos para comparador (listado completo, campos mínimos) ────────────────
 export const allCarsForComparadorQuery = groq`
-  *[_type == "car"] | order(coalesce(discountPrice, basePrice) asc) {
+  *[_type == "car" && hidden != true] | order(coalesce(discountPrice, basePrice) asc) {
     _id,
     name,
     "slug": slug.current,
@@ -579,6 +581,6 @@ export const featuredBrandsQuery = groq`
     _id,
     name,
     "slug": slug.current,
-    "models": coalesce(navbarLabel, array::join(*[_type == "car" && brand._ref == ^._id] | order(coalesce(discountPrice, basePrice) desc)[0...3].name, " · "))
+    "models": coalesce(navbarLabel, array::join(*[_type == "car" && brand._ref == ^._id && hidden != true] | order(coalesce(discountPrice, basePrice) desc)[0...3].name, " · "))
   }
 `;

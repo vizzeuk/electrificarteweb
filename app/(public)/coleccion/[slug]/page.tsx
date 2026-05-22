@@ -17,6 +17,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title:       col.metaTitle       ?? `${col.title} | Electrificarte`,
     description: col.metaDescription ?? col.description ?? `Encuentra los mejores precios en ${col.title} en Chile. Negociamos por ti.`,
+    alternates:  { canonical: `/coleccion/${slug}` },
   };
 }
 

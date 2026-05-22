@@ -5,6 +5,7 @@ import { carNamesForFormQuery } from "@/lib/queries/car";
 import { SolicitarContent } from "./SolicitarContent";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/solicitar" },
   title: "Solicitar oferta | Asesoria para tu auto electrico",
   description:
     "Completa tu solicitud y recibe en 48 a 96 horas la mejor oferta del mercado para tu auto electrico en Chile. Pago unico de $19.990. Garantia de devolucion.",

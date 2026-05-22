@@ -93,6 +93,11 @@ export const car = defineType({
     defineField({ name: "category", title: "Categoría (no usar — campo antiguo)", type: "reference", to: [{ type: "category" }], group: "general", description: "Campo heredado. Ya no es necesario completarlo — se usa Tipo de Vehículo y Tipo Eléctrico.", hidden: ({ document }) => !document?.category }),
     defineField({ name: "modelYear", title: "Año del modelo", type: "number", group: "general", description: "Ej: 2025" }),
     defineField({
+      name: "hidden", title: "🚫 Ocultar del sitio", type: "boolean",
+      group: "general", initialValue: false,
+      description: "Si está activo, el auto desaparece de todo el sitio (listados, buscador, comparador) y su página queda inaccesible. Úsalo cuando el modelo se deja de vender en Chile.",
+    }),
+    defineField({
       name: "tagline", title: "Tagline corto", type: "string",
       group: "general",
       description: 'Una línea descriptiva. Ej: "El SUV eléctrico más innovador del mercado"',

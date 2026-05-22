@@ -61,6 +61,13 @@ export function BrandStrip({ brands }: BrandStripProps) {
 
   const items = [...visibleBrands, ...visibleBrands];
 
+  // La animación corre SOLO cuando ya montaron todas las marcas — así nunca
+  // cambia el ancho de la pista en pleno movimiento (eso causaba el salto).
+  // Su duración es proporcional a la cantidad de logos, por lo que la
+  // velocidad es constante sin importar cuántas marcas haya.
+  const allMounted = visibleBrands.length >= brands.length;
+  const marqueeDuration = Math.round(visibleBrands.length * 1.15);
+
   return (
     <section ref={sectionRef} className="bg-white py-10 border-t border-gray-100" aria-label="Marcas con las que trabajamos">
       <div className="max-w-7xl mx-auto px-4 md:px-8 mb-7">
@@ -80,7 +87,11 @@ export function BrandStrip({ brands }: BrandStripProps) {
         onMouseEnter={() => trackRef.current?.classList.add("marquee-paused")}
         onMouseLeave={() => trackRef.current?.classList.remove("marquee-paused")}
       >
-        <div ref={trackRef} className={`marquee-left ${inView ? "marquee-in-view" : ""}`} style={{ display: "flex", width: "max-content", alignItems: "center" }}>
+        <div
+          ref={trackRef}
+          className={`${allMounted ? "marquee-left" : ""} ${inView ? "marquee-in-view" : ""}`}
+          style={{ display: "flex", width: "max-content", alignItems: "center", animationDuration: `${marqueeDuration}s` }}
+        >
           {items.map((brand, i) => (
             <BrandLogo key={`${brand.slug}-${i}`} brand={brand} />
           ))}

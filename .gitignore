@@ -58,3 +58,6 @@ next-env.d.ts
 FOTOS WEBP/
 public/CONTENIDO AGREGAR/
 public/JSON/json-antiguo.json.txt
+
+# Datos de trabajo de los scripts (scraping, CSVs, JSON intermedios) — solo local
+/data/

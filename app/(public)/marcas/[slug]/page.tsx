@@ -19,6 +19,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: `${brand.name} eléctricos en Chile | Precios y ofertas | Electrificarte`,
     description: brand.description ?? `Encuentra los mejores precios en autos eléctricos ${brand.name} en Chile.`,
+    alternates: { canonical: `/marcas/${slug}` },
   };
 }
 

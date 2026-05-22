@@ -7,6 +7,7 @@ import type { CalcCar } from "./types";
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/calculadora" },
   title: "Calculadora de ahorro eléctrico | Electrificarte",
   description: "Descubre cuánto puedes ahorrar al cambiar tu auto a eléctrico. Calcula tu ahorro mensual, anual y reducción de CO₂ con autos disponibles en Chile.",
 };

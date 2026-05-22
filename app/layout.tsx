@@ -15,6 +15,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://electrificarte.com"),
   title: {
     default: "Electrificarte | Ahorra millones en tu auto electrificado en Chile",
     template: "%s | Electrificarte",
@@ -51,29 +52,20 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "es_CL",
-    url: "https://electrificarte.cl",
+    url: "https://electrificarte.com",
     siteName: "Electrificarte",
     title: "Electrificarte | Ahorra millones en tu auto electrificado en Chile",
     description:
       "Marketplace #1 de autos electricos en Chile. Conectamos compradores con la mejor red de concesionarios para negociar el precio más competitivo del mercado.",
-    images: [
-      {
-        url: "https://electrificarte.cl/og-image.jpg",
-        width: 1200,
-        height: 630,
-        alt: "Electrificarte - Marketplace de autos electricos en Chile",
-      },
-    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Electrificarte | Autos electricos al mejor precio en Chile",
     description:
       "Ahorra millones en tu proximo auto electrico. Marketplace con la mejor red de concesionarios de Chile.",
-    images: ["https://electrificarte.cl/og-image.jpg"],
   },
   alternates: {
-    canonical: "https://electrificarte.cl",
+    canonical: "/",
   },
   other: {
     "geo.region": "CL-RM",

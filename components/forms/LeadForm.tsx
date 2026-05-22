@@ -356,7 +356,6 @@ export function LeadForm({ carOptions = [], carSlug, carName }: LeadFormProps) {
     handleSubmit,
     control,
     watch,
-    reset,
     setValue,
     formState: { errors },
   } = useForm<FormValues>({
@@ -383,16 +382,27 @@ export function LeadForm({ carOptions = [], carSlug, carName }: LeadFormProps) {
         source: "electrificarte-web",
       };
 
-      const res = await fetch("/api/leads", {
+      const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
       if (!res.ok) throw new Error();
-      setStatus("success");
-      reset();
-      setPhotos([]);
+      const { completionUrl, securityToken } = await res.json();
+
+      // Redirección POST a la pasarela de Reveniu (requiere TBK_TOKEN por POST).
+      // El navegador navega a Reveniu — el estado queda en "loading".
+      const form = document.createElement("form");
+      form.method = "POST";
+      form.action = completionUrl;
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = "TBK_TOKEN";
+      input.value = securityToken;
+      form.appendChild(input);
+      document.body.appendChild(form);
+      form.submit();
     } catch {
       setStatus("error");
     }
