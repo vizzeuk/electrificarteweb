@@ -10,6 +10,15 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
+// Íconos en SVG inline — no dependen de la fuente Material Symbols, así
+// renderizan al instante incluso en la primera pintura tras volver del pago.
+const IconCheck = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}
+    strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
+    <path d="M20 6 9 17l-5-5" />
+  </svg>
+);
+
 export default async function GraciasPage() {
   // Gate: solo quien pasó por el checkout (y por tanto pagó) tiene la cookie
   // firmada. Sin cookie válida → 404. No es accesible para cualquiera.
@@ -17,11 +26,17 @@ export default async function GraciasPage() {
   const orderId = verifyOrderToken(store.get("ec_order")?.value);
   if (!orderId) notFound();
 
+  const pasos = [
+    "En 48 a 96 horas te enviamos la mejor oferta.",
+    "Revisá tu email y WhatsApp — ahí te contactamos.",
+    "Cualquier duda, escribinos desde la página de contacto.",
+  ];
+
   return (
     <main className="min-h-screen flex items-center justify-center px-4 py-24 bg-surface">
       <div className="max-w-lg w-full bg-white rounded-3xl border border-gray-100 shadow-xl p-8 md:p-12 text-center">
-        <div className="w-20 h-20 bg-primary/15 rounded-full flex items-center justify-center mx-auto mb-7">
-          <span className="material-symbols-outlined text-primary-deep text-[44px]">verified</span>
+        <div className="w-20 h-20 bg-primary/15 text-primary-deep rounded-full flex items-center justify-center mx-auto mb-7">
+          <IconCheck className="w-10 h-10" />
         </div>
         <p className="text-[11px] uppercase tracking-widest text-primary-deep font-bold mb-3">
           Pago confirmado
@@ -37,18 +52,14 @@ export default async function GraciasPage() {
         <div className="mt-7 rounded-2xl bg-surface border border-gray-100 p-5 text-left">
           <p className="font-bold text-sm mb-3">Qué sigue ahora</p>
           <ul className="space-y-2.5 text-sm text-text-muted">
-            <li className="flex gap-2.5">
-              <span className="material-symbols-outlined text-primary-deep text-[18px]">schedule</span>
-              En 48 a 96 horas te enviamos la mejor oferta.
-            </li>
-            <li className="flex gap-2.5">
-              <span className="material-symbols-outlined text-primary-deep text-[18px]">mail</span>
-              Revisá tu email y WhatsApp — ahí te contactamos.
-            </li>
-            <li className="flex gap-2.5">
-              <span className="material-symbols-outlined text-primary-deep text-[18px]">support_agent</span>
-              Cualquier duda, escribinos desde la página de contacto.
-            </li>
+            {pasos.map((paso) => (
+              <li key={paso} className="flex gap-2.5">
+                <span className="w-5 h-5 rounded-full bg-primary/15 text-primary-deep flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <IconCheck className="w-3 h-3" />
+                </span>
+                {paso}
+              </li>
+            ))}
           </ul>
         </div>
 

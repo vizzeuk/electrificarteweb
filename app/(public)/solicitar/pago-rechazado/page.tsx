@@ -18,8 +18,12 @@ export default async function PagoRechazadoPage() {
   return (
     <main className="min-h-screen flex items-center justify-center px-4 py-24 bg-surface">
       <div className="max-w-lg w-full bg-white rounded-3xl border border-gray-100 shadow-xl p-8 md:p-12 text-center">
-        <div className="w-20 h-20 bg-amber/15 rounded-full flex items-center justify-center mx-auto mb-7">
-          <span className="material-symbols-outlined text-amber text-[44px]">error</span>
+        <div className="w-20 h-20 bg-amber/15 text-amber rounded-full flex items-center justify-center mx-auto mb-7">
+          {/* SVG inline — no depende de la fuente Material Symbols */}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}
+            strokeLinecap="round" strokeLinejoin="round" className="w-10 h-10" aria-hidden>
+            <path d="M18 6 6 18M6 6l12 12" />
+          </svg>
         </div>
         <p className="text-[11px] uppercase tracking-widest text-amber font-bold mb-3">
           Pago no completado
