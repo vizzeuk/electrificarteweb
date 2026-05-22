@@ -515,7 +515,8 @@ export const electricTypeBySlugQuery = groq`
 export const carNamesForFormQuery = groq`
   *[_type == "car" && hidden != true] | order(name asc) {
     "label": name,
-    "brand": brand->name
+    "brand": brand->name,
+    "versions": versions[].name
   }
 `;
 

@@ -15,6 +15,7 @@ interface SearchCar {
   basePrice: number | null;
   discountPrice: number | null;
   type: string | null;
+  versions: (string | null)[] | null;
 }
 
 const norm = (s: string) =>
@@ -53,7 +54,9 @@ export function NavbarSearch({ transparent }: { transparent: boolean }) {
     if (!index || query.trim().length < 1) return [];
     const q = norm(query.trim());
     return index
-      .filter((c) => norm(`${c.brand ?? ""} ${c.name}`).includes(q))
+      .filter((c) =>
+        norm(`${c.brand ?? ""} ${c.name} ${(c.versions ?? []).filter(Boolean).join(" ")}`).includes(q),
+      )
       .slice(0, 8);
   }, [index, query]);
 

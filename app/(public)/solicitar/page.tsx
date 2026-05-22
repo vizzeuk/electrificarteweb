@@ -20,9 +20,15 @@ export const revalidate = 3600;
 
 export default async function SolicitarPage() {
   const rawCars = await client.fetch(carNamesForFormQuery).catch(() => []);
-  const carOptions: string[] = rawCars.map(
-    (c: { brand: string; label: string }) =>
-      c.brand ? `${c.brand} ${c.label}` : c.label
+  // Por cada auto: la opción "pelada" + una opción por cada versión.
+  const carOptions: string[] = rawCars.flatMap(
+    (c: { brand: string; label: string; versions?: (string | null)[] }) => {
+      const base = c.brand ? `${c.brand} ${c.label}` : c.label;
+      const versionOpts = (c.versions ?? [])
+        .filter(Boolean)
+        .map((v) => `${base} ${v}`);
+      return [base, ...versionOpts];
+    }
   );
 
   return <SolicitarContent carOptions={carOptions} />;

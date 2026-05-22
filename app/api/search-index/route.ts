@@ -17,7 +17,8 @@ export async function GET() {
       "brandLogo": brand->logo.asset->url,
       basePrice,
       discountPrice,
-      "type": electricType->tag
+      "type": electricType->tag,
+      "versions": versions[].name
     } | order(brand asc, name asc)`
   );
 
