@@ -66,9 +66,9 @@ function validateMessages(raw: unknown): ChatMessage[] | null {
   for (const m of raw) {
     if (!m || typeof m !== "object") return null;
     const { role, content } = m as Record<string, unknown>;
-    if (role !== "user" && role !== "assistant") return null;
+    if (typeof role !== "string" || (role !== "user" && role !== "assistant")) return null;
     if (typeof content !== "string" || content.length === 0 || content.length > MAX_MSG_LEN) return null;
-    out.push({ role, content });
+    out.push({ role: role as "user" | "assistant", content });
   }
   return out;
 }
