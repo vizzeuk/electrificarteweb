@@ -113,8 +113,8 @@ const VEHICLE_SLUGS: Record<string, string[]> = {
 // ─── Electric type tag keywords ───────────────────────────────────────────────
 
 const ELECTRIC_TAGS: Record<string, string[]> = {
-  electric: ["BEV"],
-  hybrid:   ["HEV", "PHEV", "MHEV", "REEV", "FHEV"],
+  electric: ["EV"],
+  hybrid:   ["HEV", "PHEV", "MHEV", "EREV"],
   any:      [],
 };
 
