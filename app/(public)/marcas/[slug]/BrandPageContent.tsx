@@ -5,6 +5,7 @@ import { m } from "framer-motion";
 import Link from "next/link";
 import { formatCLP } from "@/lib/utils";
 import { CatalogFilters, type ActiveFilters } from "@/components/ui/CatalogFilters";
+import { ElectricTypeBadge } from "@/components/car/ElectricTypeBadge";
 
 // ─── Interfaces ───────────────────────────────────────────────────────────────
 
@@ -522,6 +523,7 @@ export default function BrandPageContent({ slug, brand }: BrandPageContentProps)
                   <div className="aspect-[16/9] bg-gradient-to-br from-gray-50 to-gray-100 relative flex flex-col items-center justify-center overflow-hidden">
                     {car.isHotDeal && <span className="absolute top-3 left-3 bg-amber text-black text-[10px] font-black uppercase tracking-wide px-2.5 py-1 rounded-full z-10">HOT DEAL</span>}
                     {pct > 0 && <span className="absolute top-3 right-3 text-[10px] font-black text-white px-2 py-1 rounded-full z-10" style={{ backgroundColor: brand.accentColor }}>-{pct}%</span>}
+                    <ElectricTypeBadge tag={car.electricType} className="absolute bottom-3 left-3 z-10 shadow-sm" />
                     {car.imageUrl ? (
                       <img src={car.imageUrl} alt={`${brand.name} ${car.name}`} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                     ) : (

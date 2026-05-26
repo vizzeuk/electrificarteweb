@@ -6,6 +6,7 @@ import { Icon } from "@/components/ui/Icon";
 import { formatCLP, carStats } from "@/lib/utils";
 import { sanityImg } from "@/lib/sanityImage";
 import { useInViewport } from "@/lib/useInViewport";
+import { ElectricTypeBadge } from "@/components/car/ElectricTypeBadge";
 
 export interface OpportunityCarData {
   _id?: string;
@@ -256,6 +257,7 @@ export function Opportunities({ title = "Destacados Electrificarte", cars }: Opp
                       -{discountPct}%
                     </span>
                   )}
+                  <ElectricTypeBadge tag={deal.electricType?.tag} className="absolute bottom-3 left-3 shadow-sm" />
                 </div>
 
                 {/* Body */}

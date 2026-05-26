@@ -10,6 +10,16 @@ export const absoluteUrl = (path = "/") =>
   `${SITE_URL}${path.startsWith("/") ? path : `/${path}`}`;
 
 /**
+ * Serializa un objeto para embeber en una etiqueta <script type="application/ld+json">.
+ * Escapa "<" como "<" para impedir que un valor controlado por un editor
+ * (ej. un título con "</script>") rompa el parser HTML y se interprete como
+ * cierre del <script> — vector clásico de XSS en JSON-LD.
+ */
+export function safeJsonLd(obj: unknown): string {
+  return JSON.stringify(obj).replace(/</g, "\\u003c");
+}
+
+/**
  * Construye la metadata de una página con canonical, OpenGraph y Twitter
  * consistentes. `path` es relativo (ej. "/marcas") — se resuelve contra el
  * `metadataBase` definido en el layout raíz.

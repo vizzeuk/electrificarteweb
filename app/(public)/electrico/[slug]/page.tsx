@@ -17,6 +17,16 @@ import ElectricoPageContent, {
 
 export const revalidate = 60;
 
+// Pre-renderiza todas las PLP de tipo eléctrico en el build.
+export async function generateStaticParams() {
+  const rows = await client
+    .fetch<{ slug: string }[]>(
+      `*[_type == "electricType" && defined(slug.current)]{ "slug": slug.current }`
+    )
+    .catch(() => []);
+  return (rows ?? []).map((r) => ({ slug: r.slug }));
+}
+
 interface PageProps {
   params: Promise<{ slug: string }>;
 }

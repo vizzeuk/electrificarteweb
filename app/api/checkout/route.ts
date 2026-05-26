@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
+import { z } from "zod";
 import { signOrderToken } from "@/lib/order-token";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 /**
  * Inicia el pago en Reveniu para una solicitud del formulario.
@@ -15,20 +17,40 @@ import { signOrderToken } from "@/lib/order-token";
 // Producción: https://api.reveniu.com/api/v1 · Sandbox: ver REVENIU_API_BASE en .env
 const REVENIU_API = process.env.REVENIU_API_BASE ?? "https://api.reveniu.com/api/v1";
 
+// Validación mínima del payload — los datos extra del formulario se pasan a
+// n8n tal cual, pero al menos garantizamos email y nombre válidos antes de
+// llamar a Reveniu.
+const checkoutSchema = z
+  .object({
+    email: z.string().email(),
+    fullName: z.string().min(2).max(120).optional(),
+    name: z.string().min(2).max(120).optional(),
+  })
+  .passthrough();
+
 export async function POST(req: NextRequest) {
-  let data: Record<string, unknown>;
+  const limited = checkRateLimit(req, { max: 5, windowMs: 60_000, bucket: "checkout" });
+  if (limited) return limited;
+
+  let raw: unknown;
   try {
-    data = await req.json();
+    raw = await req.json();
   } catch {
     return NextResponse.json({ error: "Solicitud inválida" }, { status: 400 });
   }
 
-  const orderId = crypto.randomUUID();
-  const email = String(data.email ?? "");
-  const name = String(data.fullName ?? data.name ?? "");
+  const parsed = checkoutSchema.safeParse(raw);
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });
+  }
+  const data = parsed.data;
 
-  if (!email || !name) {
-    return NextResponse.json({ error: "Faltan datos del solicitante" }, { status: 400 });
+  const orderId = crypto.randomUUID();
+  const email = data.email;
+  const name = data.fullName ?? data.name ?? "";
+
+  if (!name) {
+    return NextResponse.json({ error: "Falta el nombre" }, { status: 400 });
   }
 
   // ── 1. Crear el cobro único en Reveniu ──────────────────────────────────────

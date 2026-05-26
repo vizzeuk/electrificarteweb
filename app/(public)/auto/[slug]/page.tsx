@@ -9,6 +9,18 @@ import { CarStructuredData } from "@/components/car/CarStructuredData";
 
 export const revalidate = 60;
 
+// Pre-renderiza TODAS las PDPs en el build → navegación a un auto es instantánea
+// (HTML estático servido desde CDN). Slugs nuevos que aparezcan después siguen
+// funcionando vía ISR (server-render on-demand + cache).
+export async function generateStaticParams() {
+  const rows = await client
+    .fetch<{ slug: string }[]>(
+      `*[_type == "car" && hidden != true && defined(slug.current)]{ "slug": slug.current }`
+    )
+    .catch(() => []);
+  return (rows ?? []).map((r) => ({ slug: r.slug }));
+}
+
 interface PageProps {
   params: Promise<{ slug: string }>;
 }

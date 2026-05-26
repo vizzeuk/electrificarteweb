@@ -8,6 +8,16 @@ import BrandPageContent from "./BrandPageContent";
 
 export const revalidate = 60;
 
+// Pre-renderiza todas las PLP de marca en el build → click "marca" instantáneo.
+export async function generateStaticParams() {
+  const rows = await client
+    .fetch<{ slug: string }[]>(
+      `*[_type == "brand" && defined(slug.current)]{ "slug": slug.current }`
+    )
+    .catch(() => []);
+  return (rows ?? []).map((r) => ({ slug: r.slug }));
+}
+
 interface PageProps {
   params: Promise<{ slug: string }>;
 }

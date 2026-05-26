@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { PortableText, type PortableTextComponents } from "@portabletext/react";
 import { formatCLP, formatFecha } from "@/lib/utils";
+import { safeJsonLd } from "@/lib/seo";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -211,7 +212,7 @@ export function BlogPostContent({ post }: { post: BlogPost }) {
         <script
           key={i}
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+          dangerouslySetInnerHTML={{ __html: safeJsonLd(schema) }}
         />
       ))}
 

@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { m, AnimatePresence } from "framer-motion";
 import { Icon } from "@/components/ui/Icon";
+import { REGIONES, comunasDeRegion } from "@/lib/regiones-chile";
 
 // ─── RUT validator ────────────────────────────────────────────────────────────
 function validateRut(raw: string): boolean {
@@ -29,7 +30,8 @@ const schema = z.object({
   email:          z.string().email("Ingresa un email válido"),
   phone:          z.string().min(8, "Ingresa un teléfono válido"),
   rut:            z.string().refine(validateRut, "RUT inválido"),
-  comuna:         z.string().min(2, "Ingresa tu comuna"),
+  region:         z.string().min(1, "Selecciona tu región"),
+  comuna:         z.string().min(1, "Selecciona tu comuna"),
   carSearch:      z.string().min(1, "Selecciona el auto que buscas"),
   paymentMethod:  z.enum(["contado", "credito-convencional", "credito-inteligente", "no-seguro"], {
     error: "Selecciona una forma de pago",
@@ -59,6 +61,20 @@ function FieldLabel({ children, required }: { children: React.ReactNode; require
 
 // ─── Input base class ─────────────────────────────────────────────────────────
 const INPUT_CLS = "w-full bg-gray-100 rounded-lg py-3 px-4 text-sm text-text-main placeholder-text-ghost focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all";
+
+// Chevron para los <select> (estilizados con appearance-none).
+function ChevronDown() {
+  return (
+    <svg
+      className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-text-ghost"
+      width="16" height="16" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M6 9l6 6 6-6" />
+    </svg>
+  );
+}
 
 // ─── Radio pill group ─────────────────────────────────────────────────────────
 const COL_CLASS: Record<number, string> = {
@@ -364,6 +380,7 @@ export function LeadForm({ carOptions = [], carSlug, carName }: LeadFormProps) {
   });
 
   const tradeIn = watch("tradeIn");
+  const selectedRegion = watch("region");
 
   async function onSubmit(data: FormValues) {
     // Validate photos if trade-in
@@ -470,9 +487,48 @@ export function LeadForm({ carOptions = [], carSlug, carName }: LeadFormProps) {
               {errors.rut && <p className="text-red-500 text-xs mt-1 px-1">{errors.rut.message}</p>}
             </div>
 
-            <div className="md:col-span-2">
+            <div>
+              <FieldLabel required>Región</FieldLabel>
+              <div className="relative">
+                <select
+                  {...register("region", {
+                    // Si cambia la región, limpiamos la comuna porque la
+                    // anterior probablemente ya no pertenece a la nueva región.
+                    onChange: () => setValue("comuna", ""),
+                  })}
+                  className={`${INPUT_CLS} appearance-none pr-10 ${!watch("region") ? "text-text-ghost" : ""}`}
+                  defaultValue=""
+                >
+                  <option value="" disabled>Selecciona tu región</option>
+                  {REGIONES.map((r) => (
+                    <option key={r.region} value={r.region} className="text-text-main">
+                      {r.region}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown />
+              </div>
+              {errors.region && <p className="text-red-500 text-xs mt-1 px-1">{errors.region.message}</p>}
+            </div>
+
+            <div>
               <FieldLabel required>Comuna</FieldLabel>
-              <input {...register("comuna")} type="text" placeholder="Ej: Las Condes" className={INPUT_CLS} />
+              <div className="relative">
+                <select
+                  {...register("comuna")}
+                  disabled={!selectedRegion}
+                  className={`${INPUT_CLS} appearance-none pr-10 ${!watch("comuna") ? "text-text-ghost" : ""} ${!selectedRegion ? "opacity-60 cursor-not-allowed" : ""}`}
+                  defaultValue=""
+                >
+                  <option value="" disabled>
+                    {selectedRegion ? "Selecciona tu comuna" : "Primero elige la región"}
+                  </option>
+                  {comunasDeRegion(selectedRegion).map((c) => (
+                    <option key={c} value={c} className="text-text-main">{c}</option>
+                  ))}
+                </select>
+                <ChevronDown />
+              </div>
               {errors.comuna && <p className="text-red-500 text-xs mt-1 px-1">{errors.comuna.message}</p>}
             </div>
 

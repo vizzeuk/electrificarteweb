@@ -4,14 +4,19 @@ import { type NextRequest, NextResponse } from "next/server";
 const SECRET = process.env.SANITY_REVALIDATE_SECRET;
 
 export async function POST(req: NextRequest) {
-  const body = await req.json().catch(() => ({}));
+  // El secret es OBLIGATORIO — si la env var no está configurada, el endpoint
+  // rechaza todo. Antes, sin la env var, cualquiera podía invalidar el cache.
+  if (!SECRET) {
+    return NextResponse.json(
+      { message: "SANITY_REVALIDATE_SECRET no configurado" },
+      { status: 500 },
+    );
+  }
 
-  // Validate secret if configured
-  if (SECRET) {
-    const incomingSecret = req.headers.get("x-sanity-secret") ?? body._secret;
-    if (incomingSecret !== SECRET) {
-      return NextResponse.json({ message: "Invalid secret" }, { status: 401 });
-    }
+  const body = await req.json().catch(() => ({}));
+  const incomingSecret = req.headers.get("x-sanity-secret") ?? body._secret;
+  if (incomingSecret !== SECRET) {
+    return NextResponse.json({ message: "Invalid secret" }, { status: 401 });
   }
 
   const type: string = body._type ?? "";

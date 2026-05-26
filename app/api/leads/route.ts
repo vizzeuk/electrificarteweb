@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const schema = z.object({
   // Datos personales
@@ -29,6 +30,9 @@ const schema = z.object({
 });
 
 export async function POST(request: Request) {
+  const limited = checkRateLimit(request, { max: 5, windowMs: 60_000, bucket: "leads" });
+  if (limited) return limited;
+
   let body: unknown;
   try {
     body = await request.json();

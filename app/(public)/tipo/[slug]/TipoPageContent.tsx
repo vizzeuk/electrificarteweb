@@ -5,6 +5,7 @@ import { m } from "framer-motion";
 import Link from "next/link";
 import { formatCLP, calculateDiscount, carStats } from "@/lib/utils";
 import { CatalogFilters, type ActiveFilters } from "@/components/ui/CatalogFilters";
+import { ElectricTypeBadge } from "@/components/car/ElectricTypeBadge";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -532,7 +533,8 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes, adCar, a
                   >
                     {/* Image */}
                     <div className="aspect-[16/9] bg-gradient-to-br from-gray-50 to-gray-100 relative flex flex-col items-center justify-center overflow-hidden">
-                      {pct > 0 && <span className="absolute top-3 right-3 bg-black text-white text-[10px] font-black px-2 py-0.5 rounded-full">-{pct}%</span>}
+                      {pct > 0 && <span className="absolute top-3 right-3 bg-black text-white text-[10px] font-black px-2 py-0.5 rounded-full z-10">-{pct}%</span>}
+                      <ElectricTypeBadge tag={car.electricTypeTag} className="absolute bottom-3 left-3 z-10 shadow-sm" />
                       {car.imageUrl ? (
                         <img src={car.imageUrl} alt={`${car.brand} ${car.name}`} className="object-cover w-full h-full" loading="lazy" decoding="async" />
                       ) : (

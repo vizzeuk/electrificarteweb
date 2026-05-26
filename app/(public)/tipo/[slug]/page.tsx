@@ -12,6 +12,16 @@ import TipoPageContent, { type TipoCarData, type TipoMeta, type OtherType } from
 
 export const revalidate = 60;
 
+// Pre-renderiza todas las PLP de tipo de vehículo en el build.
+export async function generateStaticParams() {
+  const rows = await client
+    .fetch<{ slug: string }[]>(
+      `*[_type == "vehicleType" && defined(slug.current)]{ "slug": slug.current }`
+    )
+    .catch(() => []);
+  return (rows ?? []).map((r) => ({ slug: r.slug }));
+}
+
 interface PageProps {
   params: Promise<{ slug: string }>;
 }

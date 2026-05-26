@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { Icon } from "@/components/ui/Icon";
+import { ElectricTypeBadge } from "@/components/car/ElectricTypeBadge";
 import { formatCLP, calculateDiscount, carStats } from "@/lib/utils";
 import { sanityImg } from "@/lib/sanityImage";
 
@@ -103,6 +104,7 @@ export function CarCard({
               -{discountPct}%
             </Badge>
           )}
+          <ElectricTypeBadge tag={electricTypeTag} className="absolute bottom-3 left-3 shadow-sm" />
         </div>
       </Link>
 
