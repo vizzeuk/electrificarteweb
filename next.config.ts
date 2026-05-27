@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
     // Strip console.log en producción (deja error/warn para detectar problemas).
     removeConsole:
       process.env.NODE_ENV === "production"
-        ? { exclude: ["error", "warn"] }
+        ? { exclude: ["error", "warn", "log"] }
         : false,
   },
 };

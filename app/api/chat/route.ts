@@ -2,6 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "next-sanity";
 import { groq } from "next-sanity";
 import Anthropic from "@anthropic-ai/sdk";
+import { checkChatRateLimit } from "@/lib/chat/rate-limit-redis";
+import { sanityFetch } from "@/lib/chat/fetch-with-timeout";
+import {
+  detectInjection,
+  isOffTopic,
+  INJECTION_RESPONSE,
+  OFFTOPIC_RESPONSE,
+} from "@/lib/chat/guards";
+import { validateOutput } from "@/lib/chat/output-validator";
 
 // ─── Singletons ───────────────────────────────────────────────────────────────
 
@@ -22,36 +31,16 @@ let _brandCache: { data: Brand[]; expiresAt: number } | null = null;
 
 async function getBrands(): Promise<Brand[]> {
   if (_brandCache && Date.now() < _brandCache.expiresAt) return _brandCache.data;
-  const data = await sanity.fetch<Brand[]>(
-    groq`*[_type == "brand" && !(_id in path("drafts.**"))] | order(name asc) { name, "slug": slug.current }`
+  const data = await sanityFetch(
+    () => sanity.fetch<Brand[]>(
+      groq`*[_type == "brand" && !(_id in path("drafts.**"))] | order(name asc) { name, "slug": slug.current }`
+    ),
+    [],
+    3_000,
   );
   _brandCache = { data, expiresAt: Date.now() + 5 * 60 * 1000 };
   return data;
 }
-
-// ─── Rate limiter (in-memory, per IP, resets on cold start) ──────────────────
-
-const _rl = new Map<string, { n: number; resetAt: number }>();
-const RL_MAX = 20;
-const RL_WINDOW_MS = 60_000;
-
-function isRateLimited(ip: string): boolean {
-  const now = Date.now();
-  const entry = _rl.get(ip);
-  if (!entry || now > entry.resetAt) {
-    _rl.set(ip, { n: 1, resetAt: now + RL_WINDOW_MS });
-    return false;
-  }
-  if (entry.n >= RL_MAX) return true;
-  entry.n++;
-  return false;
-}
-
-// Prevent unbounded growth of the rate-limit map
-setInterval(() => {
-  const now = Date.now();
-  for (const [k, v] of _rl) if (now > v.resetAt) _rl.delete(k);
-}, 5 * 60_000);
 
 // ─── Input validation ─────────────────────────────────────────────────────────
 
@@ -153,26 +142,29 @@ async function handleRecommendation(body: {
   const vehicleSlugs = VEHICLE_SLUGS[vehicleType] ?? [];
   const electricTags = ELECTRIC_TAGS[electricType] ?? [];
 
-  const cars: CarResult[] = await sanity.fetch(
-    groq`*[_type == "car"
-      && !(_id in path("drafts.**"))
-      && coalesce(discountPrice, basePrice) >= $minPrice
-      && coalesce(discountPrice, basePrice) <= $maxPrice
-      && ($anyVehicle || vehicleType->slug.current in $vehicleSlugs)
-      && ($anyElectric || electricType->tag in $electricTags)
-    ] | order(isHotDeal desc, coalesce(discountPrice, basePrice) asc) [0..3] {
-      name, "slug": slug.current,
-      "brand": brand->{ name, "slug": slug.current },
-      "vehicleType": vehicleType->{ label, "slug": slug.current },
-      "electricType": electricType->{ label, tag },
-      basePrice, discountPrice, isHotDeal, hotDealBonusAmount,
-      range, power, batteryCapacity, traction, acceleration
-    }`,
-    {
-      minPrice, maxPrice, vehicleSlugs, electricTags,
-      anyVehicle: vehicleSlugs.length === 0,
-      anyElectric: electricTags.length === 0,
-    }
+  const cars = await sanityFetch(
+    () => sanity.fetch<CarResult[]>(
+      groq`*[_type == "car"
+        && !(_id in path("drafts.**"))
+        && coalesce(discountPrice, basePrice) >= $minPrice
+        && coalesce(discountPrice, basePrice) <= $maxPrice
+        && ($anyVehicle || vehicleType->slug.current in $vehicleSlugs)
+        && ($anyElectric || electricType->tag in $electricTags)
+      ] | order(isHotDeal desc, coalesce(discountPrice, basePrice) asc) [0..3] {
+        name, "slug": slug.current,
+        "brand": brand->{ name, "slug": slug.current },
+        "vehicleType": vehicleType->{ label, "slug": slug.current },
+        "electricType": electricType->{ label, tag },
+        basePrice, discountPrice, isHotDeal, hotDealBonusAmount,
+        range, power, batteryCapacity, traction, acceleration
+      }`,
+      {
+        minPrice, maxPrice, vehicleSlugs, electricTags,
+        anyVehicle: vehicleSlugs.length === 0,
+        anyElectric: electricTags.length === 0,
+      }
+    ),
+    [],
   );
 
   if (cars.length === 0) {
@@ -201,8 +193,8 @@ function carsToText(cars: CarResult[]): string {
   return cars.map((c) => {
     const price = c.discountPrice && c.discountPrice < c.basePrice ? c.discountPrice : c.basePrice;
     const specs = [
-      c.range        ? `${c.range}km`            : null,
-      c.power        ? `${c.power}CV`            : null,
+      c.range        ? `${c.range}km`              : null,
+      c.power        ? `${c.power}CV`              : null,
       c.traction     ?? null,
       c.acceleration ? `0-100: ${c.acceleration}s` : null,
     ].filter(Boolean).join(", ");
@@ -216,49 +208,69 @@ async function handleChat(messages: ChatMessage[]): Promise<string> {
   const allBrands = await getBrands();
 
   const [hotDeals, cheapCars, longRangeCars] = await Promise.all([
-    sanity.fetch<CarResult[]>(
-      groq`*[_type == "car" && !(_id in path("drafts.**")) && isHotDeal == true]
-        | order(coalesce(discountPrice, basePrice) asc) [0..5] {
-          name, "slug": slug.current,
-          "brand": brand->{ name, "slug": slug.current },
-          "electricType": electricType->{ label, tag },
-          basePrice, discountPrice, hotDealBonusAmount, range, power, traction, acceleration
-        }`
+    sanityFetch(
+      () => sanity.fetch<CarResult[]>(
+        groq`*[_type == "car" && !(_id in path("drafts.**")) && isHotDeal == true]
+          | order(coalesce(discountPrice, basePrice) asc) [0..5] {
+            name, "slug": slug.current,
+            "brand": brand->{ name, "slug": slug.current },
+            "electricType": electricType->{ label, tag },
+            basePrice, discountPrice, hotDealBonusAmount, range, power, traction, acceleration
+          }`
+      ),
+      [],
     ),
-    sanity.fetch<CarResult[]>(
-      groq`*[_type == "car" && !(_id in path("drafts.**"))]
-        | order(coalesce(discountPrice, basePrice) asc) [0..5] {
-          name, "slug": slug.current,
-          "brand": brand->{ name, "slug": slug.current },
-          "electricType": electricType->{ label, tag },
-          basePrice, discountPrice, isHotDeal, range, power, traction
-        }`
+    sanityFetch(
+      () => sanity.fetch<CarResult[]>(
+        groq`*[_type == "car" && !(_id in path("drafts.**"))]
+          | order(coalesce(discountPrice, basePrice) asc) [0..5] {
+            name, "slug": slug.current,
+            "brand": brand->{ name, "slug": slug.current },
+            "electricType": electricType->{ label, tag },
+            basePrice, discountPrice, isHotDeal, range, power, traction
+          }`
+      ),
+      [],
     ),
-    sanity.fetch<CarResult[]>(
-      groq`*[_type == "car" && !(_id in path("drafts.**")) && defined(range) && range > 0]
-        | order(range desc) [0..5] {
-          name, "slug": slug.current,
-          "brand": brand->{ name, "slug": slug.current },
-          "electricType": electricType->{ label, tag },
-          basePrice, discountPrice, isHotDeal, range, power, traction
-        }`
+    sanityFetch(
+      () => sanity.fetch<CarResult[]>(
+        groq`*[_type == "car" && !(_id in path("drafts.**")) && defined(range) && range > 0]
+          | order(range desc) [0..5] {
+            name, "slug": slug.current,
+            "brand": brand->{ name, "slug": slug.current },
+            "electricType": electricType->{ label, tag },
+            basePrice, discountPrice, isHotDeal, range, power, traction
+          }`
+      ),
+      [],
     ),
   ]);
 
   const matchedBrand = allBrands.find((b) => lastMsg.includes(b.name.toLowerCase()));
   let brandCars: CarResult[] = [];
   if (matchedBrand) {
-    brandCars = await sanity.fetch<CarResult[]>(
-      groq`*[_type == "car" && !(_id in path("drafts.**")) && brand->slug.current == $slug]
-        | order(coalesce(discountPrice, basePrice) asc) [0..6] {
-          name, "slug": slug.current,
-          "brand": brand->{ name, "slug": slug.current },
-          "electricType": electricType->{ label, tag },
-          basePrice, discountPrice, isHotDeal, range, power, traction, acceleration
-        }`,
-      { slug: matchedBrand.slug }
+    brandCars = await sanityFetch(
+      () => sanity.fetch<CarResult[]>(
+        groq`*[_type == "car" && !(_id in path("drafts.**")) && brand->slug.current == $slug]
+          | order(coalesce(discountPrice, basePrice) asc) [0..6] {
+            name, "slug": slug.current,
+            "brand": brand->{ name, "slug": slug.current },
+            "electricType": electricType->{ label, tag },
+            basePrice, discountPrice, isHotDeal, range, power, traction, acceleration
+          }`,
+        { slug: matchedBrand.slug }
+      ),
+      [],
+      3_000,
     );
   }
+
+  // Slugs y precios válidos para la validación de output
+  const allCars = [...hotDeals, ...cheapCars, ...longRangeCars, ...brandCars];
+  const validSlugs = new Set(allCars.map((c) => c.slug));
+  const validPrices = allCars
+    .map((c) => c.discountPrice ?? c.basePrice)
+    .filter((p): p is number => typeof p === "number" && p > 0);
 
   const systemPrompt = `Eres Francisco, el asistente virtual de Electrificarte — el marketplace #1 de autos eléctricos e híbridos en Chile. Eres amable, experto y conciso.
 
@@ -283,17 +295,25 @@ REGLAS:
 - Rutas útiles: /marcas · /solicitar · /contacto · /auto/[slug]
 - Al final sugiere 2-3 acciones con links
 - NUNCA inventes precios ni especificaciones fuera de los datos aquí indicados
-- Si no tienes info suficiente, di "no tengo esa información en este momento" y sugiere /contacto`;
+- Si no tienes info suficiente, di "no tengo esa información en este momento" y sugiere /contacto
+- Si el usuario pregunta cuál es mejor entre dos modelos (ej: "¿cuál es mejor, X o Y?" o "¿qué conviene más, X o Y?"), NO elijas un ganador ni hagas recomendaciones directas. Presenta de forma objetiva y equilibrada las mejores características y diferenciadores de CADA modelo por separado, para que el usuario tome su propia decisión`;
 
-  const response = await anthropic.messages.create({
-    model: "claude-haiku-4-5-20251001",
-    max_tokens: 600,
-    system: systemPrompt,
-    messages,
-  });
+  const response = await anthropic.messages.create(
+    {
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 600,
+      system: systemPrompt,
+      messages,
+    },
+    { timeout: 15_000 },
+  );
 
   const block = response.content[0];
-  return block.type === "text" ? block.text : "Lo siento, no pude procesar tu consulta. Intenta de nuevo.";
+  const rawText = block.type === "text"
+    ? block.text
+    : "Lo siento, no pude procesar tu consulta. Intenta de nuevo.";
+
+  return validateOutput(rawText, validSlugs, validPrices);
 }
 
 // ─── Route handler ────────────────────────────────────────────────────────────
@@ -301,7 +321,7 @@ REGLAS:
 export async function POST(req: NextRequest) {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
 
-  if (isRateLimited(ip)) {
+  if (await checkChatRateLimit(ip)) {
     return NextResponse.json(
       { error: "Demasiadas solicitudes. Intenta en un momento." },
       { status: 429 }
@@ -320,6 +340,17 @@ export async function POST(req: NextRequest) {
       if (!messages) {
         return NextResponse.json({ error: "Mensajes inválidos." }, { status: 400 });
       }
+
+      const lastContent = messages.at(-1)?.content ?? "";
+
+      if (detectInjection(lastContent)) {
+        return NextResponse.json({ message: INJECTION_RESPONSE });
+      }
+
+      if (isOffTopic(lastContent)) {
+        return NextResponse.json({ message: OFFTOPIC_RESPONSE });
+      }
+
       message = await handleChat(messages);
     } else {
       return NextResponse.json({ error: "Payload inválido." }, { status: 400 });
