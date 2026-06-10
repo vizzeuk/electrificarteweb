@@ -5,6 +5,16 @@ import { useState, useEffect } from "react";
 const SEEN_KEY = "ea_feedback_ts";
 const DAYS_UNTIL_RESHOWN = 30;
 
+// 5 caritas que mapean al rating 1-5 que sigue recibiendo n8n/Supabase.
+// Los colores se aplican solo en la cara activa (hover o seleccionada).
+const FACES = [
+  { icon: "sentiment_very_dissatisfied", color: "text-red-500",     label: "Muy mal" },
+  { icon: "sentiment_dissatisfied",      color: "text-orange-500",  label: "Mal" },
+  { icon: "sentiment_neutral",           color: "text-amber-500",   label: "Regular" },
+  { icon: "sentiment_satisfied",         color: "text-lime-500",    label: "Bien" },
+  { icon: "sentiment_very_satisfied",    color: "text-emerald-500", label: "Excelente" },
+];
+
 export function FeedbackWidget() {
   const [hidden, setHidden]       = useState(true);
   const [expanded, setExpanded]   = useState(false);
@@ -79,58 +89,58 @@ export function FeedbackWidget() {
 
   if (hidden) return null;
 
-  // Bubble lives on the OPPOSITE side from the chatbot (chatbot is at
-  // right:24px). We anchor the feedback bubble to left:24px so the two
-  // float icons frame the viewport — one each side. Size matches the
-  // chatbot on desktop (56 px) but shrinks on mobile (48 px) so it doesn't
-  // dominate the small screen.
-  const bubbleBottom = "calc(var(--sticky-h, 0px) + 24px)";
-
   return (
     <>
-      {/* Collapsed bubble — opposite side from chatbot, smaller on mobile */}
+      {/* Collapsed — pestaña vertical pegada al borde izquierdo */}
       {!expanded && (
         <button
           onClick={() => setExpanded(true)}
           title="Califica tu experiencia"
           style={{
             position: "fixed",
-            bottom: bubbleBottom,
-            left: "24px",
+            left: 0,
+            top: "42%",
             zIndex: 51,
-            transition: "bottom 0.3s ease",
+            borderRadius: "0 8px 8px 0",
+            padding: "16px 9px",
           }}
-          className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-amber text-black flex items-center justify-center shadow-lg hover:scale-110 hover:shadow-xl transition-all duration-200"
+          className="bg-amber text-black flex flex-col items-center gap-2 shadow-lg hover:translate-x-0.5 transition-all duration-200"
         >
           <span
-            className="material-symbols-outlined text-[20px] sm:text-[24px]"
+            className="material-symbols-outlined text-[17px]"
             style={{ fontVariationSettings: '"FILL" 1' }}
           >
-            star
+            sentiment_satisfied
+          </span>
+          <span
+            className="font-black text-[10px] uppercase tracking-widest"
+            style={{ writingMode: "vertical-lr", transform: "rotate(180deg)" }}
+          >
+            Feedback
           </span>
         </button>
       )}
 
-      {/* Expanded card — anchored to bottom-LEFT now */}
+      {/* Expanded card — flota cerca de la pestaña */}
       {expanded && (
         <div
           style={{
             position: "fixed",
-            bottom: "calc(var(--sticky-h, 0px) + 80px)",
-            left: "16px",
+            left: "8px",
+            top: "50%",
+            transform: "translateY(-50%)",
             zIndex: 51,
-            width: "min(288px, calc(100vw - 32px))",
-            transition: "bottom 0.3s ease",
+            width: "min(288px, calc(100vw - 24px))",
           }}
           className="bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden"
         >
           {submitted ? (
             <div className="px-5 py-8 text-center">
               <span
-                className="material-symbols-outlined text-[44px] text-amber block mb-3"
+                className="material-symbols-outlined text-[48px] text-emerald-500 block mb-3"
                 style={{ fontVariationSettings: '"FILL" 1' }}
               >
-                star
+                sentiment_very_satisfied
               </span>
               <p className="font-headline font-black text-lg">¡Gracias por tu opinión!</p>
               <p className="text-gray-500 text-sm mt-1 leading-snug">
@@ -159,28 +169,42 @@ export function FeedbackWidget() {
                   Cuéntanos cómo podemos mejorar el sitio para ayudarte mejor.
                 </p>
 
-                {/* Stars */}
-                <div className="flex gap-1 mb-4 justify-center">
-                  {[1, 2, 3, 4, 5].map((n) => (
-                    <button
-                      key={n}
-                      onMouseEnter={() => setHovered(n)}
-                      onMouseLeave={() => setHovered(0)}
-                      onClick={() => setRating(n)}
-                      aria-label={`${n} estrellas`}
-                      className="transition-transform hover:scale-115 active:scale-95"
-                    >
-                      <span
-                        className={`material-symbols-outlined text-[32px] transition-colors ${
-                          (hovered || rating) >= n ? "text-amber" : "text-gray-200"
-                        }`}
-                        style={{ fontVariationSettings: '"FILL" 1' }}
+                {/* Caritas — cada una con su color individual, solo se pinta la activa.
+                    onMouseLeave en el contenedor evita parpadeo al cruzar entre botones. */}
+                <div
+                  className="flex mb-3 justify-between"
+                  onMouseLeave={() => setHovered(0)}
+                >
+                  {FACES.map((face, i) => {
+                    const n = i + 1;
+                    const isActive = hovered ? hovered === n : rating === n;
+                    return (
+                      <button
+                        key={n}
+                        type="button"
+                        onMouseEnter={() => setHovered(n)}
+                        onClick={() => setRating(n)}
+                        aria-label={face.label}
+                        title={face.label}
+                        className="transition-transform hover:scale-125 active:scale-95"
                       >
-                        star
-                      </span>
-                    </button>
-                  ))}
+                        <span
+                          className={`material-symbols-outlined text-[34px] transition-colors ${
+                            isActive ? face.color : "text-gray-300"
+                          }`}
+                          style={{ fontVariationSettings: '"FILL" 1' }}
+                        >
+                          {face.icon}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
+
+                {/* Label de la opción activa para guiar al usuario */}
+                <p className="text-center text-xs font-semibold text-gray-500 mb-3 min-h-[1em]">
+                  {hovered ? FACES[hovered - 1].label : rating ? FACES[rating - 1].label : ""}
+                </p>
 
                 <textarea
                   value={comment}

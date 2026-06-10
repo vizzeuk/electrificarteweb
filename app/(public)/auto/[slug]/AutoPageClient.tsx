@@ -199,6 +199,7 @@ function buildFallbackHighlights(car: CarData) {
 
 export default function AutoPageClient({ car, similarCars }: AutoPageClientProps) {
   const [activeVersion, setActiveVersion] = useState(0);
+  const [versionOpen,   setVersionOpen]   = useState(false);
   const [galleryIndex,  setGalleryIndex]  = useState(0);
   const [stickyVisible, setStickyVisible] = useState(false);
   const [openEquip,     setOpenEquip]     = useState<Record<string, boolean>>({});
@@ -229,6 +230,47 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
   const totalBonus = savings + (car.hotDealBonus ?? 0);
   const galleryImages = car.gallery ?? [];
   const galleryCount  = galleryImages.length > 0 ? galleryImages.length : 6;
+
+  // Stats del hero — calculadas una vez y usadas tanto en el bloque desktop
+  // (dentro del hero) como en la sección mobile (justo debajo del hero).
+  const heroStats = (() => {
+    const tag = (car.electricTypeTag ?? "").toUpperCase();
+    const isBEV  = tag === "BEV"  || (!car.fuelConsumption && (car.battery ?? 0) >= 10 && tag !== "PHEV" && tag !== "HEV" && tag !== "MHEV" && tag !== "REEV");
+    const isPHEV = tag === "PHEV" || tag === "REEV";
+    const stat1 = isBEV
+      ? { label: "Autonomía",   value: ver.range ? `${ver.range} km` : (car.rendimientoElectrico ? `${car.rendimientoElectrico} km/kWh` : "—") }
+      : isPHEV
+        ? { label: "Autón. e-",   value: (ver.electricRangeKm ?? car.electricRangeKm) ? `${ver.electricRangeKm ?? car.electricRangeKm} km` : "—" }
+        : { label: "Rendimiento", value: (ver.fuelConsumption ?? car.fuelConsumption) ? `${ver.fuelConsumption ?? car.fuelConsumption} km/L` : "—" };
+    const stat2 = isBEV
+      ? { label: "Batería",     value: ver.battery ? `${ver.battery} kWh` : "—" }
+      : isPHEV
+        ? { label: "Efic. e-",    value: (ver.rendimientoElectrico ?? car.rendimientoElectrico) ? `${ver.rendimientoElectrico ?? car.rendimientoElectrico} km/kWh` : "—" }
+        : { label: "Potencia",    value: ver.power ? `${ver.power} CV` : "—" };
+    const used = new Set([stat1.label, stat2.label]);
+    const stat3 = [
+      ver.acceleration ? { label: "0–100",    value: `${ver.acceleration}s` } : null,
+      (ver.power ?? car.power)       ? { label: "Potencia", value: `${ver.power ?? car.power} CV` } : null,
+      (ver.topSpeed ?? car.topSpeed) ? { label: "Vel. máx", value: `${ver.topSpeed ?? car.topSpeed} km/h` } : null,
+      (ver.torque ?? car.torque)     ? { label: "Torque",   value: `${ver.torque ?? car.torque} Nm` } : null,
+      (ver.traction ?? car.traction) ? { label: "Tracción", value: `${ver.traction ?? car.traction}` } : null,
+      car.range ? { label: "Autonomía", value: `${car.range} km` } : null,
+    ].find((s) => s && !used.has(s.label)) ?? { label: "0–100", value: "—" };
+    return [stat1, stat2, stat3, { label: "Plazas", value: `${car.seats || 5} plz` }];
+  })();
+
+  // Stats por versión — usadas tanto en el selector mobile (pill activa) como
+  // en el grid desktop.
+  const computeVersionStats = (v: VersionData) => {
+    const tag = (car.electricTypeTag ?? "").toUpperCase();
+    const isBEV  = tag === "BEV"  || (!car.fuelConsumption && (car.battery ?? 0) >= 10 && tag !== "PHEV" && tag !== "HEV" && tag !== "MHEV" && tag !== "REEV");
+    const isPHEV = tag === "PHEV" || tag === "REEV";
+    return isBEV
+      ? [{label:"Autonomía",value:v.range ? `${v.range} km` : "—"},{label:"Batería",value:v.battery ? `${v.battery} kWh` : "—"},{label:"Tracción",value:v.traction||"—"},{label:"0–100",value:v.acceleration ? `${v.acceleration}s` : "—"}]
+      : isPHEV
+      ? [{label:"Autón. e-",value:(v.electricRangeKm ?? car.electricRangeKm) ? `${v.electricRangeKm ?? car.electricRangeKm} km` : "—"},{label:"Eficiencia e-",value:(v.rendimientoElectrico ?? car.rendimientoElectrico) ? `${v.rendimientoElectrico ?? car.rendimientoElectrico} km/kWh` : "—"},{label:"Tracción",value:v.traction||"—"},{label:"0–100",value:v.acceleration ? `${v.acceleration}s` : "—"}]
+      : [{label:"Rendimiento",value:(v.fuelConsumption ?? car.fuelConsumption) ? `${v.fuelConsumption ?? car.fuelConsumption} km/L` : "—"},{label:"Potencia",value:v.power ? `${v.power} CV` : "—"},{label:"Tracción",value:v.traction||"—"},{label:"0–100",value:v.acceleration ? `${v.acceleration}s` : "—"}];
+  };
 
   return (
     <>
@@ -278,8 +320,7 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
       {/* ─── Hero (full-image) ──────────────────────────────────────── */}
       <section
         ref={heroRef}
-        className="bg-black overflow-hidden relative flex flex-col"
-        style={{ minHeight: "90vh" }}
+        className="bg-black overflow-hidden relative flex flex-col min-h-[90vh]"
       >
         {/* Grid pattern */}
         <div className="absolute inset-0 pointer-events-none opacity-[0.025]"
@@ -361,47 +402,17 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
               </div>
             </m.div>
 
-            {/* Right: stats + price */}
-            <m.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.15 }}>
-              {/* Stats — 2 cols on mobile, 4 on sm+ */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-5">
-                {(() => {
-                  const tag = (car.electricTypeTag ?? "").toUpperCase();
-                  const isBEV  = tag === "BEV"  || (!car.fuelConsumption && (car.battery ?? 0) >= 10 && tag !== "PHEV" && tag !== "HEV" && tag !== "MHEV" && tag !== "REEV");
-                  const isPHEV = tag === "PHEV" || tag === "REEV";
-                  const stat1 = isBEV
-                    ? { label: "Autonomía",   value: ver.range ? `${ver.range} km` : (car.rendimientoElectrico ? `${car.rendimientoElectrico} km/kWh` : "—") }
-                    : isPHEV
-                      ? { label: "Autón. e-",   value: (ver.electricRangeKm ?? car.electricRangeKm) ? `${ver.electricRangeKm ?? car.electricRangeKm} km` : "—" }
-                      : { label: "Rendimiento", value: (ver.fuelConsumption ?? car.fuelConsumption) ? `${ver.fuelConsumption ?? car.fuelConsumption} km/L` : "—" };
-                  const stat2 = isBEV
-                    ? { label: "Batería",     value: ver.battery ? `${ver.battery} kWh` : "—" }
-                    : isPHEV
-                      ? { label: "Efic. e-",    value: (ver.rendimientoElectrico ?? car.rendimientoElectrico) ? `${ver.rendimientoElectrico ?? car.rendimientoElectrico} km/kWh` : "—" }
-                      : { label: "Potencia",    value: ver.power ? `${ver.power} CV` : "—" };
-                  // 3er stat: 0–100 si hay dato; si no, la siguiente spec
-                  // disponible que no repita stat1/stat2.
-                  const used = new Set([stat1.label, stat2.label]);
-                  const stat3 = [
-                    ver.acceleration ? { label: "0–100",    value: `${ver.acceleration}s` } : null,
-                    (ver.power ?? car.power)       ? { label: "Potencia", value: `${ver.power ?? car.power} CV` } : null,
-                    (ver.topSpeed ?? car.topSpeed) ? { label: "Vel. máx", value: `${ver.topSpeed ?? car.topSpeed} km/h` } : null,
-                    (ver.torque ?? car.torque)     ? { label: "Torque",   value: `${ver.torque ?? car.torque} Nm` } : null,
-                    (ver.traction ?? car.traction) ? { label: "Tracción", value: `${ver.traction ?? car.traction}` } : null,
-                    car.range ? { label: "Autonomía", value: `${car.range} km` } : null,
-                  ].find((s) => s && !used.has(s.label)) ?? { label: "0–100", value: "—" };
-                  return [
-                    stat1,
-                    stat2,
-                    stat3,
-                    { label: "Plazas", value: `${car.seats || 5} plz` },
-                  ].map((s) => (
-                    <div key={s.label} className="rounded-xl p-2.5 sm:p-3 text-center" style={{ backgroundColor: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.10)", backdropFilter: "blur(8px)" }}>
-                      <p className="text-primary font-headline font-black text-base sm:text-lg leading-none">{s.value}</p>
-                      <p className="text-[9px] sm:text-[10px] mt-1 uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.40)" }}>{s.label}</p>
-                    </div>
-                  ));
-                })()}
+            {/* Right: stats + price — desktop only. En mobile bajan a su propia
+                sección debajo del hero para que la foto del auto respire. */}
+            <m.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.15 }} className="hidden lg:block">
+              {/* Stats grid — desktop (los 4 dentro del hero) */}
+              <div className="grid grid-cols-4 gap-2 mb-5">
+                {heroStats.map((s) => (
+                  <div key={s.label} className="rounded-xl p-3 text-center" style={{ backgroundColor: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.10)", backdropFilter: "blur(8px)" }}>
+                    <p className="text-primary font-headline font-black text-lg leading-none">{s.value}</p>
+                    <p className="text-[10px] mt-1 uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.40)" }}>{s.label}</p>
+                  </div>
+                ))}
               </div>
 
               {/* Price box */}
@@ -466,12 +477,185 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
         </div>
       </section>
 
+      {/* ─── Stats + precio — mobile only ──────────────────────────────
+          En desktop estas dos cosas viven dentro del hero (a la derecha).
+          En mobile las bajamos acá para liberar el hero — la foto del auto
+          se aprecia más y la sección se siente más profesional. */}
+      <section className="lg:hidden bg-white py-8 border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4">
+          {/* Stats 2x2 */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-6">
+            {heroStats.map((s) => (
+              <div key={s.label} className="rounded-xl bg-surface border border-gray-100 p-3 text-center">
+                <p className="text-primary-deep font-headline font-black text-lg leading-none">{s.value}</p>
+                <p className="text-[10px] mt-1 uppercase tracking-wide text-text-muted">{s.label}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Price box — light theme */}
+          <div className="relative rounded-2xl border border-gray-200 p-5">
+            {car.isHotDeal && savingsPct > 0 ? (
+              <>
+                <div className="flex justify-between items-baseline mb-1">
+                  <span className="text-text-muted text-sm">Precio lista</span>
+                  <span className="text-text-ghost line-through text-sm">{formatCLP(ver.price)}</span>
+                </div>
+                <div className="flex justify-between items-end gap-2">
+                  <span className="text-text-main text-sm font-medium leading-tight">Con bono Electrificarte</span>
+                  <span className="text-primary-deep text-2xl font-headline font-black flex-shrink-0">{formatCLP(ver.discountPrice)}</span>
+                </div>
+                <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
+                  <span className="text-xs text-text-muted">
+                    Ahorras {formatCLP(savings)} ({savingsPct}%)
+                    {car.hotDealBonus ? ` · Bono ${formatCLP(car.hotDealBonus)}` : ""}
+                  </span>
+                </div>
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-black text-xs font-black px-3 py-1.5 rounded-full whitespace-nowrap">
+                  -{savingsPct}% con Electrificarte
+                </div>
+              </>
+            ) : (
+              <>
+                <span className="text-text-muted text-sm">Precio Electrificarte</span>
+                <p className="text-primary-deep text-2xl font-headline font-black mt-1">{formatCLP(ver.price)}</p>
+                <p className="text-xs mt-3 pt-3 border-t border-gray-100 text-text-muted">
+                  *Precio referencial. Consulta por financiamiento y bonos disponibles.
+                </p>
+              </>
+            )}
+          </div>
+        </div>
+      </section>
+
       {/* ─── Version selector ─────────────────────────────────────────── */}
       {car.versions.length > 1 && (
         <section className="bg-black py-10" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
           <div className="max-w-7xl mx-auto px-4 md:px-8">
             <p className="text-white/40 text-xs uppercase tracking-widest font-bold mb-5">Elige tu versión</p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+
+            {/* ── Mobile (≤lg): dropdown selector + detalle de versión activa ── */}
+            <div className="lg:hidden">
+              {/* Trigger */}
+              <div className="relative mb-4">
+                <button
+                  type="button"
+                  onClick={() => setVersionOpen((o) => !o)}
+                  className="w-full flex items-center justify-between rounded-2xl p-4 transition-colors"
+                  style={{ backgroundColor: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.15)" }}
+                >
+                  <div className="text-left min-w-0">
+                    <p className="text-white/40 text-[10px] uppercase tracking-widest mb-0.5">Versión seleccionada</p>
+                    <p className="text-white font-headline font-bold text-sm truncate">{car.versions[activeVersion].name}</p>
+                  </div>
+                  <div className="flex items-center gap-3 flex-shrink-0 ml-3">
+                    <p className="text-primary font-headline font-black text-base">
+                      {formatCLP(
+                        car.isHotDeal && (car.versions[activeVersion].price - car.versions[activeVersion].discountPrice) > 0
+                          ? car.versions[activeVersion].discountPrice
+                          : car.versions[activeVersion].price
+                      )}
+                    </p>
+                    <span
+                      className={`material-symbols-outlined text-white/50 text-[22px] transition-transform duration-200 ${versionOpen ? "rotate-180" : ""}`}
+                    >
+                      expand_more
+                    </span>
+                  </div>
+                </button>
+
+                {/* Dropdown */}
+                {versionOpen && (
+                  <>
+                    {/* Backdrop */}
+                    <div className="fixed inset-0 z-10" onClick={() => setVersionOpen(false)} />
+                    <div
+                      className="absolute left-0 right-0 top-full mt-2 z-20 rounded-2xl overflow-hidden"
+                      style={{ backgroundColor: "#111", border: "1px solid rgba(255,255,255,0.12)", boxShadow: "0 24px 60px rgba(0,0,0,0.7)" }}
+                    >
+                      <div className="max-h-72 overflow-y-auto">
+                        {car.versions.map((v, i) => {
+                          const vSavings = v.price - v.discountPrice;
+                          const vPct     = Math.round((vSavings / v.price) * 100);
+                          const isActive = i === activeVersion;
+                          const vStats   = computeVersionStats(v);
+                          return (
+                            <button
+                              key={v.name}
+                              type="button"
+                              onClick={() => { setActiveVersion(i); setVersionOpen(false); }}
+                              className="w-full text-left px-4 py-3.5 transition-colors hover:bg-white/5"
+                              style={{
+                                backgroundColor: isActive ? "rgba(0,229,229,0.10)" : undefined,
+                                borderTop: i > 0 ? "1px solid rgba(255,255,255,0.06)" : "none",
+                              }}
+                            >
+                              <div className="flex items-center justify-between mb-1.5">
+                                <span className={`font-headline font-bold text-sm ${isActive ? "text-primary" : "text-white"}`}>
+                                  {v.name}
+                                </span>
+                                <div className="flex items-center gap-2">
+                                  <span className={`font-headline font-black text-sm ${isActive ? "text-primary" : "text-white/80"}`}>
+                                    {formatCLP(car.isHotDeal && vPct > 0 ? v.discountPrice : v.price)}
+                                  </span>
+                                  {isActive && (
+                                    <span className="w-4 h-4 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
+                                      <span className="material-symbols-outlined text-black text-[10px]">check</span>
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex gap-4">
+                                {vStats.slice(0, 2).map((s) => (
+                                  <span key={s.label} className="text-[10px]">
+                                    <span className="text-white/30">{s.label} </span>
+                                    <span className="text-white/60 font-semibold">{s.value}</span>
+                                  </span>
+                                ))}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Detalle de la versión activa */}
+              {(() => {
+                const v = car.versions[activeVersion];
+                const vSavings = v.price - v.discountPrice;
+                const vPct     = Math.round((vSavings / v.price) * 100);
+                return (
+                  <div className="rounded-2xl p-5" style={{ backgroundColor: "#000", border: "1px solid rgba(0,229,229,0.40)" }}>
+                    <div className="grid grid-cols-2 gap-3 mb-4">
+                      {computeVersionStats(v).map((s) => (
+                        <div key={s.label}>
+                          <p className="text-sm font-bold text-primary">{s.value}</p>
+                          <p className="text-[10px] text-white/30">{s.label}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <div>
+                      {car.isHotDeal && vPct > 0 && (
+                        <p className="text-white/30 text-xs line-through">{formatCLP(v.price)}</p>
+                      )}
+                      <p className="font-headline font-black text-2xl text-primary">
+                        {formatCLP(car.isHotDeal && vPct > 0 ? v.discountPrice : v.price)}
+                      </p>
+                      {car.isHotDeal && vPct > 0 && (
+                        <p className="text-green-400 text-[10px] font-bold mt-0.5">-{vPct}% ahorro</p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* ── Desktop (lg+): grid con las 3 (o más) versiones al mismo tiempo ── */}
+            <div className="hidden lg:grid lg:grid-cols-3 gap-4">
               {car.versions.map((v, i) => {
                 const vSavings = v.price - v.discountPrice;
                 const vPct     = Math.round((vSavings / v.price) * 100);
@@ -494,22 +678,12 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
                       )}
                     </div>
                     <div className="grid grid-cols-2 gap-2 mb-4">
-                      {(() => {
-                        const tag = (car.electricTypeTag ?? "").toUpperCase();
-                        const isBEV  = tag === "BEV"  || (!car.fuelConsumption && (car.battery ?? 0) >= 10 && tag !== "PHEV" && tag !== "HEV" && tag !== "MHEV" && tag !== "REEV");
-                        const isPHEV = tag === "PHEV" || tag === "REEV";
-                        const vStats = isBEV
-                          ? [{label:"Autonomía",value:v.range ? `${v.range} km` : "—"},{label:"Batería",value:v.battery ? `${v.battery} kWh` : "—"},{label:"Tracción",value:v.traction||"—"},{label:"0–100",value:v.acceleration ? `${v.acceleration}s` : "—"}]
-                          : isPHEV
-                          ? [{label:"Autón. e-",value:(v.electricRangeKm ?? car.electricRangeKm) ? `${v.electricRangeKm ?? car.electricRangeKm} km` : "—"},{label:"Eficiencia e-",value:(v.rendimientoElectrico ?? car.rendimientoElectrico) ? `${v.rendimientoElectrico ?? car.rendimientoElectrico} km/kWh` : "—"},{label:"Tracción",value:v.traction||"—"},{label:"0–100",value:v.acceleration ? `${v.acceleration}s` : "—"}]
-                          : [{label:"Rendimiento",value:(v.fuelConsumption ?? car.fuelConsumption) ? `${v.fuelConsumption ?? car.fuelConsumption} km/L` : "—"},{label:"Potencia",value:v.power ? `${v.power} CV` : "—"},{label:"Tracción",value:v.traction||"—"},{label:"0–100",value:v.acceleration ? `${v.acceleration}s` : "—"}];
-                        return vStats.map((s) => (
-                          <div key={s.label}>
-                            <p className="text-xs font-bold" style={{ color: isActive ? "rgba(0,229,229,0.80)" : "rgba(255,255,255,0.60)" }}>{s.value}</p>
-                            <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.30)" }}>{s.label}</p>
-                          </div>
-                        ));
-                      })()}
+                      {computeVersionStats(v).map((s) => (
+                        <div key={s.label}>
+                          <p className="text-xs font-bold" style={{ color: isActive ? "rgba(0,229,229,0.80)" : "rgba(255,255,255,0.60)" }}>{s.value}</p>
+                          <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.30)" }}>{s.label}</p>
+                        </div>
+                      ))}
                     </div>
                     <div>
                       {car.isHotDeal && vPct > 0 && (

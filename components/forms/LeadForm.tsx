@@ -28,7 +28,7 @@ function validateRut(raw: string): boolean {
 const schema = z.object({
   fullName:       z.string().min(2, "Ingresa tu nombre completo"),
   email:          z.string().email("Ingresa un email válido"),
-  phone:          z.string().min(8, "Ingresa un teléfono válido"),
+  phone:          z.string().regex(/^\d{8}$/, "Ingresa los 8 dígitos de tu número"),
   rut:            z.string().refine(validateRut, "RUT inválido"),
   region:         z.string().min(1, "Selecciona tu región"),
   comuna:         z.string().min(1, "Selecciona tu comuna"),
@@ -394,6 +394,7 @@ export function LeadForm({ carOptions = [], carSlug, carName }: LeadFormProps) {
     try {
       const payload = {
         ...data,
+        phone: `+56 9 ${data.phone}`,
         carSlug,
         tradeInPhotos: data.tradeIn === "si" ? photos : [],
         source: "electrificarte-web",
@@ -477,7 +478,23 @@ export function LeadForm({ carOptions = [], carSlug, carName }: LeadFormProps) {
 
             <div>
               <FieldLabel required>Número de teléfono</FieldLabel>
-              <input {...register("phone")} type="tel" placeholder="+56 9 1234 5678" className={INPUT_CLS} />
+              <div className="flex">
+                <span className="flex-shrink-0 flex items-center bg-gray-200 text-text-muted text-sm font-semibold px-3 rounded-l-lg border-r border-gray-300 select-none">
+                  +56 9
+                </span>
+                <input
+                  {...register("phone")}
+                  type="tel"
+                  inputMode="numeric"
+                  placeholder="12345678"
+                  maxLength={8}
+                  onInput={(e) => {
+                    const t = e.currentTarget;
+                    t.value = t.value.replace(/\D/g, "").slice(0, 8);
+                  }}
+                  className={`${INPUT_CLS} rounded-l-none`}
+                />
+              </div>
               {errors.phone && <p className="text-red-500 text-xs mt-1 px-1">{errors.phone.message}</p>}
             </div>
 

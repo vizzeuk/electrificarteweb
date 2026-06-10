@@ -25,6 +25,9 @@ const checkoutSchema = z
     email: z.string().email(),
     fullName: z.string().min(2).max(120).optional(),
     name: z.string().min(2).max(120).optional(),
+    // "advisory" = pago de asesoría del chatbot; cualquier otro valor o ausencia
+    // = solicitud de auto del formulario principal.
+    type: z.enum(["advisory"]).optional(),
   })
   .passthrough();
 
@@ -48,9 +51,23 @@ export async function POST(req: NextRequest) {
   const orderId = crypto.randomUUID();
   const email = data.email;
   const name = data.fullName ?? data.name ?? "";
+  const isAdvisory = data.type === "advisory";
 
   if (!name) {
     return NextResponse.json({ error: "Falta el nombre" }, { status: 400 });
+  }
+
+  // Advisory usa su propio plan de Reveniu (precio $4.990).
+  // El plan debe tener configurada la URL de retorno:
+  //   https://electrificarteweb.vercel.app/solicitar/gracias?type=advisory
+  const planId = isAdvisory
+    ? Number(process.env.REVENIU_ADVISORY_PLAN_ID)
+    : Number(process.env.REVENIU_PLAN_ID);
+
+  if (!planId) {
+    const missing = isAdvisory ? "REVENIU_ADVISORY_PLAN_ID" : "REVENIU_PLAN_ID";
+    console.error(`Falta ${missing} en variables de entorno`);
+    return NextResponse.json({ error: "Configuración de pago no disponible" }, { status: 500 });
   }
 
   // ── 1. Crear el cobro único en Reveniu ──────────────────────────────────────
@@ -64,7 +81,7 @@ export async function POST(req: NextRequest) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        plan_id: Number(process.env.REVENIU_PLAN_ID),
+        plan_id: planId,
         external_id: orderId,
         field_values: { email, name },
       }),
@@ -84,13 +101,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "No se pudo iniciar el pago" }, { status: 502 });
   }
 
-  // ── 2. Mandar el lead pendiente a n8n (webhook "lead-pendiente") ─────────────
-  // Es el mismo webhook que ya recibía el formulario (N8N_WEBHOOK_URL).
-  if (process.env.N8N_WEBHOOK_URL) {
-    await fetch(process.env.N8N_WEBHOOK_URL, {
+  // ── 2. Mandar el lead pendiente a n8n ──────────────────────────────────────
+  const webhookUrl = isAdvisory
+    ? (process.env.N8N_ADVISORY_WEBHOOK_URL ?? process.env.N8N_WEBHOOK_URL)
+    : process.env.N8N_WEBHOOK_URL;
+
+  if (webhookUrl) {
+    await fetch(webhookUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ orderId, status: "pendiente", ...data }),
+      body: JSON.stringify({ orderId, status: "pendiente", type: isAdvisory ? "advisory" : "lead", ...data }),
     }).catch((err) => console.error("Error notificando a n8n:", err));
   }
 
@@ -103,5 +123,15 @@ export async function POST(req: NextRequest) {
     maxAge: 60 * 60 * 2,
     path: "/",
   });
+  // Cookie de tipo (no firmada — solo afecta textos visuales, no acceso).
+  if (isAdvisory) {
+    res.cookies.set("ec_order_type", "advisory", {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 2,
+      path: "/",
+    });
+  }
   return res;
 }

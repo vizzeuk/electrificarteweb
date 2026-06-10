@@ -26,11 +26,29 @@ export default async function GraciasPage() {
   const orderId = verifyOrderToken(store.get("ec_order")?.value);
   if (!orderId) notFound();
 
-  const pasos = [
-    "En 48 a 96 horas te enviamos la mejor oferta.",
-    "Revisá tu email y WhatsApp — ahí te contactamos.",
-    "Cualquier duda, escribinos desde la página de contacto.",
-  ];
+  const isAdvisory = store.get("ec_order_type")?.value === "advisory";
+
+  const content = isAdvisory
+    ? {
+        badge:       "Asesoría confirmada",
+        heading:     "¡Tu asesoría premium está activa!",
+        body:        "Recibimos tu pago. Un experto de Electrificarte te contactará directamente por WhatsApp para guiarte en la elección del auto ideal según tu presupuesto y necesidades.",
+        pasos: [
+          "En los próximos minutos recibirás un mensaje de WhatsApp de nuestro equipo.",
+          "El asesor revisará tus necesidades y te presentará las mejores opciones.",
+          "Sin presión: es una conversación personalizada, no una venta.",
+        ],
+      }
+    : {
+        badge:       "Pago confirmado",
+        heading:     "¡Gracias por confiar en Electrificarte!",
+        body:        "Tu solicitud quedó activa. Nuestro equipo ya está negociando con la red de concesionarios para conseguirte el mejor precio de Chile.",
+        pasos: [
+          "En 48 a 96 horas te enviamos la mejor oferta.",
+          "Revisá tu email y WhatsApp — ahí te contactamos.",
+          "Cualquier duda, escribinos desde la página de contacto.",
+        ],
+      };
 
   return (
     <main className="min-h-screen flex items-center justify-center px-4 py-24 bg-surface">
@@ -39,20 +57,19 @@ export default async function GraciasPage() {
           <IconCheck className="w-10 h-10" />
         </div>
         <p className="text-[11px] uppercase tracking-widest text-primary-deep font-bold mb-3">
-          Pago confirmado
+          {content.badge}
         </p>
         <h1 className="font-headline font-black text-3xl md:text-4xl tracking-tight uppercase leading-tight">
-          ¡Gracias por confiar en Electrificarte!
+          {content.heading}
         </h1>
         <p className="text-text-muted mt-4 leading-relaxed">
-          Tu solicitud quedó activa. Nuestro equipo ya está negociando con la red de
-          concesionarios para conseguirte el mejor precio de Chile.
+          {content.body}
         </p>
 
         <div className="mt-7 rounded-2xl bg-surface border border-gray-100 p-5 text-left">
           <p className="font-bold text-sm mb-3">Qué sigue ahora</p>
           <ul className="space-y-2.5 text-sm text-text-muted">
-            {pasos.map((paso) => (
+            {content.pasos.map((paso) => (
               <li key={paso} className="flex gap-2.5">
                 <span className="w-5 h-5 rounded-full bg-primary/15 text-primary-deep flex items-center justify-center flex-shrink-0 mt-0.5">
                   <IconCheck className="w-3 h-3" />
