@@ -28,7 +28,7 @@ function validateRut(raw: string): boolean {
 const schema = z.object({
   fullName:       z.string().min(2, "Ingresa tu nombre completo"),
   email:          z.string().email("Ingresa un email válido"),
-  phone:          z.string().regex(/^\d{8}$/, "Ingresa los 8 dígitos de tu número"),
+  phone:          z.string().regex(/^9\d{8}$/, "Ingresa los 9 dígitos (ej: 995760998)"),
   rut:            z.string().refine(validateRut, "RUT inválido"),
   region:         z.string().min(1, "Selecciona tu región"),
   comuna:         z.string().min(1, "Selecciona tu comuna"),
@@ -394,7 +394,7 @@ export function LeadForm({ carOptions = [], carSlug, carName }: LeadFormProps) {
     try {
       const payload = {
         ...data,
-        phone: `+56 9 ${data.phone}`,
+        phone: `+56 ${data.phone}`,
         carSlug,
         tradeInPhotos: data.tradeIn === "si" ? photos : [],
         source: "electrificarte-web",
@@ -480,17 +480,17 @@ export function LeadForm({ carOptions = [], carSlug, carName }: LeadFormProps) {
               <FieldLabel required>Número de teléfono</FieldLabel>
               <div className="flex">
                 <span className="flex-shrink-0 flex items-center bg-gray-200 text-text-muted text-sm font-semibold px-3 rounded-l-lg border-r border-gray-300 select-none">
-                  +56 9
+                  +56
                 </span>
                 <input
                   {...register("phone")}
                   type="tel"
                   inputMode="numeric"
-                  placeholder="12345678"
-                  maxLength={8}
+                  placeholder="995760998"
+                  maxLength={9}
                   onInput={(e) => {
                     const t = e.currentTarget;
-                    t.value = t.value.replace(/\D/g, "").slice(0, 8);
+                    t.value = t.value.replace(/\D/g, "").slice(0, 9);
                   }}
                   className={`${INPUT_CLS} rounded-l-none`}
                 />
