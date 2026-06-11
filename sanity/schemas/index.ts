@@ -9,6 +9,7 @@ import { collection }   from "./collection";
 import { blockContent } from "./blockContent";
 import { blogPost }     from "./blogPost";
 import { plpBanner }    from "./plpBanner";
+import { advisorKnowledge } from "./advisorKnowledge";
 
 export const schemaTypes = [
   // ─── Singleton documents (una sola instancia) ───────────────────────────
@@ -17,6 +18,9 @@ export const schemaTypes = [
 
   // ─── Blog ────────────────────────────────────────────────────────────────
   blogPost,
+
+  // ─── Asesor IA (conocimiento del chatbot de WhatsApp) ────────────────────
+  advisorKnowledge,
 
   // ─── Colecciones (secciones vendibles / temáticas) ───────────────────────
   collection,
