@@ -145,7 +145,7 @@ export function BlogListingContent({ posts }: { posts: BlogPreviewPost[] }) {
               <span className="material-symbols-outlined text-primary text-[16px]">article</span>
               <span className="text-white/60 text-xs font-semibold uppercase tracking-wider">Blog & Guías</span>
             </div>
-            <h1 className="text-5xl md:text-6xl font-headline font-black text-white tracking-tighter leading-[0.95] mb-5">
+            <h1 className="text-3xl sm:text-5xl md:text-6xl font-headline font-black text-white tracking-tighter leading-[0.95] mb-5">
               Todo sobre <span className="text-primary">electromovilidad</span> en Chile
             </h1>
             <p className="text-white/60 text-base leading-relaxed max-w-xl">
