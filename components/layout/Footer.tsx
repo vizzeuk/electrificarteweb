@@ -14,10 +14,11 @@ function IconInstagram() {
   );
 }
 
-function IconYouTube() {
+function IconEmail() {
   return (
-    <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18" aria-hidden="true">
-      <path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.96-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58zM9.75 15.02V8.98L15.5 12l-5.75 3.02z" />
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="18" height="18" aria-hidden="true">
+      <rect x="2" y="4" width="20" height="16" rx="2" />
+      <path d="m2 7 10 7 10-7" />
     </svg>
   );
 }
@@ -51,9 +52,9 @@ const footerSections = [
 ];
 
 const socialLinks = [
-  { icon: <IconInstagram />, href: "https://instagram.com/electrificarte", label: "Instagram" },
-  { icon: <IconYouTube />,   href: "https://youtube.com/@electrificarte",   label: "YouTube" },
-  { icon: <IconTikTok />,    href: "https://tiktok.com/@electrificarte",    label: "TikTok" },
+  { icon: <IconInstagram />, href: "https://www.instagram.com/autos.electricos.con.francisco", label: "Instagram" },
+  { icon: <IconTikTok />,    href: "https://www.tiktok.com/@autos_electricos_con_fco",         label: "TikTok" },
+  { icon: <IconEmail />,     href: "mailto:contacto@electrificarte.com",                        label: "Email" },
 ];
 
 // ─── Newsletter form ──────────────────────────────────────────────────────────

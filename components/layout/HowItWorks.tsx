@@ -56,15 +56,18 @@ const SEEN_KEY = "ea_how_video_seen";
 
 export function HowItWorks({ title = "Cómo funciona Electrificarte", subtitle, steps, videoUrl }: HowItWorksProps) {
   const [modalOpen, setModalOpen] = useState(false);
+  const [mobileVideoOpen, setMobileVideoOpen] = useState(false);
   const displaySteps = steps && steps.length > 0 ? steps : DEFAULT_STEPS;
   const displaySubtitle = subtitle ?? "En 4 pasos pasas de buscar a estrenar tu auto eléctrico al mejor precio de Chile.";
   const n = displaySteps.length;
   const pct = (100 / (n * 2)).toFixed(4);
 
-  // Auto-open for first-time visitors after 5 seconds
+  // Auto-open desktop modal for first-time visitors after 5 seconds
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (localStorage.getItem(SEEN_KEY)) return;
+    // Only auto-open on desktop — mobile uses inline video to avoid iOS fixed-position bugs
+    if (window.innerWidth < 640) return;
     const timer = setTimeout(() => {
       setModalOpen(true);
       localStorage.setItem(SEEN_KEY, "1");
@@ -157,9 +160,18 @@ export function HowItWorks({ title = "Cómo funciona Electrificarte", subtitle, 
           </div>
 
           <div className="text-center mt-14 flex flex-col sm:flex-row items-center justify-center gap-4">
+            {/* Mobile: toggle inline video */}
+            <button
+              onClick={() => setMobileVideoOpen((o) => !o)}
+              className="sm:hidden inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-8 py-4 rounded-xl transition-all text-lg"
+            >
+              <Icon name={mobileVideoOpen ? "pause_circle" : "play_circle"} size="sm" />
+              {mobileVideoOpen ? "Cerrar video" : "Ver video explicativo"}
+            </button>
+            {/* Desktop: open modal */}
             <button
               onClick={openModal}
-              className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-8 py-4 rounded-xl transition-all text-lg"
+              className="hidden sm:inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-8 py-4 rounded-xl transition-all text-lg"
             >
               <Icon name="play_circle" size="sm" />
               Ver video explicativo
@@ -172,43 +184,35 @@ export function HowItWorks({ title = "Cómo funciona Electrificarte", subtitle, 
               <Icon name="arrow_forward" size="sm" />
             </Link>
           </div>
+
+          {/* Mobile inline video — no modal, no fixed positioning issues on iOS */}
+          {mobileVideoOpen && (
+            <div className="sm:hidden mt-6 rounded-2xl overflow-hidden bg-black shadow-xl">
+              <video
+                key="mobile-video"
+                src={VIDEO_9x16}
+                className="w-full"
+                autoPlay
+                controls
+                playsInline
+              />
+            </div>
+          )}
         </div>
       </section>
 
-      {/* ── Video modal ───────────────────────────────────────── */}
+      {/* ── Desktop video modal ───────────────────────────────── */}
       {modalOpen && (
         <div
-          className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+          className="fixed inset-0 z-[200] hidden sm:flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
           onClick={closeModal}
         >
-          {/* Desktop: 16:9 */}
           <div
-            className="relative hidden sm:block w-full max-w-4xl aspect-video rounded-2xl overflow-hidden shadow-2xl bg-black"
+            className="relative w-full max-w-4xl aspect-video rounded-2xl overflow-hidden shadow-2xl bg-black"
             onClick={(e) => e.stopPropagation()}
           >
             <video
               src={VIDEO_16x9}
-              className="w-full h-full object-cover"
-              autoPlay
-              controls
-              playsInline
-            />
-            <button
-              onClick={closeModal}
-              className="absolute top-3 right-3 w-9 h-9 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center transition-colors z-10"
-              aria-label="Cerrar video"
-            >
-              <Icon name="close" size="sm" />
-            </button>
-          </div>
-
-          {/* Mobile: 9:16 */}
-          <div
-            className="relative sm:hidden w-full max-w-xs aspect-[9/16] rounded-2xl overflow-hidden shadow-2xl bg-black"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <video
-              src={VIDEO_9x16}
               className="w-full h-full object-cover"
               autoPlay
               controls
