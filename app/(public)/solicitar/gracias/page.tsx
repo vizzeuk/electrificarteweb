@@ -31,7 +31,7 @@ export default async function GraciasPage() {
   const content = isAdvisory
     ? {
         badge:       "Asesoría confirmada",
-        heading:     "¡Tu asesoría premium está activa!",
+        heading:     "¡Tu asesoría está confirmada!",
         body:        "Recibimos tu pago. Un experto de Electrificarte te contactará directamente por WhatsApp para guiarte en la elección del auto ideal según tu presupuesto y necesidades.",
         pasos: [
           "En los próximos minutos recibirás un mensaje de WhatsApp de nuestro equipo.",

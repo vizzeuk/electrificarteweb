@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { m, AnimatePresence } from "framer-motion";
 import { Icon } from "@/components/ui/Icon";
 import { NavbarSearch } from "@/components/layout/NavbarSearch";
@@ -35,7 +36,12 @@ interface NavbarProps {
 
 type DropdownId = "brands" | "types" | "electric" | null;
 
+// Pages with dark hero sections — navbar starts transparent on these.
+// All other pages have light backgrounds and must always show solid navbar.
+const DARK_HERO_PATHS = /^(\/|\/marcas\/[^/]+|\/auto\/[^/]+|\/tipo\/[^/]+|\/electrico\/[^/]+|\/coleccion\/[^/]+)$/;
+
 export function Navbar({ brands = [], vehicleTypes = [], electricTypes = [] }: NavbarProps) {
+  const pathname = usePathname();
   const [mobileOpen, setMobileOpen]         = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<DropdownId>(null);
   const [mobileSection, setMobileSection]   = useState<DropdownId>(null);
@@ -46,13 +52,15 @@ export function Navbar({ brands = [], vehicleTypes = [], electricTypes = [] }: N
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
-    // set initial state
     setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const transparent = !scrolled && !mobileOpen;
+  // On pages without a dark hero (e.g. /solicitar/gracias, /blog, /contacto),
+  // always show the solid white navbar regardless of scroll position.
+  const hasDarkHero = DARK_HERO_PATHS.test(pathname);
+  const transparent = hasDarkHero && !scrolled && !mobileOpen;
 
   return (
     <header

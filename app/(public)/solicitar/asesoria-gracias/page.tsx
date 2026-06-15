@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "¡Asesoría confirmada! | Electrificarte",
-  description: "Tu asesoría premium está activa. Te contactaremos pronto por WhatsApp.",
+  description: "Tu asesoría está confirmada. Te contactaremos pronto por WhatsApp.",
   robots: { index: false, follow: false },
 };
 
@@ -31,7 +31,7 @@ export default function AsesoriaGraciasPage() {
           Asesoría confirmada
         </p>
         <h1 className="font-headline font-black text-3xl md:text-4xl tracking-tight uppercase leading-tight">
-          ¡Tu asesoría premium está activa!
+          ¡Tu asesoría está confirmada!
         </h1>
         <p className="text-text-muted mt-4 leading-relaxed">
           Recibimos tu pago. Un experto de Electrificarte te contactará directamente por WhatsApp

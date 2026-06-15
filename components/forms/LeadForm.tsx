@@ -376,6 +376,7 @@ export function LeadForm({ carOptions = [], carSlug, carName }: LeadFormProps) {
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
+    mode: "onChange",
     defaultValues: { tradeIn: undefined, paymentMethod: undefined, carSearch: initialCarSearch },
   });
 
@@ -466,13 +467,13 @@ export function LeadForm({ carOptions = [], carSlug, carName }: LeadFormProps) {
 
             <div>
               <FieldLabel required>Nombre completo</FieldLabel>
-              <input {...register("fullName")} type="text" placeholder="Juan Pérez" className={INPUT_CLS} />
+              <input {...register("fullName")} type="text" autoComplete="name" placeholder="Juan Pérez" className={INPUT_CLS} />
               {errors.fullName && <p className="text-red-500 text-xs mt-1 px-1">{errors.fullName.message}</p>}
             </div>
 
             <div>
               <FieldLabel required>Email</FieldLabel>
-              <input {...register("email")} type="email" placeholder="juan@ejemplo.com" className={INPUT_CLS} />
+              <input {...register("email")} type="email" autoComplete="email" placeholder="juan@ejemplo.com" className={INPUT_CLS} />
               {errors.email && <p className="text-red-500 text-xs mt-1 px-1">{errors.email.message}</p>}
             </div>
 
@@ -483,15 +484,20 @@ export function LeadForm({ carOptions = [], carSlug, carName }: LeadFormProps) {
                   +56
                 </span>
                 <input
-                  {...register("phone")}
+                  {...register("phone", {
+                    onChange: (e) => {
+                      // Strip non-digits; if browser autofilled with +56 prefix, remove it
+                      let v = e.target.value.replace(/\D/g, "");
+                      if (v.length > 9 && v.startsWith("56")) v = v.slice(2);
+                      v = v.slice(0, 9);
+                      e.target.value = v;
+                    },
+                  })}
                   type="tel"
                   inputMode="numeric"
+                  autoComplete="tel-national"
                   placeholder="995760998"
                   maxLength={9}
-                  onInput={(e) => {
-                    const t = e.currentTarget;
-                    t.value = t.value.replace(/\D/g, "").slice(0, 9);
-                  }}
                   className={`${INPUT_CLS} rounded-l-none`}
                 />
               </div>
