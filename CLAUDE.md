@@ -2,7 +2,7 @@
 
 # Electrificarte — Contexto del proyecto
 
-Plataforma B2B2C chilena de autos eléctricos e híbridos. Intermediario entre comprador y concesionarios: negocia precios en volumen y cobra comisión al concesionario.
+Plataforma B2B2C chilena de autos eléctricos e híbridos. Intermediario entre comprador y vendedores: negocia precios en volumen 
 
 ## Stack
 - Next.js 16.2.2 App Router · React 19.2.4 · Tailwind v4 · Framer Motion 12 · Sanity v5 · TypeScript

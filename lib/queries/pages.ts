@@ -38,7 +38,6 @@ export const homePageQuery = groq`
       isNew,
       isHotDeal,
       "brand": brand->{ name, "slug": slug.current, "logoUrl": logo.asset->url },
-      "category": category->{ name },
       "electricType": electricType->{ tag }
     },
 
@@ -75,7 +74,6 @@ export const homePageQuery = groq`
       isNew,
       isHotDeal,
       "brand": brand->{ name },
-      "category": category->{ name },
       "electricType": electricType->{ tag }
     },
 

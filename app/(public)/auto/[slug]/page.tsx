@@ -77,7 +77,7 @@ export default async function CarDetailPage({ params }: PageProps) {
     name:            sanity.name,
     brand:           sanity.brand?.name ?? "",
     brandSlug:       sanity.brand?.slug ?? "",
-    category:        sanity.vehicleType?.label ?? sanity.category?.name ?? "",
+    category:        sanity.vehicleType?.label ?? sanity.electricType?.tag ?? "",
     tagline:         sanity.tagline ?? "",
     description:     sanity.description ?? "",
     basePrice:       sanity.basePrice,

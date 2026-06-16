@@ -44,8 +44,7 @@ const CAR_CARD_FIELDS = groq`
   hotDealExpiry,
   "brand": brand->{ _id, name, "slug": slug.current, logo, accentColor },
   "vehicleType": vehicleType->{ _id, "slug": slug.current, label, icon },
-  "electricType": electricType->{ _id, "slug": slug.current, label, tag, color },
-  "category": category->{ _id, name, "slug": slug.current }
+  "electricType": electricType->{ _id, "slug": slug.current, label, tag, color }
 `;
 
 // ─── Todos los autos (para comparador y PLP genérico) ─────────────────────────
@@ -81,8 +80,7 @@ export const newCarsForHomeQuery = groq`
     basePrice,
     discountPrice,
     isNew,
-    "brand": brand->{ name, "slug": slug.current, "logoUrl": logo.asset->url },
-    "category": category->{ name }
+    "brand": brand->{ name, "slug": slug.current, "logoUrl": logo.asset->url }
   }
 `;
 
@@ -106,8 +104,7 @@ export const featuredCarsForHomeQuery = groq`
     "electricType": electricType->{ tag },
     isNew,
     isHotDeal,
-    "brand": brand->{ name },
-    "category": category->{ name }
+    "brand": brand->{ name }
   }
 `;
 
@@ -249,7 +246,6 @@ export const carBySlugQuery = groq`
     "brand": brand->{ _id, name, "slug": slug.current, "logoUrl": logo.asset->url, logo, description, accentColor },
     "vehicleType": vehicleType->{ _id, name, "slug": slug.current, label, icon },
     "electricType": electricType->{ _id, name, "slug": slug.current, label, tag, color, icon },
-    "category": category->{ _id, name, "slug": slug.current },
     metaTitle,
     metaDescription,
     keywords
@@ -348,8 +344,7 @@ export const compareCarsQuery = groq`
     comfortFeatures,
     "brand": brand->{ name, "slug": slug.current, logo },
     "vehicleType": vehicleType->{ label },
-    "electricType": electricType->{ label, tag, color },
-    "category": category->{ name }
+    "electricType": electricType->{ label, tag, color }
   }
 `;
 

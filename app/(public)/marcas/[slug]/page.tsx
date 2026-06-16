@@ -66,7 +66,7 @@ export default async function BrandPage({ params }: PageProps) {
     range:        c.range,
     power:        `${c.power} CV`,
     traction:     c.traction,
-    category:     c.vehicleType?.label ?? c.category?.name ?? "",
+    category:     c.vehicleType?.label ?? c.electricType?.tag ?? "",
     tipoSlug:     c.vehicleType?.slug ?? "",
     electricType: c.electricType?.slug ?? "",
     isHotDeal:    c.isHotDeal ?? false,

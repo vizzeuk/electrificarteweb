@@ -90,7 +90,6 @@ export const car = defineType({
       group: "general", validation: (r) => r.required(),
       description: "EV, PHEV, HEV, EREV o MHEV",
     }),
-    defineField({ name: "category", title: "Categoría (no usar — campo antiguo)", type: "reference", to: [{ type: "category" }], group: "general", description: "Campo heredado. Ya no es necesario completarlo — se usa Tipo de Vehículo y Tipo Eléctrico.", hidden: ({ document }) => !document?.category }),
     defineField({ name: "modelYear", title: "Año del modelo", type: "number", group: "general", description: "Ej: 2025" }),
     defineField({
       name: "hidden", title: "🚫 Ocultar del sitio", type: "boolean",

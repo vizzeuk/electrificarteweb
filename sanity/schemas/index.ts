@@ -1,6 +1,5 @@
 import { brand }        from "./brand";
 import { car }          from "./car";
-import { category }     from "./category";
 import { vehicleType }  from "./vehicleType";
 import { electricType } from "./electricType";
 import { siteSettings } from "./siteSettings";
@@ -32,7 +31,6 @@ export const schemaTypes = [
   // ─── Taxonomías (clasificaciones) ────────────────────────────────────────
   vehicleType,
   electricType,
-  category,
 
   // ─── Tipos de contenido reutilizables ────────────────────────────────────
   blockContent,
