@@ -98,8 +98,8 @@ export function ServiciosExtras({ items }: ServiciosExtrasProps) {
                 <div className="mt-8">
                   <a
                     href={card.ctaHref}
-                    target={card.ctaHref.startsWith("http") ? "_blank" : undefined}
-                    rel={card.ctaHref.startsWith("http") ? "noopener noreferrer" : undefined}
+                    target={card.ctaHref?.startsWith("http") ? "_blank" : undefined}
+                    rel={card.ctaHref?.startsWith("http") ? "noopener noreferrer" : undefined}
                     className="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold text-sm px-6 py-3 rounded-xl transition-colors duration-200"
                   >
                     {card.ctaText}

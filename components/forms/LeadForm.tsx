@@ -376,7 +376,7 @@ export function LeadForm({ carOptions = [], carSlug, carName }: LeadFormProps) {
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    mode: "onChange",
+    mode: "onTouched",
     defaultValues: { tradeIn: undefined, paymentMethod: undefined, carSearch: initialCarSearch },
   });
 
@@ -484,20 +484,20 @@ export function LeadForm({ carOptions = [], carSlug, carName }: LeadFormProps) {
                   +56
                 </span>
                 <input
-                  {...register("phone", {
-                    onChange: (e) => {
-                      // Strip non-digits; if browser autofilled with +56 prefix, remove it
-                      let v = e.target.value.replace(/\D/g, "");
-                      if (v.length > 9 && v.startsWith("56")) v = v.slice(2);
-                      v = v.slice(0, 9);
-                      e.target.value = v;
-                    },
-                  })}
+                  {...register("phone")}
                   type="tel"
                   inputMode="numeric"
                   autoComplete="tel-national"
                   placeholder="995760998"
                   maxLength={9}
+                  onInput={(e) => {
+                    // RHF's onChange already fired with the raw value — override via setValue
+                    let v = e.currentTarget.value.replace(/\D/g, "");
+                    if (v.length > 9 && v.startsWith("56")) v = v.slice(2);
+                    v = v.slice(0, 9);
+                    e.currentTarget.value = v;
+                    setValue("phone", v, { shouldValidate: true });
+                  }}
                   className={`${INPUT_CLS} rounded-l-none`}
                 />
               </div>

@@ -43,7 +43,7 @@ function StarRating({ rating }: { rating: number }) {
 }
 
 function Avatar({ name, imageUrl }: { name: string; imageUrl?: string }) {
-  const initials = name.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase();
+  const initials = (name ?? "").split(" ").map(n => n[0]).filter(Boolean).slice(0, 2).join("").toUpperCase();
   if (imageUrl) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
