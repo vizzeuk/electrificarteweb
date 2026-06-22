@@ -74,6 +74,14 @@ export const homePage = defineType({
       group: "hero", initialValue: "$19.990",
     }),
     defineField({
+      name: "formServicePrice",
+      title: "Precio del formulario principal (display)",
+      type: "string",
+      group: "hero",
+      initialValue: "$19.990",
+      description: "Monto que aparece en el formulario de solicitud (/solicitar). Solo visual — para cambiar el precio real edita el plan en Reveniu.",
+    }),
+    defineField({
       name: "heroOfferBadge", title: "Oferta activa – badge (texto)", type: "string",
       group: "hero", initialValue: "33% dcto Electric Sale",
     }),

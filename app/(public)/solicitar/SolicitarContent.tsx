@@ -10,9 +10,10 @@ import { TrustBadges } from "@/components/layout/TrustBadges";
 
 interface SolicitarContentProps {
   carOptions: string[];
+  servicePrice?: string;
 }
 
-function SolicitarInner({ carOptions }: SolicitarContentProps) {
+function SolicitarInner({ carOptions, servicePrice = "$19.990" }: SolicitarContentProps) {
   const searchParams = useSearchParams();
   const autoSlug   = searchParams.get("auto")    || undefined;
   const autoNombre = searchParams.get("nombre")  || undefined;
@@ -61,7 +62,7 @@ function SolicitarInner({ carOptions }: SolicitarContentProps) {
           <div className="border-t border-white/10 py-5 grid grid-cols-1 sm:grid-cols-3 gap-4">
             {[
               { n: "01", icon: "edit_note",        title: "Completa tu solicitud",      desc: "Cuéntanos qué auto te interesa y tu presupuesto." },
-              { n: "02", icon: "payments",          title: "Activa tu búsqueda",         desc: "Un pago único de $19.990 por WebPay activa la búsqueda exclusiva." },
+              { n: "02", icon: "payments",          title: "Activa tu búsqueda",         desc: `Un pago único de ${servicePrice} por WebPay activa la búsqueda exclusiva.` },
               { n: "03", icon: "mark_email_read",   title: "Recibe tu oferta en 48-96h",   desc: "La mejor oferta con bonos y financiamiento incluido." },
             ].map((s, i, arr) => (
               <div key={s.n} className="flex items-start gap-3 relative">
@@ -118,7 +119,7 @@ function SolicitarInner({ carOptions }: SolicitarContentProps) {
                 </div>
                 <div className="flex items-baseline justify-between">
                   <span className="font-headline font-bold">Pago unico</span>
-                  <span className="text-3xl font-headline font-black text-primary-deep">$19.990</span>
+                  <span className="text-3xl font-headline font-black text-primary-deep">{servicePrice}</span>
                 </div>
                 <p className="text-[10px] text-text-ghost mt-2 uppercase tracking-wide">33% dcto por Electric Sale</p>
               </div>
@@ -149,10 +150,10 @@ function SolicitarInner({ carOptions }: SolicitarContentProps) {
   );
 }
 
-export function SolicitarContent({ carOptions }: SolicitarContentProps) {
+export function SolicitarContent({ carOptions, servicePrice }: SolicitarContentProps) {
   return (
     <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><p className="text-text-muted">Cargando...</p></div>}>
-      <SolicitarInner carOptions={carOptions} />
+      <SolicitarInner carOptions={carOptions} servicePrice={servicePrice} />
     </Suspense>
   );
 }

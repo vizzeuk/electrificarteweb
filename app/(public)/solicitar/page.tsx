@@ -19,8 +19,11 @@ export const metadata: Metadata = {
 export const revalidate = 3600;
 
 export default async function SolicitarPage() {
-  const rawCars = await client.fetch(carNamesForFormQuery).catch(() => []);
-  // Por cada auto: la opción "pelada" + una opción por cada versión.
+  const [rawCars, homePage] = await Promise.all([
+    client.fetch(carNamesForFormQuery).catch(() => []),
+    client.fetch<{ formServicePrice?: string } | null>(`*[_type == "homePage"][0]{ formServicePrice }`).catch(() => null),
+  ]);
+
   const carOptions: string[] = rawCars.flatMap(
     (c: { brand: string; label: string; versions?: (string | null)[] }) => {
       const base = c.brand ? `${c.brand} ${c.label}` : c.label;
@@ -31,5 +34,5 @@ export default async function SolicitarPage() {
     }
   );
 
-  return <SolicitarContent carOptions={carOptions} />;
+  return <SolicitarContent carOptions={carOptions} servicePrice={homePage?.formServicePrice} />;
 }
