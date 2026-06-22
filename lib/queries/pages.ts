@@ -84,7 +84,8 @@ export const homePageQuery = groq`
 
     howItWorksTitle,
     howItWorksSubtitle,
-    howItWorksVideoUrl,
+    "howItWorksVideoDesktop": howItWorksVideoDesktop.asset->url,
+    "howItWorksVideoMobile": howItWorksVideoMobile.asset->url,
     howItWorksSteps[]{number, icon, title, description},
 
     trustBadges[]{icon, title, description},

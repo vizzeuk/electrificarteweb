@@ -17,6 +17,8 @@ interface HowItWorksProps {
   subtitle?: string;
   steps?: HowItWorksStep[];
   videoUrl?: string;
+  videoDesktopUrl?: string;
+  videoMobileUrl?: string;
 }
 
 const DEFAULT_STEPS: HowItWorksStep[] = [
@@ -50,11 +52,13 @@ const DEFAULT_STEPS: HowItWorksStep[] = [
   },
 ];
 
-const VIDEO_16x9 = "/hero-video/explicativo-16x9.mp4";
-const VIDEO_9x16 = "/hero-video/explicativo-9x16.mp4";
+const FALLBACK_16x9 = "/hero-video/explicativo-16x9.mp4";
+const FALLBACK_9x16 = "/hero-video/explicativo-9x16.mp4";
 const SEEN_KEY = "ea_how_video_seen";
 
-export function HowItWorks({ title = "Cómo funciona Electrificarte", subtitle, steps, videoUrl }: HowItWorksProps) {
+export function HowItWorks({ title = "Cómo funciona Electrificarte", subtitle, steps, videoDesktopUrl, videoMobileUrl }: HowItWorksProps) {
+  const VIDEO_16x9 = videoDesktopUrl ?? FALLBACK_16x9;
+  const VIDEO_9x16 = videoMobileUrl ?? FALLBACK_9x16;
   const [modalOpen, setModalOpen] = useState(false);
   const [mobileVideoOpen, setMobileVideoOpen] = useState(false);
   const displaySteps = steps && steps.length > 0 ? steps : DEFAULT_STEPS;

@@ -139,10 +139,11 @@ export default async function HomePage() {
         collections={collections ?? []}
         servicios={page?.serviciosExtras}
         howItWorks={{
-          title:    page?.howItWorksTitle,
-          subtitle: page?.howItWorksSubtitle,
-          steps:    page?.howItWorksSteps,
-          videoUrl: page?.howItWorksVideoUrl,
+          title:           page?.howItWorksTitle,
+          subtitle:        page?.howItWorksSubtitle,
+          steps:           page?.howItWorksSteps,
+          videoDesktopUrl: page?.howItWorksVideoDesktop ?? undefined,
+          videoMobileUrl:  page?.howItWorksVideoMobile ?? undefined,
         }}
         trustBadges={page?.trustBadges}
         testimonials={{ title: page?.testimonialsTitle, items: page?.testimonials }}

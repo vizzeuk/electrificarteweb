@@ -38,7 +38,7 @@ const PromoPopup = dynamic(
 interface HomeDeferredProps {
   collections:     unknown[];
   servicios:       unknown[] | undefined;
-  howItWorks:      { title?: string; subtitle?: string; steps?: unknown[]; videoUrl?: string };
+  howItWorks:      { title?: string; subtitle?: string; steps?: unknown[]; videoDesktopUrl?: string; videoMobileUrl?: string };
   trustBadges:     unknown[] | undefined;
   testimonials:    { title?: string; items?: unknown[] };
   blogPosts:       unknown[];
@@ -65,7 +65,8 @@ export function HomeDeferred(p: HomeDeferredProps) {
           title={p.howItWorks.title}
           subtitle={p.howItWorks.subtitle}
           steps={p.howItWorks.steps as any}
-          videoUrl={p.howItWorks.videoUrl}
+          videoDesktopUrl={p.howItWorks.videoDesktopUrl}
+          videoMobileUrl={p.howItWorks.videoMobileUrl}
         />
       </div>
       <div style={offscreen}><TrustBadges badges={p.trustBadges as any} /></div>

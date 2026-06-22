@@ -144,9 +144,20 @@ export const homePage = defineType({
       initialValue: "En 4 simples pasos pasas de buscar a estrenar tu auto eléctrico al mejor precio de Chile.",
     }),
     defineField({
-      name: "howItWorksVideoUrl", title: "Video explicativo (URL YouTube)", type: "url",
+      name: "howItWorksVideoDesktop",
+      title: "Video explicativo — Desktop (16:9)",
+      type: "file",
       group: "howItWorks",
-      description: 'URL del video explicativo de Electrificarte. Ej: "https://www.youtube.com/embed/xxxx". Se abre en popup al hacer clic en el botón.',
+      options: { accept: "video/*" },
+      description: "Video horizontal (16:9). Se muestra en el popup del escritorio. Recomendado: MP4 H.264, máx. 30 MB.",
+    }),
+    defineField({
+      name: "howItWorksVideoMobile",
+      title: "Video explicativo — Mobile (9:16 vertical)",
+      type: "file",
+      group: "howItWorks",
+      options: { accept: "video/*" },
+      description: "Video vertical (9:16). Se muestra inline en móvil. Recomendado: MP4 H.264, máx. 20 MB.",
     }),
     defineField({
       name: "howItWorksSteps", title: "Pasos del proceso", type: "array", group: "howItWorks",
