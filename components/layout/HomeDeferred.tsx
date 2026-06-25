@@ -51,7 +51,7 @@ interface HomeDeferredProps {
 // with contain-intrinsic-size so the scrollbar still measures correctly.
 const offscreen: React.CSSProperties = {
   contentVisibility: "auto",
-  containIntrinsicSize: "0 720px",
+  containIntrinsicSize: "auto 720px",
 };
 
 export function HomeDeferred(p: HomeDeferredProps) {

@@ -1,3 +1,5 @@
+"use client";
+
 import { Icon } from "@/components/ui/Icon";
 
 export interface TrustBadgeData {
