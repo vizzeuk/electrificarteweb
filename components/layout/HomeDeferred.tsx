@@ -1,39 +1,14 @@
 "use client";
 
-import dynamic from "next/dynamic";
-
-// All sections below render below-the-fold on mobile. We keep ssr:true so
-// the HTML still contains the rendered markup (good for SEO + LCP without
-// flicker) but next/dynamic gives each section its own JS chunk so the
-// initial JS bundle the client has to parse is smaller.
-
-const CollectionsSlideshow = dynamic(
-  () => import("@/components/layout/CollectionsSlideshow").then(m => m.CollectionsSlideshow),
-);
-const ServiciosExtras = dynamic(
-  () => import("@/components/layout/ServiciosExtras").then(m => m.ServiciosExtras),
-);
-const HowItWorks = dynamic(
-  () => import("@/components/layout/HowItWorks").then(m => m.HowItWorks),
-);
-const TrustBadges = dynamic(
-  () => import("@/components/layout/TrustBadges").then(m => m.TrustBadges),
-);
-const Testimonials = dynamic(
-  () => import("@/components/layout/Testimonials").then(m => m.Testimonials),
-);
-const BlogPreview = dynamic(
-  () => import("@/components/layout/BlogPreview").then(m => m.BlogPreview),
-);
-const FAQ = dynamic(
-  () => import("@/components/layout/FAQ").then(m => m.FAQ),
-);
-const StickyCTA = dynamic(
-  () => import("@/components/layout/StickyCTA").then(m => m.StickyCTA),
-);
-const PromoPopup = dynamic(
-  () => import("@/components/layout/PromoPopup").then(m => m.PromoPopup),
-);
+import { CollectionsSlideshow } from "@/components/layout/CollectionsSlideshow";
+import { ServiciosExtras }      from "@/components/layout/ServiciosExtras";
+import { HowItWorks }           from "@/components/layout/HowItWorks";
+import { TrustBadges }          from "@/components/layout/TrustBadges";
+import { Testimonials }         from "@/components/layout/Testimonials";
+import { BlogPreview }          from "@/components/layout/BlogPreview";
+import { FAQ }                  from "@/components/layout/FAQ";
+import { StickyCTA }            from "@/components/layout/StickyCTA";
+import { PromoPopup }           from "@/components/layout/PromoPopup";
 
 interface HomeDeferredProps {
   collections:     unknown[];
@@ -46,35 +21,23 @@ interface HomeDeferredProps {
   hotDealCar:      unknown;
 }
 
-// content-visibility:auto tells the browser to skip layout/paint for elements
-// outside the viewport — huge mobile-Safari win for long pages. We pair it
-// with contain-intrinsic-size so the scrollbar still measures correctly.
-const offscreen: React.CSSProperties = {
-  contentVisibility: "auto",
-  containIntrinsicSize: "auto 720px",
-};
-
 export function HomeDeferred(p: HomeDeferredProps) {
   return (
     <>
       {/* eslint-disable @typescript-eslint/no-explicit-any */}
-      <div style={offscreen}><CollectionsSlideshow collections={p.collections as any} /></div>
-      <div style={offscreen}><ServiciosExtras items={p.servicios as any} /></div>
-      <div style={offscreen}>
-        <HowItWorks
-          title={p.howItWorks.title}
-          subtitle={p.howItWorks.subtitle}
-          steps={p.howItWorks.steps as any}
-          videoDesktopUrl={p.howItWorks.videoDesktopUrl}
-          videoMobileUrl={p.howItWorks.videoMobileUrl}
-        />
-      </div>
-      <div style={offscreen}><TrustBadges badges={p.trustBadges as any} /></div>
-      <div style={offscreen}>
-        <Testimonials title={p.testimonials.title} testimonials={p.testimonials.items as any} />
-      </div>
-      <div style={offscreen}><BlogPreview posts={p.blogPosts as any} /></div>
-      <div style={offscreen}><FAQ title={p.faq.title} faqs={p.faq.faqs as any} /></div>
+      <CollectionsSlideshow collections={p.collections as any} />
+      <ServiciosExtras items={p.servicios as any} />
+      <HowItWorks
+        title={p.howItWorks.title}
+        subtitle={p.howItWorks.subtitle}
+        steps={p.howItWorks.steps as any}
+        videoDesktopUrl={p.howItWorks.videoDesktopUrl}
+        videoMobileUrl={p.howItWorks.videoMobileUrl}
+      />
+      <TrustBadges badges={p.trustBadges as any} />
+      <Testimonials title={p.testimonials.title} testimonials={p.testimonials.items as any} />
+      <BlogPreview posts={p.blogPosts as any} />
+      <FAQ title={p.faq.title} faqs={p.faq.faqs as any} />
       <StickyCTA />
       <PromoPopup car={p.hotDealCar as any} />
       {/* eslint-enable @typescript-eslint/no-explicit-any */}
