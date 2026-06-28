@@ -1,4 +1,5 @@
 import React from "react";
+import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { client } from "@/lib/sanity/client";
@@ -41,19 +42,7 @@ export default async function BrandPage({ params }: PageProps) {
     client.fetch(carsByBrandQuery, { brandSlug: slug }).catch(() => []),
   ]);
 
-  if (!sanityBrand) {
-    // Brand not found in Sanity
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-6 px-4 text-center">
-        <span className="material-symbols-outlined text-[64px] text-gray-200">electric_car</span>
-        <h1 className="font-headline font-black text-3xl uppercase">{slug.replace(/-/g, " ")}</h1>
-        <p className="text-text-muted max-w-sm">Estamos preparando el catálogo de esta marca. Mientras tanto, puedes solicitar una oferta personalizada.</p>
-        <Link href="/solicitar" className="bg-primary hover:bg-primary-dark text-black font-bold px-8 py-3 rounded-xl transition-colors">
-          Solicitar oferta
-        </Link>
-      </div>
-    );
-  }
+  if (!sanityBrand) notFound();
 
   const accentColor = sanityBrand.accentColor ?? "#003499";
 

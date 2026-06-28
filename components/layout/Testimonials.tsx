@@ -1,5 +1,3 @@
-"use client";
-
 import { sanityImg } from "@/lib/sanityImage";
 
 export interface TestimonialData {

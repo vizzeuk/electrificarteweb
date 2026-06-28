@@ -4,7 +4,6 @@ import { m } from "framer-motion";
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { Icon } from "@/components/ui/Icon";
-import { HeroVideoPlayer } from "@/components/layout/HeroVideoPlayer";
 import { HeroBgVideo } from "@/components/layout/HeroBgVideo";
 
 export interface HeroData {
@@ -91,9 +90,7 @@ export function Hero({ data }: HeroProps) {
       aria-label="Bienvenida"
     >
       <div className="absolute inset-0 z-0">
-        {/* Background — poster as <img> for instant paint, video mounted only
-            after the page is idle so it doesn't compete with critical
-            resources on mobile networks. */}
+        {/* Background video with poster frame for instant paint */}
         <HeroBgVideo
           poster="/images/video-fondo-hero-poster.jpg"
           srcMp4="/images/video-fondo-hero.mp4"
@@ -147,24 +144,6 @@ export function Hero({ data }: HeroProps) {
               </a>
             </div>
           </div>
-
-          {/* Right: Sanity video > animated demo — temporalmente deshabilitado */}
-          {false && (
-          <m.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className="w-full"
-          >
-            <div className="relative w-full aspect-[16/9] lg:scale-[1.12] lg:origin-right rounded-2xl overflow-hidden border border-white/10 shadow-[0_8px_48px_rgba(0,229,229,0.12)] bg-black">
-              {videoUrl ? (
-                <HeroVideo url={videoUrl as string} />
-              ) : (
-                <HeroVideoPlayer />
-              )}
-            </div>
-          </m.div>
-          )}
         </div>
 
       </div>

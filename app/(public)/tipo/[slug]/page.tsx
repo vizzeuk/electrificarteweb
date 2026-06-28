@@ -1,6 +1,6 @@
 import React from "react";
+import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { client } from "@/lib/sanity/client";
 import { urlFor } from "@/lib/sanity/image";
 import {
@@ -46,23 +46,7 @@ export default async function TipoPage({ params }: PageProps) {
     client.fetch(allVehicleTypesQuery, {}).catch(() => []),
   ]);
 
-  if (!sanityMeta) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-6 px-4 text-center">
-        <span className="material-symbols-outlined text-[64px] text-gray-200">electric_car</span>
-        <h1 className="font-headline font-black text-3xl uppercase">{slug.replace(/-/g, " ")}</h1>
-        <p className="text-text-muted max-w-sm">
-          Esta categoría no está disponible aún. Explora el resto del catálogo.
-        </p>
-        <Link
-          href="/solicitar"
-          className="bg-primary hover:bg-primary-dark text-black font-bold px-8 py-3 rounded-xl transition-colors"
-        >
-          Solicitar oferta
-        </Link>
-      </div>
-    );
-  }
+  if (!sanityMeta) notFound();
 
   const meta: TipoMeta = {
     label:    sanityMeta.label ?? slug,
