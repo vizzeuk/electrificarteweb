@@ -3,10 +3,10 @@ import { z } from "zod";
 import { checkRateLimit } from "@/lib/rate-limit";
 
 const schema = z.object({
-  name:    z.string().min(2),
+  name:    z.string().min(2).max(100),
   email:   z.string().email(),
-  phone:   z.string().optional(),
-  message: z.string().min(10),
+  phone:   z.string().max(20).regex(/^[\d\s+\-()+]+$/).optional(),
+  message: z.string().min(10).max(5000),
 });
 
 export async function POST(req: Request) {
@@ -26,6 +26,7 @@ export async function POST(req: Request) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...data, source: "contact-page" }),
+      signal: AbortSignal.timeout(5_000),
     });
 
     if (!res.ok) throw new Error(`Webhook responded ${res.status}`);

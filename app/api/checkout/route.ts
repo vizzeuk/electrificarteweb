@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { z } from "zod";
 import { signOrderToken } from "@/lib/order-token";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { checkRateLimitRedis } from "@/lib/rate-limit-redis";
 
 /**
  * Inicia el pago en Reveniu para una solicitud del formulario.
@@ -35,7 +35,7 @@ const checkoutSchema = z
   .passthrough();
 
 export async function POST(req: NextRequest) {
-  const limited = checkRateLimit(req, { max: 5, windowMs: 60_000, bucket: "checkout" });
+  const limited = await checkRateLimitRedis(req, { max: 5, windowSeconds: 60, bucket: "checkout" });
   if (limited) return limited;
 
   let raw: unknown;
@@ -88,6 +88,7 @@ export async function POST(req: NextRequest) {
         external_id: orderId,
         field_values: { email, name },
       }),
+      signal: AbortSignal.timeout(8_000),
     });
     if (!reveniuRes.ok) {
       console.error("Reveniu respondió", reveniuRes.status, await reveniuRes.text());

@@ -39,6 +39,7 @@ export async function POST(request: Request) {
         source: "footer-newsletter",
         timestamp: new Date().toISOString(),
       }),
+      signal: AbortSignal.timeout(5_000),
     });
 
     if (!res.ok) throw new Error(`Webhook respondió ${res.status}`);

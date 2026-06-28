@@ -1,16 +1,16 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { checkRateLimitRedis } from "@/lib/rate-limit-redis";
 
 const schema = z.object({
   // Datos personales
-  fullName:      z.string().min(2),
+  fullName:      z.string().min(2).max(120),
   email:         z.string().email(),
-  phone:         z.string().min(8),
-  rut:           z.string().min(2),
-  comuna:        z.string().min(2),
+  phone:         z.string().min(8).max(20).regex(/^[\d\s+\-()+]+$/),
+  rut:           z.string().regex(/^\d{7,8}-[\dkK]$/, "RUT inválido"),
+  comuna:        z.string().min(2).max(100),
   // Auto buscado
-  carSearch:     z.string().min(1),
+  carSearch:     z.string().min(1).max(200),
   carSlug:       z.string().optional(),
   // Pago
   paymentMethod: z.enum(["contado", "credito-convencional", "credito-inteligente", "no-seguro"]),
@@ -24,13 +24,13 @@ const schema = z.object({
   tradeInMaintenance: z.enum(["todas-marca", "no-todas"]).optional(),
   tradeInDebt:        z.enum(["si", "no"]).optional(),
   tradeInPlate:       z.string().optional(),
-  tradeInPhotos:      z.array(z.string()).optional(), // base64 strings
+  tradeInPhotos:      z.array(z.string().max(2_000_000)).max(5).optional(),
   // Meta
-  source: z.string().optional(),
+  source: z.string().max(100).optional(),
 });
 
 export async function POST(request: Request) {
-  const limited = checkRateLimit(request, { max: 5, windowMs: 60_000, bucket: "leads" });
+  const limited = await checkRateLimitRedis(request, { max: 5, windowSeconds: 60, bucket: "leads" });
   if (limited) return limited;
 
   let body: unknown;
@@ -61,6 +61,7 @@ export async function POST(request: Request) {
         ...parsed.data,
         timestamp: new Date().toISOString(),
       }),
+      signal: AbortSignal.timeout(5_000),
     });
 
     if (!webhookResponse.ok) {

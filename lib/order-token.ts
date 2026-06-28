@@ -6,7 +6,9 @@ import crypto from "crypto";
  * checkout (y por tanto el pago) tiene una cookie con firma válida — nadie
  * puede falsificarla sin el secreto.
  */
-const SECRET = process.env.ORDER_TOKEN_SECRET ?? "dev-secret-cambiar-en-produccion";
+const _rawSecret = process.env.ORDER_TOKEN_SECRET;
+if (!_rawSecret) throw new Error("ORDER_TOKEN_SECRET env var is required");
+const SECRET: string = _rawSecret;
 
 export function signOrderToken(orderId: string): string {
   const sig = crypto.createHmac("sha256", SECRET).update(orderId).digest("hex");

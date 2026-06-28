@@ -14,9 +14,9 @@ export default async function PublicLayout({
   children: React.ReactNode;
 }) {
   const [brands, vehicleTypes, electricTypes] = await Promise.all([
-    client.fetch(featuredBrandsQuery),
-    client.fetch(allVehicleTypesQuery),
-    client.fetch(allElectricTypesQuery),
+    client.fetch(featuredBrandsQuery,   {}, { next: { tags: ["brand"],        revalidate: 3600 } }),
+    client.fetch(allVehicleTypesQuery,  {}, { next: { tags: ["vehicleType"],  revalidate: 3600 } }),
+    client.fetch(allElectricTypesQuery, {}, { next: { tags: ["electricType"], revalidate: 3600 } }),
   ]);
 
   return (

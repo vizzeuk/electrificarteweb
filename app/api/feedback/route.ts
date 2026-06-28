@@ -5,7 +5,7 @@ import { checkRateLimit } from "@/lib/rate-limit";
 const schema = z.object({
   rating:  z.number().int().min(1).max(5),
   comment: z.string().max(1000).optional(),
-  page:    z.string().optional(),
+  page:    z.string().max(200).optional(),
 });
 
 export async function POST(req: Request) {
@@ -25,6 +25,7 @@ export async function POST(req: Request) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...data, source: "feedback-widget", timestamp: new Date().toISOString() }),
+      signal: AbortSignal.timeout(5_000),
     });
 
     if (!res.ok) throw new Error(`Webhook responded ${res.status}`);
