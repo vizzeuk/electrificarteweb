@@ -12,6 +12,9 @@ import { checkRateLimit } from "@/lib/rate-limit";
  * 3. Manda el lead a n8n como "pendiente" (webhook lead-pendiente).
  * 4. Deja una cookie firmada que habilita la página de gracias.
  * 5. Devuelve la URL del gateway para redirigir al usuario a pagar.
+ *
+ * El registro en Supabase (advisory_payments) lo hace n8n cuando Reveniu
+ * confirma el pago vía su webhook de eventos.
  */
 
 // Producción: https://api.reveniu.com/api/v1 · Sandbox: ver REVENIU_API_BASE en .env

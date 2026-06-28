@@ -16,8 +16,8 @@ const DAY_TTL_SECONDS = 60 * 60 * 26; // ~26h, cubre el día con holgura de zona
 let _redis: Redis | null = null;
 function getRedis(): Redis | null {
   if (_redis) return _redis;
-  const url = process.env.KV_REST_API_URL;
-  const token = process.env.KV_REST_API_TOKEN;
+  const url = process.env.KV_REST_API_URL ?? process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.KV_REST_API_TOKEN ?? process.env.UPSTASH_REDIS_REST_TOKEN;
   if (!url || !token) return null;
   _redis = new Redis({ url, token });
   return _redis;
