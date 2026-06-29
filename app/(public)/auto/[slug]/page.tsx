@@ -28,7 +28,7 @@ interface PageProps {
 // ─── SEO dinámico ─────────────────────────────────────────────────────────────
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const car = await client.fetch(carBySlugQuery, { slug }).catch(() => null);
+  const car = await client.fetch(carBySlugQuery, { slug }, { next: { tags: ["car"], revalidate: 60 } }).catch(() => null);
   if (!car || car.hidden) return { title: "Auto no encontrado | Electrificarte" };
   const brandName = car.brand?.name ?? "";
   return {
@@ -43,7 +43,7 @@ export default async function CarDetailPage({ params }: PageProps) {
   const { slug } = await params;
 
   // Fetch car from Sanity
-  const sanity = await client.fetch(carBySlugQuery, { slug }).catch(() => null);
+  const sanity = await client.fetch(carBySlugQuery, { slug }, { next: { tags: ["car"], revalidate: 60 } }).catch(() => null);
 
   // Auto descontinuado / oculto → 404 real
   if (sanity?.hidden) notFound();
@@ -65,11 +65,11 @@ export default async function CarDetailPage({ params }: PageProps) {
   // Fetch all similar car candidates (same brand, vehicleType, or electricType)
   // No ordering/limit in GROQ — JS scoring handles ranking by price proximity + type
   const sanitySimiar = await client.fetch(similarCarsQuery, {
-    excludeSlug:   slug,
-    brandId:       sanity.brand?._id ?? null,
-    vehicleTypeId: sanity.vehicleType?._id ?? null,
+    excludeSlug:    slug,
+    brandId:        sanity.brand?._id ?? null,
+    vehicleTypeId:  sanity.vehicleType?._id ?? null,
     electricTypeId: sanity.electricType?._id ?? null,
-  }).catch(() => []);
+  }, { next: { tags: ["car"], revalidate: 60 } }).catch(() => []);
 
   // ─── Map Sanity data → CarData shape ────────────────────────────────────────
   const car: CarData = {

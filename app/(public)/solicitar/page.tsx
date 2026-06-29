@@ -20,8 +20,8 @@ export const revalidate = 3600;
 
 export default async function SolicitarPage() {
   const [rawCars, homePage] = await Promise.all([
-    client.fetch(carNamesForFormQuery).catch(() => []),
-    client.fetch<{ formServicePrice?: string } | null>(`*[_type == "homePage"][0]{ formServicePrice }`).catch(() => null),
+    client.fetch(carNamesForFormQuery, {}, { next: { tags: ["car"], revalidate: 3600 } }).catch(() => []),
+    client.fetch<{ formServicePrice?: string } | null>(`*[_type == "homePage"][0]{ formServicePrice }`, {}, { next: { tags: ["homePage"], revalidate: 3600 } }).catch(() => null),
   ]);
 
   const carOptions: string[] = rawCars.flatMap(

@@ -7,10 +7,7 @@ export async function POST(req: NextRequest) {
   // El secret es OBLIGATORIO — si la env var no está configurada, el endpoint
   // rechaza todo. Antes, sin la env var, cualquiera podía invalidar el cache.
   if (!SECRET) {
-    return NextResponse.json(
-      { message: "SANITY_REVALIDATE_SECRET no configurado" },
-      { status: 500 },
-    );
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
   const body = await req.json().catch(() => ({}));

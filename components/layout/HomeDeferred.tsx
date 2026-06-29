@@ -1,5 +1,3 @@
-"use client";
-
 import { CollectionsSlideshow } from "@/components/layout/CollectionsSlideshow";
 import { ServiciosExtras }      from "@/components/layout/ServiciosExtras";
 import { HowItWorks }           from "@/components/layout/HowItWorks";

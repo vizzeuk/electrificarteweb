@@ -18,7 +18,7 @@ interface PageProps {
 
 export default async function ComparadorPage({ searchParams }: PageProps) {
   const { add } = await searchParams;
-  const raw = await client.fetch(allCarsForComparadorQuery).catch(() => []);
+  const raw = await client.fetch(allCarsForComparadorQuery, {}, { next: { tags: ["car"], revalidate: 60 } }).catch(() => []);
 
   const allCars: Car[] = [];
 
