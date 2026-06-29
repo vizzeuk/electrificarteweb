@@ -13,16 +13,14 @@ const TABLE = process.env.SUPABASE_SUBSCRIPTION_TABLE ?? "advisory_payments";
 const PHONE_COLUMN = process.env.SUPABASE_PHONE_COLUMN ?? "phone";
 
 // ─── Tabla de ofertador $19.990 ───────────────────────────────────────────────
-// n8n escribe aquí cuando Reveniu confirma el pago del ofertador.
-// Env var: SUPABASE_OFERTA_TABLE (ej: "oferta_payments" o "leads_paid")
-// Si no está configurada, se omite la verificación de este tier.
-const OFERTA_TABLE = process.env.SUPABASE_OFERTA_TABLE ?? "";
+// n8n escribe aquí cuando Reveniu confirma el pago. Status "pagado" = activo.
+// "pendiente" queda excluido por isRowActive (payment not yet confirmed).
+const OFERTA_TABLE = process.env.SUPABASE_OFERTA_TABLE ?? "leads";
 
 // ─── Tabla de vendedores ──────────────────────────────────────────────────────
-// Registros de vendedores de la otra web. Si un vendedor escribe al bot
-// de compradores, lo bloqueamos con un mensaje específico.
-// Env var: SUPABASE_VENDOR_TABLE (ej: "vendors" o "vendedores")
-const VENDOR_TABLE = process.env.SUPABASE_VENDOR_TABLE ?? "";
+// Registros de vendedores de la plataforma de vendedores (web separada).
+// Cualquier número activo en esta tabla es bloqueado del bot de compradores.
+const VENDOR_TABLE = process.env.SUPABASE_VENDOR_TABLE ?? "leads_vendors";
 
 // ─── Cliente Supabase (singleton, lazy) ───────────────────────────────────────
 
