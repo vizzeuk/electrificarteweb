@@ -65,6 +65,7 @@ bot.onDirectMessage(async (thread, message) => {
 
   // 2. Subscription tier gating
   const tier = await getSubscriptionTier(phone);
+  console.log("[bot] mensaje recibido", { phone: maskPhone(phone), tier });
 
   if (tier === "vendedor") {
     await thread.post(VENDOR_MESSAGE);
@@ -109,5 +110,10 @@ bot.onDirectMessage(async (thread, message) => {
   await saveContext(phone, [...messages, { role: "assistant", content: response }]);
 
   // 8. Reply via Kapso → WhatsApp
+  console.log("[bot] respuesta enviada", { phone: maskPhone(phone), tier, length: response.length });
   await thread.post(response);
 });
+
+function maskPhone(phone: string): string {
+  return phone.length > 4 ? `***${phone.slice(-4)}` : phone;
+}
