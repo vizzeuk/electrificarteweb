@@ -77,7 +77,7 @@ async function resolveConversation(
 function subscribeMessage(): string {
   const url = process.env.ADVISOR_SUBSCRIBE_URL;
   const base =
-    "¡Hola! 👋 Soy el asesor experto en autos eléctricos de Electrificarte. La asesoría 1:1 por WhatsApp es un servicio para suscriptores.";
+    "¡Hola! 👋 Soy *Francisco IA*, el asesor IA de electrificarte.com. La asesoría 1:1 por WhatsApp es un servicio para suscriptores.";
   return url
     ? `${base}\n\nActiva tu asesoría acá y te ayudo a encontrar tu auto ideal:\n${url}`
     : `${base}\n\nEscríbenos para activar tu asesoría.`;
