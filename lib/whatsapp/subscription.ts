@@ -8,8 +8,21 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 // Nombres de columna configurables por env para adaptarse a la tabla real sin
 // tocar código. Defaults pensados para una tabla típica `asesoria_pagada`.
 
-const TABLE = process.env.SUPABASE_SUBSCRIPTION_TABLE ?? "asesoria_pagada";
+// ─── Tabla de asesoría $4.990 ─────────────────────────────────────────────────
+const TABLE = process.env.SUPABASE_SUBSCRIPTION_TABLE ?? "advisory_payments";
 const PHONE_COLUMN = process.env.SUPABASE_PHONE_COLUMN ?? "phone";
+
+// ─── Tabla de ofertador $19.990 ───────────────────────────────────────────────
+// n8n escribe aquí cuando Reveniu confirma el pago del ofertador.
+// Env var: SUPABASE_OFERTA_TABLE (ej: "oferta_payments" o "leads_paid")
+// Si no está configurada, se omite la verificación de este tier.
+const OFERTA_TABLE = process.env.SUPABASE_OFERTA_TABLE ?? "";
+
+// ─── Tabla de vendedores ──────────────────────────────────────────────────────
+// Registros de vendedores de la otra web. Si un vendedor escribe al bot
+// de compradores, lo bloqueamos con un mensaje específico.
+// Env var: SUPABASE_VENDOR_TABLE (ej: "vendors" o "vendedores")
+const VENDOR_TABLE = process.env.SUPABASE_VENDOR_TABLE ?? "";
 
 // ─── Cliente Supabase (singleton, lazy) ───────────────────────────────────────
 
@@ -135,4 +148,64 @@ function isRowActive(row: Record<string, unknown>): boolean {
   }
 
   return true;
+}
+
+// ─── Tier de suscripción ──────────────────────────────────────────────────────
+
+/**
+ * Tier del número que escribe:
+ * - "vendedor"  → bloqueado (canal exclusivo para compradores)
+ * - "oferta"    → pagó el ofertador $19.990 — acceso completo al advisor
+ *                 pero SIN pitch del $19.990 (ya lo tiene o está en ese flujo)
+ * - "asesoria"  → pagó la asesoría $4.990 — acceso completo + pitch $19.990 OK
+ * - null        → sin suscripción activa → mostrar mensaje de suscripción
+ *
+ * Si alguien tiene AMBAS (oferta + asesoria) → "oferta" (no re-pitch $19.990).
+ */
+export type SubscriptionTier = "asesoria" | "oferta" | "vendedor" | null;
+
+const _tierCache = new Map<string, { tier: SubscriptionTier; expiresAt: number }>();
+
+export async function getSubscriptionTier(rawPhone: string): Promise<SubscriptionTier> {
+  const phone = normalizePhone(rawPhone);
+  if (!phone) return null;
+
+  const cached = _tierCache.get(phone);
+  if (cached && Date.now() < cached.expiresAt) return cached.tier;
+
+  const tier = await resolveTier(phone);
+  _tierCache.set(phone, { tier, expiresAt: Date.now() + CACHE_TTL_MS });
+  return tier;
+}
+
+async function checkTable(table: string, phone: string): Promise<boolean> {
+  if (!table) return false;
+  const supabase = getSupabase();
+  if (!supabase) return false;
+  try {
+    const { data } = await supabase
+      .from(table)
+      .select("*")
+      .in(PHONE_COLUMN, phoneCandidates(phone))
+      .limit(1);
+    const row = data?.[0];
+    return row ? isRowActive(row) : false;
+  } catch {
+    return false;
+  }
+}
+
+async function resolveTier(phone: string): Promise<SubscriptionTier> {
+  // Checks run in priority order. Vendor check first so a registered vendor
+  // never accidentally triggers the buyer advisor.
+  const [isVendor, isOferta, isAsesoria] = await Promise.all([
+    checkTable(VENDOR_TABLE, phone),
+    checkTable(OFERTA_TABLE, phone),
+    querySubscription(phone), // existing advisory_payments check
+  ]);
+
+  if (isVendor) return "vendedor";
+  if (isOferta) return "oferta";   // also true if they have both (don't re-pitch)
+  if (isAsesoria) return "asesoria";
+  return null;
 }

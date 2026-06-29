@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { checkChatRateLimit } from "@/lib/chat/rate-limit-redis";
 import { detectInjection, INJECTION_RESPONSE } from "@/lib/chat/guards";
-import { isSubscribed, normalizePhone } from "@/lib/whatsapp/subscription";
+import { getSubscriptionTier, normalizePhone } from "@/lib/whatsapp/subscription";
 import { runAdvisor, type ChatMessage } from "@/lib/whatsapp/advisor";
 import { fetchKapsoHistory } from "@/lib/whatsapp/kapso";
+import { loadContext, saveContext } from "@/lib/whatsapp/context";
 import { exceedsDailyQuota, DAILY_QUOTA_MESSAGE } from "@/lib/whatsapp/quota";
 
 // ─── Validación de payload ────────────────────────────────────────────────────
@@ -110,24 +111,51 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    // 3. Gating: autoridad server-side contra Supabase
-    if (!(await isSubscribed(phone))) {
+    // 3. Tier gating: distingue asesoría / oferta / vendedor / sin suscripción
+    const tier = await getSubscriptionTier(phone);
+
+    if (tier === "vendedor") {
+      return NextResponse.json({
+        message: "Hola 👋 Este canal es para compradores. Para soporte como vendedor, escríbenos a vendedores@electrificarte.com.",
+        subscribed: false,
+      });
+    }
+
+    if (!tier) {
       return NextResponse.json({ message: subscribeMessage(), subscribed: false });
     }
 
-    // 4. Guard de inyección sobre el último mensaje del usuario
-    const last = messages.at(-1)?.content ?? "";
+    // 4. Merge Kapso messages with persistent Redis context
+    // Redis is the source of truth for history; Kapso messages are the new input.
+    // This prevents context loss after ~1h gaps in conversation.
+    const normPhone = normalizePhone(phone);
+    const storedContext = await loadContext(normPhone);
+    // If Kapso provided a richer history (e.g. first message), prefer it;
+    // otherwise use our Redis context + the latest message from the payload.
+    const mergedMessages: ChatMessage[] =
+      storedContext.length > 0
+        ? [...storedContext, ...messages.filter(
+            (m) => m.role === "user" && !storedContext.some((s) => s.content === m.content),
+          )]
+        : messages;
+
+    // 5. Guard de inyección sobre el último mensaje del usuario
+    const last = mergedMessages.at(-1)?.content ?? "";
     if (detectInjection(last)) {
       return NextResponse.json({ message: INJECTION_RESPONSE, subscribed: true });
     }
 
-    // 5. Cuota diaria por número (control de costo; solo suscriptores consumen)
-    if (await exceedsDailyQuota(normalizePhone(phone))) {
+    // 6. Cuota diaria por número (control de costo; solo suscriptores consumen)
+    if (await exceedsDailyQuota(normPhone)) {
       return NextResponse.json({ message: DAILY_QUOTA_MESSAGE, subscribed: true });
     }
 
-    // 6. Motor advisor
-    const message = await runAdvisor(messages);
+    // 7. Motor advisor (tier-aware prompt)
+    const message = await runAdvisor(mergedMessages, tier);
+
+    // 8. Persist updated context
+    await saveContext(normPhone, [...mergedMessages, { role: "assistant", content: message }]);
+
     return NextResponse.json({ message, subscribed: true });
   } catch (err) {
     console.error("[whatsapp advisor]", err instanceof Error ? err.message : err);

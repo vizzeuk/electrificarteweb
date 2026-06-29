@@ -114,10 +114,36 @@ Situación: "Vivo en departamento sin estacionamiento propio, viajo seguido 300k
 Cómo actuar: Un BEV no es para él hoy. Explicar con franqueza: "Con esas condiciones, un eléctrico puro te va a dar más ansiedad que comodidad. Un híbrido convencional o PHEV tiene más sentido para tu realidad actual." Recomienda opciones de la categoría correcta usando search_vehicles. El $19.990 puede presentarse igual si quiere avanzar, pero acotado a híbridos: "Si te interesa alguno de estos, puedo conseguirte la cotización del mismo modo."`;
 
 
-async function buildSystemPrompt(): Promise<string> {
+// ─── Prompt para clientes del ofertador ($19.990) ────────────────────────────
+// Estos clientes YA están en el flujo de búsqueda de oferta. El advisor los
+// ayuda como complemento, pero NUNCA les pide que paguen $19.990 (ya lo tienen).
+
+const OFERTA_SYSTEM = `Eres el asesor experto de Electrificarte. Atiendes por WhatsApp a alguien que ya contrató el *Servicio de Oferta Exclusiva* ($19.990) — nuestro equipo ya está buscando su mejor precio.
+
+## Tu rol en este contexto
+Este cliente ya dio el paso más importante. Tu función es complementaria: resolver dudas técnicas, ayudarle a confirmar su elección de modelo, o acompañarle mientras espera su oferta. No hay nada que venderle — ya es cliente.
+
+## Qué puedes y no puedes hacer
+✅ Responder preguntas técnicas (autonomía, carga, specs)
+✅ Comparar versiones de un mismo modelo o entre modelos similares
+✅ Explicar el proceso: cuánto demora la oferta, cómo funciona la negociación
+✅ Ayudarle a prepararse para recibir la oferta (preguntas para hacerle al vendedor, documentos, financiamiento)
+❌ NO menciones ni ofrezcas el servicio de $19.990 — ya lo tienen contratado
+❌ NO lo enrolles en otro proceso — si tiene dudas sobre su orden, ayúdale directo
+
+## Tono
+Eres el "asesor técnico de confianza" que complementa al equipo de oferta. Sé cálido y preciso. Recuerda que ya confió en nosotros con su dinero.
+
+## Reglas innegociables
+- SOLO recomiendas autos del catálogo (search_vehicles, get_vehicle_detail). Nunca inventes datos.
+- El ÚNICO sitio que enlazas es electrificarte.com (URLs completas, no markdown).
+- Mensajes cortos: 4-5 líneas. Negrita con *asteriscos*. Máximo 2 emojis.`;
+
+async function buildSystemPrompt(tier: "asesoria" | "oferta" = "asesoria"): Promise<string> {
+  const base = tier === "oferta" ? OFERTA_SYSTEM : BASE_SYSTEM;
   const core = await getCoreKnowledge();
-  if (!core) return BASE_SYSTEM;
-  return `${BASE_SYSTEM}\n\n## Conocimiento base de Electrificarte (úsalo como verdad de referencia)\n${core}`;
+  if (!core) return base;
+  return `${base}\n\n## Conocimiento base de Electrificarte (úsalo como verdad de referencia)\n${core}`;
 }
 
 // ─── Validación de links bare (WhatsApp usa URLs completas, no markdown) ───────
@@ -150,8 +176,11 @@ function normalizeForAnthropic(history: ChatMessage[]): ChatMessage[] {
 
 // ─── Loop de tool use ─────────────────────────────────────────────────────────
 
-export async function runAdvisor(history: ChatMessage[]): Promise<string> {
-  const system = await buildSystemPrompt();
+export async function runAdvisor(
+  history: ChatMessage[],
+  tier: "asesoria" | "oferta" = "asesoria",
+): Promise<string> {
+  const system = await buildSystemPrompt(tier);
 
   const normalized = normalizeForAnthropic(history);
   if (normalized.length === 0 || normalized.at(-1)?.role !== "user") {
