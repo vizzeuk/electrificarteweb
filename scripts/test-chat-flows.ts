@@ -37,7 +37,11 @@ if (!SECRET) {
 interface TestFlow {
   id: number;
   name: string;
-  tier: "asesoria" | "oferta" | "vendedor" | "none";
+  // Tiers base + escenarios de edge case con estados especiales en Supabase:
+  //   asesoria_expiring → advisory_payments con expires_at mañana (aún vigente)
+  //   asesoria_expired  → advisory_payments con expires_at ayer (caducado)
+  //   both              → en advisory_payments (activo) Y en leads status=pagado
+  tier: "asesoria" | "oferta" | "vendedor" | "none" | "asesoria_expiring" | "asesoria_expired" | "both";
   messages: ChatMessage[];
   // Checks sobre la respuesta
   shouldContain?: string[];
@@ -48,20 +52,28 @@ interface TestFlow {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 // Fake phone numbers por defecto — no existen en Supabase, así que el gating
-// real los deja en tier null salvo que apuntes TEST_PHONE_* (o TEST_PHONE) a
-// números con filas reales.
+// real los deja en tier null salvo que apuntes TEST_PHONE_* a números reales.
+//
+// Para los flujos de edge case necesitas filas con estados específicos:
+//   TEST_PHONE_ASESORIA_EXPIRING → advisory_payments con expires_at = mañana
+//   TEST_PHONE_ASESORIA_EXPIRED  → advisory_payments con expires_at = ayer
+//   TEST_PHONE_BOTH              → en advisory_payments (activo) + leads (status=pagado)
 const SINGLE_PHONE = process.env.TEST_PHONE;
 const PHONES: Record<string, string> = {
-  asesoria: SINGLE_PHONE ?? process.env.TEST_PHONE_ASESORIA ?? "56900000001",
-  oferta:   SINGLE_PHONE ?? process.env.TEST_PHONE_OFERTA   ?? "56900000002",
-  vendedor: SINGLE_PHONE ?? process.env.TEST_PHONE_VENDEDOR ?? "56900000003",
-  none:     SINGLE_PHONE ?? process.env.TEST_PHONE_NONE     ?? "56900000004",
+  asesoria:          SINGLE_PHONE ?? process.env.TEST_PHONE_ASESORIA          ?? "56900000001",
+  oferta:            SINGLE_PHONE ?? process.env.TEST_PHONE_OFERTA            ?? "56900000002",
+  vendedor:          SINGLE_PHONE ?? process.env.TEST_PHONE_VENDEDOR          ?? "56900000003",
+  none:              SINGLE_PHONE ?? process.env.TEST_PHONE_NONE              ?? "56900000004",
+  asesoria_expiring: SINGLE_PHONE ?? process.env.TEST_PHONE_ASESORIA_EXPIRING ?? "56900000005",
+  asesoria_expired:  SINGLE_PHONE ?? process.env.TEST_PHONE_ASESORIA_EXPIRED  ?? "56900000006",
+  both:              SINGLE_PHONE ?? process.env.TEST_PHONE_BOTH              ?? "56900000007",
 };
 
 // Tier opcional como argumento de línea de comandos: corre solo esos flujos.
 const requestedTier = process.argv[2];
-if (requestedTier && !["asesoria", "oferta", "vendedor", "none"].includes(requestedTier)) {
-  console.error(`❌ Tier inválido "${requestedTier}". Usa: asesoria | oferta | vendedor | none`);
+const VALID_TIERS = ["asesoria", "oferta", "vendedor", "none", "asesoria_expiring", "asesoria_expired", "both"];
+if (requestedTier && !VALID_TIERS.includes(requestedTier)) {
+  console.error(`❌ Tier inválido "${requestedTier}". Usa: ${VALID_TIERS.join(" | ")}`);
   process.exit(1);
 }
 
@@ -332,6 +344,50 @@ const FLOWS: TestFlow[] = [
     ],
     expectSubscribed: true,
     shouldNotContain: ["$19.990", "servicio de oferta"],
+  },
+
+  // ── Edge cases: caducidad y combinación de tiers ──────────────────────────────
+  // SETUP REQUERIDO en Supabase antes de correr estos flujos:
+  //   Flujo 31: TEST_PHONE_ASESORIA_EXPIRING → advisory_payments con expires_at = mañana
+  //   Flujo 32: TEST_PHONE_ASESORIA_EXPIRED  → advisory_payments con expires_at = ayer (o anteayer)
+  //   Flujo 33: TEST_PHONE_BOTH → fila en advisory_payments (activo) + fila en leads (status='pagado')
+  {
+    id: 31,
+    name: "Asesoría próxima a caducar — todavía activa, debe asesorar normal",
+    tier: "asesoria_expiring",
+    // El número tiene expires_at = mañana → isRowActive devuelve true → tier asesoria
+    // Verifica que la priorización correcta no expulsa a alguien a punto de caducar
+    messages: [
+      { role: "user", content: "Hola, busco un eléctrico urbano, presupuesto $20M, tengo cargador en casa" },
+    ],
+    expectSubscribed: true,
+    shouldNotContain: ["[", "](", "suscriptor", "activar"],
+  },
+  {
+    id: 32,
+    name: "Asesoría caducada — debe rechazar con mensaje de suscripción",
+    tier: "asesoria_expired",
+    // El número tiene expires_at = ayer → isRowActive devuelve false → tier null
+    // Verifica que un usuario con asesoría vencida no accede al advisor
+    messages: [
+      { role: "user", content: "Hola quiero retomar la asesoría, tenía una consulta pendiente sobre el BYD Seal" },
+    ],
+    expectSubscribed: false,
+    // El mensaje debe invitar a renovar/suscribirse, no dar asesoría
+    shouldNotContain: ["BYD Seal", "autonomía", "batería", "$19.990 del servicio"],
+  },
+  {
+    id: 33,
+    name: "Tiene ambos (asesoría activa + oferta pagada) — debe priorizar oferta",
+    tier: "both",
+    // El número está en advisory_payments (activo) Y en leads (status='pagado')
+    // resolveTier debe devolver 'oferta' (ya decidió qué quiere, etapa más avanzada)
+    // No debe re-pitchear $19.990 (ya lo tiene) ni $4.990 (ya pasó esa etapa)
+    messages: [
+      { role: "user", content: "Pagué el formulario del BYD Atto 3, ¿cuándo me llega la oferta?" },
+    ],
+    expectSubscribed: true,
+    shouldNotContain: ["$19.990", "$4.990", "asesoría", "contratar"],
   },
 ];
 
