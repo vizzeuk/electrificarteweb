@@ -153,12 +153,15 @@ function isRowActive(row: Record<string, unknown>): boolean {
 /**
  * Tier del número que escribe:
  * - "vendedor"  → bloqueado (canal exclusivo para compradores)
- * - "oferta"    → pagó el ofertador $19.990 — acceso completo al advisor
- *                 pero SIN pitch del $19.990 (ya lo tiene o está en ese flujo)
- * - "asesoria"  → pagó la asesoría $4.990 — acceso completo + pitch $19.990 OK
+ * - "oferta"    → contrató el Servicio de Oferta Exclusiva ($19.990): ya sabe
+ *                 qué auto quiere y espera precio de la red de vendedores.
+ *                 El advisor le da soporte técnico sin venderle nada más.
+ * - "asesoria"  → contrató la Asesoría IA ($4.990): aún decide qué auto comprar.
+ *                 El advisor le ayuda a elegir y puede recomendarle el $19.990
+ *                 como siguiente paso una vez que tenga claro el modelo.
  * - null        → sin suscripción activa → mostrar mensaje de suscripción
  *
- * Si alguien tiene AMBAS (oferta + asesoria) → "oferta" (no re-pitch $19.990).
+ * Si alguien tiene ambos → "oferta" (ya pasó la etapa de decisión).
  */
 export type SubscriptionTier = "asesoria" | "oferta" | "vendedor" | null;
 

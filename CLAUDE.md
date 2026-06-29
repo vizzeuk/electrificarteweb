@@ -32,6 +32,23 @@ Plataforma B2B2C chilena de autos eléctricos e híbridos. Intermediario entre c
 - Imágenes de Sanity: `logo.asset->url` en GROQ para obtener la URL directa
 - Scripts en `scripts/` usan `@sanity/client` directamente con token de escritura
 
+## Chatbot WhatsApp — Flujos de suscripción (Kapso SDK)
+
+Tres tiers, cada uno con su propio comportamiento. La tabla Supabase determina el tier en cada mensaje.
+
+| Tier | Tabla Supabase | Servicio | Comportamiento del bot |
+|---|---|---|---|
+| `asesoria` | `advisory_payments` | Asesoría IA $4.990 | Ayuda a decidir qué auto comprar. Puede y debe recomendar el $19.990 como siguiente paso natural una vez que el cliente tiene claro el modelo. |
+| `oferta` | `leads` (status=`pagado`) | Oferta Exclusiva $19.990 | Esta persona ya decidió qué auto quiere y espera precio de la red de vendedores. El bot resuelve dudas técnicas del modelo elegido. ❌ No menciona $4.990 (ya pasó esa etapa) ni $19.990 (ya lo tiene). |
+| `vendedor` | `leads_vendors` | Plataforma vendedores | Canal incorrecto. Responde con mensaje de redirección a vendedores@electrificarte.com. ❌ Ninguna oferta de compra. |
+| `null` | — | Sin suscripción | Muestra mensaje invitando a contratar la asesoría. |
+
+**Prioridad de resolución**: `vendedor` > `oferta` > `asesoria` (si alguien tiene ambas, prevalece la etapa más avanzada).
+
+**Contexto persistente**: el historial de conversación se guarda en Redis (TTL 7 días). Esto evita la pérdida de contexto tras ~1h de inactividad en la API de Kapso.
+
+**Webhook Kapso**: apunta a `/api/whatsapp/kapso`. Variables necesarias en Vercel: `KAPSO_WEBHOOK_SECRET`, `SUPABASE_OFERTA_TABLE=leads`, `SUPABASE_VENDOR_TABLE=leads_vendors`, `SUPABASE_SUBSCRIPTION_TABLE=advisory_payments`.
+
 ## Pendientes conocidos
 - WhatsApp hardcodeado como `+56912345678` en `components/layout/Navbar.tsx` (líneas ~215 y ~339) — reemplazar con número real
 - `N8N_CONTACT_URL` en Vercel necesita URL de producción (sin `-test`)
