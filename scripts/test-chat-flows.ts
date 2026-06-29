@@ -2,8 +2,13 @@
  * 30 flujos de prueba del asesor WhatsApp.
  * Evalúa la respuesta de /api/whatsapp/advisor con mensajes simulados.
  *
- * Uso:
- *   WHATSAPP_WEBHOOK_SECRET=xxx \
+ * Uso (un solo tier, con un único número real que vas cambiando de estado
+ * en Supabase entre corridas):
+ *   WHATSAPP_WEBHOOK_SECRET=xxx TEST_PHONE=569XXXXXXXX \
+ *   npx tsx --env-file=.env.local scripts/test-chat-flows.ts asesoria
+ *
+ * Uso (los 30 flujos, uno por tier con números distintos):
+ *   WHATSAPP_WEBHOOK_SECRET=xxx TEST_PHONE_ASESORIA=569XXXXXXXX ... \
  *   npx tsx --env-file=.env.local scripts/test-chat-flows.ts
  *
  * Métricas evaluadas por cada flujo:
@@ -42,15 +47,23 @@ interface TestFlow {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-// Fake phone numbers per tier (these won't actually be in Supabase in CI,
-// so we use a mock mode: if MOCK_TIER is set, the route skips Supabase lookup).
-// In a real run against staging/prod, replace these with real test numbers.
+// Fake phone numbers por defecto — no existen en Supabase, así que el gating
+// real los deja en tier null salvo que apuntes TEST_PHONE_* (o TEST_PHONE) a
+// números con filas reales.
+const SINGLE_PHONE = process.env.TEST_PHONE;
 const PHONES: Record<string, string> = {
-  asesoria: process.env.TEST_PHONE_ASESORIA ?? "56900000001",
-  oferta:   process.env.TEST_PHONE_OFERTA   ?? "56900000002",
-  vendedor: process.env.TEST_PHONE_VENDEDOR ?? "56900000003",
-  none:     process.env.TEST_PHONE_NONE     ?? "56900000004",
+  asesoria: SINGLE_PHONE ?? process.env.TEST_PHONE_ASESORIA ?? "56900000001",
+  oferta:   SINGLE_PHONE ?? process.env.TEST_PHONE_OFERTA   ?? "56900000002",
+  vendedor: SINGLE_PHONE ?? process.env.TEST_PHONE_VENDEDOR ?? "56900000003",
+  none:     SINGLE_PHONE ?? process.env.TEST_PHONE_NONE     ?? "56900000004",
 };
+
+// Tier opcional como argumento de línea de comandos: corre solo esos flujos.
+const requestedTier = process.argv[2];
+if (requestedTier && !["asesoria", "oferta", "vendedor", "none"].includes(requestedTier)) {
+  console.error(`❌ Tier inválido "${requestedTier}". Usa: asesoria | oferta | vendedor | none`);
+  process.exit(1);
+}
 
 async function callAdvisor(
   messages: ChatMessage[],
@@ -368,19 +381,25 @@ async function runFlow(flow: TestFlow) {
 }
 
 async function main() {
-  console.log(`\n🔌 Electrificarte — Test de flujos de chat (${FLOWS.length} flujos)`);
+  const flows = requestedTier ? FLOWS.filter((f) => f.tier === requestedTier) : FLOWS;
+
+  console.log(`\n🔌 Electrificarte — Test de flujos de chat (${flows.length} flujos)`);
   console.log(`📡 Base URL: ${BASE_URL}\n`);
+  if (requestedTier) {
+    console.log(`Corriendo solo el tier "${requestedTier}" — asegúrate de que TEST_PHONE`);
+    console.log(`ya esté en ese estado en Supabase.\n`);
+  }
 
   const CONCURRENCY = 3;
   const results: Awaited<ReturnType<typeof runFlow>>[] = [];
 
   // Run in batches to avoid overloading the API
-  for (let i = 0; i < FLOWS.length; i += CONCURRENCY) {
-    const batch = FLOWS.slice(i, i + CONCURRENCY);
+  for (let i = 0; i < flows.length; i += CONCURRENCY) {
+    const batch = flows.slice(i, i + CONCURRENCY);
     const batchResults = await Promise.all(batch.map(runFlow));
     results.push(...batchResults);
     // Small delay between batches
-    if (i + CONCURRENCY < FLOWS.length) await new Promise((r) => setTimeout(r, 500));
+    if (i + CONCURRENCY < flows.length) await new Promise((r) => setTimeout(r, 500));
   }
 
   // Print results
@@ -405,7 +424,7 @@ async function main() {
   }
 
   console.log("\n─────────────────────────────────────────────");
-  console.log(`Total: ${FLOWS.length} flujos | ✅ ${totalPassed} OK | ❌ ${totalFailed} con fallos`);
+  console.log(`Total: ${flows.length} flujos | ✅ ${totalPassed} OK | ❌ ${totalFailed} con fallos`);
 
   if (totalFailed > 0) {
     console.log("\n⚠️  Hay flujos con fallos. Revisa los items marcados con ❌.");
