@@ -21,7 +21,7 @@ const DEFAULT_FAQS: FAQItem[] = [
   { icon: "groups",        question: "¿Cómo logran esos descuentos?",                    answer: "Trabajamos con una amplia red de vendedores oficiales y distribuidores en Chile. Al agrupar múltiples solicitudes de compra, podemos negociar descuentos por volumen, acceder a bonos exclusivos y encontrar ofertas de inventario que no están disponibles al público general." },
   { icon: "payments",      question: "¿Tiene algún costo para mí?",                      answer: "Solo pagas una tarifa única de $19.990 para activar el servicio. No hay costos ocultos, suscripciones ni comisiones adicionales. Si no logramos un descuento significativo, te devolvemos el dinero." },
   { icon: "directions_car",question: "¿Tengo que comprar sin ver el auto?",              answer: "Para nada. Nosotros te conseguimos la mejor oferta y te conectamos con el vendedor oficial que la ofrece. Puedes visitarlo, hacer test drive y revisar el vehículo antes de tomar cualquier decisión. La oferta final siempre es tuya para aceptar o rechazar." },
-  { icon: "shield",        question: "¿Qué pasa si no consiguen un buen precio?",        answer: "PENDIENTE — respuesta a cargo del equipo Electrificarte." },
+  { icon: "shield",        question: "¿Qué pasa si no consiguen un buen precio?",        answer: "Si no logramos una oferta que supere lo que encontrarías solo, te devolvemos el 100% del costo del servicio. Sin preguntas, sin burocracia. Nuestra garantía no es solo una promesa de marketing: es la razón por la que más de 500 personas han confiado en nosotros. Si no ganamos juntos, no cobramos." },
 ];
 
 export function FAQ({ title = "Preguntas frecuentes", faqs }: FAQProps) {
