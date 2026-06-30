@@ -15,12 +15,15 @@ const PHONE_COLUMN = process.env.SUPABASE_PHONE_COLUMN ?? "phone";
 // ─── Tabla de ofertador $19.990 ───────────────────────────────────────────────
 // n8n escribe aquí cuando Reveniu confirma el pago. Status "pagado" = activo.
 // "pendiente" queda excluido por isRowActive (payment not yet confirmed).
+// La columna del teléfono puede diferir entre tablas (ej: "telefono" vs "phone").
 const OFERTA_TABLE = process.env.SUPABASE_OFERTA_TABLE ?? "leads";
+const OFERTA_PHONE_COLUMN = process.env.SUPABASE_OFERTA_PHONE_COLUMN ?? "telefono";
 
 // ─── Tabla de vendedores ──────────────────────────────────────────────────────
 // Registros de vendedores de la plataforma de vendedores (web separada).
 // Cualquier número activo en esta tabla es bloqueado del bot de compradores.
 const VENDOR_TABLE = process.env.SUPABASE_VENDOR_TABLE ?? "leads_vendors";
+const VENDOR_PHONE_COLUMN = process.env.SUPABASE_VENDOR_PHONE_COLUMN ?? "telefono";
 
 // ─── Cliente Supabase (singleton, lazy) ───────────────────────────────────────
 
@@ -179,7 +182,7 @@ export async function getSubscriptionTier(rawPhone: string): Promise<Subscriptio
   return tier;
 }
 
-async function checkTable(table: string, phone: string): Promise<boolean> {
+async function checkTable(table: string, phone: string, phoneCol = PHONE_COLUMN): Promise<boolean> {
   if (!table) return false;
   const supabase = getSupabase();
   if (!supabase) return false;
@@ -187,7 +190,7 @@ async function checkTable(table: string, phone: string): Promise<boolean> {
     const { data } = await supabase
       .from(table)
       .select("*")
-      .in(PHONE_COLUMN, phoneCandidates(phone))
+      .in(phoneCol, phoneCandidates(phone))
       .limit(1);
     const row = data?.[0];
     return row ? isRowActive(row) : false;
@@ -200,8 +203,8 @@ async function resolveTier(phone: string): Promise<SubscriptionTier> {
   // Checks run in priority order. Vendor check first so a registered vendor
   // never accidentally triggers the buyer advisor.
   const [isVendor, isOferta, isAsesoria] = await Promise.all([
-    checkTable(VENDOR_TABLE, phone),
-    checkTable(OFERTA_TABLE, phone),
+    checkTable(VENDOR_TABLE, phone, VENDOR_PHONE_COLUMN),
+    checkTable(OFERTA_TABLE, phone, OFERTA_PHONE_COLUMN),
     querySubscription(phone), // existing advisory_payments check
   ]);
 
