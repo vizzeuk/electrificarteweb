@@ -53,7 +53,6 @@ export default defineConfig({
             // ─── Taxonomías ─────────────────────────────────────────────────
             S.documentTypeListItem("vehicleType").title("📂 Tipos de Vehículo"),
             S.documentTypeListItem("electricType").title("🔋 Tipos Eléctricos"),
-            S.documentTypeListItem("category").title("🏷️ Categorías (legado)"),
           ]),
     }),
   ],
