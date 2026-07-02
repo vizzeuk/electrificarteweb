@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useLayoutEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { m, AnimatePresence } from "framer-motion";
@@ -50,7 +50,9 @@ export function Navbar({ brands = [], vehicleTypes = [], electricTypes = [] }: N
   const toggleMobileSection = (id: DropdownId) =>
     setMobileSection((prev) => (prev === id ? null : id));
 
-  useEffect(() => {
+  // useLayoutEffect fires before the browser paints — prevents the flash where
+  // the navbar briefly shows white after scroll restoration on page reload.
+  useLayoutEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
     setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", onScroll, { passive: true });
