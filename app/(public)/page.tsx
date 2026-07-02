@@ -1,6 +1,6 @@
 import React from "react";
 import { client } from "@/lib/sanity/client";
-import { homePageQuery } from "@/lib/queries/pages";
+import { homePageQuery, hotDealUrgencyLabelQuery } from "@/lib/queries/pages";
 import { latestBlogPostsQuery } from "@/lib/queries/blog";
 import {
   allBrandsStripQuery,
@@ -29,7 +29,7 @@ import { HomeDeferred }     from "@/components/layout/HomeDeferred";
 export const revalidate = 60;
 
 export default async function HomePage() {
-  const [page, blogPosts, brands, collections, hotDeals, vehicleTypes, newCars, featuredCars] =
+  const [page, blogPosts, brands, collections, hotDeals, vehicleTypes, newCars, featuredCars, siteSettings] =
     await Promise.all([
       client.fetch(homePageQuery, {}, { next: { tags: ["homePage"] } }).catch(() => null),
       client.fetch(latestBlogPostsQuery, { count: 3 }, { next: { tags: ["blogPost"] } }).catch(() => []),
@@ -39,7 +39,10 @@ export default async function HomePage() {
       client.fetch(electricTypesForHomeQuery, {}, { next: { tags: ["electricType"] } }).catch(() => []),
       client.fetch(newCarsForHomeQuery, {}, { next: { tags: ["car"] } }).catch(() => []),
       client.fetch(featuredCarsForHomeQuery, {}, { next: { tags: ["car"] } }).catch(() => []),
+      client.fetch(hotDealUrgencyLabelQuery, {}, { next: { tags: ["siteSettings"] } }).catch(() => null),
     ]);
+
+  const hotDealUrgencyLabel: string | null = siteSettings?.hotDealUrgencyLabel ?? null;
 
   // Manual Sanity curation takes priority; dynamic fallback fills remaining slots
   const mergeAndDedup = (manual: any[], dynamic: any[], limit: number) => {
@@ -129,7 +132,10 @@ export default async function HomePage() {
           intrinsic-size hint so the scrollbar is honest. */}
       <LatestLaunches title={page?.latestLaunchesTitle} cars={latestCars} />
       <VehicleTypeGrid types={vehicleTypes ?? []} />
-      <HotDeal cars={hotDeals?.length ? hotDeals : (page?.hotDealCar ? [page.hotDealCar] : null)} />
+      <HotDeal
+        cars={hotDeals?.length ? hotDeals : (page?.hotDealCar ? [page.hotDealCar] : null)}
+        urgencyLabel={hotDealUrgencyLabel}
+      />
       <Opportunities
         title={page?.opportunitiesTitle ?? "Destacados Electrificarte"}
         cars={opportunityCars}
@@ -150,6 +156,7 @@ export default async function HomePage() {
         blogPosts={blogPosts ?? []}
         faq={{ title: page?.faqTitle, faqs: page?.faqs }}
         hotDealCar={page?.hotDealCar ?? null}
+        hotDealUrgencyLabel={hotDealUrgencyLabel}
       />
     </>
   );

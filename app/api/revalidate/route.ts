@@ -48,6 +48,14 @@ export async function POST(req: NextRequest) {
     revalidatePath("/marcas");
   }
 
+  if (type === "siteSettings") {
+    revalidateTag("siteSettings", "default");
+    revalidatePath("/");
+    revalidatePath("/marcas/[slug]", "page");
+    revalidatePath("/tipo/[slug]", "page");
+    revalidatePath("/electrico/[slug]", "page");
+  }
+
   // Generic fallback: if called without a type, revalidate everything
   if (!type) {
     revalidateTag("blogPost", "default");
@@ -55,6 +63,7 @@ export async function POST(req: NextRequest) {
     revalidateTag("car", "default");
     revalidateTag("brand", "default");
     revalidateTag("collection", "default");
+    revalidateTag("siteSettings", "default");
     revalidatePath("/");
     revalidatePath("/blog");
   }

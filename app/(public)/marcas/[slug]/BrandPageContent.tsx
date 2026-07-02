@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { m } from "framer-motion";
 import Link from "next/link";
-import { formatCLP } from "@/lib/utils";
+import { formatCLP, DEFAULT_HOT_DEAL_LABEL } from "@/lib/utils";
 import { CatalogFilters, type ActiveFilters } from "@/components/ui/CatalogFilters";
 import { ElectricTypeBadge } from "@/components/car/ElectricTypeBadge";
 
@@ -86,11 +86,13 @@ const ELECTRIC_LABELS: Record<string, string> = {
 interface BrandPageContentProps {
   slug: string;
   brand: BrandData;
+  hotDealUrgencyLabel?: string | null;
 }
 
 const PAGE_SIZE = 9;
 
-export default function BrandPageContent({ slug, brand }: BrandPageContentProps) {
+export default function BrandPageContent({ slug, brand, hotDealUrgencyLabel }: BrandPageContentProps) {
+  const urgencyLabel = hotDealUrgencyLabel ?? DEFAULT_HOT_DEAL_LABEL;
   const [activeFilters, setActiveFilters] = useState<ActiveFilters>({ tipo: "", electric: "" });
   const [sort, setSort] = useState("default");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
@@ -365,7 +367,7 @@ export default function BrandPageContent({ slug, brand }: BrandPageContentProps)
                         <div>
                           <div className="flex items-center gap-2 mb-1.5">
                             <span className="bg-amber text-black text-[10px] font-black uppercase tracking-wide px-3 py-1 rounded-full">HOT DEAL</span>
-                            <span className="text-white/40 text-xs">Oferta limitada</span>
+                            <span className="text-white/40 text-xs">{urgencyLabel}</span>
                           </div>
                           <p className="text-white font-headline font-black text-base uppercase leading-tight">{brand.name} {deal.carName}</p>
                           <p className="text-white/50 text-xs mt-0.5">Bonos de hasta <span className="text-primary font-bold">{formatCLP(bonusAmt)}</span></p>
@@ -400,7 +402,7 @@ export default function BrandPageContent({ slug, brand }: BrandPageContentProps)
                       <div>
                         <div className="flex items-center gap-3 mb-5">
                           <span className="bg-amber text-black text-[10px] font-black uppercase tracking-wide px-3 py-1 rounded-full">HOT DEAL</span>
-                          <span className="text-white/50 text-sm">Oferta limitada</span>
+                          <span className="text-white/50 text-sm">{urgencyLabel}</span>
                         </div>
                         <h2 className="text-3xl md:text-4xl font-headline font-black text-white mb-4 uppercase leading-tight">
                           {brand.name} {deal.carName} con bonos de hasta{" "}

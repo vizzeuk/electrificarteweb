@@ -98,11 +98,21 @@ export const homePageQuery = groq`
   }
 `;
 
+// ─── Hot Deal urgency label ───────────────────────────────────────────────────
+// Etiqueta editable desde Sanity que reemplaza el texto hardcodeado "Oferta
+// limitada" en todas las secciones Hot Deal del sitio. Consulta liviana y
+// separada de siteSettingsQuery para no arrastrar navbarBrands en páginas
+// que solo necesitan este campo.
+export const hotDealUrgencyLabelQuery = groq`
+  *[_type == "siteSettings"][0] { hotDealUrgencyLabel }
+`;
+
 // ─── Site Settings ────────────────────────────────────────────────────────────
 export const siteSettingsQuery = groq`
   *[_type == "siteSettings"][0] {
     siteName,
     siteTagline,
+    hotDealUrgencyLabel,
     contactPhone,
     contactEmail,
     whatsappNumber,

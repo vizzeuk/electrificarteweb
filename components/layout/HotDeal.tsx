@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { Icon } from "@/components/ui/Icon";
-import { formatCLP } from "@/lib/utils";
+import { formatCLP, DEFAULT_HOT_DEAL_LABEL } from "@/lib/utils";
 import { sanityImg } from "@/lib/sanityImage";
 import { useInViewport } from "@/lib/useInViewport";
 
@@ -26,6 +26,7 @@ export interface HotDealCarData {
 interface HotDealProps {
   car?: HotDealCarData | null;
   cars?: HotDealCarData[] | null;
+  urgencyLabel?: string | null;
 }
 
 const FALLBACK: HotDealCarData = {
@@ -41,12 +42,13 @@ const FALLBACK: HotDealCarData = {
 };
 
 /* ─── Mobile card — completamente estático, sin motion, sin fragmentos ─── */
-function HotDealMobile({ c, brandDisplay, modelDisplay, bonusAmt, savingsPct }: {
+function HotDealMobile({ c, brandDisplay, modelDisplay, bonusAmt, savingsPct, urgencyLabel }: {
   c: HotDealCarData;
   brandDisplay: string;
   modelDisplay: string;
   bonusAmt: number;
   savingsPct: number;
+  urgencyLabel: string;
 }) {
   return (
     <div className="px-4 w-full">
@@ -71,7 +73,7 @@ function HotDealMobile({ c, brandDisplay, modelDisplay, bonusAmt, savingsPct }: 
           <div>
             <div className="flex items-center gap-2 mb-1.5">
               <Badge variant="hot">HOT DEAL</Badge>
-              <span className="text-white/40 text-xs">Oferta limitada</span>
+              <span className="text-white/40 text-xs">{urgencyLabel}</span>
             </div>
             <p className="text-white font-headline font-black text-base uppercase leading-tight">
               {brandDisplay} {modelDisplay}
@@ -129,12 +131,13 @@ function HotDealMobile({ c, brandDisplay, modelDisplay, bonusAmt, savingsPct }: 
 }
 
 /* ─── Desktop card — sin whileInView (items off-screen en carrusel nunca disparan IntersectionObserver) ─── */
-function HotDealDesktop({ c, brandDisplay, modelDisplay, bonusAmt, savingsPct }: {
+function HotDealDesktop({ c, brandDisplay, modelDisplay, bonusAmt, savingsPct, urgencyLabel }: {
   c: HotDealCarData;
   brandDisplay: string;
   modelDisplay: string;
   bonusAmt: number;
   savingsPct: number;
+  urgencyLabel: string;
 }) {
   return (
     <div className="max-w-7xl mx-auto px-8 py-4">
@@ -143,7 +146,7 @@ function HotDealDesktop({ c, brandDisplay, modelDisplay, bonusAmt, savingsPct }:
         <div>
           <div className="flex items-center gap-3 mb-5">
             <Badge variant="hot">HOT DEAL</Badge>
-            <span className="text-white/50 text-sm">Oferta limitada</span>
+            <span className="text-white/50 text-sm">{urgencyLabel}</span>
           </div>
           <h2 className="text-3xl xl:text-4xl font-headline font-black text-white mb-5 uppercase leading-tight">
             {brandDisplay} {modelDisplay} con bonos de hasta{" "}
@@ -211,7 +214,7 @@ function HotDealDesktop({ c, brandDisplay, modelDisplay, bonusAmt, savingsPct }:
 }
 
 /* ─── Card wrapper: decide mobile vs desktop ─── */
-function HotDealCard({ c }: { c: HotDealCarData }) {
+function HotDealCard({ c, urgencyLabel }: { c: HotDealCarData; urgencyLabel: string }) {
   const brandDisplay = c.brandName ?? c.brand?.name ?? c.name.split(" ")[0];
   const modelDisplay = c.brandName
     ? c.name
@@ -223,7 +226,7 @@ function HotDealCard({ c }: { c: HotDealCarData }) {
   const savingsPct = Math.round((savings / c.basePrice) * 100);
   const bonusAmt   = bonus > 0 ? bonus : savings;
 
-  const shared = { c, brandDisplay, modelDisplay, bonusAmt, savingsPct };
+  const shared = { c, brandDisplay, modelDisplay, bonusAmt, savingsPct, urgencyLabel };
 
   return (
     <>
@@ -234,8 +237,9 @@ function HotDealCard({ c }: { c: HotDealCarData }) {
 }
 
 /* ─── Exported section with carousel ─── */
-export function HotDeal({ car, cars }: HotDealProps) {
+export function HotDeal({ car, cars, urgencyLabel }: HotDealProps) {
   const list = cars?.length ? cars : car ? [car] : [FALLBACK];
+  const label = urgencyLabel ?? DEFAULT_HOT_DEAL_LABEL;
 
   const sectionRef = useRef<HTMLElement>(null);
   const trackRef   = useRef<HTMLDivElement>(null);
@@ -334,7 +338,7 @@ export function HotDeal({ car, cars }: HotDealProps) {
       >
         {list.map((c) => (
           <div key={c.slug} style={{ flex: "0 0 100%", scrollSnapAlign: "start" }}>
-            <HotDealCard c={c} />
+            <HotDealCard c={c} urgencyLabel={label} />
           </div>
         ))}
       </div>

@@ -10,6 +10,10 @@ export function normalizeElectricLabel(tag: string | null | undefined, label: st
   return label ?? null;
 }
 
+// Etiqueta junto al badge HOT DEAL cuando Sanity aún no tiene el campo
+// hotDealUrgencyLabel configurado. Nunca hardcodear una cantidad exacta acá.
+export const DEFAULT_HOT_DEAL_LABEL = "Bonos exclusivos por tiempo limitado";
+
 export function formatCLP(amount: number | null | undefined): string {
   if (amount == null || Number.isNaN(amount)) return "Consultar precio";
   return new Intl.NumberFormat("es-CL", {

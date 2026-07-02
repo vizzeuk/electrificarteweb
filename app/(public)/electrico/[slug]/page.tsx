@@ -9,6 +9,7 @@ import {
   carsByElectricTypeQuery,
   allElectricTypesQuery,
 } from "@/lib/queries/car";
+import { hotDealUrgencyLabelQuery } from "@/lib/queries/pages";
 import ElectricoPageContent, {
   type ElectricoMeta,
   type ElectricoCarData,
@@ -45,10 +46,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function ElectricoPage({ params }: PageProps) {
   const { slug } = await params;
 
-  const [sanityMeta, sanityCars, allTypes] = await Promise.all([
+  const [sanityMeta, sanityCars, allTypes, siteSettings] = await Promise.all([
     client.fetch(electricTypeBySlugQuery, { slug }).catch(() => null),
     client.fetch(carsByElectricTypeQuery, { electricSlug: slug }).catch(() => []),
     client.fetch(allElectricTypesQuery, {}).catch(() => []),
+    client.fetch(hotDealUrgencyLabelQuery, {}, { next: { tags: ["siteSettings"] } }).catch(() => null),
   ]);
 
   if (!sanityMeta) notFound();
@@ -121,6 +123,7 @@ export default async function ElectricoPage({ params }: PageProps) {
       adCar={adCar}
       adText={adText}
       plpBanners={plpBanners}
+      hotDealUrgencyLabel={siteSettings?.hotDealUrgencyLabel ?? null}
     />
   );
 }

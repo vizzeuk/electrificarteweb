@@ -17,6 +17,7 @@ interface HomeDeferredProps {
   blogPosts:       unknown[];
   faq:             { title?: string; faqs?: unknown[] };
   hotDealCar:      unknown;
+  hotDealUrgencyLabel?: string | null;
 }
 
 export function HomeDeferred(p: HomeDeferredProps) {
@@ -37,7 +38,7 @@ export function HomeDeferred(p: HomeDeferredProps) {
       <BlogPreview posts={p.blogPosts as any} />
       <FAQ title={p.faq.title} faqs={p.faq.faqs as any} />
       <StickyCTA />
-      <PromoPopup car={p.hotDealCar as any} />
+      <PromoPopup car={p.hotDealCar as any} urgencyLabel={p.hotDealUrgencyLabel} />
       {/* eslint-enable @typescript-eslint/no-explicit-any */}
     </>
   );

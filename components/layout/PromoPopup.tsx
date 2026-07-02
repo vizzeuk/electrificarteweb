@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, m } from "framer-motion";
-import { formatCLP } from "@/lib/utils";
+import { formatCLP, DEFAULT_HOT_DEAL_LABEL } from "@/lib/utils";
 import type { HotDealCarData } from "@/components/layout/HotDeal";
 
 const STORAGE_KEY = "electrificarte_promo_seen";
@@ -22,12 +22,14 @@ const FALLBACK: HotDealCarData = {
 
 interface PromoPopupProps {
   car?: HotDealCarData | null;
+  urgencyLabel?: string | null;
 }
 
-export function PromoPopup({ car }: PromoPopupProps) {
+export function PromoPopup({ car, urgencyLabel }: PromoPopupProps) {
   const [open, setOpen] = useState(false);
 
-  const c         = car ?? FALLBACK;
+  const c     = car ?? FALLBACK;
+  const label = urgencyLabel ?? DEFAULT_HOT_DEAL_LABEL;
   const brandName = c.brand?.name ?? c.name.split(" ")[0];
   const modelName = c.brand ? c.name : c.name.split(" ").slice(1).join(" ");
   const savings   = c.basePrice - c.discountPrice;
@@ -127,7 +129,7 @@ export function PromoPopup({ car }: PromoPopupProps) {
                     <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-black" />
                     HOT DEAL
                   </div>
-                  <span className="text-white/40 text-xs">Oferta limitada</span>
+                  <span className="text-white/40 text-xs">{label}</span>
                 </div>
               )}
 

@@ -22,6 +22,17 @@ export const siteSettings = defineType({
       group: "general",
       description: 'Ej: "El marketplace #1 de autos eléctricos en Chile"',
     }),
+    defineField({
+      name: "hotDealUrgencyLabel",
+      title: "Etiqueta de urgencia junto al badge HOT DEAL",
+      type: "string",
+      group: "general",
+      initialValue: "Bonos exclusivos por tiempo limitado",
+      description:
+        'Texto que acompaña el badge "HOT DEAL" en todo el sitio (home, marcas, tipos, popup). ' +
+        "Evita cantidades exactas comprometedoras (ej. \"solo quedan 3 unidades\") que después no se puedan cumplir. " +
+        'Usa frases genéricas: "Bonos exclusivos por tiempo limitado", "Oferta por tiempo limitado", "Cupos limitados", etc.',
+    }),
 
     // ─── Contact ────────────────────────────────────────────────────────────
     defineField({

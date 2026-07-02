@@ -8,6 +8,7 @@ import {
   carsByVehicleTypeQuery,
   allVehicleTypesQuery,
 } from "@/lib/queries/car";
+import { hotDealUrgencyLabelQuery } from "@/lib/queries/pages";
 import TipoPageContent, { type TipoCarData, type TipoMeta, type OtherType } from "./TipoPageContent";
 
 export const revalidate = 60;
@@ -40,10 +41,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function TipoPage({ params }: PageProps) {
   const { slug } = await params;
 
-  const [sanityMeta, sanityCars, allTypes] = await Promise.all([
+  const [sanityMeta, sanityCars, allTypes, siteSettings] = await Promise.all([
     client.fetch(vehicleTypeBySlugQuery, { slug }).catch(() => null),
     client.fetch(carsByVehicleTypeQuery, { typeSlug: slug }).catch(() => []),
     client.fetch(allVehicleTypesQuery, {}).catch(() => []),
+    client.fetch(hotDealUrgencyLabelQuery, {}, { next: { tags: ["siteSettings"] } }).catch(() => null),
   ]);
 
   if (!sanityMeta) notFound();
@@ -110,6 +112,7 @@ export default async function TipoPage({ params }: PageProps) {
       adCar={adCar}
       adText={adText}
       plpBanners={plpBanners}
+      hotDealUrgencyLabel={siteSettings?.hotDealUrgencyLabel ?? null}
     />
   );
 }

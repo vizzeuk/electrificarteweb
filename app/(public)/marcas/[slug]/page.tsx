@@ -5,6 +5,7 @@ import Link from "next/link";
 import { client } from "@/lib/sanity/client";
 import { urlFor } from "@/lib/sanity/image";
 import { brandBySlugQuery, carsByBrandQuery } from "@/lib/queries/car";
+import { hotDealUrgencyLabelQuery } from "@/lib/queries/pages";
 import BrandPageContent from "./BrandPageContent";
 
 export const revalidate = 60;
@@ -37,9 +38,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function BrandPage({ params }: PageProps) {
   const { slug } = await params;
 
-  const [sanityBrand, sanityCars] = await Promise.all([
+  const [sanityBrand, sanityCars, siteSettings] = await Promise.all([
     client.fetch(brandBySlugQuery, { slug }).catch(() => null),
     client.fetch(carsByBrandQuery, { brandSlug: slug }).catch(() => []),
+    client.fetch(hotDealUrgencyLabelQuery, {}, { next: { tags: ["siteSettings"] } }).catch(() => null),
   ]);
 
   if (!sanityBrand) notFound();
@@ -127,5 +129,11 @@ export default async function BrandPage({ params }: PageProps) {
     plpBanners:       sanityBrand.plpBanners ?? [],
   };
 
-  return <BrandPageContent slug={slug} brand={brand} />;
+  return (
+    <BrandPageContent
+      slug={slug}
+      brand={brand}
+      hotDealUrgencyLabel={siteSettings?.hotDealUrgencyLabel ?? null}
+    />
+  );
 }

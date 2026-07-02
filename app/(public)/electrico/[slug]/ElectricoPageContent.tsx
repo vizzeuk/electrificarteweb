@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { m, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { formatCLP, calculateDiscount, carStats } from "@/lib/utils";
+import { formatCLP, calculateDiscount, carStats, DEFAULT_HOT_DEAL_LABEL } from "@/lib/utils";
 import { CatalogFilters, type ActiveFilters } from "@/components/ui/CatalogFilters";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -75,13 +75,15 @@ interface ElectricoPageContentProps {
   adCar?: AdCarData | null;
   adText?: string;
   plpBanners?: PlpBannerData[];
+  hotDealUrgencyLabel?: string | null;
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
 const PAGE_SIZE = 9;
 
-export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adCar, adText, plpBanners = [] }: ElectricoPageContentProps) {
+export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adCar, adText, plpBanners = [], hotDealUrgencyLabel }: ElectricoPageContentProps) {
+  const urgencyLabel = hotDealUrgencyLabel ?? DEFAULT_HOT_DEAL_LABEL;
   const [activeFilters, setActiveFilters] = useState<ActiveFilters>({ brand: "", tipo: "" });
   const [sort, setSort] = useState("default");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
@@ -429,7 +431,7 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
                         <div>
                           <div className="flex items-center gap-2 mb-1.5">
                             <span className="bg-amber text-black text-[10px] font-black uppercase tracking-wide px-3 py-1 rounded-full">HOT DEAL</span>
-                            <span className="text-white/40 text-xs">Oferta limitada</span>
+                            <span className="text-white/40 text-xs">{urgencyLabel}</span>
                           </div>
                           <p className="text-white font-headline font-black text-base uppercase leading-tight">{car.brand} {car.name}</p>
                           <p className="text-white/50 text-xs mt-0.5">Al mejor precio de Chile</p>
@@ -464,7 +466,7 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
                       <div>
                         <div className="flex items-center gap-3 mb-5">
                           <span className="bg-amber text-black text-[10px] font-black uppercase tracking-wide px-3 py-1 rounded-full">HOT DEAL</span>
-                          <span className="text-white/50 text-sm">Oferta limitada</span>
+                          <span className="text-white/50 text-sm">{urgencyLabel}</span>
                         </div>
                         <h2 className="text-3xl md:text-4xl font-headline font-black text-white mb-4 uppercase leading-tight">
                           {car.brand} {car.name} al mejor precio de Chile
