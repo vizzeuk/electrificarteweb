@@ -23,6 +23,12 @@ const sanity = createClient({
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
+// ─── Productos ────────────────────────────────────────────────────────────────
+// Asesoría personalizada ($4.990, por WhatsApp) → link de pago Reveniu.
+// Negociación del mejor precio ($19.990) → formulario /solicitar.
+const ASESORIA_URL =
+  "https://app.reveniu.com/checkout-custom-link/nd1Zh0zfeNfi1b1yJgH8XeI94hJqycjB";
+
 // ─── Brand cache (5-min TTL) ──────────────────────────────────────────────────
 
 interface Brand { name: string; slug: string }
@@ -182,7 +188,7 @@ async function handleRecommendation(body: {
 
 [MENU]
 1. Ver catálogo completo → /marcas
-2. Quiero cotizar uno de estos → /solicitar
+2. Negociar el mejor precio de uno → /solicitar
 3. Volver al inicio
 [/MENU]`;
 }
@@ -287,12 +293,17 @@ ${carsToText(longRangeCars)}
 
 ${matchedBrand ? `MODELOS ${matchedBrand.name.toUpperCase()}:\n${brandCars.length > 0 ? carsToText(brandCars) : "Sin modelos disponibles"}` : ""}
 
+DOS PRODUCTOS (no los confundas):
+1. **Asesoría personalizada** — $4.990, atención directa por WhatsApp con un experto que ayuda a DECIDIR qué auto comprar. Enlace de pago: ${ASESORIA_URL}. Úsalo cuando la persona pide ayuda para decidir, orientación, o quiere hablar con un experto y aún no tiene claro el modelo.
+2. **Negociación del mejor precio** — $19.990, nuestro equipo negocia con concesionarios el mejor precio de un modelo ya elegido. Enlace: /solicitar. Úsalo SOLO cuando la persona ya sabe qué modelo quiere y busca cotizar/conseguir el mejor precio.
+- NUNCA envíes la asesoría personalizada a /solicitar, ni la negociación de precio al enlace de Reveniu.
+
 REGLAS:
 - Responde siempre en español chileno, tono cercano
 - Máximo 3-4 párrafos, sé directo
 - Usa markdown: **negrita**, listas con guiones
 - Incluye links clickeables: [Nombre del auto](/auto/slug) o [Ver catálogo](/marcas)
-- Rutas útiles: /marcas · /solicitar · /contacto · /auto/[slug]
+- Rutas útiles: /marcas (catálogo) · /solicitar (negociar precio de un modelo elegido) · /contacto · /auto/[slug]. Para la asesoría personalizada por WhatsApp usa el enlace de Reveniu de arriba.
 - Al final sugiere 2-3 acciones con links
 - NUNCA inventes precios ni especificaciones fuera de los datos aquí indicados
 - Si no tienes info suficiente, di "no tengo esa información en este momento" y sugiere /contacto

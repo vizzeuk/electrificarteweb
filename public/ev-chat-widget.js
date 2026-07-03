@@ -481,7 +481,8 @@ Ahorro anual estimado: $${o(l)} CLP
 [/MENU]`)}}_isContactFlow(e){return e==="4. Quiero contactar al equipo"||e==="4"&&this._findStep<0&&this._savingsState===null||e.includes("Quiero contactar al equipo")}_handleContactFlow(){c(this._messagesEl,"user","4. Quiero contactar al equipo",()=>{}),this._showBotMessage(`Te conectamos con nuestro equipo.
 
 [MENU]
-1. Solicitar oferta personalizada → /solicitar
-2. Enviar mensaje al equipo → /contacto
-3. Empezar de nuevo
+1. Negociar el mejor precio de un modelo → /solicitar
+2. Asesoría personalizada por WhatsApp → ${UPSELL_URL}
+3. Enviar mensaje al equipo → /contacto
+4. Empezar de nuevo
 [/MENU]`)}}customElements.define("ev-chat-widget",E)})();
