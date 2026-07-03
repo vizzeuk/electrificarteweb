@@ -275,7 +275,9 @@ const FLOWS: TestFlow[] = [
     id: 21, name: "Oferta — saludo inicial", tier: "oferta",
     messages: [{ role: "user", content: "Hola, acabo de pagar, ¿qué pasa ahora?" }],
     expectSubscribed: true,
-    shouldNotContain: ["$19.990", "pagar", "servicio de oferta"],
+    // No debe RE-vender el servicio (pedir pagar/contratar de nuevo). Mencionar
+    // "ya contrataste el Servicio de Oferta" como confirmación es válido.
+    shouldNotContain: ["$19.990", "contratar", "vuelve a pagar"],
   },
   {
     id: 22, name: "Oferta — pregunta técnica sobre su modelo", tier: "oferta",
