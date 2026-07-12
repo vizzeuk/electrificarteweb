@@ -60,7 +60,7 @@ export function VehicleTypeGrid({ types }: ElectricTypeGridProps) {
         <div className="flex items-end justify-between gap-4 mb-8">
           <div>
             <p className="text-[11px] uppercase tracking-widest text-primary-deep font-bold mb-2">
-              Tecnologías disponibles
+              Electrificados disponibles
             </p>
             <h2
               id="electric-types-title"

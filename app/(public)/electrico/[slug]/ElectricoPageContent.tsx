@@ -5,6 +5,7 @@ import { m, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { formatCLP, calculateDiscount, carStats, DEFAULT_HOT_DEAL_LABEL } from "@/lib/utils";
 import { CatalogFilters, type ActiveFilters } from "@/components/ui/CatalogFilters";
+import { ElectricTypeBadge } from "@/components/car/ElectricTypeBadge";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -605,12 +606,7 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
                   >
                     <div className="aspect-[16/9] bg-gradient-to-br from-gray-50 to-gray-100 relative flex flex-col items-center justify-center overflow-hidden">
                       {pct > 0 && <span className="absolute top-3 right-3 bg-black text-white text-[10px] font-black px-2 py-0.5 rounded-full">-{pct}%</span>}
-                      <span
-                        className="absolute top-3 left-3 text-[9px] font-black px-2 py-0.5 rounded-full text-white"
-                        style={{ backgroundColor: meta.color === "#00E5E5" ? "#006A61" : meta.color }}
-                      >
-                        {meta.tag}
-                      </span>
+                      <ElectricTypeBadge tag={car.electricTypeTag} className="absolute bottom-3 left-3 z-10 shadow-sm" />
                       {car.imageUrl ? (
                         <img src={car.imageUrl} alt={`${car.brand} ${car.name}`} className="object-cover w-full h-full" loading="lazy" decoding="async" />
                       ) : (
@@ -658,7 +654,7 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
                           className="relative z-[1] px-3 border border-gray-200 hover:border-primary/40 text-text-muted hover:text-primary-deep rounded-xl flex items-center transition-colors"
                           title="Comparar"
                         >
-                          <span className="material-symbols-outlined text-[18px]">compare</span>
+                          <span className="material-symbols-outlined text-[18px]">compare_arrows</span>
                         </Link>
                       </div>
                     </div>

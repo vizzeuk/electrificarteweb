@@ -396,7 +396,7 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
                   href={`/comparador?add=${car.slug}`}
                   className="inline-flex items-center justify-center gap-2 border border-white/20 hover:border-white/40 text-white font-medium px-5 py-4 rounded-xl transition-colors"
                 >
-                  <span className="material-symbols-outlined text-[18px]">compare</span>
+                  <span className="material-symbols-outlined text-[18px]">compare_arrows</span>
                   Comparar
                 </Link>
               </div>
@@ -469,7 +469,7 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
                 href={`/comparador?add=${car.slug}`}
                 className="inline-flex items-center justify-center gap-2 border border-white/20 hover:border-white/40 text-white font-medium px-5 py-4 rounded-xl transition-colors"
               >
-                <span className="material-symbols-outlined text-[18px]">compare</span>
+                <span className="material-symbols-outlined text-[18px]">compare_arrows</span>
                 Comparar
               </Link>
             </div>

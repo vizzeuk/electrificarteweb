@@ -63,7 +63,7 @@ export function ComparePromo({
           href={`/comparador?add=${carSlug}`}
           className="flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold py-3 rounded-xl text-sm transition-colors"
         >
-          <span className="material-symbols-outlined text-[18px]">compare</span>
+          <span className="material-symbols-outlined text-[18px]">compare_arrows</span>
           Comparar el {carName}
         </Link>
       </div>

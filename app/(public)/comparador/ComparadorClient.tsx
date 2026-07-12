@@ -222,7 +222,7 @@ export default function ComparadorClient({ allCars, initialId }: ComparadorClien
             {/* Left */}
             <div>
               <div className="inline-flex items-center gap-1.5 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full mb-5">
-                <span className="material-symbols-outlined text-primary text-[14px]">compare</span>
+                <span className="material-symbols-outlined text-primary text-[14px]">compare_arrows</span>
                 <span className="text-white/60 text-xs font-semibold">Herramienta gratuita</span>
               </div>
               <h1 className="text-5xl md:text-6xl font-headline font-black text-white tracking-tighter leading-[0.92] mb-4">
@@ -330,7 +330,7 @@ export default function ComparadorClient({ allCars, initialId }: ComparadorClien
             </m.div>
           ) : (
             <div className="text-center py-10 text-text-ghost px-4 md:px-8">
-              <span className="material-symbols-outlined text-[40px] mb-2 block text-gray-200">compare</span>
+              <span className="material-symbols-outlined text-[40px] mb-2 block text-gray-200">compare_arrows</span>
               <p className="font-medium text-sm">Agrega al menos 2 autos para ver la comparación</p>
             </div>
           )}

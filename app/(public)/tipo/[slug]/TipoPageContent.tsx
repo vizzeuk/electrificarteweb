@@ -504,7 +504,7 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes, adCar, a
             <CatalogFilters
               groups={[
                 ...(brandOptions.length > 1 ? [{ id: "brand", label: "Marca", options: brandOptions }] : []),
-                ...(electricOptions.length > 1 ? [{ id: "electric", label: "Tecnología", options: electricOptions }] : []),
+                ...(electricOptions.length > 1 ? [{ id: "electric", label: "Electrificado", options: electricOptions }] : []),
               ]}
               active={activeFilters}
               onChange={(id, val) => setActiveFilters((p) => ({ ...p, [id]: val }))}
@@ -584,7 +584,7 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes, adCar, a
                           className="relative z-[1] px-3 border border-gray-200 hover:border-primary/40 text-text-muted hover:text-primary-deep rounded-xl flex items-center transition-colors"
                           title="Comparar"
                         >
-                          <span className="material-symbols-outlined text-[18px]">compare</span>
+                          <span className="material-symbols-outlined text-[18px]">compare_arrows</span>
                         </Link>
                       </div>
                     </div>

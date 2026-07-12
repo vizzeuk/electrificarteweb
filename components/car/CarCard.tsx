@@ -170,7 +170,7 @@ export function CarCard({
           title="Comparar"
           className="px-3 border border-gray-200 hover:border-primary/40 text-text-muted hover:text-primary-deep rounded-lg flex items-center transition-colors"
         >
-          <span className="material-symbols-outlined text-[18px]">compare</span>
+          <span className="material-symbols-outlined text-[18px]">compare_arrows</span>
         </Link>
       </div>
     </article>

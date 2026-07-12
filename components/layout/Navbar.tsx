@@ -164,10 +164,10 @@ export function Navbar({ brands = [], vehicleTypes = [], electricTypes = [] }: N
               </div>
             </Dropdown>
 
-            {/* Dropdown – Tipo de Eléctrico */}
+            {/* Dropdown – Tipo de Electrificado */}
             <Dropdown
               id="electric"
-              label="Tipo de Eléctrico"
+              label="Tipo de Electrificado"
               active={activeDropdown === "electric"}
               transparent={transparent}
               onEnter={() => setActiveDropdown("electric")}
@@ -285,9 +285,9 @@ export function Navbar({ brands = [], vehicleTypes = [], electricTypes = [] }: N
                 ))}
               </MobileAccordion>
 
-              {/* Mobile – Tipo de Eléctrico accordion */}
+              {/* Mobile – Tipo de Electrificado accordion */}
               <MobileAccordion
-                label="Tipo de Eléctrico"
+                label="Tipo de Electrificado"
                 open={mobileSection === "electric"}
                 onToggle={() => toggleMobileSection("electric")}
               >
