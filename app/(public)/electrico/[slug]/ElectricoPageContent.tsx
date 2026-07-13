@@ -1,10 +1,12 @@
 "use client";
 
-import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { m, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { formatCLP, calculateDiscount, carStats, DEFAULT_HOT_DEAL_LABEL } from "@/lib/utils";
-import { CatalogFilters, type ActiveFilters } from "@/components/ui/CatalogFilters";
+import { PlpFilters } from "@/components/filters/PlpFilters";
+import { useCarFilters } from "@/hooks/useCarFilters";
+import type { FacetCar } from "@/lib/filters/types";
 import { ElectricTypeBadge } from "@/components/car/ElectricTypeBadge";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -39,9 +41,34 @@ export interface ElectricoCarData {
   electricRangeKm?: number | null;
   fuelConsumption?: number | null;
   rendimientoElectrico?: number | null;
+  traction?: string;
+  seats?: number | null;
+  euroNcap?: number | null;
   isHotDeal: boolean;
   tagline: string;
   imageUrl?: string;
+}
+
+// Adaptador estable raw → FacetCar (contexto: /electrico, oculta "tecnologia").
+function electricoToFacet(c: ElectricoCarData): FacetCar {
+  return {
+    slug: c.slug,
+    brandSlug: c.brandSlug,
+    brandName: c.brand,
+    vehicleTypeSlug: c.tipoSlug,
+    vehicleTypeLabel: c.tipoLabel,
+    electricTypeTag: "",
+    electricTypeLabel: "",
+    price: c.discountPrice ?? c.basePrice,
+    basePrice: c.basePrice,
+    discountPrice: c.discountPrice ?? c.basePrice,
+    range: Math.max(c.range ?? 0, c.maxVersionRange ?? 0),
+    seats: c.seats ?? null,
+    euroNcap: c.euroNcap ?? null,
+    traction: c.traction ?? "",
+    isHotDeal: c.isHotDeal,
+    isNew: false,
+  };
 }
 
 export interface OtherElectricType {
@@ -85,8 +112,6 @@ const PAGE_SIZE = 9;
 
 export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adCar, adText, plpBanners = [], hotDealUrgencyLabel }: ElectricoPageContentProps) {
   const urgencyLabel = hotDealUrgencyLabel ?? DEFAULT_HOT_DEAL_LABEL;
-  const [activeFilters, setActiveFilters] = useState<ActiveFilters>({ brand: "", tipo: "" });
-  const [sort, setSort] = useState("default");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [openHowItem, setOpenHowItem] = useState<number | null>(null);
 
@@ -98,37 +123,14 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
     return () => clearInterval(t);
   }, [nextSlide, plpBanners.length]);
 
-  const brandOptions = useMemo(() => {
-    const vals = [...new Set(cars.map((c) => c.brandSlug))];
-    return vals.map((v) => ({
-      value: v,
-      label: cars.find((c) => c.brandSlug === v)?.brand ?? v,
-      count: cars.filter((c) => c.brandSlug === v).length,
-    }));
-  }, [cars]);
+  const filters = useCarFilters(cars, { toFacet: electricoToFacet, context: "tecnologia" });
+  const { filtered } = filters;
 
-  const tipoOptions = useMemo(() => {
-    const vals = [...new Set(cars.map((c) => c.tipoSlug))];
-    return vals.map((v) => ({
-      value: v,
-      label: cars.find((c) => c.tipoSlug === v)?.tipoLabel ?? v,
-      count: cars.filter((c) => c.tipoSlug === v).length,
-    }));
-  }, [cars]);
+  // Reinicia la paginación cuando cambian los filtros/orden.
+  useEffect(() => setVisibleCount(PAGE_SIZE), [filtered]);
 
-  const filteredCars = useMemo(() => {
-    setVisibleCount(PAGE_SIZE);
-    let list = [...cars];
-    if (activeFilters.brand) list = list.filter((c) => c.brandSlug === activeFilters.brand);
-    if (activeFilters.tipo)  list = list.filter((c) => c.tipoSlug === activeFilters.tipo);
-    if (sort === "price-asc")  list.sort((a, b) => a.discountPrice - b.discountPrice);
-    if (sort === "price-desc") list.sort((a, b) => b.discountPrice - a.discountPrice);
-    if (sort === "range-desc") list.sort((a, b) => b.range - a.range);
-    return list;
-  }, [cars, activeFilters, sort]);
-
-  const hotDeals = filteredCars.filter((c) => c.isHotDeal);
-  const rest     = filteredCars.filter((c) => !c.isHotDeal);
+  const hotDeals = filtered.filter((c) => c.isHotDeal);
+  const rest     = filtered.filter((c) => !c.isHotDeal);
 
   // Hot deal carousel
   const hotTrackRef  = useRef<HTMLDivElement>(null);
@@ -572,21 +574,20 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
               Todos los {meta.label}
             </h2>
 
-            <CatalogFilters
-              groups={[
-                ...(brandOptions.length > 1 ? [{ id: "brand", label: "Marca", options: brandOptions }] : []),
-                ...(tipoOptions.length > 1  ? [{ id: "tipo",  label: "Tipo de vehículo", options: tipoOptions }] : []),
-              ]}
-              active={activeFilters}
-              onChange={(id, val) => setActiveFilters((p) => ({ ...p, [id]: val }))}
-              sort={sort}
-              onSortChange={setSort}
-              total={cars.length}
-              count={filteredCars.length}
+            <PlpFilters
+              facetGroups={filters.facetGroups}
+              active={filters.active}
+              sort={filters.sort}
+              onToggle={filters.toggle}
+              onSortChange={filters.setSort}
+              onClearAll={filters.clearAll}
+              activeCount={filters.activeCount}
+              total={filters.total}
+              count={filters.count}
             />
           </div>
 
-          {filteredCars.length === 0 ? (
+          {filtered.length === 0 ? (
             <div className="py-16 text-center">
               <span className="material-symbols-outlined text-[40px] text-gray-200 block mb-3">search_off</span>
               <p className="text-text-muted font-medium">No hay autos con estos filtros.</p>

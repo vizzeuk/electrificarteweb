@@ -36,6 +36,8 @@ const CAR_CARD_FIELDS = groq`
   chargeType,
   warranty,
   highlight,
+  euroNcap,
+  airbags,
   isNew,
   isFeatured,
   isTopSeller,

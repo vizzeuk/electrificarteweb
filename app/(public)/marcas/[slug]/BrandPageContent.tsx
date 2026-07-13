@@ -4,7 +4,9 @@ import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { m } from "framer-motion";
 import Link from "next/link";
 import { formatCLP, DEFAULT_HOT_DEAL_LABEL } from "@/lib/utils";
-import { CatalogFilters, type ActiveFilters } from "@/components/ui/CatalogFilters";
+import { PlpFilters } from "@/components/filters/PlpFilters";
+import { useCarFilters } from "@/hooks/useCarFilters";
+import type { FacetCar } from "@/lib/filters/types";
 import { ElectricTypeBadge } from "@/components/car/ElectricTypeBadge";
 
 // ─── Interfaces ───────────────────────────────────────────────────────────────
@@ -17,13 +19,40 @@ interface BrandCarData {
   range: number;
   power: string;
   traction: string;
+  seats?: number | null;
+  euroNcap?: number | null;
   category: string;
   tipoSlug: string;
+  vehicleTypeLabel?: string;
   electricType: string;
+  electricTypeTag?: string;
+  electricTypeLabel?: string;
   isHotDeal: boolean;
   isTopSeller?: boolean;
   imageUrl?: string;
   specs: { battery: string; charge0to80: string; topSpeed: string };
+}
+
+// Adaptador estable raw → FacetCar (contexto: /marcas, oculta el facet "marca").
+function brandToFacet(c: BrandCarData): FacetCar {
+  return {
+    slug: c.slug,
+    brandSlug: "",
+    brandName: "",
+    vehicleTypeSlug: c.tipoSlug,
+    vehicleTypeLabel: c.vehicleTypeLabel || c.category,
+    electricTypeTag: c.electricTypeTag ?? "",
+    electricTypeLabel: c.electricTypeLabel ?? "",
+    price: c.discountPrice ?? c.basePrice,
+    basePrice: c.basePrice,
+    discountPrice: c.discountPrice ?? c.basePrice,
+    range: c.range ?? 0,
+    seats: c.seats ?? null,
+    euroNcap: c.euroNcap ?? null,
+    traction: c.traction ?? "",
+    isHotDeal: c.isHotDeal,
+    isNew: false,
+  };
 }
 
 interface VideoData {
@@ -74,14 +103,6 @@ export interface BrandData {
   plpBanners?: PlpBannerData[];
 }
 
-// ─── Label maps ───────────────────────────────────────────────────────────────
-const TIPO_LABELS: Record<string, string> = {
-  suv: "SUV", sedan: "Sedán", "city-car": "City Car", pickup: "Pickup", hatchback: "Hatchback",
-};
-const ELECTRIC_LABELS: Record<string, string> = {
-  ev: "Eléctrico Puro", phev: "Híbrido Enchufable", hev: "Híbrido Clásico", erev: "Autonomía Extendida", mhev: "Micro Híbrido",
-};
-
 // ─── Component ────────────────────────────────────────────────────────────────
 interface BrandPageContentProps {
   slug: string;
@@ -93,33 +114,16 @@ const PAGE_SIZE = 9;
 
 export default function BrandPageContent({ slug, brand, hotDealUrgencyLabel }: BrandPageContentProps) {
   const urgencyLabel = hotDealUrgencyLabel ?? DEFAULT_HOT_DEAL_LABEL;
-  const [activeFilters, setActiveFilters] = useState<ActiveFilters>({ tipo: "", electric: "" });
-  const [sort, setSort] = useState("default");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
-  const tipoOptions = useMemo(() => {
-    const vals = [...new Set(brand.cars.map((c) => c.tipoSlug))].filter(Boolean);
-    return vals.map((v) => ({ value: v, label: TIPO_LABELS[v] ?? v, count: brand.cars.filter((c) => c.tipoSlug === v).length }));
-  }, [brand.cars]);
+  const filters = useCarFilters(brand.cars, { toFacet: brandToFacet, context: "marca" });
+  const { filtered } = filters;
 
-  const electricOptions = useMemo(() => {
-    const vals = [...new Set(brand.cars.map((c) => c.electricType))].filter(Boolean);
-    return vals.map((v) => ({ value: v, label: ELECTRIC_LABELS[v] ?? v, count: brand.cars.filter((c) => c.electricType === v).length }));
-  }, [brand.cars]);
+  // Reinicia la paginación cuando cambian los filtros/orden.
+  useEffect(() => setVisibleCount(PAGE_SIZE), [filtered]);
 
-  const filteredCars = useMemo(() => {
-    setVisibleCount(PAGE_SIZE);
-    let cars = [...brand.cars];
-    if (activeFilters.tipo)     cars = cars.filter((c) => c.tipoSlug === activeFilters.tipo);
-    if (activeFilters.electric) cars = cars.filter((c) => c.electricType === activeFilters.electric);
-    if (sort === "price-asc")   cars.sort((a, b) => a.discountPrice - b.discountPrice);
-    if (sort === "price-desc")  cars.sort((a, b) => b.discountPrice - a.discountPrice);
-    if (sort === "range-desc")  cars.sort((a, b) => b.range - a.range);
-    return cars;
-  }, [brand.cars, activeFilters, sort]);
-
-  const visibleCars = filteredCars.slice(0, visibleCount);
-  const hasMore = visibleCount < filteredCars.length;
+  const visibleCars = filtered.slice(0, visibleCount);
+  const hasMore = visibleCount < filtered.length;
 
   // Hot deal carousel
   const hotDeals = brand.hotDeals;
@@ -500,19 +504,20 @@ export default function BrandPageContent({ slug, brand, hotDealUrgencyLabel }: B
           <div className="mb-8">
             <p className="text-[11px] uppercase tracking-widest text-primary-deep font-bold mb-2">Catálogo eléctrico</p>
             <h2 className="text-3xl md:text-4xl font-headline font-black uppercase tracking-tighter mb-6">Autos {brand.name} disponibles</h2>
-            <CatalogFilters
-              groups={[
-                ...(tipoOptions.length > 1 ? [{ id: "tipo", label: "Tipo de vehículo", options: tipoOptions }] : []),
-                ...(electricOptions.length > 1 ? [{ id: "electric", label: "Electrificado", options: electricOptions }] : []),
-              ]}
-              active={activeFilters}
-              onChange={(id, val) => setActiveFilters((p) => ({ ...p, [id]: val }))}
-              sort={sort} onSortChange={setSort}
-              total={brand.cars.length} count={filteredCars.length}
+            <PlpFilters
+              facetGroups={filters.facetGroups}
+              active={filters.active}
+              sort={filters.sort}
+              onToggle={filters.toggle}
+              onSortChange={filters.setSort}
+              onClearAll={filters.clearAll}
+              activeCount={filters.activeCount}
+              total={filters.total}
+              count={filters.count}
             />
           </div>
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
-            {filteredCars.length === 0 ? (
+            {filtered.length === 0 ? (
               <div className="col-span-3 py-16 text-center">
                 <span className="material-symbols-outlined text-[40px] text-gray-200 block mb-3">search_off</span>
                 <p className="text-text-muted font-medium">No hay autos con estos filtros.</p>
