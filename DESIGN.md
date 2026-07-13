@@ -73,7 +73,7 @@ Premium, minimal, and kinetic. The design channels an Apple-meets-automotive edi
 - **Nav links:** `text-sm font-medium`, hover to cyan.
 
 ### Footer
-- **Background:** `bg-black`, white text. 4-column grid. Brand bolt icon gets cyan bg.
+- **Background:** `bg-black`, white text. 5-column grid (Brand, Nosotros, Legal, Vendedores, Newsletter). Brand bolt icon gets cyan bg.
 
 ## 5. Layout Principles
 

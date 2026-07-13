@@ -41,7 +41,6 @@ const footerSections: { title: string; links: FooterLink[] }[] = [
       { label: "Quiénes somos",    href: "/nosotros" },
       { label: "Nuestro servicio", href: "/#como-funciona" },
       { label: "Cómo negociamos",  href: "/negociacion" },
-      { label: "Para vendedores",  href: "https://vendedores.electrificarte.com", external: true },
       { label: "Blog",             href: "/blog" },
     ],
   },
@@ -51,6 +50,13 @@ const footerSections: { title: string; links: FooterLink[] }[] = [
       { label: "Términos y condiciones", href: "/terminos" },
       { label: "Privacidad",             href: "/privacidad" },
       { label: "Contacto",               href: "/contacto" },
+    ],
+  },
+  {
+    title: "Vendedores",
+    links: [
+      { label: "Cómo funciona", href: "https://vendedores.electrificarte.com", external: true },
+      { label: "Únete",         href: "https://vendedores.electrificarte.com/unirse", external: true },
     ],
   },
 ];
@@ -125,7 +131,7 @@ export function Footer() {
   return (
     <footer className="bg-black text-white pt-20 pb-6" role="contentinfo">
       <div className="max-w-7xl mx-auto px-4 md:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16 pb-16 border-b border-white/10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-12 mb-16 pb-16 border-b border-white/10">
 
           {/* Brand */}
           <div>
