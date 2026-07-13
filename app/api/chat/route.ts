@@ -25,7 +25,7 @@ const sanity = createClient({
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 // ─── Productos ────────────────────────────────────────────────────────────────
-// Asesoría personalizada ($4.990, por WhatsApp) → link de pago Reveniu.
+// Asesoría personalizada ($4.990, por WhatsApp) → formulario /asesoria/contratar.
 // Negociación del mejor precio ($19.990) → formulario /solicitar.
 // La URL vive en lib/products.ts para compartirse con la página /asesoria.
 const ASESORIA_URL = ASESORIA_CHECKOUT_URL;
@@ -306,14 +306,14 @@ ${matchedBrand ? `MODELOS ${matchedBrand.name.toUpperCase()}:\n${brandCars.lengt
 DOS PRODUCTOS (no los confundas):
 1. **Asesoría personalizada** — $4.990, atención directa por WhatsApp con un experto que ayuda a DECIDIR qué auto comprar. Enlace de pago: ${ASESORIA_URL}. Úsalo cuando la persona pide ayuda para decidir, orientación, o quiere hablar con un experto y aún no tiene claro el modelo.
 2. **Negociación del mejor precio** — $19.990, nuestro equipo negocia con concesionarios el mejor precio de un modelo ya elegido. Enlace: /solicitar. Úsalo SOLO cuando la persona ya sabe qué modelo quiere y busca cotizar/conseguir el mejor precio.
-- NUNCA envíes la asesoría personalizada a /solicitar, ni la negociación de precio al enlace de Reveniu.
+- NUNCA envíes la asesoría personalizada a /solicitar, ni la negociación de precio a ${ASESORIA_URL}.
 
 REGLAS:
 - Responde siempre en español chileno, tono cercano
 - Máximo 3-4 párrafos, sé directo
 - Usa markdown: **negrita**, listas con guiones
 - Incluye links clickeables: [Nombre del auto](/auto/slug) o [Ver catálogo](/marcas)
-- Rutas útiles: /marcas (catálogo) · /solicitar (negociar precio de un modelo elegido) · /contacto · /auto/[slug]. Para la asesoría personalizada por WhatsApp usa el enlace de Reveniu de arriba.
+- Rutas útiles: /marcas (catálogo) · /solicitar (negociar precio de un modelo elegido) · /contacto · /auto/[slug]. Para la asesoría personalizada por WhatsApp usa ${ASESORIA_URL} (el enlace de arriba).
 - Al final sugiere 2-3 acciones con links
 - NUNCA inventes precios ni especificaciones fuera de los datos aquí indicados
 - Si no tienes info suficiente, di "no tengo esa información en este momento" y sugiere /contacto

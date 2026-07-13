@@ -36,7 +36,7 @@ function SolicitarInner({ carOptions, servicePrice = "$19.990" }: SolicitarConte
 
         <div className="max-w-7xl mx-auto px-4 md:px-8 relative z-10">
           {/* Title block — full width */}
-          <div className="pb-8">
+          <div className="pb-7">
             <p className="text-primary text-[10px] uppercase tracking-widest font-bold mb-3">
               Paso final
             </p>
@@ -44,13 +44,16 @@ function SolicitarInner({ carOptions, servicePrice = "$19.990" }: SolicitarConte
               Conseguimos el mejor precio{" "}
               <span className="text-primary">o te devolvemos el dinero</span>
             </h1>
-            <div className="flex flex-wrap gap-x-6 gap-y-2">
+            <div className="flex flex-wrap gap-2">
               {[
                 { icon: "schedule", label: "Respuesta en 48-96 h" },
                 { icon: "verified", label: "Garantía de devolución" },
                 { icon: "lock",     label: "Sin costos ocultos" },
               ].map((item) => (
-                <div key={item.label} className="flex items-center gap-1.5 text-white/50 text-xs">
+                <div
+                  key={item.label}
+                  className="flex items-center gap-1.5 bg-white/5 border border-white/10 text-white/60 text-xs px-3 py-1.5 rounded-full"
+                >
                   <span className="material-symbols-outlined text-primary text-[14px]">{item.icon}</span>
                   {item.label}
                 </div>
@@ -59,20 +62,20 @@ function SolicitarInner({ carOptions, servicePrice = "$19.990" }: SolicitarConte
           </div>
 
           {/* Steps strip — inline, bottom of header */}
-          <div className="border-t border-white/10 py-5 grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="border-t border-white/10 py-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
             {[
               { n: "01", icon: "edit_note",        title: "Completa tu solicitud",      desc: "Cuéntanos qué auto te interesa y tu presupuesto." },
               { n: "02", icon: "payments",          title: "Activa tu búsqueda",         desc: `Un pago único de ${servicePrice} por WebPay activa la búsqueda exclusiva.` },
               { n: "03", icon: "mark_email_read",   title: "Recibe tu oferta en 48-96h",   desc: "La mejor oferta con bonos y financiamiento incluido." },
-            ].map((s, i, arr) => (
-              <div key={s.n} className="flex items-start gap-3 relative">
-                {i < arr.length - 1 && (
-                  <div className="hidden sm:block absolute right-0 top-4 w-px h-full border-r border-white/10" />
-                )}
-                <div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
-                  <span className="material-symbols-outlined text-primary text-[14px]">{s.icon}</span>
+            ].map((s) => (
+              <div
+                key={s.n}
+                className="flex items-start gap-3 rounded-2xl bg-white/[0.03] border border-white/10 p-3.5 hover:bg-white/[0.06] hover:border-primary/25 transition-colors"
+              >
+                <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+                  <span className="material-symbols-outlined text-primary text-[16px]">{s.icon}</span>
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="text-white/30 text-[9px] font-bold tracking-widest mb-0.5">{s.n}</p>
                   <h3 className="text-white text-sm font-bold leading-snug mb-0.5">{s.title}</h3>
                   <p className="text-white/40 text-xs leading-relaxed">{s.desc}</p>

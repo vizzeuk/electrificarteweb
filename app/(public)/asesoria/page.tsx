@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
-import { ASESORIA_CHECKOUT_URL, ASESORIA_PRICE } from "@/lib/products";
+import { ASESORIA_PRICE } from "@/lib/products";
 
 export const metadata: Metadata = {
   title: "Asesoría IA por WhatsApp",
@@ -66,13 +66,13 @@ export default function AsesoriaPage() {
             conversación, no una venta.
           </p>
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            <a
-              href={ASESORIA_CHECKOUT_URL}
+            <Link
+              href="/asesoria/contratar"
               className="inline-flex items-center justify-center gap-2 bg-amber hover:bg-amber-dark text-black font-bold px-8 py-4 rounded-xl transition-all text-lg shadow-[0_6px_32px_rgba(245,158,11,0.30)] hover:shadow-[0_8px_40px_rgba(245,158,11,0.45)] hover:scale-[1.02] active:scale-[0.99]"
             >
               Contratar asesoría · {ASESORIA_PRICE}
               <Icon name="arrow_forward" size="sm" />
-            </a>
+            </Link>
             <span className="text-white/40 text-sm">Pago único · respuesta inmediata</span>
           </div>
         </div>
@@ -134,13 +134,13 @@ export default function AsesoriaPage() {
           <p className="text-white/50 mb-8">
             Un solo pago de {ASESORIA_PRICE} y hablas con Francisco IA por WhatsApp en minutos.
           </p>
-          <a
-            href={ASESORIA_CHECKOUT_URL}
+          <Link
+            href="/asesoria/contratar"
             className="inline-flex items-center justify-center gap-2 bg-amber hover:bg-amber-dark text-black font-bold px-8 py-4 rounded-xl transition-all text-lg shadow-[0_6px_32px_rgba(245,158,11,0.30)] hover:shadow-[0_8px_40px_rgba(245,158,11,0.45)] hover:scale-[1.02] active:scale-[0.99]"
           >
             Contratar asesoría · {ASESORIA_PRICE}
             <Icon name="arrow_forward" size="sm" />
-          </a>
+          </Link>
           <p className="text-white/40 text-sm mt-6">
             ¿Ya sabes qué auto quieres?{" "}
             <Link href="/solicitar" className="text-primary hover:underline">Consigue tu mejor precio →</Link>

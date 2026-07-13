@@ -15,6 +15,9 @@ export default async function PagoRechazadoPage() {
   const orderId = verifyOrderToken(store.get("ec_order")?.value);
   if (!orderId) notFound();
 
+  const isAdvisory = store.get("ec_order_type")?.value === "advisory";
+  const retryHref = isAdvisory ? "/asesoria/contratar" : "/solicitar";
+
   return (
     <main className="min-h-screen flex items-center justify-center px-4 py-24 bg-surface">
       <div className="max-w-lg w-full bg-white rounded-3xl border border-gray-100 shadow-xl p-8 md:p-12 text-center">
@@ -37,7 +40,7 @@ export default async function PagoRechazadoPage() {
         </p>
 
         <Link
-          href="/solicitar"
+          href={retryHref}
           className="mt-8 inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-7 py-3 rounded-xl transition-colors"
         >
           Reintentar mi solicitud
