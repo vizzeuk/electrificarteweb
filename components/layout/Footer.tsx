@@ -38,6 +38,7 @@ const footerSections = [
     links: [
       { label: "Quiénes somos",    href: "/nosotros" },
       { label: "Nuestro servicio", href: "/#como-funciona" },
+      { label: "Cómo negociamos",  href: "/negociacion" },
       { label: "Blog",             href: "/blog" },
     ],
   },
