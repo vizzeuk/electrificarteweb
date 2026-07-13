@@ -149,6 +149,11 @@ Tres tiers, cada uno con su propio comportamiento. La tabla Supabase determina e
 
 **Webhook Kapso**: apunta a `/api/whatsapp/kapso`. Variables necesarias en Vercel: `KAPSO_WEBHOOK_SECRET`, `SUPABASE_OFERTA_TABLE=leads`, `SUPABASE_VENDOR_TABLE=leads_vendors`, `SUPABASE_SUBSCRIPTION_TABLE=advisory_payments`.
 
+**Recordatorio "queda 1 día" (asesoría $4.990)**: la asesoría dura exactamente 10 días desde el pago. En el día 9 (1 día restante) un cron diario (`vercel.json` → `/api/cron/asesoria-reminder`) envía un mensaje proactivo por WhatsApp. Lógica: `lib/whatsapp/lifecycle.ts` (selecciona filas de `advisory_payments` con activación hace 9-10 días) + `lib/whatsapp/outbound.ts` (envío Kapso) + dedup en Redis (`wa_day9_sent:<phone>`, TTL 3 días).
+- **Prerequisitos externos para que envíe de verdad**: (1) la tabla `advisory_payments` debe tener columna de fecha de activación (`SUPABASE_SUBSCRIPTION_CREATED_COLUMN`, default `created_at`); (2) por la ventana de 24h de WhatsApp, el mensaje casi siempre cae fuera de ventana → se necesita una **plantilla aprobada** en Kapso/Meta (`ASESORIA_REMINDER_TEMPLATE`, idioma `ASESORIA_REMINDER_TEMPLATE_LANG`). Sin plantilla, cae a texto libre y solo llega a quienes escribieron en las últimas 24h.
+- **Env vars**: `CRON_SECRET` (auth del cron), `KAPSO_API_KEY`, `KAPSO_PHONE_NUMBER_ID`, `ASESORIA_REMINDER_TEMPLATE`. Opcionales: `ASESORIA_WINDOW_DAYS` (10), `ASESORIA_REMINDER_DAY` (9), `KAPSO_BASE_URL`.
+- **Limitación**: si el cron no corre un día (outage), esa cohorte se pierde (la ventana es de 1 día). Aceptable para un nudge.
+
 ## Pendientes conocidos
 - WhatsApp hardcodeado como `+56912345678` en `components/layout/Navbar.tsx` (líneas ~215 y ~339) — reemplazar con número real
 - `N8N_CONTACT_URL` en Vercel necesita URL de producción (sin `-test`)

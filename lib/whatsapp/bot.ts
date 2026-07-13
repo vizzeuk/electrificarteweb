@@ -2,11 +2,17 @@ import { Chat } from "chat";
 import { createMemoryState } from "@chat-adapter/state-memory";
 import { createKapsoAdapter, type KapsoAdapter } from "@kapso/chat-adapter";
 import { checkChatRateLimit } from "@/lib/chat/rate-limit-redis";
-import { detectInjection, INJECTION_RESPONSE } from "@/lib/chat/guards";
+import {
+  detectInjection,
+  INJECTION_RESPONSE,
+  isOffTopic,
+  OFFTOPIC_RESPONSE,
+} from "@/lib/chat/guards";
 import { getSubscriptionTier, normalizePhone } from "@/lib/whatsapp/subscription";
 import { runAdvisor, type ChatMessage } from "@/lib/whatsapp/advisor";
 import { loadContext, saveContext } from "@/lib/whatsapp/context";
-import { exceedsDailyQuota, DAILY_QUOTA_MESSAGE } from "@/lib/whatsapp/quota";
+import { exceedsDailyQuota, refundDailyQuota, DAILY_QUOTA_MESSAGE } from "@/lib/whatsapp/quota";
+import { alreadyProcessed, withPhoneLock } from "@/lib/whatsapp/concurrency";
 
 // ─── Bot singleton ────────────────────────────────────────────────────────────
 // Memory state is fine for the SDK's internal dedup/lock needs; we handle
@@ -45,6 +51,13 @@ bot.onDirectMessage(async (thread, message) => {
   const text = message.text ?? "";
   if (!text.trim()) return; // ignore media-only messages
 
+  // 0. Idempotencia: descartar reintentos de webhook / entregas duplicadas
+  //    (Kapso reintenta; puede haber instancias serverless concurrentes).
+  if (await alreadyProcessed(message.id)) {
+    console.log("[bot] mensaje duplicado ignorado", { id: message.id });
+    return;
+  }
+
   // Extract customer phone from the Kapso thread ID
   const adapter = bot.getAdapter("kapso") as KapsoAdapter;
   let waId: string;
@@ -77,41 +90,55 @@ bot.onDirectMessage(async (thread, message) => {
     return;
   }
 
-  // 3. Injection guard
+  // 3. Injection guard (input-side)
   if (detectInjection(text)) {
+    console.warn("[bot] inyección detectada", { phone: maskPhone(phone), tier });
     await thread.post(INJECTION_RESPONSE);
+    return;
+  }
+
+  // 3b. Off-topic guard (conservador: solo bloquea mensajes claramente fuera de tema)
+  if (isOffTopic(text)) {
+    console.log("[bot] off-topic", { phone: maskPhone(phone), tier });
+    await thread.post(OFFTOPIC_RESPONSE);
     return;
   }
 
   // 4. Daily quota (cost control — only subscribers consume tokens)
   if (await exceedsDailyQuota(phone)) {
+    console.log("[bot] cuota diaria excedida", { phone: maskPhone(phone), tier });
     await thread.post(DAILY_QUOTA_MESSAGE);
     return;
   }
 
-  // 5. Load persistent context from Redis + append current message
-  const history = await loadContext(phone);
-  const messages: ChatMessage[] = [
-    ...history,
-    { role: "user", content: text.slice(0, 1_500) },
-  ];
+  // 5-8. Serializado por teléfono: evita el race read-modify-write del contexto
+  //       cuando el usuario manda una ráfaga de mensajes.
+  await withPhoneLock(phone, async () => {
+    // Load persistent context from Redis + append current message
+    const history = await loadContext(phone);
+    const messages: ChatMessage[] = [
+      ...history,
+      { role: "user", content: text.slice(0, 1_500) },
+    ];
 
-  // 6. Run LLM advisor with tier-appropriate prompt
-  let response: string;
-  try {
-    response = await runAdvisor(messages, tier);
-  } catch (err) {
-    console.error("[bot] runAdvisor error:", err instanceof Error ? err.message : err);
-    await thread.post("Disculpa, tuve un problema. ¿Me lo puedes repetir?");
-    return;
-  }
+    // Run LLM advisor with tier-appropriate prompt
+    let response: string;
+    try {
+      response = await runAdvisor(messages, tier);
+    } catch (err) {
+      console.error("[bot] runAdvisor error:", err instanceof Error ? err.message : err);
+      await refundDailyQuota(phone); // no penalizar la cuota por un error nuestro
+      await thread.post("Disculpa, tuve un problema. ¿Me lo puedes repetir?");
+      return;
+    }
 
-  // 7. Persist updated context to Redis
-  await saveContext(phone, [...messages, { role: "assistant", content: response }]);
+    // Persist updated context to Redis
+    await saveContext(phone, [...messages, { role: "assistant", content: response }]);
 
-  // 8. Reply via Kapso → WhatsApp
-  console.log("[bot] respuesta enviada", { phone: maskPhone(phone), tier, length: response.length });
-  await thread.post(response);
+    // Reply via Kapso → WhatsApp
+    console.log("[bot] respuesta enviada", { phone: maskPhone(phone), tier, length: response.length });
+    await thread.post(response);
+  });
 });
 
 function maskPhone(phone: string): string {

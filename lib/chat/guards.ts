@@ -101,3 +101,31 @@ export function isOffTopic(content: string): boolean {
 
 export const OFFTOPIC_RESPONSE =
   "Soy Francisco, especialista en autos eléctricos e híbridos en Chile 🔋. ¿Puedo ayudarte a encontrar tu próximo auto o resolver alguna duda sobre movilidad eléctrica?";
+
+// ─── Detección de fuga del system prompt (output-side) ────────────────────────
+// Complementa detectInjection (input-side, regex): si una inyección evade el
+// filtro de entrada, este guard atrapa señales de que la respuesta está filtrando
+// instrucciones internas o nombres de herramientas que NUNCA deben verse en un
+// mensaje al usuario.
+
+const LEAK_MARKERS: RegExp[] = [
+  // Nombres de tools internas — jamás deben aparecer en texto al usuario
+  /\bsearch_vehicles\b/i,
+  /\bget_vehicle_detail\b/i,
+  /\bsearch_knowledge\b/i,
+  // Encabezados textuales de los system prompts
+  /##\s*(Reglas innegociables|Diagn[óo]stico estructurado|Casos de referencia|C[óo]mo trabajas|Qui[ée]n eres|Formato WhatsApp|Producto principal|Tu rol en este contexto|Qu[ée] puedes y no puedes hacer)/i,
+  /\b(BASE_SYSTEM|OFERTA_SYSTEM)\b/,
+  /Conocimiento base de Electrificarte/i,
+  // Pedidos meta que solo tendrían sentido si se filtró el prompt
+  /(mi|el)\s+(system\s*prompt|prompt\s+del\s+sistema|instrucciones\s+del\s+sistema)/i,
+];
+
+/** True si la respuesta del modelo parece filtrar el system prompt o tools internas. */
+export function containsSystemLeak(text: string): boolean {
+  return LEAK_MARKERS.some((p) => p.test(text));
+}
+
+// Respuesta segura de reemplazo si se detecta fuga.
+export const LEAK_SAFE_RESPONSE =
+  "¿En qué te puedo ayudar con tu próximo auto eléctrico? Cuéntame qué buscas y te oriento.";
