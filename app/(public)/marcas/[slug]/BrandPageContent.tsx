@@ -503,7 +503,7 @@ export default function BrandPageContent({ slug, brand, hotDealUrgencyLabel }: B
             <CatalogFilters
               groups={[
                 ...(tipoOptions.length > 1 ? [{ id: "tipo", label: "Tipo de vehículo", options: tipoOptions }] : []),
-                ...(electricOptions.length > 1 ? [{ id: "electric", label: "Tecnología", options: electricOptions }] : []),
+                ...(electricOptions.length > 1 ? [{ id: "electric", label: "Electrificado", options: electricOptions }] : []),
               ]}
               active={activeFilters}
               onChange={(id, val) => setActiveFilters((p) => ({ ...p, [id]: val }))}
@@ -553,7 +553,7 @@ export default function BrandPageContent({ slug, brand, hotDealUrgencyLabel }: B
                       </Link>
                       <Link href={`/comparador?add=${car.slug}`} title="Comparar"
                         className="relative z-[1] px-3 border border-gray-200 hover:border-primary/40 text-text-muted hover:text-primary-deep rounded-xl flex items-center transition-colors">
-                        <span className="material-symbols-outlined text-[18px]">compare</span>
+                        <span className="material-symbols-outlined text-[18px]">compare_arrows</span>
                       </Link>
                     </div>
                   </div>
