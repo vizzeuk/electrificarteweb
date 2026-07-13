@@ -36,6 +36,7 @@ const STEPS = [
 ];
 
 const INCLUYE = [
+  "10 días de acceso a la asesoría para resolver todas tus dudas",
   "Recomendación personalizada según tu estilo de uso real",
   "Comparación entre modelos eléctricos e híbridos del catálogo",
   "Resolución de dudas técnicas (autonomía, carga, mantención)",
@@ -73,7 +74,7 @@ export default function AsesoriaPage() {
               Contratar asesoría · {ASESORIA_PRICE}
               <Icon name="arrow_forward" size="sm" />
             </Link>
-            <span className="text-white/40 text-sm">Pago único · respuesta inmediata</span>
+            <span className="text-white/40 text-sm">Pago único · acceso por 10 días · respuesta inmediata</span>
           </div>
         </div>
       </section>
