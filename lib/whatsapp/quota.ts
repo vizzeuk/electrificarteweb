@@ -57,5 +57,27 @@ export async function exceedsDailyQuota(phone: string): Promise<boolean> {
   return entry.count > DAILY_LIMIT;
 }
 
+/**
+ * Devuelve una unidad de cuota. Llamar cuando el turno se contabilizó (incr) pero
+ * runAdvisor falló, para no penalizar al usuario por un error nuestro.
+ */
+export async function refundDailyQuota(phone: string): Promise<void> {
+  if (!Number.isFinite(DAILY_LIMIT) || DAILY_LIMIT <= 0) return;
+  const key = todayKey(phone);
+  const redis = getRedis();
+
+  if (redis) {
+    try {
+      await redis.decr(key);
+    } catch {
+      // no fatal
+    }
+    return;
+  }
+
+  const entry = _mem.get(key);
+  if (entry && entry.count > 0) entry.count--;
+}
+
 export const DAILY_QUOTA_MESSAGE =
   "Por hoy llegamos al límite de consultas de tu asesoría 🙏. Mañana seguimos donde quedamos — cuéntame y te ayudo a avanzar con tu próximo auto eléctrico.";

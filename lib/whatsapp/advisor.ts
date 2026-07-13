@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { validateOutput } from "@/lib/chat/output-validator";
+import { containsSystemLeak, LEAK_SAFE_RESPONSE } from "@/lib/chat/guards";
 import { advisorTools, runTool, getCoreKnowledge } from "@/lib/whatsapp/tools";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -246,6 +247,13 @@ export async function runAdvisor(
 
   if (!finalText) {
     return "Disculpa, tuve un problema procesando tu consulta. ¿Me la puedes repetir?";
+  }
+
+  // Guard de salida: si la respuesta filtra el system prompt o tools internas,
+  // no la enviamos (posible inyección que evadió el filtro de entrada).
+  if (containsSystemLeak(finalText)) {
+    console.warn("[advisor] posible fuga de system prompt en la salida — reemplazada");
+    return LEAK_SAFE_RESPONSE;
   }
 
   // Groundedness: quita links PDP inexistentes + chequeo de precios + largo
