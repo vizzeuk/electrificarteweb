@@ -24,6 +24,7 @@ import { HomeStructuredData } from "@/components/layout/StructuredData";
 // each one with next/dynamic ssr:false. Keeps the initial HTML small so the
 // hero paints fast on mobile.
 import { HomeDeferred }     from "@/components/layout/HomeDeferred";
+import { ParaVendedores }   from "@/components/layout/ParaVendedores";
 
 // ISR: revalidar cada 60 segundos cuando haya cambios en Sanity
 export const revalidate = 60;
@@ -158,6 +159,9 @@ export default async function HomePage() {
         hotDealCar={page?.hotDealCar ?? null}
         hotDealUrgencyLabel={hotDealUrgencyLabel}
       />
+
+      {/* Sección para vendedores — justo antes del footer (solo home) */}
+      <ParaVendedores />
     </>
   );
 }
