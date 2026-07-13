@@ -114,7 +114,7 @@ export function Hero({ data }: HeroProps) {
             </p>
             <div className="flex items-center gap-3 mb-5">
               <span className="text-3xl md:text-4xl font-headline font-extrabold text-white">{advPrice}</span>
-              <span className="text-xs text-white/40">pago único</span>
+              <span className="text-xs text-white/40">pago único · acceso por 10 días</span>
             </div>
             <Link
               href={advCtaHref}

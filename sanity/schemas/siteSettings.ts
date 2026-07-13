@@ -7,6 +7,7 @@ export const siteSettings = defineType({
   // Singleton: enforced via Studio structure config in sanity.config.ts
   groups: [
     { name: "general",  title: "🌐 General",   default: true },
+    { name: "pricing",  title: "💲 Precios de productos" },
     { name: "contact",  title: "📞 Contacto y RRSS" },
     { name: "navbar",   title: "🧭 Menú de navegación" },
     { name: "footer",   title: "🦶 Footer" },
@@ -32,6 +33,29 @@ export const siteSettings = defineType({
         'Texto que acompaña el badge "HOT DEAL" en todo el sitio (home, marcas, tipos, popup). ' +
         "Evita cantidades exactas comprometedoras (ej. \"solo quedan 3 unidades\") que después no se puedan cumplir. " +
         'Usa frases genéricas: "Bonos exclusivos por tiempo limitado", "Oferta por tiempo limitado", "Cupos limitados", etc.',
+    }),
+
+    // ─── Precios de productos ─────────────────────────────────────────────────
+    defineField({
+      name: "advisoryPrice",
+      title: "Precio Asesoría IA",
+      type: "string",
+      group: "pricing",
+      initialValue: "$4.990",
+      description:
+        'Precio de display de la Asesoría IA ($4.990). Se muestra en la página /asesoria y en el hero. ' +
+        "Incluye el símbolo tal cual quieres verlo (ej. \"$4.990\"). " +
+        "Nota: el cobro real vive en el plan de Reveniu — este campo es solo el texto que se muestra.",
+    }),
+    defineField({
+      name: "offerPrice",
+      title: "Precio Negociación / Oferta Exclusiva",
+      type: "string",
+      group: "pricing",
+      initialValue: "$19.990",
+      description:
+        'Precio de display del servicio de Negociación ($19.990). Se muestra en la página /negociacion y en el hero. ' +
+        'Incluye el símbolo tal cual quieres verlo (ej. "$19.990").',
     }),
 
     // ─── Contact ────────────────────────────────────────────────────────────

@@ -1,27 +1,43 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
+import { client } from "@/lib/sanity/client";
+import { productPricesQuery } from "@/lib/queries/pages";
 import { ASESORIA_CHECKOUT_URL, ASESORIA_PRICE } from "@/lib/products";
 
-export const metadata: Metadata = {
-  title: "Asesoría IA por WhatsApp",
-  description:
-    "Por $4.990, Francisco IA analiza tu uso y presupuesto por WhatsApp y te lleva al auto eléctrico ideal. Sin presión, es una conversación, no una venta.",
-  alternates: { canonical: "/asesoria" },
-  openGraph: {
-    title: "Asesoría IA por WhatsApp | Electrificarte",
-    description:
-      "¿No sabes qué auto eléctrico elegir? Te ayudamos a decidir por WhatsApp desde $4.990.",
-    url: "/asesoria",
-    type: "website",
-  },
-};
+export const revalidate = 60;
 
-const STEPS = [
+// Precio de display editable desde Sanity (Configuración del Sitio → Precios).
+// Fallback a la constante de lib/products.ts si Sanity no lo trae.
+async function getAdvisoryPrice(): Promise<string> {
+  const prices = await client
+    .fetch(productPricesQuery, {}, { next: { tags: ["siteSettings"] } })
+    .catch(() => null);
+  return prices?.advisoryPrice ?? ASESORIA_PRICE;
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const price = await getAdvisoryPrice();
+  return {
+    title: "Asesoría IA por WhatsApp",
+    description:
+      `Por ${price}, Francisco IA analiza tu uso y presupuesto por WhatsApp y te lleva al auto eléctrico ideal. Sin presión, es una conversación, no una venta.`,
+    alternates: { canonical: "/asesoria" },
+    openGraph: {
+      title: "Asesoría IA por WhatsApp | Electrificarte",
+      description:
+        `¿No sabes qué auto eléctrico elegir? Te ayudamos a decidir por WhatsApp desde ${price}.`,
+      url: "/asesoria",
+      type: "website",
+    },
+  };
+}
+
+const buildSteps = (price: string) => [
   {
     icon: "forum",
     title: "Contratas y te escribimos",
-    description: "Pagas $4.990 y Francisco IA te contacta por WhatsApp al instante. Sin apps, sin descargas.",
+    description: `Pagas ${price} y Francisco IA te contacta por WhatsApp al instante. Sin apps, sin descargas.`,
   },
   {
     icon: "psychology",
@@ -36,13 +52,16 @@ const STEPS = [
 ];
 
 const INCLUYE = [
+  "10 días de acceso a la asesoría para resolver todas tus dudas",
   "Recomendación personalizada según tu estilo de uso real",
   "Comparación entre modelos eléctricos e híbridos del catálogo",
   "Resolución de dudas técnicas (autonomía, carga, mantención)",
   "Atención directa por WhatsApp, a tu ritmo",
 ];
 
-export default function AsesoriaPage() {
+export default async function AsesoriaPage() {
+  const price = await getAdvisoryPrice();
+  const STEPS = buildSteps(price);
   return (
     <>
       {/* ── Hero ── */}
@@ -70,10 +89,10 @@ export default function AsesoriaPage() {
               href={ASESORIA_CHECKOUT_URL}
               className="inline-flex items-center justify-center gap-2 bg-amber hover:bg-amber-dark text-black font-bold px-8 py-4 rounded-xl transition-all text-lg shadow-[0_6px_32px_rgba(245,158,11,0.30)] hover:shadow-[0_8px_40px_rgba(245,158,11,0.45)] hover:scale-[1.02] active:scale-[0.99]"
             >
-              Contratar asesoría · {ASESORIA_PRICE}
+              Contratar asesoría · {price}
               <Icon name="arrow_forward" size="sm" />
             </a>
-            <span className="text-white/40 text-sm">Pago único · respuesta inmediata</span>
+            <span className="text-white/40 text-sm">Pago único · acceso por 10 días · respuesta inmediata</span>
           </div>
         </div>
       </section>
@@ -132,13 +151,13 @@ export default function AsesoriaPage() {
             Empieza hoy tu asesoría
           </h2>
           <p className="text-white/50 mb-8">
-            Un solo pago de {ASESORIA_PRICE} y hablas con Francisco IA por WhatsApp en minutos.
+            Un solo pago de {price} y hablas con Francisco IA por WhatsApp en minutos.
           </p>
           <a
             href={ASESORIA_CHECKOUT_URL}
             className="inline-flex items-center justify-center gap-2 bg-amber hover:bg-amber-dark text-black font-bold px-8 py-4 rounded-xl transition-all text-lg shadow-[0_6px_32px_rgba(245,158,11,0.30)] hover:shadow-[0_8px_40px_rgba(245,158,11,0.45)] hover:scale-[1.02] active:scale-[0.99]"
           >
-            Contratar asesoría · {ASESORIA_PRICE}
+            Contratar asesoría · {price}
             <Icon name="arrow_forward" size="sm" />
           </a>
           <p className="text-white/40 text-sm mt-6">
