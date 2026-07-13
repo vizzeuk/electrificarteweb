@@ -9,8 +9,10 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 // tocar código. Defaults pensados para una tabla típica `asesoria_pagada`.
 
 // ─── Tabla de asesoría $4.990 ─────────────────────────────────────────────────
-const TABLE = process.env.SUPABASE_SUBSCRIPTION_TABLE ?? "advisory_payments";
-const PHONE_COLUMN = process.env.SUPABASE_PHONE_COLUMN ?? "phone";
+export const ADVISORY_TABLE = process.env.SUPABASE_SUBSCRIPTION_TABLE ?? "advisory_payments";
+export const ADVISORY_PHONE_COLUMN = process.env.SUPABASE_PHONE_COLUMN ?? "phone";
+const TABLE = ADVISORY_TABLE;
+const PHONE_COLUMN = ADVISORY_PHONE_COLUMN;
 
 // ─── Tabla de ofertador $19.990 ───────────────────────────────────────────────
 // n8n escribe aquí cuando Reveniu confirma el pago. Status "pagado" = activo.
@@ -29,7 +31,7 @@ const VENDOR_PHONE_COLUMN = process.env.SUPABASE_VENDOR_PHONE_COLUMN ?? "telefon
 
 let _supabase: SupabaseClient | null = null;
 
-function getSupabase(): SupabaseClient | null {
+export function getSupabase(): SupabaseClient | null {
   if (_supabase) return _supabase;
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -132,7 +134,7 @@ async function querySubscription(phone: string): Promise<boolean> {
  * - Si existe `expires_at`, debe ser futura.
  * Si ninguno de esos campos existe, la mera presencia de la fila basta.
  */
-function isRowActive(row: Record<string, unknown>): boolean {
+export function isRowActive(row: Record<string, unknown>): boolean {
   if (typeof row.active === "boolean" && !row.active) return false;
 
   if (typeof row.status === "string") {
