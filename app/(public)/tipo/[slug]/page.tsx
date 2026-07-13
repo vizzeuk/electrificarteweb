@@ -74,6 +74,8 @@ export default async function TipoPage({ params }: PageProps) {
     fuelConsumption:      c.fuelConsumption ?? null,
     rendimientoElectrico: c.rendimientoElectrico ?? null,
     traction:             c.traction ?? "",
+    seats:                c.seats ?? null,
+    euroNcap:             c.euroNcap ?? null,
     acceleration:         c.acceleration ?? 0,
     isHotDeal:            c.isHotDeal ?? false,
     tagline:              c.tagline ?? "",

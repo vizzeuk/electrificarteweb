@@ -1,8 +1,10 @@
+import Link from "next/link";
 import { sanityImg } from "@/lib/sanityImage";
 
 export interface TestimonialData {
   name: string;
   car: string;
+  carSlug?: string;
   savings: string;
   quote: string;
   rating: number;
@@ -16,9 +18,9 @@ interface TestimonialsProps {
 }
 
 const DEFAULT_TESTIMONIALS: TestimonialData[] = [
-  { name: "Francisco M.", car: "Tesla Model 3",  savings: "$5.200.000", rating: 4, imageUrl: "/images/testimonial-tesla-model3.webp", personImageUrl: "/images/testimonial-person-1.jpg", quote: "Llevaba meses mirando el Model 3. Electrificarte consiguió un precio que no encontré en ningún concesionario. En dos semanas ya manejaba con 500 km de autonomía." },
-  { name: "Sofía R.",     car: "Kia EV6",        savings: "$3.800.000", rating: 5, imageUrl: "/images/testimonial-kia-ev6.webp",      personImageUrl: "/images/testimonial-person-2.jpg", quote: "Quería carga rápida para el día a día y autonomía para los fines de semana. Me trajeron una oferta con bono incluido que no habría conseguido negociando sola." },
-  { name: "Pablo V.",     car: "BYD Tang Pro",   savings: "$6.100.000", rating: 4, imageUrl: "/images/testimonial-byd-tang.webp",     personImageUrl: "/images/testimonial-person-3.jpg", quote: "Para un auto de ese precio esperaba un proceso largo. Todo lo contrario: oferta en 48 horas, sin pisar concesionarias. El ahorro en un auto así es muy significativo." },
+  { name: "Francisco M.", car: "Tesla Model 3",  carSlug: "tesla-model-3", savings: "$5.200.000", rating: 5, imageUrl: "/images/testimonial-tesla-model3.webp", personImageUrl: "/images/testimonial-person-1.jpg", quote: "Llevaba meses mirando el Model 3. Electrificarte consiguió un precio que no encontré en ningún concesionario. En dos semanas ya manejaba con 500 km de autonomía." },
+  { name: "Sofía R.",     car: "Kia EV6",        carSlug: "kia-ev6",       savings: "$3.800.000", rating: 5, imageUrl: "/images/testimonial-kia-ev6.webp",      personImageUrl: "/images/testimonial-person-2.jpg", quote: "Quería carga rápida para el día a día y autonomía para los fines de semana. Me trajeron una oferta con bono incluido que no habría conseguido negociando sola." },
+  { name: "Pablo V.",     car: "BYD Tang Pro",   carSlug: "byd-tang",      savings: "$6.100.000", rating: 5, imageUrl: "/images/testimonial-byd-tang.webp",     personImageUrl: "/images/testimonial-person-3.jpg", quote: "Para un auto de ese precio esperaba un proceso largo. Todo lo contrario: oferta en 48 horas, sin pisar concesionarias. El ahorro en un auto así es muy significativo." },
 ];
 
 function StarRating({ rating }: { rating: number }) {
@@ -100,7 +102,16 @@ export function Testimonials({ title = "Lo que dicen nuestros clientes", testimo
                     <Avatar name={t.name} imageUrl={t.personImageUrl} />
                     <div className="min-w-0">
                       <p className="font-headline font-bold leading-tight truncate">{t.name}</p>
-                      <p className="text-text-muted text-xs truncate">{t.car}</p>
+                      {t.carSlug ? (
+                        <Link
+                          href={`/auto/${t.carSlug}`}
+                          className="text-text-muted text-xs truncate block hover:text-primary-deep underline decoration-dotted underline-offset-2 transition-colors"
+                        >
+                          {t.car}
+                        </Link>
+                      ) : (
+                        <p className="text-text-muted text-xs truncate">{t.car}</p>
+                      )}
                     </div>
                   </div>
                   <div className="text-right flex-shrink-0">

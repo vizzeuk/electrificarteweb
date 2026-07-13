@@ -147,3 +147,22 @@ ev-chat-widget {
     animation: none;
   }
 }
+
+/* Panel de filtros — entrada. Mobile: sube desde abajo. Desktop (drawer):
+   entra desde la derecha. CSS puro (sin JS) para ser determinista. */
+@keyframes filter-sheet-in {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+@keyframes filter-drawer-in {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+.filter-panel-enter {
+  animation: filter-sheet-in 0.3s ease-out both;
+}
+@media (min-width: 768px) {
+  .filter-panel-enter {
+    animation: filter-drawer-in 0.3s ease-out both;
+  }
+}

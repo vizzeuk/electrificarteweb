@@ -32,13 +32,16 @@ function IconTikTok() {
 }
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
-const footerSections = [
+type FooterLink = { label: string; href: string; external?: boolean };
+
+const footerSections: { title: string; links: FooterLink[] }[] = [
   {
     title: "Nosotros",
     links: [
       { label: "Quiénes somos",    href: "/nosotros" },
       { label: "Nuestro servicio", href: "/#como-funciona" },
       { label: "Cómo negociamos",  href: "/negociacion" },
+      { label: "Para vendedores",  href: "https://vendedores.electrificarte.com", external: true },
       { label: "Blog",             href: "/blog" },
     ],
   },
@@ -168,12 +171,23 @@ export function Footer() {
               <ul className="space-y-3.5">
                 {section.links.map((link) => (
                   <li key={link.label}>
-                    <Link
-                      href={link.href}
-                      className="text-sm text-white/60 font-medium hover:text-primary transition-colors"
-                    >
-                      {link.label}
-                    </Link>
+                    {link.external ? (
+                      <a
+                        href={link.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-white/60 font-medium hover:text-primary transition-colors"
+                      >
+                        {link.label}
+                      </a>
+                    ) : (
+                      <Link
+                        href={link.href}
+                        className="text-sm text-white/60 font-medium hover:text-primary transition-colors"
+                      >
+                        {link.label}
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>
