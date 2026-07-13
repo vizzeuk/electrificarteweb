@@ -21,36 +21,131 @@ interface HowItWorksProps {
   videoMobileUrl?: string;
 }
 
-const DEFAULT_STEPS: HowItWorksStep[] = [
+// ─── Track OFERTA ($19.990) — fallback si Sanity no trae pasos ───
+const OFERTA_STEPS: HowItWorksStep[] = [
   {
     number: "01",
     icon: "search",
-    tag: "Explora el catálogo",
-    title: "Cuéntanos qué buscas",
-    description: "Explora el catálogo o dinos el modelo que te interesa. Si no estás seguro, te ayudamos a decidir.",
+    title: "Elige tu modelo",
+    description: "Ya sabes qué auto quieres. Dinos el modelo desde el catálogo o el buscador.",
   },
   {
     number: "02",
     icon: "payments",
-    tag: "Pago único $19.990",
     title: "Activamos tu búsqueda",
     description: "Con un pago único de $19.990 negociamos en tu nombre con nuestra red exclusiva de vendedores oficiales.",
   },
   {
     number: "03",
     icon: "handshake",
-    tag: "Respuesta en 48-96h",
     title: "Recibe la mejor oferta",
-    description: "Comparamos precios, bonos y financiamiento disponible. Tú decides si la tomas.",
+    description: "Comparamos precios, bonos y financiamiento en 48-96h. Tú decides si la tomas.",
   },
   {
     number: "04",
     icon: "celebration",
-    tag: "A estrenar",
     title: "Estrena tu auto",
-    description: "Coordinas directamente con el vendedor oficial los últimos detalles y retiras tu vehículo nuevo.",
+    description: "Coordinas con el vendedor oficial los últimos detalles y retiras tu vehículo nuevo.",
   },
 ];
+
+// ─── Track ASESORÍA ($4.990) — hardcodeado; listo para subir a Sanity ───
+const ASESORIA_STEPS: HowItWorksStep[] = [
+  {
+    number: "01",
+    icon: "forum",
+    title: "Contratas y te escribimos",
+    description: "Pagas $4.990 y Francisco IA te contacta por WhatsApp al instante.",
+  },
+  {
+    number: "02",
+    icon: "psychology",
+    title: "Analizamos tu caso",
+    description: "Revisamos tu uso diario, presupuesto y necesidades reales para filtrar el catálogo por ti.",
+  },
+  {
+    number: "03",
+    icon: "check_circle",
+    title: "Llegas a tu auto ideal",
+    description: "Terminas con claridad total sobre qué modelo comprar. Es una conversación, no una venta.",
+  },
+];
+
+type Accent = "amber" | "teal";
+
+const ACCENT: Record<Accent, {
+  label: string; text: string; chipBg: string; card: string;
+  numBg: string; line: string; btn: string;
+}> = {
+  amber: {
+    label: "Asesoría · $4.990",
+    text: "text-amber-dark",
+    chipBg: "bg-amber/10 text-amber-dark",
+    card: "hover:border-amber/40 hover:shadow-amber/5",
+    numBg: "from-amber/20 to-amber/5 border-amber/40 text-amber-dark",
+    line: "border-amber/30",
+    btn: "bg-amber hover:bg-amber-dark",
+  },
+  teal: {
+    label: "Oferta · $19.990",
+    text: "text-primary-deep",
+    chipBg: "bg-primary/10 text-primary-deep",
+    card: "hover:border-primary/40 hover:shadow-primary/5",
+    numBg: "from-primary/20 to-primary/5 border-primary/40 text-primary-deep",
+    line: "border-primary/30",
+    btn: "bg-primary hover:bg-primary-dark",
+  },
+};
+
+function Track({
+  accent, heading, description, steps, ctaText, ctaHref,
+}: {
+  accent: Accent;
+  heading: string;
+  description: string;
+  steps: HowItWorksStep[];
+  ctaText: string;
+  ctaHref: string;
+}) {
+  const a = ACCENT[accent];
+  return (
+    <div className="flex flex-col">
+      <div className="mb-6">
+        <span className={`inline-block ${a.chipBg} text-[11px] font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3`}>
+          {a.label}
+        </span>
+        <h3 className="font-headline font-bold text-xl md:text-2xl mb-2">{heading}</h3>
+        <p className="text-sm text-text-muted leading-relaxed">{description}</p>
+      </div>
+
+      {/* Vertical roadmap */}
+      <div className="relative pl-10 flex-1">
+        <div className={`absolute left-4 top-4 bottom-4 w-px border-l-2 border-dashed ${a.line}`} />
+        {steps.map((step, i) => (
+          <div
+            key={step.title}
+            className="fade-in-up relative mb-5 last:mb-0"
+            style={{ animationDelay: `${i * 0.1}s` }}
+          >
+            <div className={`absolute -left-10 top-1 w-8 h-8 rounded-full bg-gradient-to-br ${a.numBg} border-2 flex items-center justify-center`}>
+              <Icon name={step.icon} size="sm" />
+            </div>
+            <h4 className="font-headline font-bold text-base mb-1">{step.title}</h4>
+            <p className="text-sm text-text-muted leading-relaxed">{step.description}</p>
+          </div>
+        ))}
+      </div>
+
+      <Link
+        href={ctaHref}
+        className={`mt-7 inline-flex items-center justify-center gap-2 ${a.btn} text-black font-bold px-6 py-3.5 rounded-xl transition-all text-base`}
+      >
+        {ctaText}
+        <Icon name="arrow_forward" size="sm" />
+      </Link>
+    </div>
+  );
+}
 
 const FALLBACK_16x9 = "/hero-video/explicativo-16x9.mp4";
 const FALLBACK_9x16 = "/hero-video/explicativo-9x16.mp4";
@@ -61,10 +156,9 @@ export function HowItWorks({ title = "Cómo funciona Electrificarte", subtitle, 
   const VIDEO_9x16 = videoMobileUrl ?? FALLBACK_9x16;
   const [modalOpen, setModalOpen] = useState(false);
   const [mobileVideoOpen, setMobileVideoOpen] = useState(false);
-  const displaySteps = steps && steps.length > 0 ? steps : DEFAULT_STEPS;
-  const displaySubtitle = subtitle ?? "En 4 pasos pasas de buscar a estrenar tu auto eléctrico al mejor precio de Chile.";
-  const n = displaySteps.length;
-  const pct = (100 / (n * 2)).toFixed(4);
+
+  const ofertaSteps = steps && steps.length > 0 ? steps : OFERTA_STEPS;
+  const ofertaDescription = subtitle ?? "Comparamos precios, bonos y financiamiento con nuestra red de vendedores y te traemos la mejor oferta del mercado.";
 
   // Auto-open desktop modal for first-time visitors after 5 seconds
   useEffect(() => {
@@ -81,7 +175,6 @@ export function HowItWorks({ title = "Cómo funciona Electrificarte", subtitle, 
 
   function closeModal() {
     setModalOpen(false);
-    // Mark as seen if they close manually (button click counts too)
     if (typeof window !== "undefined") {
       localStorage.setItem(SEEN_KEY, "1");
     }
@@ -98,76 +191,47 @@ export function HowItWorks({ title = "Cómo funciona Electrificarte", subtitle, 
     <>
       <section id="como-funciona" className="py-20 md:py-24 overflow-hidden" aria-labelledby="howitworks-title">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <div className="text-center mb-20">
+          <div className="text-center mb-14 md:mb-16">
             <p className="text-[11px] uppercase tracking-widest text-primary-deep font-bold mb-2">Proceso simple</p>
             <h2 id="howitworks-title" className="text-3xl md:text-4xl font-headline font-black uppercase tracking-tight mb-4">
               {title}
             </h2>
-            <p className="text-text-muted max-w-2xl mx-auto">{displaySubtitle}</p>
+            <p className="text-text-muted max-w-2xl mx-auto">
+              Dos caminos, un mismo objetivo: que estrenes tu auto eléctrico al mejor precio de Chile. Elige según dónde estás hoy.
+            </p>
           </div>
 
-          {/* ── Desktop roadmap ─────────────────────────────────── */}
-          <div className="hidden md:block">
-            <div className="relative flex items-start justify-between">
-              <div
-                className="absolute top-8 h-px border-t-2 border-dashed border-primary/30 z-0"
-                style={{ left: `${pct}%`, right: `${pct}%` }}
-              />
-
-              {displaySteps.map((step, i) => (
-                <div
-                  key={step.title}
-                  className="fade-in-up flex-1 flex flex-col items-center z-10"
-                  style={{ animationDelay: `${i * 0.12}s` }}
-                >
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border-2 border-primary/40 flex items-center justify-center mb-6 shadow-[0_0_24px_rgba(0,229,229,0.12)]">
-                    <Icon name={step.icon} className="text-primary-deep" />
-                  </div>
-                  <div className="bg-white border border-gray-100 rounded-2xl p-5 mx-2 text-center hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 w-full">
-                    {step.tag && (
-                      <span className="inline-block bg-primary/10 text-primary-deep text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full mb-3">
-                        {step.tag}
-                      </span>
-                    )}
-                    <h3 className="font-headline font-bold text-base mb-2">{step.title}</h3>
-                    <p className="text-sm text-text-muted leading-relaxed">{step.description}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+          {/* Two parallel tracks — stacked on mobile, side-by-side on desktop */}
+          <div className="grid gap-12 md:gap-8 md:grid-cols-2 max-w-5xl mx-auto">
+            <Track
+              accent="amber"
+              heading="Aún no sé qué auto quiero"
+              description="Te ayudamos a decidir con una asesoría IA por WhatsApp, según tu uso y presupuesto reales."
+              steps={ASESORIA_STEPS}
+              ctaText="Quiero asesoría"
+              ctaHref="/asesoria"
+            />
+            <Track
+              accent="teal"
+              heading="Ya sé qué auto quiero"
+              description={ofertaDescription}
+              steps={ofertaSteps}
+              ctaText="Solicitar mi oferta"
+              ctaHref="/solicitar"
+            />
           </div>
 
-          {/* ── Mobile roadmap — vertical ────────────────────────── */}
-          <div className="md:hidden relative pl-8">
-            <div className="absolute left-4 top-4 bottom-4 w-px border-l-2 border-dashed border-primary/30" />
+          {/* Optional bridge — parallel, not a ladder */}
+          <p className="text-center text-sm text-text-muted mt-10">
+            ¿Hiciste la asesoría y ya decidiste? Pasa directo a{" "}
+            <Link href="/solicitar" className="text-primary-deep font-semibold hover:underline">conseguir tu precio</Link>.
+          </p>
 
-            {displaySteps.map((step, i) => (
-              <div
-                key={step.title}
-                className="fade-in-up relative mb-6 last:mb-0"
-                style={{ animationDelay: `${i * 0.1}s` }}
-              >
-                <div className="absolute -left-8 top-4 w-8 h-8 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border-2 border-primary/40 flex items-center justify-center">
-                  <Icon name={step.icon} className="text-primary-deep" size="sm" />
-                </div>
-                <div className="bg-white border border-gray-100 rounded-2xl p-5 hover:border-primary/30 transition-colors">
-                  {step.tag && (
-                    <span className="inline-block bg-primary/10 text-primary-deep text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full mb-2">
-                      {step.tag}
-                    </span>
-                  )}
-                  <h3 className="font-headline font-bold mb-1">{step.title}</h3>
-                  <p className="text-sm text-text-muted leading-relaxed">{step.description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="text-center mt-14 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <div className="text-center mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
             {/* Mobile: toggle inline video */}
             <button
               onClick={() => setMobileVideoOpen((o) => !o)}
-              className="sm:hidden inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-8 py-4 rounded-xl transition-all text-lg"
+              className="sm:hidden inline-flex items-center justify-center gap-2 border border-gray-200 hover:border-primary/40 text-gray-700 font-bold px-8 py-4 rounded-xl transition-all text-lg"
             >
               <Icon name={mobileVideoOpen ? "pause_circle" : "play_circle"} size="sm" />
               {mobileVideoOpen ? "Cerrar video" : "Ver video explicativo"}
@@ -175,18 +239,11 @@ export function HowItWorks({ title = "Cómo funciona Electrificarte", subtitle, 
             {/* Desktop: open modal */}
             <button
               onClick={openModal}
-              className="hidden sm:inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-8 py-4 rounded-xl transition-all text-lg"
+              className="hidden sm:inline-flex items-center justify-center gap-2 border border-gray-200 hover:border-primary/40 text-gray-700 font-bold px-8 py-4 rounded-xl transition-all text-lg"
             >
               <Icon name="play_circle" size="sm" />
               Ver video explicativo
             </button>
-            <Link
-              href="/solicitar"
-              className="inline-flex items-center justify-center gap-2 border border-gray-200 hover:border-primary/40 text-gray-700 font-bold px-8 py-4 rounded-xl transition-all text-lg"
-            >
-              Comenzar ahora
-              <Icon name="arrow_forward" size="sm" />
-            </Link>
           </div>
 
           {/* Mobile inline video — no modal, no fixed positioning issues on iOS */}

@@ -38,7 +38,7 @@ type DropdownId = "brands" | "types" | "electric" | null;
 
 // Pages with dark hero sections — navbar starts transparent on these.
 // All other pages have light backgrounds and must always show solid navbar.
-const DARK_HERO_PATHS = /^(\/|\/marcas\/[^/]+|\/auto\/[^/]+|\/tipo\/[^/]+|\/electrico\/[^/]+|\/coleccion\/[^/]+)$/;
+const DARK_HERO_PATHS = /^(\/|\/asesoria|\/marcas\/[^/]+|\/auto\/[^/]+|\/tipo\/[^/]+|\/electrico\/[^/]+|\/coleccion\/[^/]+)$/;
 
 export function Navbar({ brands = [], vehicleTypes = [], electricTypes = [] }: NavbarProps) {
   const pathname = usePathname();

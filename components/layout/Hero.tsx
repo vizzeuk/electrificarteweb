@@ -1,6 +1,3 @@
-"use client";
-
-import { m } from "framer-motion";
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { Icon } from "@/components/ui/Icon";
@@ -10,10 +7,20 @@ export interface HeroData {
   badge?: string;
   title?: string;
   titleHighlight?: string;
+  // ─── Panel Oferta ($19.990) — alimentado por Sanity ───
   subtitle?: string;
   cta1Text?: string;
   cta1Href?: string;
   cta2Text?: string;
+  offerPrice?: string;
+  // ─── Panel Asesoría ($4.990) — hoy con fallbacks; listo para subir a Sanity ───
+  advisoryEyebrow?: string;
+  advisoryTitle?: string;
+  advisorySubtitle?: string;
+  advisoryPrice?: string;
+  advisoryCtaText?: string;
+  advisoryCtaHref?: string;
+  // ─── Campos heredados (aún llegan desde page.tsx; no se renderizan hoy) ───
   statSavings?: string;
   statCars?: string;
   statDiscount?: string;
@@ -24,65 +31,28 @@ export interface HeroData {
   videoUrl?: string;
 }
 
-function getYouTubeId(url: string): string | null {
-  const patterns = [
-    /youtu\.be\/([^?&]+)/,
-    /youtube\.com\/watch\?v=([^&]+)/,
-    /youtube\.com\/embed\/([^?&]+)/,
-  ];
-  for (const p of patterns) {
-    const match = url.match(p);
-    if (match) return match[1];
-  }
-  return null;
-}
-
-function HeroVideo({ url }: { url: string }) {
-  const ytId = getYouTubeId(url);
-  if (ytId) {
-    return (
-      <iframe
-        src={`https://www.youtube.com/embed/${ytId}?autoplay=1&mute=1&loop=1&playlist=${ytId}&controls=1&rel=0&modestbranding=1`}
-        title="Video Electrificarte"
-        allow="autoplay; encrypted-media"
-        allowFullScreen
-        className="absolute inset-0 w-full h-full"
-      />
-    );
-  }
-  return (
-    <video
-      src={url}
-      autoPlay
-      muted
-      loop
-      playsInline
-      controls
-      className="absolute inset-0 w-full h-full object-cover"
-    />
-  );
-}
-
 interface HeroProps {
   data?: HeroData;
 }
 
 export function Hero({ data }: HeroProps) {
-  const badge         = data?.badge         ?? "Más de 500 compras negociadas en Chile";
-  const title         = data?.title         ?? "Ahorra millones en tu próximo";
-  const highlight     = data?.titleHighlight ?? "auto eléctrico";
-  const subtitle      = data?.subtitle      ?? "Por solo $19.990 negociamos con nuestra red de vendedores oficiales y te traemos la mejor oferta del mercado en 48-96 horas. Si no ahorras, te devolvemos el dinero.";
-  const cta1Text      = data?.cta1Text      ?? "Ver autos disponibles";
-  const cta1Href      = data?.cta1Href      ?? "/marcas";
-  const cta2Text      = data?.cta2Text      ?? "Cómo funciona";
-  const statSavings   = data?.statSavings   ?? "$4.200.000 CLP";
-  const statCars      = data?.statCars      ?? "500+";
-  const statDiscount  = data?.statDiscount  ?? "27%";
-  const statResponse  = data?.statResponse  ?? "48-96h";
-  const offerOld      = data?.offerOldPrice ?? "$29.990";
-  const offerNew      = data?.offerNewPrice ?? "$19.990";
-  const offerBadge    = data?.offerBadge    ?? "33% dcto Electric Sale";
-  const videoUrl      = data?.videoUrl;
+  const badge     = data?.badge          ?? "Marketplace #1 de autos eléctricos en Chile";
+  const title     = data?.title          ?? "Estrena tu próximo";
+  const highlight = data?.titleHighlight ?? "auto eléctrico";
+
+  // Panel Oferta ($19.990)
+  const offerSubtitle = data?.subtitle  ?? "Ya sabes qué auto quieres. Negociamos con nuestra red de vendedores oficiales y te traemos la mejor oferta del mercado en 48-96 horas. Si no ahorras, te devolvemos el dinero.";
+  const offerCtaText  = data?.cta1Text  ?? "Quiero mi oferta";
+  const offerCtaHref  = data?.cta1Href  ?? "/solicitar";
+  const offerPrice    = data?.offerPrice ?? data?.offerNewPrice ?? "$19.990";
+
+  // Panel Asesoría ($4.990)
+  const advEyebrow  = data?.advisoryEyebrow  ?? "Aún no sé cuál elegir";
+  const advTitle    = data?.advisoryTitle    ?? "Te ayudamos a decidir";
+  const advSubtitle = data?.advisorySubtitle ?? "Francisco, nuestro asesor IA, analiza tu uso y presupuesto por WhatsApp y te lleva al auto ideal, sin presión.";
+  const advCtaText  = data?.advisoryCtaText  ?? "Quiero asesoría";
+  const advCtaHref  = data?.advisoryCtaHref  ?? "/asesoria";
+  const advPrice    = data?.advisoryPrice    ?? "$4.990";
 
   return (
     <section
@@ -106,46 +76,90 @@ export function Hero({ data }: HeroProps) {
           }}
         />
         <div className="absolute bottom-0 left-0 w-[500px] h-[400px] bg-primary/5 rounded-full blur-[140px]" />
+        <div className="absolute top-0 right-0 w-[500px] h-[400px] bg-amber/5 rounded-full blur-[140px]" />
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 py-12 md:py-24 lg:py-32 w-full">
-        <div className="grid gap-12 items-center max-w-3xl">
-          {/* Left: Copy. Plain <div> instead of m.div so we don't add another
-              framer-motion consumer to MotionProvider's tree — that combo was
-              choking iOS Safari hard. CSS .hero-fade-in keeps the desktop
-              animation identical; on mobile the rule is `animation:none` so
-              paint is instant. */}
-          <div className="hero-fade-in">
-            <Badge variant="primary" className="mb-6">{badge}</Badge>
+      <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 py-12 md:py-20 lg:py-24 w-full">
+        {/* Shared header. Plain <div> (not m.div) — keeps CSS entry animation
+            without adding a framer-motion consumer that choked iOS Safari. */}
+        <div className="hero-fade-in text-center max-w-3xl mx-auto mb-10 md:mb-12">
+          <Badge variant="primary" className="mb-5">{badge}</Badge>
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-headline font-extrabold text-white leading-[1.05] mb-4">
+            {title}{" "}
+            <span className="text-primary">{highlight}</span>
+          </h1>
+          <p className="text-base md:text-lg text-white/50">
+            Dos formas de lograrlo. Elige la tuya.
+          </p>
+        </div>
 
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-headline font-extrabold text-white leading-[1.05] mb-6">
-              {title}{" "}
-              <span className="text-primary">{highlight}</span>
-            </h1>
-
-            <p className="text-lg md:text-xl text-white/60 mb-10 max-w-xl leading-relaxed">
-              {subtitle}
-            </p>
-
-            <div className="flex flex-col items-start sm:flex-row gap-3">
-              <Link
-                href={cta1Href}
-                className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-5 py-3 sm:px-8 sm:py-4 rounded-xl transition-all text-sm sm:text-lg shadow-[0_6px_32px_rgba(0,229,229,0.30)] hover:shadow-[0_8px_40px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]"
-              >
-                {cta1Text}
-                <Icon name="arrow_forward" size="sm" />
-              </Link>
-              <a
-                href="#como-funciona"
-                className="inline-flex items-center justify-center gap-2 border border-white/20 hover:border-white/50 hover:bg-white/5 text-white font-medium px-5 py-3 sm:px-8 sm:py-4 rounded-xl transition-all text-sm sm:text-base"
-              >
-                {cta2Text}
-                <Icon name="expand_more" size="sm" />
-              </a>
+        {/* Two co-equal panels. On mobile they stack (Asesoría first). */}
+        <div className="grid gap-4 md:gap-6 md:grid-cols-2 max-w-5xl mx-auto items-stretch">
+          {/* ── Panel Asesoría (amber) ── */}
+          <div className="card-fade-in flex flex-col rounded-2xl border border-amber/30 bg-white/[0.03] p-6 md:p-8 hover:border-amber/60 hover:bg-white/[0.05] transition-all">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-amber/15 text-amber">
+                <Icon name="forum" />
+              </span>
+              <span className="text-[11px] font-bold uppercase tracking-widest text-amber">{advEyebrow}</span>
             </div>
+            <h2 className="text-2xl md:text-3xl font-headline font-bold text-white mb-3 leading-tight">
+              {advTitle}
+            </h2>
+            <p className="text-sm md:text-base text-white/60 leading-relaxed mb-6 flex-1">
+              {advSubtitle}
+            </p>
+            <div className="flex items-center gap-3 mb-5">
+              <span className="text-2xl font-headline font-extrabold text-white">{advPrice}</span>
+              <span className="text-xs text-white/40">pago único · por WhatsApp</span>
+            </div>
+            <Link
+              href={advCtaHref}
+              className="inline-flex items-center justify-center gap-2 bg-amber hover:bg-amber-dark text-black font-bold px-6 py-3.5 rounded-xl transition-all text-base shadow-[0_6px_32px_rgba(245,158,11,0.30)] hover:shadow-[0_8px_40px_rgba(245,158,11,0.45)] hover:scale-[1.02] active:scale-[0.99]"
+            >
+              {advCtaText}
+              <Icon name="arrow_forward" size="sm" />
+            </Link>
+          </div>
+
+          {/* ── Panel Oferta (teal) ── */}
+          <div className="card-fade-in flex flex-col rounded-2xl border border-primary/30 bg-white/[0.03] p-6 md:p-8 hover:border-primary/60 hover:bg-white/[0.05] transition-all">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-primary/15 text-primary">
+                <Icon name="verified" />
+              </span>
+              <span className="text-[11px] font-bold uppercase tracking-widest text-primary">Ya sé qué quiero</span>
+            </div>
+            <h2 className="text-2xl md:text-3xl font-headline font-bold text-white mb-3 leading-tight">
+              Conseguimos tu mejor precio
+            </h2>
+            <p className="text-sm md:text-base text-white/60 leading-relaxed mb-6 flex-1">
+              {offerSubtitle}
+            </p>
+            <div className="flex items-center gap-3 mb-5">
+              <span className="text-2xl font-headline font-extrabold text-white">{offerPrice}</span>
+              <span className="text-xs text-white/40">pago único · red de vendedores</span>
+            </div>
+            <Link
+              href={offerCtaHref}
+              className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-6 py-3.5 rounded-xl transition-all text-base shadow-[0_6px_32px_rgba(0,229,229,0.30)] hover:shadow-[0_8px_40px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]"
+            >
+              {offerCtaText}
+              <Icon name="arrow_forward" size="sm" />
+            </Link>
           </div>
         </div>
 
+        {/* Secondary CTA — anchors to the two-track "Cómo funciona" section */}
+        <div className="text-center mt-8">
+          <a
+            href="#como-funciona"
+            className="inline-flex items-center justify-center gap-1.5 text-white/50 hover:text-white text-sm font-medium transition-colors"
+          >
+            ¿Cómo funciona cada uno?
+            <Icon name="expand_more" size="sm" />
+          </a>
+        </div>
       </div>
     </section>
   );
