@@ -11,6 +11,7 @@ import {
   OFFTOPIC_RESPONSE,
 } from "@/lib/chat/guards";
 import { validateOutput } from "@/lib/chat/output-validator";
+import { ASESORIA_CHECKOUT_URL } from "@/lib/products";
 
 // ─── Singletons ───────────────────────────────────────────────────────────────
 
@@ -26,8 +27,8 @@ const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 // ─── Productos ────────────────────────────────────────────────────────────────
 // Asesoría personalizada ($4.990, por WhatsApp) → link de pago Reveniu.
 // Negociación del mejor precio ($19.990) → formulario /solicitar.
-const ASESORIA_URL =
-  "https://app.reveniu.com/checkout-custom-link/nd1Zh0zfeNfi1b1yJgH8XeI94hJqycjB";
+// La URL vive en lib/products.ts para compartirse con la página /asesoria.
+const ASESORIA_URL = ASESORIA_CHECKOUT_URL;
 
 // ─── Brand cache (5-min TTL) ──────────────────────────────────────────────────
 
@@ -50,7 +51,9 @@ async function getBrands(): Promise<Brand[]> {
 
 // ─── Input validation ─────────────────────────────────────────────────────────
 
-const MAX_MSG_LEN = 1_000;
+const MAX_MSG_LEN = 1_000;          // límite de entrada del usuario (abuso/costo)
+const MAX_ASSISTANT_LEN = 4_000;    // los mensajes del asistente son salida propia
+                                    // (listas de autos largas) y se truncan, no se rechazan
 const MAX_HISTORY = 20;
 
 interface ChatMessage { role: "user" | "assistant"; content: string }
@@ -62,8 +65,15 @@ function validateMessages(raw: unknown): ChatMessage[] | null {
     if (!m || typeof m !== "object") return null;
     const { role, content } = m as Record<string, unknown>;
     if (typeof role !== "string" || (role !== "user" && role !== "assistant")) return null;
-    if (typeof content !== "string" || content.length === 0 || content.length > MAX_MSG_LEN) return null;
-    out.push({ role: role as "user" | "assistant", content });
+    if (typeof content !== "string" || content.length === 0) return null;
+    // El usuario se rechaza si excede el límite; el asistente (nuestra propia
+    // salida, p. ej. tarjetas de autos) se trunca para no romper el multi-turno.
+    if (role === "user") {
+      if (content.length > MAX_MSG_LEN) return null;
+      out.push({ role, content });
+    } else {
+      out.push({ role, content: content.length > MAX_ASSISTANT_LEN ? content.slice(0, MAX_ASSISTANT_LEN) : content });
+    }
   }
   return out;
 }
