@@ -49,7 +49,7 @@ export function Hero({ data }: HeroProps) {
   // Panel Asesoría ($4.990)
   const advEyebrow  = data?.advisoryEyebrow  ?? "Aún no sé cuál elegir";
   const advTitle    = data?.advisoryTitle    ?? "Te ayudamos a decidir";
-  const advSubtitle = data?.advisorySubtitle ?? "Francisco, nuestro asesor IA, analiza tu uso y presupuesto por WhatsApp y te lleva al auto ideal, sin presión.";
+  const advSubtitle = data?.advisorySubtitle ?? "Francisco, nuestro asesor IA, analiza tu uso y presupuesto por WhatsApp y te ayuda a encontrar tu modelo ideal, sin presión de venta.";
   const advCtaText  = data?.advisoryCtaText  ?? "Quiero asesoría";
   const advCtaHref  = data?.advisoryCtaHref  ?? "/asesoria";
   const advPrice    = data?.advisoryPrice    ?? "$4.990";
@@ -88,8 +88,11 @@ export function Hero({ data }: HeroProps) {
             {title}{" "}
             <span className="text-primary">{highlight}</span>
           </h1>
-          <p className="text-base md:text-lg text-white/50">
-            Dos formas de lograrlo. Elige la tuya.
+          <p className="text-base md:text-lg text-white/70">
+            ¿No sabes cuál modelo elegir? Te ayudamos.
+          </p>
+          <p className="text-base md:text-lg text-white/50 mt-1">
+            ¿Ya te decidiste por tu próximo electrificado? Te conseguimos el mejor precio.
           </p>
         </div>
 
@@ -110,8 +113,8 @@ export function Hero({ data }: HeroProps) {
               {advSubtitle}
             </p>
             <div className="flex items-center gap-3 mb-5">
-              <span className="text-2xl font-headline font-extrabold text-white">{advPrice}</span>
-              <span className="text-xs text-white/40">pago único · por WhatsApp</span>
+              <span className="text-3xl md:text-4xl font-headline font-extrabold text-white">{advPrice}</span>
+              <span className="text-xs text-white/40">pago único</span>
             </div>
             <Link
               href={advCtaHref}
@@ -137,8 +140,8 @@ export function Hero({ data }: HeroProps) {
               {offerSubtitle}
             </p>
             <div className="flex items-center gap-3 mb-5">
-              <span className="text-2xl font-headline font-extrabold text-white">{offerPrice}</span>
-              <span className="text-xs text-white/40">pago único · red de vendedores</span>
+              <span className="text-3xl md:text-4xl font-headline font-extrabold text-white">{offerPrice}</span>
+              <span className="text-xs text-white/40">pago único</span>
             </div>
             <Link
               href={offerCtaHref}
