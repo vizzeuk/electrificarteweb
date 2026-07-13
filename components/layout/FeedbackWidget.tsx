@@ -62,8 +62,14 @@ export function FeedbackWidget() {
     };
   }, []);
 
-  function collapse() {
+  // Oculta el widget y persiste el descarte: la lógica de lectura en el
+  // useEffect ya respeta SEEN_KEY, así que no reaparece por 30 días.
+  function dismiss() {
     setExpanded(false);
+    setHidden(true);
+    try {
+      localStorage.setItem(SEEN_KEY, Date.now().toString());
+    } catch {}
   }
 
   async function handleSubmit() {
@@ -93,32 +99,36 @@ export function FeedbackWidget() {
     <>
       {/* Collapsed — pestaña vertical pegada al borde izquierdo */}
       {!expanded && (
-        <button
-          onClick={() => setExpanded(true)}
-          title="Califica tu experiencia"
-          style={{
-            position: "fixed",
-            left: 0,
-            top: "42%",
-            zIndex: 51,
-            borderRadius: "0 8px 8px 0",
-            padding: "16px 9px",
-          }}
-          className="bg-amber text-black flex flex-col items-center gap-2 shadow-lg hover:translate-x-0.5 transition-all duration-200"
-        >
-          <span
-            className="material-symbols-outlined text-[17px]"
-            style={{ fontVariationSettings: '"FILL" 1' }}
+        <div style={{ position: "fixed", left: 0, top: "42%", zIndex: 51 }}>
+          <button
+            onClick={() => setExpanded(true)}
+            title="Califica tu experiencia"
+            style={{ borderRadius: "0 8px 8px 0" }}
+            className="bg-amber text-black flex flex-col items-center gap-1.5 px-1.5 py-2.5 sm:px-2.5 sm:py-4 shadow-lg hover:translate-x-0.5 transition-all duration-200"
           >
-            sentiment_satisfied
-          </span>
-          <span
-            className="font-black text-[10px] uppercase tracking-widest"
-            style={{ writingMode: "vertical-lr", transform: "rotate(180deg)" }}
+            <span
+              className="material-symbols-outlined text-[15px] sm:text-[17px]"
+              style={{ fontVariationSettings: '"FILL" 1' }}
+            >
+              sentiment_satisfied
+            </span>
+            <span
+              className="font-black text-[9px] sm:text-[10px] uppercase tracking-widest"
+              style={{ writingMode: "vertical-lr", transform: "rotate(180deg)" }}
+            >
+              Feedback
+            </span>
+          </button>
+          {/* Descartar — oculta el widget (no reaparece por 30 días) */}
+          <button
+            onClick={dismiss}
+            aria-label="Ocultar feedback"
+            title="Ocultar"
+            className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-black text-white/70 shadow-md hover:text-white transition-colors"
           >
-            Feedback
-          </span>
-        </button>
+            <span className="material-symbols-outlined text-[12px]">close</span>
+          </button>
+        </div>
       )}
 
       {/* Expanded card — flota cerca de la pestaña */}
@@ -130,7 +140,7 @@ export function FeedbackWidget() {
             top: "50%",
             transform: "translateY(-50%)",
             zIndex: 51,
-            width: "min(288px, calc(100vw - 24px))",
+            width: "min(280px, calc(100vw - 32px))",
           }}
           className="bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden"
         >
@@ -153,7 +163,7 @@ export function FeedbackWidget() {
               <div className="flex items-center justify-between px-4 py-3 bg-black">
                 <p className="text-white font-bold text-sm">Tu experiencia</p>
                 <button
-                  onClick={collapse}
+                  onClick={dismiss}
                   className="text-white/50 hover:text-white transition-colors"
                   aria-label="Cerrar"
                 >
@@ -189,7 +199,7 @@ export function FeedbackWidget() {
                         className="transition-transform hover:scale-125 active:scale-95"
                       >
                         <span
-                          className={`material-symbols-outlined text-[34px] transition-colors ${
+                          className={`material-symbols-outlined text-[28px] sm:text-[34px] transition-colors ${
                             isActive ? face.color : "text-gray-300"
                           }`}
                           style={{ fontVariationSettings: '"FILL" 1' }}
