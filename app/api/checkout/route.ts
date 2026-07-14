@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
 
   // Advisory usa su propio plan de Reveniu (precio $4.990).
   // El plan debe tener configurada la URL de retorno:
-  //   https://electrificarteweb.vercel.app/solicitar/gracias?type=advisory
+  //   https://www.electrificarte.com/solicitar/gracias?type=advisory
   const planId = isAdvisory
     ? Number(process.env.REVENIU_ADVISORY_PLAN_ID)
     : Number(process.env.REVENIU_PLAN_ID);

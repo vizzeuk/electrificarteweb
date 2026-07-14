@@ -107,12 +107,21 @@ export const hotDealUrgencyLabelQuery = groq`
   *[_type == "siteSettings"][0] { hotDealUrgencyLabel }
 `;
 
+// ─── Precios de productos ─────────────────────────────────────────────────────
+// Precios de display editables desde Sanity (Configuración del Sitio → Precios).
+// Las páginas /asesoria y /negociacion los consumen; fallback a lib/products.ts.
+export const productPricesQuery = groq`
+  *[_type == "siteSettings"][0] { advisoryPrice, offerPrice }
+`;
+
 // ─── Site Settings ────────────────────────────────────────────────────────────
 export const siteSettingsQuery = groq`
   *[_type == "siteSettings"][0] {
     siteName,
     siteTagline,
     hotDealUrgencyLabel,
+    advisoryPrice,
+    offerPrice,
     contactPhone,
     contactEmail,
     whatsappNumber,
