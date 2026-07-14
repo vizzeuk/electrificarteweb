@@ -586,7 +586,7 @@
 
   // ── Constants & static content ────────────────────────────────────────────
   const UPSELL_THRESHOLD = 3;
-  const UPSELL_URL = "https://app.reveniu.com/checkout-custom-link/nd1Zh0zfeNfi1b1yJgH8XeI94hJqycjB";
+  const UPSELL_URL = "/asesoria/contratar";
   const MAX_HISTORY = 20;
   const MAX_TRANSCRIPT = 60;
   const SESSION_KEY = "ev_chat_session";
