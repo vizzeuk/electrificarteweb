@@ -1,23 +1,39 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
+import { client } from "@/lib/sanity/client";
+import { productPricesQuery } from "@/lib/queries/pages";
 import { OFERTA_PRICE } from "@/lib/products";
 
-export const metadata: Metadata = {
-  title: "Negociación de ofertas — Conseguimos tu mejor precio",
-  description:
-    "Ya sabes qué auto quieres. Por $19.990 negociamos con nuestra red de vendedores oficiales y te traemos la mejor oferta del mercado en 48-96 horas. Si no ahorras, te devolvemos el dinero.",
-  alternates: { canonical: "/negociacion" },
-  openGraph: {
-    title: "Negociación de ofertas | Electrificarte",
-    description:
-      "Negociamos con nuestra red de vendedores oficiales y te conseguimos el mejor precio de tu auto eléctrico. Garantía de devolución.",
-    url: "/negociacion",
-    type: "website",
-  },
-};
+export const revalidate = 60;
 
-const STEPS = [
+// Precio de display editable desde Sanity (Configuración del Sitio → Precios).
+// Fallback a la constante de lib/products.ts si Sanity no lo trae.
+async function getOfferPrice(): Promise<string> {
+  const prices = await client
+    .fetch(productPricesQuery, {}, { next: { tags: ["siteSettings"] } })
+    .catch(() => null);
+  return prices?.offerPrice ?? OFERTA_PRICE;
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const price = await getOfferPrice();
+  return {
+    title: "Negociación de ofertas — Conseguimos tu mejor precio",
+    description:
+      `Ya sabes qué auto quieres. Por ${price} negociamos con nuestra red de vendedores oficiales y te traemos la mejor oferta del mercado en 48-96 horas. Si no ahorras, te devolvemos el dinero.`,
+    alternates: { canonical: "/negociacion" },
+    openGraph: {
+      title: "Negociación de ofertas | Electrificarte",
+      description:
+        "Negociamos con nuestra red de vendedores oficiales y te conseguimos el mejor precio de tu auto eléctrico. Garantía de devolución.",
+      url: "/negociacion",
+      type: "website",
+    },
+  };
+}
+
+const buildSteps = (price: string) => [
   {
     icon: "search",
     title: "Elige tu modelo",
@@ -26,7 +42,7 @@ const STEPS = [
   {
     icon: "payments",
     title: "Activamos tu búsqueda",
-    description: "Con un pago único de $19.990 negociamos en tu nombre con nuestra red exclusiva de vendedores oficiales.",
+    description: `Con un pago único de ${price} negociamos en tu nombre con nuestra red exclusiva de vendedores oficiales.`,
   },
   {
     icon: "handshake",
@@ -74,7 +90,9 @@ const INCLUYE = [
   "Garantía de devolución si no conseguimos ahorro",
 ];
 
-export default function NegociacionPage() {
+export default async function NegociacionPage() {
+  const price = await getOfferPrice();
+  const STEPS = buildSteps(price);
   return (
     <>
       {/* ── Hero ── */}
@@ -102,7 +120,7 @@ export default function NegociacionPage() {
               href="/solicitar"
               className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-8 py-4 rounded-xl transition-all text-lg shadow-[0_6px_32px_rgba(0,229,229,0.30)] hover:shadow-[0_8px_40px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]"
             >
-              Quiero mi oferta · {OFERTA_PRICE}
+              Quiero mi oferta · {price}
               <Icon name="arrow_forward" size="sm" />
             </Link>
             <span className="text-white/40 text-sm">Pago único · respuesta en 48-96 h</span>
@@ -201,13 +219,13 @@ export default function NegociacionPage() {
             Consigue tu mejor precio
           </h2>
           <p className="text-white/50 mb-8">
-            Un solo pago de {OFERTA_PRICE} y activamos la búsqueda con nuestra red de vendedores. Si no ahorras, te devolvemos el dinero.
+            Un solo pago de {price} y activamos la búsqueda con nuestra red de vendedores. Si no ahorras, te devolvemos el dinero.
           </p>
           <Link
             href="/solicitar"
             className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-8 py-4 rounded-xl transition-all text-lg shadow-[0_6px_32px_rgba(0,229,229,0.30)] hover:shadow-[0_8px_40px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]"
           >
-            Quiero mi oferta · {OFERTA_PRICE}
+            Quiero mi oferta · {price}
             <Icon name="arrow_forward" size="sm" />
           </Link>
           <p className="text-white/40 text-sm mt-6">
