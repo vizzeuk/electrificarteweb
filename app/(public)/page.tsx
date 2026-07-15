@@ -65,7 +65,8 @@ export default async function HomePage() {
       name:                 c.name,
       slug:                 toSlug(c.slug),
       brand:                toBrand(c.brand),
-      category:             c.electricType?.tag ?? "",
+      // El tipo eléctrico ya se muestra con el ribbon de color (ElectricTypeBadge);
+      // no lo duplicamos en el badge blanco de "categoría".
       imageUrl:             c.imageUrl,
       batteryCapacity:      c.batteryCapacity,
       range:                c.range,

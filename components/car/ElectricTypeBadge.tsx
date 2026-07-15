@@ -18,6 +18,25 @@ const TYPE_CONFIG: Record<string, Config> = {
   REEV: { label: "REEV", className: "bg-purple-600 text-white" },
 };
 
+/**
+ * Color de acento (hex) por tipo eléctrico — equivalente a las clases Tailwind
+ * de TYPE_CONFIG. Fuente única de verdad para que otras secciones (ej. la grilla
+ * de "¿Qué tipo de electrificado buscas?") usen el mismo color que los ribbons.
+ */
+export const ELECTRIC_TYPE_COLORS: Record<string, string> = {
+  EV:   "#00E5E5", // bg-primary
+  BEV:  "#00E5E5",
+  PHEV: "#006A61", // bg-primary-deep
+  HEV:  "#F59E0B", // bg-amber
+  MHEV: "#374151", // bg-gray-700
+  EREV: "#9333EA", // bg-purple-600
+  REEV: "#9333EA",
+};
+
+export function electricTypeColor(tag?: string | null): string | undefined {
+  return ELECTRIC_TYPE_COLORS[(tag ?? "").toUpperCase()];
+}
+
 export function ElectricTypeBadge({
   tag,
   className = "",
