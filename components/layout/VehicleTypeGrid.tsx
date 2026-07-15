@@ -3,6 +3,7 @@
 import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import { sanityImg } from "@/lib/sanityImage";
+import { electricTypeColor } from "@/components/car/ElectricTypeBadge";
 
 export interface ElectricTypeItem {
   _id: string;
@@ -106,7 +107,9 @@ export function VehicleTypeGrid({ types }: ElectricTypeGridProps) {
         }}
       >
         {types.map((type) => {
-          const accent   = type.color ?? "#00E5E5";
+          // Usar el mismo color que el ribbon de tipo eléctrico (ElectricTypeBadge);
+          // fallback al color de Sanity y luego al cyan primario.
+          const accent   = electricTypeColor(type.tag) ?? type.color ?? "#00E5E5";
           const desc     = type.tagline ?? type.idealFor ?? null;
           const hasImage = !!type.cardImageUrl;
 
