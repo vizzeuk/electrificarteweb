@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { m, AnimatePresence } from "framer-motion";
-import { formatCLP } from "@/lib/utils";
+import { formatCLP, heroStats, classifyElectric } from "@/lib/utils";
 import { ComparePromo } from "@/components/car/ComparePromo";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -111,10 +111,10 @@ function validCharge(val: string | null | undefined): string | null {
 
 function buildFallbackHighlights(car: CarData) {
   const gallery = car.gallery ?? [];
-  const tag = (car.electricTypeTag ?? "").toUpperCase();
-  const isBEV  = tag === "BEV"  || (!car.fuelConsumption && (car.battery ?? 0) >= 10 && tag !== "PHEV" && tag !== "HEV" && tag !== "MHEV" && tag !== "REEV");
-  const isPHEV = tag === "PHEV" || tag === "REEV";
-  const isHEV  = !isBEV && !isPHEV;
+  const cls = classifyElectric(car);
+  const isBEV  = cls === "EV";
+  const isPHEV = cls === "PHEV";
+  const isHEV  = cls === "HEV";
 
   const comfortDesc = car.comfortFeatures.length > 0
     ? `El interior del ${car.name} combina materiales premium con tecnología conectada. ${car.comfortFeatures.slice(0, 2).join(", ")} y mucho más para que cada viaje sea placentero.`
@@ -231,46 +231,33 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
   const galleryImages = car.gallery ?? [];
   const galleryCount  = galleryImages.length > 0 ? galleryImages.length : 6;
 
-  // Stats del hero — calculadas una vez y usadas tanto en el bloque desktop
-  // (dentro del hero) como en la sección mobile (justo debajo del hero).
-  const heroStats = (() => {
-    const tag = (car.electricTypeTag ?? "").toUpperCase();
-    const isBEV  = tag === "BEV"  || (!car.fuelConsumption && (car.battery ?? 0) >= 10 && tag !== "PHEV" && tag !== "HEV" && tag !== "MHEV" && tag !== "REEV");
-    const isPHEV = tag === "PHEV" || tag === "REEV";
-    const stat1 = isBEV
-      ? { label: "Autonomía",   value: ver.range ? `${ver.range} km` : (car.rendimientoElectrico ? `${car.rendimientoElectrico} km/kWh` : "—") }
-      : isPHEV
-        ? { label: "Autón. e-",   value: (ver.electricRangeKm ?? car.electricRangeKm) ? `${ver.electricRangeKm ?? car.electricRangeKm} km` : "—" }
-        : { label: "Rendimiento", value: (ver.fuelConsumption ?? car.fuelConsumption) ? `${ver.fuelConsumption ?? car.fuelConsumption} km/L` : "—" };
-    const stat2 = isBEV
-      ? { label: "Batería",     value: ver.battery ? `${ver.battery} kWh` : "—" }
-      : isPHEV
-        ? { label: "Efic. e-",    value: (ver.rendimientoElectrico ?? car.rendimientoElectrico) ? `${ver.rendimientoElectrico ?? car.rendimientoElectrico} km/kWh` : "—" }
-        : { label: "Potencia",    value: ver.power ? `${ver.power} CV` : "—" };
-    const used = new Set([stat1.label, stat2.label]);
-    const stat3 = [
-      ver.acceleration ? { label: "0–100",    value: `${ver.acceleration}s` } : null,
-      (ver.power ?? car.power)       ? { label: "Potencia", value: `${ver.power ?? car.power} CV` } : null,
-      (ver.topSpeed ?? car.topSpeed) ? { label: "Vel. máx", value: `${ver.topSpeed ?? car.topSpeed} km/h` } : null,
-      (ver.torque ?? car.torque)     ? { label: "Torque",   value: `${ver.torque ?? car.torque} Nm` } : null,
-      (ver.traction ?? car.traction) ? { label: "Tracción", value: `${ver.traction ?? car.traction}` } : null,
-      car.range ? { label: "Autonomía", value: `${car.range} km` } : null,
-    ].find((s) => s && !used.has(s.label)) ?? { label: "0–100", value: "—" };
-    return [stat1, stat2, stat3, { label: "Plazas", value: `${car.seats || 5} plz` }];
-  })();
+  // Convierte una versión (con fallback al auto) al shape que consume el pool de
+  // stats compartido en lib/utils. Así el hero y las tarjetas de catálogo usan la
+  // MISMA lógica "nunca vacía": si falta un dato, entra el siguiente disponible —
+  // jamás se renderiza un "—" en las stats destacadas.
+  const statInputFor = (v: Partial<VersionData>) => ({
+    electricTypeTag:      car.electricTypeTag,
+    range:                v.range ?? car.range,
+    electricRangeKm:      v.electricRangeKm ?? car.electricRangeKm,
+    fuelConsumption:      v.fuelConsumption ?? car.fuelConsumption,
+    rendimientoElectrico: v.rendimientoElectrico ?? car.rendimientoElectrico,
+    battery:              v.battery ?? car.battery,
+    power:                v.power ?? car.power,
+    acceleration:         v.acceleration ?? car.acceleration,
+    topSpeed:             v.topSpeed ?? car.topSpeed,
+    torque:               v.torque ?? car.torque,
+    traction:             v.traction ?? car.traction,
+    seats:                car.seats,
+    category:             car.category,
+  });
+
+  // Stats del hero — calculadas una vez para la versión activa y usadas tanto en
+  // el bloque desktop (dentro del hero) como en la sección mobile.
+  const heroStatCells = heroStats(statInputFor(ver), 4);
 
   // Stats por versión — usadas tanto en el selector mobile (pill activa) como
-  // en el grid desktop.
-  const computeVersionStats = (v: VersionData) => {
-    const tag = (car.electricTypeTag ?? "").toUpperCase();
-    const isBEV  = tag === "BEV"  || (!car.fuelConsumption && (car.battery ?? 0) >= 10 && tag !== "PHEV" && tag !== "HEV" && tag !== "MHEV" && tag !== "REEV");
-    const isPHEV = tag === "PHEV" || tag === "REEV";
-    return isBEV
-      ? [{label:"Autonomía",value:v.range ? `${v.range} km` : "—"},{label:"Batería",value:v.battery ? `${v.battery} kWh` : "—"},{label:"Tracción",value:v.traction||"—"},{label:"0–100",value:v.acceleration ? `${v.acceleration}s` : "—"}]
-      : isPHEV
-      ? [{label:"Autón. e-",value:(v.electricRangeKm ?? car.electricRangeKm) ? `${v.electricRangeKm ?? car.electricRangeKm} km` : "—"},{label:"Eficiencia e-",value:(v.rendimientoElectrico ?? car.rendimientoElectrico) ? `${v.rendimientoElectrico ?? car.rendimientoElectrico} km/kWh` : "—"},{label:"Tracción",value:v.traction||"—"},{label:"0–100",value:v.acceleration ? `${v.acceleration}s` : "—"}]
-      : [{label:"Rendimiento",value:(v.fuelConsumption ?? car.fuelConsumption) ? `${v.fuelConsumption ?? car.fuelConsumption} km/L` : "—"},{label:"Potencia",value:v.power ? `${v.power} CV` : "—"},{label:"Tracción",value:v.traction||"—"},{label:"0–100",value:v.acceleration ? `${v.acceleration}s` : "—"}];
-  };
+  // en el grid desktop. Mismo pool priorizado, nunca "—".
+  const computeVersionStats = (v: VersionData) => heroStats(statInputFor(v), 4);
 
   return (
     <>
@@ -407,7 +394,7 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
             <m.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.15 }} className="hidden lg:block">
               {/* Stats grid — desktop (los 4 dentro del hero) */}
               <div className="grid grid-cols-4 gap-2 mb-5">
-                {heroStats.map((s) => (
+                {heroStatCells.map((s) => (
                   <div key={s.label} className="rounded-xl p-3 text-center" style={{ backgroundColor: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.10)", backdropFilter: "blur(8px)" }}>
                     <p className="text-primary font-headline font-black text-lg leading-none">{s.value}</p>
                     <p className="text-[10px] mt-1 uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.40)" }}>{s.label}</p>
@@ -485,7 +472,7 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
         <div className="max-w-7xl mx-auto px-4">
           {/* Stats 2x2 */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-6">
-            {heroStats.map((s) => (
+            {heroStatCells.map((s) => (
               <div key={s.label} className="rounded-xl bg-surface border border-gray-100 p-3 text-center">
                 <p className="text-primary-deep font-headline font-black text-lg leading-none">{s.value}</p>
                 <p className="text-[10px] mt-1 uppercase tracking-wide text-text-muted">{s.label}</p>
@@ -756,9 +743,9 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
             <p className="text-text-muted leading-relaxed mb-10">{car.description}</p>
             <div className="grid sm:grid-cols-2 gap-3">
               {(() => {
-                const tag = (car.electricTypeTag ?? "").toUpperCase();
-                const isBEV  = tag === "BEV"  || (!car.fuelConsumption && (car.battery ?? 0) >= 10 && tag !== "PHEV" && tag !== "HEV" && tag !== "MHEV" && tag !== "REEV");
-                const isPHEV = tag === "PHEV" || tag === "REEV";
+                const cls = classifyElectric(car);
+                const isBEV  = cls === "EV";
+                const isPHEV = cls === "PHEV";
                 const perf = isBEV
                   ? { icon: "electric_car", text: ver.range ? `Hasta ${ver.range} km de autonomía` : car.rendimientoElectrico ? `Eficiencia ${car.rendimientoElectrico} km/kWh` : "Vehículo 100% eléctrico" }
                   : isPHEV
@@ -870,7 +857,7 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
                 { label: "Batería",              value: ver.battery ? `${ver.battery} kWh` : null },
                 { label: "Autonomía WLTP",       value: ver.range   ? `${ver.range} km`    : null },
                 { label: "Eficiencia eléctrica", value: (ver.rendimientoElectrico ?? car.rendimientoElectrico) ? `${ver.rendimientoElectrico ?? car.rendimientoElectrico} km/kWh` : null },
-                { label: "Rendimiento híbrido",  value: (["PHEV","REEV"].includes((car.electricTypeTag ?? "").toUpperCase())) ? null : ((ver.fuelConsumption ?? car.fuelConsumption) ? `${ver.fuelConsumption ?? car.fuelConsumption} km/L` : null) },
+                { label: "Rendimiento híbrido",  value: classifyElectric(car) === "PHEV" ? null : ((ver.fuelConsumption ?? car.fuelConsumption) ? `${ver.fuelConsumption ?? car.fuelConsumption} km/L` : null) },
                 { label: "Carga rápida DC",      value: validCharge(ver.chargeTimeDC) },
                 { label: "Carga AC",             value: validCharge(ver.chargeTimeAC) },
                 { label: "Tipo de conector",     value: car.chargeType   || null },
