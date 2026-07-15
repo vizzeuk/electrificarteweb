@@ -62,61 +62,123 @@ export interface CarStatInput {
   torque?: number | null;
   traction?: string | null;
   seats?: number | null;
+  category?: string | null;
 }
 
 /**
- * Devuelve las specs para mostrar en las tarjetas. Siempre intenta llegar a 3
- * specs CON VALOR — primero las relevantes al tipo de auto, luego rellena con
- * cualquier otra disponible. Nunca devuelve filas vacías ni "—": si un dato
- * falta, simplemente usa el siguiente que sí exista.
+ * Clasifica el auto en una de las tres familias de presentación a partir del
+ * tag REAL de Sanity (EV / HEV / PHEV / MHEV / EREV), con heurística de respaldo
+ * por specs. Única fuente de verdad — la usan carStats, heroStats y la PDP, para
+ * no repetir el mapeo de tags (y no volver a chequear tags que no existen como
+ * "BEV"/"REEV"). Devuelve la familia con la nomenclatura del sitio: "EV"
+ * (100% eléctrico), "PHEV" (enchufable, incl. REEV/EREV) o "HEV" (híbrido/mild).
  */
-export function carStats(car: CarStatInput): { label: string; value: string }[] {
+export function classifyElectric(car: CarStatInput): "EV" | "PHEV" | "HEV" {
   const tag = (car.electricTypeTag ?? "").toUpperCase();
+  const isPHEV = tag === "PHEV" || tag === "REEV" || tag === "EREV" ||
+    ((car.electricRangeKm ?? 0) > 0 && (car.fuelConsumption ?? 0) > 0);
+  if (isPHEV) return "PHEV";
+  const isHEV = tag === "HEV" || tag === "MHEV" || (car.fuelConsumption ?? 0) > 0;
+  if (isHEV) return "HEV";
+  return "EV";
+}
+
+/**
+ * Arma el pool COMPLETO de stats con valor, en orden de relevancia y sin
+ * duplicados. Nunca incluye un dato faltante ("—"): si una spec no existe,
+ * simplemente no entra y el pool sigue con la siguiente. `carStats` y
+ * `heroStats` cortan este pool a N celdas.
+ *
+ * `opts.compact` usa las etiquetas y formatos cortos del hero de la PDP
+ * (p. ej. "Autón. e-", "0–100", "5 plz"); sin él produce la salida de tarjeta
+ * de catálogo, byte-idéntica a la histórica de `carStats`.
+ */
+type StatCell = { label: string; value: string };
+function buildStatPool(car: CarStatInput, opts: { compact?: boolean } = {}): StatCell[] {
+  const compact = opts.compact ?? false;
+  const tag = (car.electricTypeTag ?? "").toUpperCase();
+  const cls = classifyElectric(car);
+
   const base   = car.range ?? 0;
   const maxVer = car.maxVersionRange ?? 0;
   const eff    = maxVer > base ? maxVer : base;
   const rangeLabel = maxVer > base ? `hasta ${eff} km` : eff > 0 ? `${eff} km` : null;
 
-  type S = { label: string; value: string };
-  const out: S[] = [];
+  const out: StatCell[] = [];
   const seen = new Set<string>();
   const add = (label: string, val: string | null | undefined) => {
     if (val && !seen.has(label)) { out.push({ label, value: val }); seen.add(label); }
   };
 
-  const isPHEV = tag === "PHEV" || tag === "REEV" || tag === "EREV" ||
-    ((car.electricRangeKm ?? 0) > 0 && (car.fuelConsumption ?? 0) > 0);
-  const isHEV  = !isPHEV && (tag === "HEV" || tag === "MHEV" || (car.fuelConsumption ?? 0) > 0);
+  const batteryVal = (car.battery ?? 0) >= 1 ? `${car.battery} kWh` : null;
+  const eficVal    = car.rendimientoElectrico ? `${car.rendimientoElectrico} km/kWh` : null;
 
   // 1) Specs primarias según el tipo de auto.
-  // El orden importa: las tarjetas chicas (home) muestran solo las 2 primeras.
-  if (isPHEV) {
-    add("Autonomía e-", (car.electricRangeKm ?? 0) > 0 ? `${car.electricRangeKm} km` : null);
-    add("Batería", (car.battery ?? 0) >= 1 ? `${car.battery} kWh` : null);
-    add("Eficiencia e-", car.rendimientoElectrico ? `${car.rendimientoElectrico} km/kWh` : null);
-  } else if (isHEV) {
+  if (cls === "PHEV") {
+    add(compact ? "Autón. e-" : "Autonomía e-", (car.electricRangeKm ?? 0) > 0 ? `${car.electricRangeKm} km` : null);
+    if (compact) {
+      // En el hero la eficiencia es la 2ª stat destacada del PHEV.
+      add("Efic. e-", eficVal);
+      add("Batería", batteryVal);
+    } else {
+      add("Batería", batteryVal);
+      add("Eficiencia e-", eficVal);
+    }
+  } else if (cls === "HEV") {
     add("Rendimiento", car.fuelConsumption ? `${car.fuelConsumption} km/L` : null);
-    add("Batería", (car.battery ?? 0) >= 1 ? `${car.battery} kWh` : null);
+    add("Batería", batteryVal);
   } else {
     add("Autonomía", rangeLabel);
-    add("Batería", (car.battery ?? 0) >= 1 ? `${car.battery} kWh` : null);
-    add("Eficiencia", car.rendimientoElectrico ? `${car.rendimientoElectrico} km/kWh` : null);
+    add("Batería", batteryVal);
+    add(compact ? "Efic. e-" : "Eficiencia", eficVal);
   }
 
-  // 2) Relleno con cualquier otra spec disponible hasta completar 3.
-  add("Potencia", (car.power ?? 0) > 0 ? `${car.power} CV` : null);
-  add("0-100",    (car.acceleration ?? 0) > 0 ? `${car.acceleration} s` : null);
-  add("Vel. máx", (car.topSpeed ?? 0) > 0 ? `${car.topSpeed} km/h` : null);
-  add("Torque",   (car.torque ?? 0) > 0 ? `${car.torque} Nm` : null);
-  add("Tracción", car.traction || null);
-  add("Plazas",   (car.seats ?? 0) > 0 ? `${car.seats} plazas` : null);
-  add("Autonomía", rangeLabel);
+  // 2) Relleno con cualquier otra spec disponible.
+  const powerVal  = (car.power ?? 0) > 0 ? `${car.power} CV` : null;
+  const topVal    = (car.topSpeed ?? 0) > 0 ? `${car.topSpeed} km/h` : null;
+  const torqueVal = (car.torque ?? 0) > 0 ? `${car.torque} Nm` : null;
+  if (compact) {
+    add("Potencia", powerVal);
+    add("0–100",    (car.acceleration ?? 0) > 0 ? `${car.acceleration}s` : null);
+    add("Torque",   torqueVal);
+    add("Vel. máx", topVal);
+    add("Tracción", car.traction || null);
+    add("Autonomía", rangeLabel);
+    // 3) Fillers garantizados (siempre presentes → jamás una celda vacía).
+    add("Plazas",   `${car.seats || 5} plz`);
+    add("Segmento", car.category || null);
+  } else {
+    add("Potencia", powerVal);
+    add("0-100",    (car.acceleration ?? 0) > 0 ? `${car.acceleration} s` : null);
+    add("Vel. máx", topVal);
+    add("Torque",   torqueVal);
+    add("Tracción", car.traction || null);
+    add("Plazas",   (car.seats ?? 0) > 0 ? `${car.seats} plazas` : null);
+    add("Autonomía", rangeLabel);
+  }
 
-  // 3) Filler garantizado: el tipo de tecnología (siempre presente).
+  // Filler final por tecnología (siempre presente salvo tag desconocido).
   add("Tipo",
     tag === "PHEV" || tag === "REEV" || tag === "EREV" ? "Híbrido enchufable" :
     tag === "HEV"  || tag === "MHEV" ? "Híbrido" :
     tag === "BEV"  || tag === "EV"   ? "100% eléctrico" : null);
 
-  return out.slice(0, 3);
+  return out;
+}
+
+/**
+ * Specs para las tarjetas de catálogo/comparador. Siempre 3 celdas con valor,
+ * priorizadas por tipo. Salida idéntica a la histórica (delega en buildStatPool).
+ */
+export function carStats(car: CarStatInput): { label: string; value: string }[] {
+  return buildStatPool(car).slice(0, 3);
+}
+
+/**
+ * Specs destacadas del hero de la PDP. Devuelve hasta `count` celdas, TODAS con
+ * valor real — nunca un "—". Version-aware: el caller pasa los campos de la
+ * versión seleccionada con fallback al auto.
+ */
+export function heroStats(car: CarStatInput, count = 4): { label: string; value: string }[] {
+  return buildStatPool(car, { compact: true }).slice(0, count);
 }
