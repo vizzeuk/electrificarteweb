@@ -28,6 +28,10 @@ export default async function GraciasPage() {
 
   const isAdvisory = store.get("ec_order_type")?.value === "advisory";
 
+  // Referencia corta y legible del pedido, para que el usuario la cite si
+  // necesita escribir a soporte. No expone datos personales (es un UUID).
+  const orderRef = orderId.slice(0, 8).toUpperCase();
+
   const content = isAdvisory
     ? {
         badge:       "Asesoría confirmada",
@@ -38,16 +42,18 @@ export default async function GraciasPage() {
           "El asesor revisará tus necesidades y te presentará las mejores opciones.",
           "Sin presión: es una conversación personalizada, no una venta.",
         ],
+        secondaryCta: null as { href: string; label: string } | null,
       }
     : {
         badge:       "Pago confirmado",
         heading:     "¡Gracias por confiar en Electrificarte!",
-        body:        "Tu solicitud quedó activa. Nuestro equipo ya está negociando con la red de concesionarios para conseguirte el mejor precio de Chile.",
+        body:        "Tu solicitud quedó activa. Nuestro equipo ya está negociando con la red de vendedores oficiales para conseguirte el mejor precio de Chile.",
         pasos: [
           "En 48 a 96 horas te enviamos la mejor oferta.",
-          "Revisá tu email y WhatsApp — ahí te contactamos.",
-          "Cualquier duda, escribinos desde la página de contacto.",
+          "Revisa tu email y WhatsApp — ahí te contactamos.",
+          "No necesitas hacer nada más: nosotros te contactamos.",
         ],
+        secondaryCta: { href: "/marcas", label: "Ver otros modelos" },
       };
 
   return (
@@ -80,12 +86,38 @@ export default async function GraciasPage() {
           </ul>
         </div>
 
-        <Link
-          href="/"
-          className="mt-8 inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-7 py-3 rounded-xl transition-colors"
-        >
-          Volver al inicio
-        </Link>
+        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+          <Link
+            href="/"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-7 py-3 rounded-xl transition-colors"
+          >
+            Volver al inicio
+          </Link>
+          {content.secondaryCta && (
+            <Link
+              href={content.secondaryCta.href}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 border border-gray-200 hover:border-gray-300 text-text-muted hover:text-black font-bold px-7 py-3 rounded-xl transition-colors"
+            >
+              {content.secondaryCta.label}
+            </Link>
+          )}
+        </div>
+
+        <div className="mt-8 pt-6 border-t border-gray-100 text-sm text-text-muted">
+          <p>
+            Referencia de tu pedido:{" "}
+            <span className="font-mono font-bold text-black tracking-wide">#{orderRef}</span>
+          </p>
+          <p className="mt-2">
+            ¿Problemas con tu compra? Escríbenos a{" "}
+            <a
+              href={`mailto:contacto@electrificarte.com?subject=${encodeURIComponent(`Problema con mi compra (Ref #${orderRef})`)}`}
+              className="text-primary-deep font-bold hover:underline"
+            >
+              contacto@electrificarte.com
+            </a>
+          </p>
+        </div>
       </div>
     </main>
   );

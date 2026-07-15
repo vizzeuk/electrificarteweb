@@ -58,6 +58,18 @@ export default function AsesoriaGraciasPage() {
         >
           Volver al inicio
         </Link>
+
+        <div className="mt-8 pt-6 border-t border-gray-100 text-sm text-text-muted">
+          <p>
+            ¿Problemas con tu compra? Escríbenos a{" "}
+            <a
+              href="mailto:contacto@electrificarte.com?subject=Problema%20con%20mi%20compra"
+              className="text-primary-deep font-bold hover:underline"
+            >
+              contacto@electrificarte.com
+            </a>
+          </p>
+        </div>
       </div>
     </main>
   );
