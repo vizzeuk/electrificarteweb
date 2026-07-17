@@ -42,7 +42,17 @@ async function notify(phone: string, brand: string, model: string, result: Resea
 
 export async function POST(req: NextRequest) {
   const secret = process.env.ADMIN_API_SECRET;
-  if (!secret || req.headers.get("x-admin-secret") !== secret) {
+  const received = req.headers.get("x-admin-secret");
+  if (!secret || received !== secret) {
+    // Diagnóstico temporal (no expone el secreto completo) — quitar una vez resuelto el 401
+    // reportado en producción.
+    console.warn("[admin/pdp-research] auth mismatch", {
+      hasEnvSecret: !!secret,
+      envSecretLen: secret?.length ?? 0,
+      receivedLen: received?.length ?? 0,
+      envPrefix: secret?.slice(0, 3),
+      receivedPrefix: received?.slice(0, 3),
+    });
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

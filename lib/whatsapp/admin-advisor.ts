@@ -37,6 +37,9 @@ async function triggerResearch(brand: string, model: string, phone: string): Pro
   const secret = process.env.ADMIN_API_SECRET;
   if (!secret) return "No se pudo iniciar: falta configurar ADMIN_API_SECRET en el servidor.";
   try {
+    // Diagnóstico temporal (no expone el secreto completo) — quitar una vez resuelto el 401
+    // reportado en producción.
+    console.warn("[admin-advisor] enviando secreto", { len: secret.length, prefix: secret.slice(0, 3), url: SITE_URL });
     const res = await fetch(`${SITE_URL}/api/admin/pdp-research`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-admin-secret": secret },
