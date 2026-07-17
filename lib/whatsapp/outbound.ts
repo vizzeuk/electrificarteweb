@@ -42,6 +42,20 @@ export async function sendProactiveText(phone: string, body: string): Promise<bo
   }
 }
 
+/** Envía una imagen (por URL pública, ej. CDN de Sanity). Solo dentro de la ventana de 24h. */
+export async function sendProactiveImage(phone: string, imageUrl: string, caption?: string): Promise<boolean> {
+  const client = getClient();
+  const from = phoneNumberId();
+  if (!client || !from) return false;
+  try {
+    await client.messages.sendImage({ phoneNumberId: from, to: phone, image: { link: imageUrl, caption } });
+    return true;
+  } catch (err) {
+    console.warn("[outbound] sendImage falló:", err instanceof Error ? err.message : err);
+    return false;
+  }
+}
+
 /** Envía una plantilla aprobada (funciona fuera de la ventana de 24h). */
 export async function sendTemplate(
   phone: string,

@@ -13,6 +13,9 @@ import { runAdvisor, type ChatMessage } from "@/lib/whatsapp/advisor";
 import { loadContext, saveContext } from "@/lib/whatsapp/context";
 import { exceedsDailyQuota, refundDailyQuota, DAILY_QUOTA_MESSAGE } from "@/lib/whatsapp/quota";
 import { alreadyProcessed, withPhoneLock } from "@/lib/whatsapp/concurrency";
+import { isAdminPhone } from "@/lib/whatsapp/admin";
+import { runAdminAdvisor } from "@/lib/whatsapp/admin-advisor";
+import { loadAdminContext, saveAdminContext } from "@/lib/whatsapp/admin-context";
 
 // ─── Bot singleton ────────────────────────────────────────────────────────────
 // Memory state is fine for the SDK's internal dedup/lock needs; we handle
@@ -69,6 +72,26 @@ bot.onDirectMessage(async (thread, message) => {
   }
   const phone = normalizePhone(waId);
   if (!phone || phone.length < 6) return;
+
+  // Modo administrador (Francisco) — antes que cualquier gate/cuota de clientes.
+  // Nunca se activa por contenido del mensaje, solo por número emisor (ver lib/whatsapp/admin.ts).
+  if (isAdminPhone(phone)) {
+    await withPhoneLock(phone, async () => {
+      const history = await loadAdminContext(phone);
+      const messages: ChatMessage[] = [...history, { role: "user", content: text.slice(0, 1_500) }];
+      let response: string;
+      try {
+        response = await runAdminAdvisor(messages, phone);
+      } catch (err) {
+        console.error("[bot] runAdminAdvisor error:", err instanceof Error ? err.message : err);
+        await thread.post("Tuve un problema procesando eso. ¿Me lo repites?");
+        return;
+      }
+      await saveAdminContext(phone, [...messages, { role: "assistant", content: response }]);
+      await thread.post(response);
+    });
+    return;
+  }
 
   // 1. Rate limit
   if (await checkChatRateLimit(`wa:${phone}`)) {
