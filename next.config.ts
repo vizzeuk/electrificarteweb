@@ -12,6 +12,15 @@ const nextConfig: NextConfig = {
   async headers() {
     return [{ source: "/(.*)", headers: securityHeaders }];
   },
+  // El rastreo automático de archivos de Next.js no incluye todo lo que playwright-core y
+  // @sparticuz/chromium necesitan en runtime (browsers.json, binarios Brotli de Chromium) —
+  // /api/admin/pdp-research los usa para investigar autos vía WhatsApp (Fase 1.2, Flujo A / M3).
+  outputFileTracingIncludes: {
+    "/api/admin/pdp-research": [
+      "./node_modules/playwright-core/**/*",
+      "./node_modules/@sparticuz/chromium/**/*",
+    ],
+  },
   images: {
     // Negocia automáticamente AVIF (más eficiente) → WebP → original.
     // Reduce ~30-50% el peso de imágenes para navegadores modernos.

@@ -6,7 +6,9 @@
  *   1. Claude + búsqueda web nativa ubica la ficha oficial del modelo en Chile. Si no hay nada
  *      usable en el sitio de fábrica, cae a un concesionario autorizado como respaldo.
  *   2. Playwright renderiza esas páginas (texto + imágenes + enlaces internos a ficha técnica/PDF)
- *      y sigue hasta 2 enlaces de specs adicionales por fuente; los PDF se parsean con pdf-parse.
+ *      y sigue hasta 2 enlaces de specs adicionales por fuente; los PDF se parsean con unpdf
+ *      (build serverless de pdf.js, sin dependencia de canvas — pdf-parse/pdfjs-dist normal
+ *      crashea en el runtime de Vercel por usar DOMMatrix, que no existe fuera del navegador).
  *   3. Claude extrae specs estructuradas SOLO de ese texto (nunca de memoria).
  *   4. Se resuelven referencias (marca/tipo), se suben las fotos candidatas y se crea el car.
  *
@@ -18,7 +20,7 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import type { createClient } from "@sanity/client";
 import type { Browser } from "playwright-core";
-import { PDFParse } from "pdf-parse";
+import { extractText, getDocumentProxy } from "unpdf";
 
 // ReturnType<typeof createClient> (en vez del tipo SanityClient exportado) para preservar
 // exactamente el mismo tipo concreto que devuelve createClient() — con el tipo de clase genérico
@@ -374,10 +376,9 @@ async function fetchPdfText(url: string, log?: (line: string) => void): Promise<
     const res = await fetch(url, { headers: { "User-Agent": SCRAPE_UA } });
     if (!res.ok) return null;
     const buf = new Uint8Array(await res.arrayBuffer());
-    const parser = new PDFParse({ data: buf });
-    const result = await parser.getText();
-    await parser.destroy();
-    return result.text.replace(/\n{3,}/g, "\n\n").slice(0, MAX_TEXT_CHARS_PER_SOURCE);
+    const pdf = await getDocumentProxy(buf);
+    const { text } = await extractText(pdf, { mergePages: true });
+    return text.replace(/\n{3,}/g, "\n\n").slice(0, MAX_TEXT_CHARS_PER_SOURCE);
   } catch (err) {
     log?.(`    ✗ ${url} (PDF) — ${(err as Error).message}`);
     return null;
