@@ -41,11 +41,30 @@ Flags: `--llm` (incluye escenarios con LLM), `--tags a,b`, `--id x`, `--transcri
 - **Border/adversarial** (`border`): gibberish, inglés, ráfagas, pedidos ilegales,
   consejo financiero fuera de alcance, on-topic + inyección embebida.
 
+## QA del endpoint HTTP (capa de ruta)
+
+`run.ts` llama `runAdvisor` directo. Para validar la **ruta completa** del endpoint
+(`/api/whatsapp/advisor`) — auth, validación de payload, tier gating y rate-limit —
+usá `http.ts` con el dev server arriba:
+
+```bash
+# 1) dev server (usa .claude/launch.json → "electrificarte-dev", puerto 3000)
+# 2) requiere WHATSAPP_TEST_TIERS en .env.local (ver más abajo)
+npx tsx --env-file=.env.local scripts/qa/http.ts               # auth + payload + gating
+npx tsx --env-file=.env.local scripts/qa/http.ts --ratelimit   # + test de rate-limit (22 reqs)
+```
+
+Cubre: `401` sin/con secret inválido · `400` en payloads malformados · gating por tier
+(vendedor→redirect, null→suscripción, asesoria/oferta→responde) · `429` al superar el
+rate-limit. El rate-limit y la cuota usan fallback in-memory sin Redis, así que se
+ejercitan localmente (el test usa un teléfono null-tier para no gastar tokens de LLM).
+
 ## Estructura
 
 - `lib.ts` — simulación del pipeline (`runTurn`/`runConversation`) + helpers de aserción.
 - `scenarios.ts` — la matriz de escenarios (agregá casos acá).
-- `run.ts` — runner CLI.
+- `run.ts` — runner CLI del pipeline de lógica.
+- `http.ts` — runner CLI del endpoint HTTP (requiere dev server).
 
 ## Tier gating en local
 
