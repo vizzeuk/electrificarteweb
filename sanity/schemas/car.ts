@@ -62,6 +62,7 @@ export const car = defineType({
     { name: "media",    title: "🖼️ Multimedia"                       },
     { name: "deal",     title: "🔥 Ofertas y etiquetas"               },
     { name: "seo",      title: "🔍 SEO"                               },
+    { name: "ai",       title: "🤖 IA"                                },
   ],
   fields: [
     // ─── General ────────────────────────────────────────────────────────────
@@ -331,6 +332,22 @@ export const car = defineType({
       name: "hotDealExpiry", title: "Vencimiento de la oferta", type: "datetime",
       group: "deal",
       hidden: ({ document }) => !document?.isHotDeal,
+    }),
+
+    // ─── IA (auditoría de investigación automática — Fase 1.2, Flujo A/B) ────
+    defineField({
+      name: "aiGenerated", title: "Creado por IA", type: "boolean", group: "ai",
+      initialValue: false,
+      description: "Activo si esta ficha fue generada por el script de investigación automática (scripts/pdp-research.ts).",
+    }),
+    defineField({
+      name: "sourceUrls", title: "Fuentes usadas", type: "array", group: "ai",
+      of: [defineArrayMember({ type: "url" })],
+      description: "URLs oficiales que se usaron para completar los datos de esta ficha.",
+    }),
+    defineField({
+      name: "lastPriceCheckAt", title: "Última revisión de precio/vigencia", type: "datetime", group: "ai",
+      description: "Se actualiza en la revisión semanal automática de vigencia y precio de mercado.",
     }),
 
     // ─── SEO ────────────────────────────────────────────────────────────────
