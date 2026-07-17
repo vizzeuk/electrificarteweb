@@ -176,12 +176,64 @@ export async function getSubscriptionTier(rawPhone: string): Promise<Subscriptio
   const phone = normalizePhone(rawPhone);
   if (!phone) return null;
 
+  // ── Override dev-only para QA local ─────────────────────────────────────────
+  // Fuera de producción, WHATSAPP_TEST_TIERS permite mapear teléfonos a un tier
+  // fijo sin sembrar filas en Supabase. Formato: "56911110001:asesoria,56911110002:oferta".
+  // Tiers válidos: asesoria | oferta | vendedor | none (none ⇒ null / sin suscripción).
+  // Se ignora por completo si NODE_ENV === "production" (nunca afecta prod).
+  const testTier = resolveTestTier(phone);
+  if (testTier !== undefined) return testTier;
+
   const cached = _tierCache.get(phone);
   if (cached && Date.now() < cached.expiresAt) return cached.tier;
 
   const tier = await resolveTier(phone);
   _tierCache.set(phone, { tier, expiresAt: Date.now() + CACHE_TTL_MS });
   return tier;
+}
+
+// ─── Override de tier para QA (dev-only) ──────────────────────────────────────
+
+let _testTierMap: Map<string, SubscriptionTier> | null = null;
+
+/** "asesoria"|"oferta"|"vendedor"|null (tier válido) o `undefined` si el token es inválido. */
+function parseTierToken(token: string): SubscriptionTier | undefined {
+  switch (token.toLowerCase()) {
+    case "asesoria": return "asesoria";
+    case "oferta":   return "oferta";
+    case "vendedor": return "vendedor";
+    case "none":
+    case "null":     return null;
+    default:         return undefined;
+  }
+}
+
+function parseTestTiers(): Map<string, SubscriptionTier> {
+  const map = new Map<string, SubscriptionTier>();
+  const raw = process.env.WHATSAPP_TEST_TIERS;
+  if (!raw) return map;
+  for (const pair of raw.split(",")) {
+    const [phoneRaw, tierRaw] = pair.split(":").map((s) => s.trim());
+    if (!phoneRaw || !tierRaw) continue;
+    const tier = parseTierToken(tierRaw);
+    if (tier === undefined) continue; // token de tier inválido → ignorar
+    for (const cand of phoneCandidates(normalizePhone(phoneRaw))) {
+      map.set(normalizePhone(cand), tier);
+    }
+  }
+  return map;
+}
+
+/**
+ * Retorna el tier forzado para un teléfono según WHATSAPP_TEST_TIERS, o `undefined`
+ * si no aplica (env ausente, prod, o teléfono no mapeado) para que siga el flujo normal.
+ * Distingue `undefined` (no aplica) de `null` (mapeado explícitamente a "sin suscripción").
+ */
+function resolveTestTier(phone: string): SubscriptionTier | undefined {
+  if (process.env.NODE_ENV === "production") return undefined;
+  if (!process.env.WHATSAPP_TEST_TIERS) return undefined;
+  if (!_testTierMap) _testTierMap = parseTestTiers();
+  return _testTierMap.has(phone) ? _testTierMap.get(phone)! : undefined;
 }
 
 async function checkTable(table: string, phone: string, phoneCol = PHONE_COLUMN): Promise<boolean> {
