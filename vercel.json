@@ -3,6 +3,14 @@
     {
       "path": "/api/cron/asesoria-reminder",
       "schedule": "0 14 * * *"
+    },
+    {
+      "path": "/api/cron/price-check-scan",
+      "schedule": "0 13 * * *"
+    },
+    {
+      "path": "/api/cron/price-check-digest",
+      "schedule": "0 14 * * 1"
     }
   ]
 }
