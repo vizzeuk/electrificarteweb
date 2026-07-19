@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "¡Asesoría confirmada! | Electrificarte",
+  title: "¡Asesoría confirmada!",
   description: "Tu asesoría está confirmada. Te contactaremos pronto por WhatsApp.",
   robots: { index: false, follow: false },
 };

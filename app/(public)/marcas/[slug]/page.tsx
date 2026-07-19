@@ -27,7 +27,7 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const brand = await client.fetch(brandBySlugQuery, { slug }).catch(() => null);
-  if (!brand) return { title: "Marca no encontrada | Electrificarte" };
+  if (!brand) return { title: "Marca no encontrada" };
   return {
     title: `${brand.name} eléctricos en Chile | Precios y ofertas | Electrificarte`,
     description: brand.description ?? `Encuentra los mejores precios en autos eléctricos ${brand.name} en Chile.`,

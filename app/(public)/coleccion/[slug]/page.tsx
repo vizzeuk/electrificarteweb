@@ -23,9 +23,9 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const col = await client.fetch(collectionBySlugQuery, { slug }).catch(() => null);
-  if (!col) return { title: "Colección no encontrada | Electrificarte" };
+  if (!col) return { title: "Colección no encontrada" };
   return {
-    title:       col.metaTitle       ?? `${col.title} | Electrificarte`,
+    title:       col.metaTitle       ?? col.title,
     description: col.metaDescription ?? col.description ?? `Encuentra los mejores precios en ${col.title} en Chile. Negociamos por ti.`,
     alternates:  { canonical: `/coleccion/${slug}` },
   };

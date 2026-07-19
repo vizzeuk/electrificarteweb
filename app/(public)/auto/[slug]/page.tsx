@@ -29,10 +29,10 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const car = await client.fetch(carBySlugQuery, { slug }, { next: { tags: ["car"], revalidate: 60 } }).catch(() => null);
-  if (!car || car.hidden) return { title: "Auto no encontrado | Electrificarte" };
+  if (!car || car.hidden) return { title: "Auto no encontrado" };
   const brandName = car.brand?.name ?? "";
   return {
-    title: car.metaTitle ?? `${brandName} ${car.name} | Oferta exclusiva Electrificarte`,
+    title: car.metaTitle ?? `${brandName} ${car.name} | Oferta exclusiva`,
     description: car.metaDescription ?? car.tagline ?? `Consigue el mejor precio en el ${brandName} ${car.name} en Chile.`,
     alternates: { canonical: `/auto/${slug}` },
   };

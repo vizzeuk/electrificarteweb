@@ -6,7 +6,7 @@ import ComparadorClient, { type Car } from "./ComparadorClient";
 export const revalidate = 60;
 
 export const metadata: Metadata = {
-  title: "Comparador de autos eléctricos e híbridos | Electrificarte",
+  title: "Comparador de autos eléctricos e híbridos",
   description:
     "Compará autos eléctricos e híbridos lado a lado: precio, autonomía, batería, carga y equipamiento. Encontrá el auto ideal al mejor precio en Chile.",
   alternates: { canonical: "/comparador" },

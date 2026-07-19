@@ -21,12 +21,12 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const post = await client.fetch(blogPostBySlugQuery, { slug }).catch(() => null);
-  if (!post) return { title: "Artículo no encontrado | Electrificarte" };
+  if (!post) return { title: "Artículo no encontrado" };
 
   const ogUrl = post.ogImage?.asset?.url ?? post.coverImage?.asset?.url;
 
   return {
-    title:       post.metaTitle       ?? `${post.title} | Electrificarte`,
+    title:       post.metaTitle       ?? post.title,
     description: post.metaDescription ?? post.excerpt,
     keywords:    post.keywords?.join(", "),
     robots:      post.noIndex ? "noindex,nofollow" : "index,follow",

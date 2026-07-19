@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { verifyOrderToken } from "@/lib/order-token";
 
 export const metadata: Metadata = {
-  title: "¡Gracias por tu solicitud! | Electrificarte",
+  title: "¡Gracias por tu solicitud!",
   description: "Tu solicitud quedó activa. Pronto recibirás la mejor oferta.",
   robots: { index: false, follow: false },
 };

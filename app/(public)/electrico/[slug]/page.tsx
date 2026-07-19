@@ -35,7 +35,7 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const meta = await client.fetch(electricTypeBySlugQuery, { slug }).catch(() => null);
-  if (!meta) return { title: "Tipo eléctrico no encontrado | Electrificarte" };
+  if (!meta) return { title: "Tipo eléctrico no encontrado" };
   return {
     title: meta.metaTitle ?? `${meta.label} en Chile | Electrificarte`,
     description: meta.metaDescription ?? meta.tagline ?? `Encuentra los mejores precios en autos ${meta.label} en Chile.`,
