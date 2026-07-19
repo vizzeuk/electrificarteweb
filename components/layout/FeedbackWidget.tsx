@@ -97,25 +97,30 @@ export function FeedbackWidget() {
 
   return (
     <>
-      {/* Collapsed — pestaña vertical pegada al borde izquierdo */}
+      {/* Collapsed — botón discreto anclado abajo-izquierda (simétrico al chat
+          de la derecha). Icono solo en mobile; icono + label en sm+. */}
       {!expanded && (
-        <div style={{ position: "fixed", left: 0, top: "42%", zIndex: 51 }}>
+        <div
+          style={{
+            position: "fixed",
+            left: "1rem",
+            bottom: "calc(1rem + env(safe-area-inset-bottom))",
+            zIndex: 40,
+          }}
+        >
           <button
             onClick={() => setExpanded(true)}
             title="Califica tu experiencia"
-            style={{ borderRadius: "0 8px 8px 0" }}
-            className="bg-amber text-black flex flex-col items-center gap-1.5 px-1.5 py-2.5 sm:px-2.5 sm:py-4 shadow-lg hover:translate-x-0.5 transition-all duration-200"
+            aria-label="Danos tu opinión"
+            className="flex items-center justify-center gap-2 bg-amber text-black rounded-full shadow-lg h-12 w-12 sm:h-auto sm:w-auto sm:px-4 sm:py-3 hover:brightness-105 active:scale-95 transition-all duration-200"
           >
             <span
-              className="material-symbols-outlined text-[15px] sm:text-[17px]"
+              className="material-symbols-outlined text-[20px]"
               style={{ fontVariationSettings: '"FILL" 1' }}
             >
               sentiment_satisfied
             </span>
-            <span
-              className="font-black text-[9px] sm:text-[10px] uppercase tracking-widest"
-              style={{ writingMode: "vertical-lr", transform: "rotate(180deg)" }}
-            >
+            <span className="hidden sm:inline font-black text-[11px] uppercase tracking-widest">
               Feedback
             </span>
           </button>
@@ -124,25 +129,25 @@ export function FeedbackWidget() {
             onClick={dismiss}
             aria-label="Ocultar feedback"
             title="Ocultar"
-            className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-black text-white/70 shadow-md hover:text-white transition-colors"
+            className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-black text-white/70 shadow-md hover:text-white transition-colors"
           >
             <span className="material-symbols-outlined text-[12px]">close</span>
           </button>
         </div>
       )}
 
-      {/* Expanded card — flota cerca de la pestaña */}
+      {/* Expanded card — se despliega desde abajo-izquierda, responsive */}
       {expanded && (
         <div
           style={{
             position: "fixed",
-            left: "8px",
-            top: "50%",
-            transform: "translateY(-50%)",
-            zIndex: 51,
-            width: "min(280px, calc(100vw - 32px))",
+            left: "1rem",
+            bottom: "calc(1rem + env(safe-area-inset-bottom))",
+            zIndex: 41,
+            width: "min(320px, calc(100vw - 2rem))",
+            maxHeight: "calc(100dvh - 2rem)",
           }}
-          className="bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden"
+          className="bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-y-auto"
         >
           {submitted ? (
             <div className="px-5 py-8 text-center">
