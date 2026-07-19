@@ -50,7 +50,7 @@ export function ParaVendedores() {
                 id="vendedores-title"
                 className="text-3xl md:text-4xl font-headline font-black uppercase tracking-tight text-white mb-4"
               >
-                Vende más autos eléctricos
+                Vende más autos electrificados
                 <br className="hidden md:block" /> sin buscar clientes
               </h2>
               <p className="text-white/60 leading-relaxed">

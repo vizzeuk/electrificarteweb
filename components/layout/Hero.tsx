@@ -38,7 +38,7 @@ interface HeroProps {
 export function Hero({ data }: HeroProps) {
   const badge     = data?.badge          ?? "Marketplace #1 de autos eléctricos en Chile";
   const title     = data?.title          ?? "Estrena tu próximo";
-  const highlight = data?.titleHighlight ?? "auto eléctrico";
+  const highlight = data?.titleHighlight ?? "auto electrificado";
 
   // Panel Oferta ($19.990)
   const offerSubtitle = data?.subtitle  ?? "Ya sabes qué auto quieres. Negociamos con nuestra red de vendedores oficiales y te traemos la mejor oferta del mercado en 48-96 horas. Si no ahorras, te devolvemos el dinero.";

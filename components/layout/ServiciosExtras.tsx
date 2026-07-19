@@ -50,7 +50,7 @@ export function ServiciosExtras({ items }: ServiciosExtrasProps) {
             Servicios adicionales
           </p>
           <h2 className="text-2xl md:text-3xl font-headline font-extrabold text-text-main">
-            Todo lo que necesitas para tu auto eléctrico
+            Todo lo que necesitas para tu auto electrificado
           </h2>
         </div>
 

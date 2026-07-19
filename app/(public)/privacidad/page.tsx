@@ -52,14 +52,14 @@ export default function PrivacidadPage() {
             <p>Los datos recopilados se utilizan exclusivamente para:</p>
             <ul>
               <li>Gestionar tu solicitud de oferta y comunicar los resultados de la negociación.</li>
-              <li>Coordinar el contacto entre el cliente y el concesionario seleccionado.</li>
+              <li>Coordinar el contacto entre el cliente y el vendedor oficial seleccionado.</li>
               <li>Enviar comunicaciones comerciales relacionadas con ofertas de vehículos eléctricos e híbridos, únicamente si otorgaste tu consentimiento expreso (newsletter).</li>
               <li>Cumplir con obligaciones legales aplicables.</li>
             </ul>
 
             <h2>4. Compartición de datos</h2>
             <p>
-              Electrificarte comparte los datos estrictamente necesarios con los concesionarios y distribuidores de su red, únicamente para efectos de preparar y ejecutar la oferta solicitada. No vendemos ni cedemos datos personales a terceros con fines comerciales ajenos al servicio contratado.
+              Electrificarte comparte los datos estrictamente necesarios con los vendedores oficiales y distribuidores de su red, únicamente para efectos de preparar y ejecutar la oferta solicitada. No vendemos ni cedemos datos personales a terceros con fines comerciales ajenos al servicio contratado.
             </p>
             <p>
               Utilizamos servicios tecnológicos de terceros para la gestión de formularios y automatización (incluyendo n8n en infraestructura propia), los cuales operan bajo acuerdos de confidencialidad.

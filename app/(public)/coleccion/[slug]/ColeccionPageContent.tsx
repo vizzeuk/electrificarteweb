@@ -344,7 +344,7 @@ export default function ColeccionPageContent({ col, cars }: Props) {
                 Consigue el mejor precio en {col.title}
               </h2>
               <p className="text-white/50 text-sm mt-1">
-                Negociamos por ti con nuestra red exclusiva de concesionarios en Chile.
+                Negociamos por ti con nuestra red exclusiva de vendedores oficiales en Chile.
               </p>
             </div>
             <Link

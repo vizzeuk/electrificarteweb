@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { m } from "framer-motion";
+import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
 
 const schema = z.object({
@@ -158,7 +159,10 @@ export function AsesoriaCheckoutForm() {
           )}
 
           <p className="text-center text-[10px] text-text-muted mt-4 uppercase tracking-wider">
-            Al hacer clic, aceptas nuestros términos de servicio y política de privacidad.
+            Al hacer clic, aceptas nuestros{" "}
+            <Link href="/terminos" className="underline hover:text-primary-deep transition-colors">términos de servicio</Link>{" "}
+            y{" "}
+            <Link href="/privacidad" className="underline hover:text-primary-deep transition-colors">política de privacidad</Link>.
           </p>
         </div>
       </form>
