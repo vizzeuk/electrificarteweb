@@ -6,6 +6,7 @@ import { client } from "@/lib/sanity/client";
 import { urlFor } from "@/lib/sanity/image";
 import { brandBySlugQuery, carsByBrandQuery } from "@/lib/queries/car";
 import { hotDealUrgencyLabelQuery } from "@/lib/queries/pages";
+import { stripBrandSuffix } from "@/lib/utils";
 import BrandPageContent from "./BrandPageContent";
 
 export const revalidate = 60;
@@ -29,7 +30,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const brand = await client.fetch(brandBySlugQuery, { slug }).catch(() => null);
   if (!brand) return { title: "Marca no encontrada" };
   return {
-    title: `${brand.name} eléctricos en Chile | Precios y ofertas | Electrificarte`,
+    title: stripBrandSuffix(`${brand.name} eléctricos en Chile | Precios y ofertas`),
     description: brand.description ?? `Encuentra los mejores precios en autos eléctricos ${brand.name} en Chile.`,
     alternates: { canonical: `/marcas/${slug}` },
   };

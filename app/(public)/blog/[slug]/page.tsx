@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { client } from "@/lib/sanity/client";
 import { blogPostBySlugQuery, allBlogSlugsQuery } from "@/lib/queries/blog";
+import { stripBrandSuffix } from "@/lib/utils";
 import { BlogPostContent } from "./BlogPostContent";
 
 export const revalidate = 60;
@@ -32,7 +33,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     robots:      post.noIndex ? "noindex,nofollow" : "index,follow",
     alternates:  { canonical: post.canonicalUrl ?? `/blog/${slug}` },
     openGraph: {
-      title:       post.metaTitle ?? post.title,
+      title:       stripBrandSuffix(post.metaTitle ?? post.title),
       description: post.metaDescription ?? post.excerpt,
       type:        "article",
       publishedTime: post.publishedAt,

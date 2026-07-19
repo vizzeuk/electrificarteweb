@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { client } from "@/lib/sanity/client";
 import { carBySlugQuery, similarCarsQuery } from "@/lib/queries/car";
+import { stripBrandSuffix } from "@/lib/utils";
 import AutoPageClient, { type CarData, type SimilarCarData } from "./AutoPageClient";
 import { CarStructuredData } from "@/components/car/CarStructuredData";
 
@@ -32,7 +33,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!car || car.hidden) return { title: "Auto no encontrado" };
   const brandName = car.brand?.name ?? "";
   return {
-    title: car.metaTitle ?? `${brandName} ${car.name} | Oferta exclusiva`,
+    title: stripBrandSuffix(car.metaTitle ?? `${brandName} ${car.name} | Oferta exclusiva`),
     description: car.metaDescription ?? car.tagline ?? `Consigue el mejor precio en el ${brandName} ${car.name} en Chile.`,
     alternates: { canonical: `/auto/${slug}` },
   };

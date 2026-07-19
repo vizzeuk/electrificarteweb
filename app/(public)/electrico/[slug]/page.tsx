@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { client } from "@/lib/sanity/client";
 import { urlFor } from "@/lib/sanity/image";
-import { normalizeElectricLabel } from "@/lib/utils";
+import { normalizeElectricLabel, pickFeaturedAdCar, stripBrandSuffix } from "@/lib/utils";
 import {
   electricTypeBySlugQuery,
   carsByElectricTypeQuery,
@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const meta = await client.fetch(electricTypeBySlugQuery, { slug }).catch(() => null);
   if (!meta) return { title: "Tipo eléctrico no encontrado" };
   return {
-    title: meta.metaTitle ?? `${meta.label} en Chile | Electrificarte`,
+    title: stripBrandSuffix(meta.metaTitle ?? `${meta.label} en Chile`),
     description: meta.metaDescription ?? meta.tagline ?? `Encuentra los mejores precios en autos ${meta.label} en Chile.`,
     alternates: { canonical: `/electrico/${slug}` },
   };
@@ -93,10 +93,9 @@ export default async function ElectricoPage({ params }: PageProps) {
     imageUrl:             c.mainImage ? urlFor(c.mainImage).width(800).auto("format").url() : undefined,
   }));
 
-  // Ad car: Sanity selection takes priority, fallback = most expensive in catalog
-  const rawAdCar = sanityMeta.heroFeaturedCar ?? (sanityCars ?? []).slice().sort(
-    (a: any, b: any) => (b.discountPrice ?? b.basePrice) - (a.discountPrice ?? a.basePrice)
-  )[0];
+  // Ad car: Sanity selection takes priority; fallback = mejor oferta real
+  // (hot deal / mayor descuento / más accesible), nunca el más caro.
+  const rawAdCar = sanityMeta.heroFeaturedCar ?? pickFeaturedAdCar(sanityCars ?? []);
   const adCar = rawAdCar ? {
     name:          rawAdCar.name,
     slug:          rawAdCar.slug ?? rawAdCar.slug?.current ?? "",

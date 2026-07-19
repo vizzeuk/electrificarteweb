@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound }      from "next/navigation";
 import { client }        from "@/lib/sanity/client";
 import { collectionBySlugQuery, carsByFiltersQuery } from "@/lib/queries/collections";
+import { stripBrandSuffix } from "@/lib/utils";
 import ColeccionPageContent from "./ColeccionPageContent";
 
 export const revalidate = 60;
@@ -25,7 +26,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const col = await client.fetch(collectionBySlugQuery, { slug }).catch(() => null);
   if (!col) return { title: "Colección no encontrada" };
   return {
-    title:       col.metaTitle       ?? col.title,
+    title:       stripBrandSuffix(col.metaTitle ?? col.title),
     description: col.metaDescription ?? col.description ?? `Encuentra los mejores precios en ${col.title} en Chile. Negociamos por ti.`,
     alternates:  { canonical: `/coleccion/${slug}` },
   };

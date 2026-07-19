@@ -48,6 +48,46 @@ export function calculateDiscount(original: number, discounted: number): number 
   return Math.round(((original - discounted) / original) * 100);
 }
 
+/**
+ * Quita un sufijo "| Electrificarte" al final de un título. El root layout ya
+ * agrega ese sufijo vía metadata.title.template, así que los títulos (propios o
+ * de Sanity) no deben incluirlo o saldría duplicado en la pestaña del navegador.
+ */
+export function stripBrandSuffix(title: string): string {
+  return title.replace(/\s*\|\s*Electrificarte\s*$/i, "").trim();
+}
+
+interface AdCarInput {
+  basePrice?: number | null;
+  discountPrice?: number | null;
+  isHotDeal?: boolean | null;
+}
+
+/**
+ * Elige el auto destacado ("Publicidad") de una PLP cuando Sanity no define uno
+ * manualmente (heroFeaturedCar). El objetivo es coherencia con el mensaje "El
+ * mejor precio del mercado garantizado" y con el badge "Desde $X": prioriza una
+ * oferta real, nunca el auto más caro del catálogo.
+ *   1) Hot deals (mayor descuento primero)
+ *   2) Cualquier auto con descuento real (mayor descuento primero)
+ *   3) El más accesible (menor precio) — jamás el más caro
+ */
+export function pickFeaturedAdCar<T extends AdCarInput>(cars: T[] | null | undefined): T | undefined {
+  if (!cars?.length) return undefined;
+  const priceOf = (c: T) => c.discountPrice ?? c.basePrice ?? 0;
+  const discountOf = (c: T) => Math.max(0, (c.basePrice ?? 0) - (c.discountPrice ?? c.basePrice ?? 0));
+
+  const hotDeals = cars.filter((c) => c.isHotDeal);
+  if (hotDeals.length) {
+    return hotDeals.slice().sort((a, b) => discountOf(b) - discountOf(a))[0];
+  }
+  const discounted = cars.filter((c) => discountOf(c) > 0);
+  if (discounted.length) {
+    return discounted.slice().sort((a, b) => discountOf(b) - discountOf(a))[0];
+  }
+  return cars.slice().sort((a, b) => priceOf(a) - priceOf(b))[0];
+}
+
 export interface CarStatInput {
   battery?: number | null;
   range?: number | null;
