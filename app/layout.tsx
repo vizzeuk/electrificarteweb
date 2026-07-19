@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Space_Grotesk, Inter } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
@@ -14,6 +15,16 @@ const inter = Inter({
   display: "swap",
 });
 
+// Material Symbols — self-hosted variable icon font (opsz/wght/FILL/GRAD).
+// Self-hosting via next/font removes the external Google Fonts request and the
+// print-media swap script that caused the hydration mismatch.
+const materialSymbols = localFont({
+  src: "./fonts/material-symbols-outlined.woff2",
+  variable: "--font-symbols",
+  display: "block",
+  weight: "100 700",
+});
+
 export const metadata: Metadata = {
   metadataBase: new URL("https://electrificarte.com"),
   title: {
@@ -21,7 +32,7 @@ export const metadata: Metadata = {
     template: "%s | Electrificarte",
   },
   description:
-    "Marketplace #1 de autos electricos en Chile. Conectamos compradores con la mejor red de concesionarios para garantizarte el precio mas bajo del mercado. Encuentra el mejor precio disponible en tu próximo vehículo eléctrico.",
+    "Marketplace #1 de autos electrificados en Chile. Conectamos compradores con la mejor red de vendedores oficiales para garantizarte el precio más bajo del mercado. Encuentra el mejor precio disponible en tu próximo vehículo electrificado.",
   keywords: [
     "autos electricos chile",
     "vehiculos electricos chile",
@@ -56,13 +67,13 @@ export const metadata: Metadata = {
     siteName: "Electrificarte",
     title: "Electrificarte | Ahorra millones en tu auto electrificado en Chile",
     description:
-      "Marketplace #1 de autos electricos en Chile. Conectamos compradores con la mejor red de concesionarios para negociar el precio más competitivo del mercado.",
+      "Marketplace #1 de autos electrificados en Chile. Conectamos compradores con la mejor red de vendedores oficiales para negociar el precio más competitivo del mercado.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Electrificarte | Autos electricos al mejor precio en Chile",
+    title: "Electrificarte | Autos electrificados al mejor precio en Chile",
     description:
-      "Ahorra millones en tu proximo auto electrico. Marketplace con la mejor red de concesionarios de Chile.",
+      "Ahorra millones en tu próximo auto electrificado. Marketplace con la mejor red de vendedores oficiales de Chile.",
   },
   alternates: {
     canonical: "/",
@@ -82,29 +93,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className={`${spaceGrotesk.variable} ${inter.variable}`}>
+    <html
+      lang="es"
+      className={`${spaceGrotesk.variable} ${inter.variable} ${materialSymbols.variable}`}
+    >
       <head>
-        {/* Preconnects — open the TLS connection before assets are requested */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        {/* Preconnect a Sanity CDN (imágenes). Las fuentes ahora son self-hosted
+            vía next/font, así que ya no hay preconnects a Google Fonts. */}
         <link rel="preconnect" href="https://cdn.sanity.io" crossOrigin="" />
-
-        {/* Material Symbols — load non-blocking via the print-media trick. */}
-        <link
-          rel="preload"
-          as="style"
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700&display=swap"
-        />
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700&display=swap"
-          media="print"
-        />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `document.querySelectorAll('link[rel="stylesheet"][media="print"]').forEach(function(l){if(l.sheet){l.media='all';}else{l.addEventListener('load',function(){l.media='all';});}});`,
-          }}
-        />
 
         {/* Favicon is auto-wired by Next.js from app/icon.svg */}
         <meta name="theme-color" content="#00E5E5" />
