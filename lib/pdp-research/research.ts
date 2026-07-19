@@ -21,6 +21,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 import type { createClient } from "@sanity/client";
 import type { Browser } from "playwright-core";
 import { extractText, getDocumentProxy } from "unpdf";
+import { isChileConfirmedUrl } from "@/lib/chile-url";
 
 // ReturnType<typeof createClient> (en vez del tipo SanityClient exportado) para preservar
 // exactamente el mismo tipo concreto que devuelve createClient() — con el tipo de clase genérico
@@ -222,15 +223,14 @@ async function runSourceSearch(
   const input = reportBlock.input as { found: boolean; urls?: string[]; note?: string };
   let urls = (input.urls ?? []).slice(0, MAX_SOURCE_URLS);
 
-  // Red de seguridad: solo confiamos en dominios .cl (o con /cl explícito en la ruta, como
-  // volvocars.com/cl) — un sitio regional LatAm sin esa señal no se acepta como fuente para
-  // Chile aunque el modelo lo haya reportado como tal (ver caso Zeekr/Colombia).
-  const clUrls = urls.filter((u) => /\.cl(\/|$)/i.test(u) || /\/cl(\/|$)/i.test(u));
+  // Red de seguridad: ver lib/chile-url.ts — un sitio regional LatAm sin señal de Chile no se
+  // acepta como fuente aunque el modelo lo haya reportado como tal (ver caso Zeekr/Colombia).
+  const clUrls = urls.filter(isChileConfirmedUrl);
   if (urls.length > 0 && clUrls.length === 0) {
     return {
       found: false,
       urls: [],
-      note: `Se descartaron ${urls.length} URL(s) por no confirmar dominio .cl (posible sitio regional, no específico de Chile): ${urls.join(", ")}`,
+      note: `Se descartaron ${urls.length} URL(s) por no confirmar mercado Chile (posible sitio regional): ${urls.join(", ")}`,
     };
   }
   urls = clUrls;

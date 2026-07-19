@@ -349,6 +349,26 @@ export const car = defineType({
       name: "lastPriceCheckAt", title: "Última revisión de precio/vigencia", type: "datetime", group: "ai",
       description: "Se actualiza en la revisión semanal automática de vigencia y precio de mercado.",
     }),
+    defineField({
+      name: "priceCheckFlag", title: "Estado de la última revisión", type: "string", group: "ai",
+      initialValue: "none",
+      options: {
+        list: [
+          { title: "Sin novedad", value: "none" },
+          { title: "🟡 Precio sobre el oficial", value: "price_high" },
+          { title: "🔴 Posiblemente descontinuado", value: "discontinued" },
+        ],
+      },
+      description: "Resultado de la última revisión automática (Flujo B) — se limpia al resolver desde WhatsApp o Studio.",
+    }),
+    defineField({
+      name: "priceCheckNote", title: "Detalle de la revisión", type: "text", rows: 3, group: "ai",
+      description: "Precio oficial encontrado, nuestro precio, precio sugerido y fuente — solo si priceCheckFlag no es 'none'.",
+    }),
+    defineField({
+      name: "priceCheckSuggestedPrice", title: "Precio sugerido (5% bajo el oficial)", type: "number", group: "ai",
+      description: "Solo cuando priceCheckFlag = 'price_high' — el valor que aplicaría 'aplicar <modelo>' desde WhatsApp.",
+    }),
 
     // ─── SEO ────────────────────────────────────────────────────────────────
     defineField({ name: "metaTitle",       title: "Meta Title",       type: "string",       group: "seo" }),

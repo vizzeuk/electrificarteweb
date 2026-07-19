@@ -17,3 +17,8 @@ export function isAdminPhone(phone: string): boolean {
   if (ADMIN_PHONES.size === 0) return false;
   return ADMIN_PHONES.has(normalizePhone(phone));
 }
+
+/** Lista de números admin normalizados — para envíos proactivos (ej. digest semanal de M4). */
+export function adminPhones(): string[] {
+  return [...ADMIN_PHONES];
+}
