@@ -38,7 +38,7 @@ function SolicitarInner({ carOptions, servicePrice = "$19.990" }: SolicitarConte
           {/* Title block — full width */}
           <div className="pb-7">
             <p className="text-primary text-[10px] uppercase tracking-widest font-bold mb-3">
-              Paso final
+              Último paso
             </p>
             <h1 className="text-3xl sm:text-4xl font-headline font-black text-white leading-tight tracking-tighter mb-5">
               Conseguimos el mejor precio{" "}
@@ -96,16 +96,16 @@ function SolicitarInner({ carOptions, servicePrice = "$19.990" }: SolicitarConte
               <div className="bg-surface rounded-2xl p-6 border border-gray-100">
                 <h3 className="font-headline font-bold mb-4 flex items-center gap-2">
                   <Icon name="verified" className="text-primary" size="sm" />
-                  Que incluye tu asesoria
+                  Qué incluye tu solicitud
                 </h3>
                 <ul className="space-y-3">
                   {[
-                    "Busqueda en red exclusiva de concesionarios",
-                    "Negociacion de bonos y descuentos",
+                    "Búsqueda en red exclusiva de vendedores oficiales",
+                    "Negociación de bonos y descuentos",
                     "Opciones de financiamiento pre-aprobadas",
                     "Comparativa de precios del mercado",
-                    "Acompanamiento hasta la entrega",
-                    "Garantia de devolucion si no hay ahorro",
+                    "Acompañamiento hasta la entrega",
+                    "Garantía de devolución si no hay ahorro",
                   ].map((item) => (
                     <li key={item} className="flex items-start gap-2">
                       <Icon name="check_circle" className="text-primary flex-shrink-0 mt-0.5" size="sm" />
@@ -121,16 +121,16 @@ function SolicitarInner({ carOptions, servicePrice = "$19.990" }: SolicitarConte
                   <span className="text-text-ghost text-sm line-through">$29.990</span>
                 </div>
                 <div className="flex items-baseline justify-between">
-                  <span className="font-headline font-bold">Pago unico</span>
+                  <span className="font-headline font-bold">Pago único</span>
                   <span className="text-3xl font-headline font-black text-primary-deep">{servicePrice}</span>
                 </div>
                 <p className="text-[10px] text-text-ghost mt-2 uppercase tracking-wide">33% dcto por Electric Sale</p>
               </div>
 
               <div className="bg-white rounded-2xl p-6 border border-gray-100">
-                <h3 className="font-headline font-bold text-sm mb-3">Metodos de pago</h3>
+                <h3 className="font-headline font-bold text-sm mb-3">Métodos de pago</h3>
                 <div className="flex flex-wrap gap-2">
-                  {["WebPay", "Tarjeta credito", "Tarjeta debito", "Transferencia"].map((method) => (
+                  {["WebPay", "Tarjeta crédito", "Tarjeta débito", "Transferencia"].map((method) => (
                     <span key={method} className="text-xs bg-gray-100 px-3 py-1.5 rounded-full text-text-muted font-medium">
                       {method}
                     </span>

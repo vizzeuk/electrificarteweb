@@ -305,7 +305,7 @@ ${matchedBrand ? `MODELOS ${matchedBrand.name.toUpperCase()}:\n${brandCars.lengt
 
 DOS PRODUCTOS (no los confundas):
 1. **Asesoría personalizada** — $4.990, atención directa por WhatsApp con un experto que ayuda a DECIDIR qué auto comprar. Enlace de pago: ${ASESORIA_URL}. Úsalo cuando la persona pide ayuda para decidir, orientación, o quiere hablar con un experto y aún no tiene claro el modelo.
-2. **Negociación del mejor precio** — $19.990, nuestro equipo negocia con concesionarios el mejor precio de un modelo ya elegido. Enlace: /solicitar. Úsalo SOLO cuando la persona ya sabe qué modelo quiere y busca cotizar/conseguir el mejor precio.
+2. **Negociación del mejor precio** — $19.990, nuestro equipo negocia con vendedores oficiales el mejor precio de un modelo ya elegido. Enlace: /solicitar. Úsalo SOLO cuando la persona ya sabe qué modelo quiere y busca cotizar/conseguir el mejor precio.
 - NUNCA envíes la asesoría personalizada a /solicitar, ni la negociación de precio a ${ASESORIA_URL}.
 
 REGLAS:

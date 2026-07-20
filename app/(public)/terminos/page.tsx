@@ -40,15 +40,15 @@ export default function TerminosPage() {
 
             <h2>2. Objeto del servicio</h2>
             <p>
-              Electrificarte actúa como intermediario entre compradores particulares y la red de concesionarios y distribuidores de vehículos electrificados en Chile. El servicio consiste en:
+              Electrificarte actúa como intermediario entre compradores particulares y la red de vendedores oficiales y distribuidores de vehículos electrificados en Chile. El servicio consiste en:
             </p>
             <ul>
               <li>Recepción de solicitudes de oferta a través del formulario del sitio web.</li>
-              <li>Negociación con la red de concesionarios para obtener el mejor precio disponible.</li>
+              <li>Negociación con la red de vendedores oficiales para obtener el mejor precio disponible.</li>
               <li>Entrega de una oferta formal al solicitante en un plazo máximo de 96 horas hábiles.</li>
             </ul>
             <p>
-              Electrificarte no comercializa vehículos directamente ni actúa como concesionario. La decisión final de compra corresponde exclusivamente al cliente.
+              Electrificarte no comercializa vehículos directamente ni actúa como vendedor. La decisión final de compra corresponde exclusivamente al cliente.
             </p>
 
             <h2>3. Pago del servicio</h2>
@@ -74,7 +74,7 @@ export default function TerminosPage() {
 
             <h2>6. Limitación de responsabilidad</h2>
             <p>
-              Electrificarte no garantiza la disponibilidad ininterrumpida del sitio web ni la exactitud de los precios mostrados, los cuales son de carácter referencial y pueden variar según disponibilidad del concesionario. La oferta definitiva se entrega por escrito tras el proceso de negociación.
+              Electrificarte no garantiza la disponibilidad ininterrumpida del sitio web ni la exactitud de los precios mostrados, los cuales son de carácter referencial y pueden variar según disponibilidad del vendedor oficial. La oferta definitiva se entrega por escrito tras el proceso de negociación.
             </p>
 
             <h2>7. Ley aplicable y jurisdicción</h2>

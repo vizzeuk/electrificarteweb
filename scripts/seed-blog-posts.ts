@@ -143,11 +143,11 @@ const posts = [
 
       h2("¿Cómo comprar un auto eléctrico al mejor precio en Chile?"),
 
-      p("El precio de lista rara vez es el precio real. En Electrificarte negociamos directamente con la red de concesionarios para conseguir el mejor precio del mercado. Nuestro proceso es simple:"),
+      p("El precio de lista rara vez es el precio real. En Electrificarte negociamos directamente con la red de vendedores oficiales para conseguir el mejor precio del mercado. Nuestro proceso es simple:"),
 
       numbered([
         "Nos indicas el modelo que te interesa y tu presupuesto.",
-        "Consultamos a toda nuestra red de concesionarios simultáneamente.",
+        "Consultamos a toda nuestra red de vendedores oficiales simultáneamente.",
         "Te presentamos la mejor oferta en menos de 24 horas.",
         "Si no ahorras al menos $500.000 CLP vs. el precio de lista, no te cobramos nada.",
       ]),

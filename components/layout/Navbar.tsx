@@ -222,7 +222,7 @@ export function Navbar({ brands = [], vehicleTypes = [], electricTypes = [] }: N
               transparent ? "text-white hover:bg-white/10" : "text-text-main hover:bg-surface",
             ].join(" ")}
             onClick={() => { setMobileOpen(!mobileOpen); setMobileSection(null); }}
-            aria-label={mobileOpen ? "Cerrar menu" : "Abrir menu"}
+            aria-label={mobileOpen ? "Cerrar menú" : "Abrir menú"}
             aria-expanded={mobileOpen}
           >
             <Icon name={mobileOpen ? "close" : "menu"} />

@@ -9,6 +9,7 @@ import {
   allVehicleTypesQuery,
 } from "@/lib/queries/car";
 import { hotDealUrgencyLabelQuery } from "@/lib/queries/pages";
+import { pickFeaturedAdCar, stripBrandSuffix } from "@/lib/utils";
 import TipoPageContent, { type TipoCarData, type TipoMeta, type OtherType } from "./TipoPageContent";
 
 export const revalidate = 60;
@@ -30,9 +31,9 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const meta = await client.fetch(vehicleTypeBySlugQuery, { slug }).catch(() => null);
-  if (!meta) return { title: "Tipo no encontrado | Electrificarte" };
+  if (!meta) return { title: "Tipo no encontrado" };
   return {
-    title: meta.metaTitle ?? `${meta.label} eléctricos en Chile | Electrificarte`,
+    title: stripBrandSuffix(meta.metaTitle ?? `${meta.label} eléctricos en Chile`),
     description: meta.metaDescription ?? `Encuentra los mejores precios en autos ${meta.label} eléctricos en Chile.`,
     alternates: { canonical: `/tipo/${slug}` },
   };
@@ -82,10 +83,9 @@ export default async function TipoPage({ params }: PageProps) {
     imageUrl:             c.mainImage ? urlFor(c.mainImage).width(800).auto("format").url() : undefined,
   }));
 
-  // Ad car: Sanity selection takes priority, fallback = most expensive in catalog
-  const rawAdCar = sanityMeta.heroFeaturedCar ?? (sanityCars ?? []).slice().sort(
-    (a: any, b: any) => (b.discountPrice ?? b.basePrice) - (a.discountPrice ?? a.basePrice)
-  )[0];
+  // Ad car: Sanity selection takes priority; fallback = mejor oferta real
+  // (hot deal / mayor descuento / más accesible), nunca el más caro.
+  const rawAdCar = sanityMeta.heroFeaturedCar ?? pickFeaturedAdCar(sanityCars ?? []);
   const adCar = rawAdCar ? {
     name:          rawAdCar.name,
     slug:          rawAdCar.slug ?? rawAdCar.slug?.current ?? "",

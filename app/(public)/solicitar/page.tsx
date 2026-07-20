@@ -6,13 +6,13 @@ import { SolicitarContent } from "./SolicitarContent";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/solicitar" },
-  title: "Solicitar oferta | Asesoria para tu auto electrico",
+  title: "Solicitar oferta | Consigue tu mejor precio",
   description:
-    "Completa tu solicitud y recibe en 48 a 96 horas la mejor oferta del mercado para tu auto electrico en Chile. Pago unico de $19.990. Garantia de devolucion.",
+    "Completa tu solicitud y recibe en 48 a 96 horas la mejor oferta del mercado para tu auto electrificado en Chile. Pago único de $19.990. Garantía de devolución.",
   openGraph: {
     title: "Solicitar oferta | Electrificarte",
     description:
-      "Recibe la mejor oferta para tu auto electrico en 48 a 96 horas. Pago unico $19.990.",
+      "Recibe la mejor oferta para tu auto electrificado en 48 a 96 horas. Pago único $19.990.",
   },
 };
 

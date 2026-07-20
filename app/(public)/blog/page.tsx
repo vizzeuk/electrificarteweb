@@ -9,7 +9,7 @@ export const revalidate = 60;
 
 export const metadata: Metadata = {
   alternates: { canonical: "/blog" },
-  title: "Blog de Electromovilidad | Guías, Comparativas y Noticias | Electrificarte",
+  title: "Blog de Electromovilidad | Guías, Comparativas y Noticias",
   description:
     "Guías de compra, comparativas de autos eléctricos, costos de carga y todo lo que necesitas saber sobre electromovilidad en Chile.",
 };

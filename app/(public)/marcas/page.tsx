@@ -10,7 +10,7 @@ import type { Brand } from "./MarcasGrid";
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: "Marcas eléctricas e híbridas en Chile | Electrificarte",
+  title: "Marcas eléctricas e híbridas en Chile",
   description:
     "Explora todas las marcas de autos eléctricos e híbridos disponibles en Chile. Compara modelos y consigue el mejor precio con Electrificarte.",
 };

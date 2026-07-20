@@ -82,7 +82,7 @@ const STATS = [
 ];
 
 const INCLUYE = [
-  "Búsqueda en nuestra red exclusiva de concesionarios oficiales",
+  "Búsqueda en nuestra red exclusiva de vendedores oficiales",
   "Negociación de bonos y descuentos por volumen",
   "Opciones de financiamiento pre-aprobadas",
   "Comparativa de precios reales del mercado",
@@ -197,7 +197,7 @@ export default async function NegociacionPage() {
             Qué incluye
           </h2>
           <p className="text-text-muted text-center mb-10">
-            Ideal si ya tienes claro qué modelo quieres y buscas el mejor precio posible, sin dar vueltas por concesionarios.
+            Ideal si ya tienes claro qué modelo quieres y buscas el mejor precio posible, sin dar vueltas por tu cuenta.
           </p>
           <ul className="grid gap-4 sm:grid-cols-2">
             {INCLUYE.map((item) => (

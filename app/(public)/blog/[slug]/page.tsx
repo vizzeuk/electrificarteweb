@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { client } from "@/lib/sanity/client";
 import { blogPostBySlugQuery, allBlogSlugsQuery } from "@/lib/queries/blog";
+import { stripBrandSuffix } from "@/lib/utils";
 import { BlogPostContent } from "./BlogPostContent";
 
 export const revalidate = 60;
@@ -21,18 +22,18 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const post = await client.fetch(blogPostBySlugQuery, { slug }).catch(() => null);
-  if (!post) return { title: "Artículo no encontrado | Electrificarte" };
+  if (!post) return { title: "Artículo no encontrado" };
 
   const ogUrl = post.ogImage?.asset?.url ?? post.coverImage?.asset?.url;
 
   return {
-    title:       post.metaTitle       ?? `${post.title} | Electrificarte`,
+    title:       post.metaTitle       ?? post.title,
     description: post.metaDescription ?? post.excerpt,
     keywords:    post.keywords?.join(", "),
     robots:      post.noIndex ? "noindex,nofollow" : "index,follow",
     alternates:  { canonical: post.canonicalUrl ?? `/blog/${slug}` },
     openGraph: {
-      title:       post.metaTitle ?? post.title,
+      title:       stripBrandSuffix(post.metaTitle ?? post.title),
       description: post.metaDescription ?? post.excerpt,
       type:        "article",
       publishedTime: post.publishedAt,

@@ -421,7 +421,7 @@ export default function BrandPageContent({ slug, brand, hotDealUrgencyLabel }: B
                             <span className="text-white text-sm font-medium">Con bono Electrificarte</span>
                             <span className="text-primary text-3xl font-headline font-black">{formatCLP(deal.discountPrice)}</span>
                           </div>
-                          <p className="text-white/30 text-xs pt-2 border-t border-white/10">Ahorra {discountPct}% · Incluye bono concesionario + Electrificarte</p>
+                          <p className="text-white/30 text-xs pt-2 border-t border-white/10">Ahorra {discountPct}% · Incluye bono vendedor + Electrificarte</p>
                         </div>
                         <div className="flex gap-3">
                           <Link href={`/solicitar?auto=${deal.carSlug}`} className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-6 py-3 rounded-xl transition-all text-sm shadow-[0_4px_20px_rgba(0,229,229,0.30)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]">
@@ -615,7 +615,7 @@ export default function BrandPageContent({ slug, brand, hotDealUrgencyLabel }: B
               <div>
                 <p className="text-primary text-xs uppercase tracking-widest font-bold mb-2">¿Te convenció?</p>
                 <h3 className="text-white font-headline font-black text-2xl md:text-3xl tracking-tight">Consigue el mejor precio en tu {brand.name}</h3>
-                <p className="text-white/50 text-sm mt-1">Negociamos por ti con nuestra red exclusiva de concesionarios en Chile.</p>
+                <p className="text-white/50 text-sm mt-1">Negociamos por ti con nuestra red exclusiva de vendedores oficiales en Chile.</p>
               </div>
               <Link href="/solicitar" className="flex-shrink-0 inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-black px-8 py-4 rounded-xl transition-all text-sm whitespace-nowrap shadow-[0_4px_20px_rgba(0,229,229,0.30)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]">
                 Solicitar oferta ahora <span className="material-symbols-outlined text-[18px]">arrow_forward</span>

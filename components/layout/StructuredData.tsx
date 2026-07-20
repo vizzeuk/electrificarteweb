@@ -9,7 +9,7 @@ export function HomeStructuredData() {
     url: "https://electrificarte.com",
     logo: "https://electrificarte.com/logos-electrificarte/logo-elec-sin%20auto.webp",
     description:
-      "Marketplace de autos electricos en Chile. Intermediario entre compradores y concesionarios que garantiza el mejor precio del mercado.",
+      "Marketplace de autos electrificados en Chile. Intermediario entre compradores y vendedores oficiales que garantiza el mejor precio del mercado.",
     foundingDate: "2023",
     address: {
       "@type": "PostalAddress",
@@ -47,7 +47,7 @@ export function HomeStructuredData() {
             "@type": "Service",
             name: "Asesoria de compra de auto electrico",
             description:
-              "Servicio de negociacion exclusiva con concesionarios para obtener el mejor precio en autos electricos en Chile",
+              "Servicio de negociacion exclusiva con vendedores oficiales para obtener el mejor precio en autos electrificados en Chile",
           },
           price: "19990",
           priceCurrency: "CLP",
@@ -82,7 +82,7 @@ export function HomeStructuredData() {
         name: "Como puedo obtener un descuento en un auto electrico en Chile?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Al registrarte en Electrificarte y pagar $19.990 CLP, activamos nuestro servicio de busqueda exclusiva. Nuestro equipo negocia directamente con concesionarios para conseguirte el mejor precio posible, con los mejores descuentos disponibles del mercado.",
+          text: "Al registrarte en Electrificarte y pagar $19.990 CLP, activamos nuestro servicio de busqueda exclusiva. Nuestro equipo negocia directamente con vendedores oficiales para conseguirte el mejor precio posible, con los mejores descuentos disponibles del mercado.",
         },
       },
       {
@@ -90,7 +90,7 @@ export function HomeStructuredData() {
         name: "Como logra Electrificarte los descuentos?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Trabajamos con una red de concesionarios verificados en Chile. Agrupamos solicitudes para negociar descuentos por volumen, acceder a bonos exclusivos y ofertas de inventario no disponibles al publico.",
+          text: "Trabajamos con una red de vendedores oficiales verificados en Chile. Agrupamos solicitudes para negociar descuentos por volumen, acceder a bonos exclusivos y ofertas de inventario no disponibles al publico.",
         },
       },
       {
@@ -106,7 +106,7 @@ export function HomeStructuredData() {
         name: "Puedo ver el auto antes de comprarlo?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Si. Te conectamos con el concesionario que ofrezca el mejor precio para que puedas visitarlo, hacer test drive y verificar todo antes de decidir.",
+          text: "Si. Te conectamos con el vendedor oficial que ofrezca el mejor precio para que puedas visitarlo, hacer test drive y verificar todo antes de decidir.",
         },
       },
     ],

@@ -414,7 +414,7 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes, adCar, a
                             <span className="text-white text-sm font-medium">Con descuento Electrificarte</span>
                             <span className="text-primary text-3xl font-headline font-black">{formatCLP(car.discountPrice)}</span>
                           </div>
-                          <p className="text-xs pt-2" style={{ color: "rgba(255,255,255,0.30)", borderTop: "1px solid rgba(255,255,255,0.10)" }}>Ahorra {discountPct}% · Incluye bono concesionario + Electrificarte</p>
+                          <p className="text-xs pt-2" style={{ color: "rgba(255,255,255,0.30)", borderTop: "1px solid rgba(255,255,255,0.10)" }}>Ahorra {discountPct}% · Incluye bono vendedor + Electrificarte</p>
                         </div>
                         <div className="flex gap-3">
                           <Link href={`/solicitar?auto=${car.slug}`} className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-6 py-3 rounded-xl transition-all text-sm shadow-[0_4px_20px_rgba(0,229,229,0.30)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]">
@@ -647,7 +647,7 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes, adCar, a
                 Consigue el mejor precio en tu {meta.label} eléctrico
               </h2>
               <p className="text-white/50 text-sm mt-1">
-                Negociamos por ti con nuestra red exclusiva de concesionarios en Chile.
+                Negociamos por ti con nuestra red exclusiva de vendedores oficiales en Chile.
               </p>
             </div>
             <Link

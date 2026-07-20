@@ -339,6 +339,11 @@
         bottom: 16px;
         right: 16px;
       }
+      /* El nudge flotante (nowrap) invade el contenido en pantallas chicas.
+         El launcher sigue visible y tappable, así que ocultamos solo el nudge. */
+      #nudge {
+        display: none;
+      }
     }
 
     /* Upsell card */

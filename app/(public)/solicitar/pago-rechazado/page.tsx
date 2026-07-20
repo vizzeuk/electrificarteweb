@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { verifyOrderToken } from "@/lib/order-token";
 
 export const metadata: Metadata = {
-  title: "El pago no se completó | Electrificarte",
+  title: "El pago no se completó",
   description: "El pago no pudo procesarse. Podés reintentar tu solicitud.",
   robots: { index: false, follow: false },
 };

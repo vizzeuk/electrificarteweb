@@ -462,7 +462,7 @@ export default function CalculadoraContent({ cars }: Props) {
               </div>
 
               <h1 className="text-5xl md:text-6xl font-headline font-black text-white tracking-tighter leading-[0.92] mb-4">
-                ¿Cuánto puedes<br /><span className="text-primary">ahorrar con un electrico?</span>
+                ¿Cuánto puedes<br /><span className="text-primary">ahorrar con un electrificado?</span>
               </h1>
               <p className="text-white/60 text-base leading-relaxed max-w-md mb-8">
                 Ingresa tu uso mensual y tu consumo actual, elige el auto que te interesa y calcula tu ahorro real.
