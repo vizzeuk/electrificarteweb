@@ -138,12 +138,19 @@ async function triggerResearch(brand: string, model: string, phone: string): Pro
   const secret = process.env.ADMIN_API_SECRET;
   if (!secret) return "No se pudo iniciar: falta configurar ADMIN_API_SECRET en el servidor.";
   try {
-    // Diagnóstico temporal (no expone el secreto completo) — quitar una vez resuelto el 401
-    // reportado en producción.
-    console.warn("[admin-advisor] enviando secreto", { len: secret.length, prefix: secret.slice(0, 3), url: SITE_URL });
+    // Vercel Authentication (Deployment Protection) bloquea llamadas servidor-a-servidor sin
+    // sesión de browser, incluso en producción — se pasa el bypass generado en Vercel →
+    // Settings → Deployment Protection → "Protection Bypass for Automation" para que esta
+    // llamada interna no choque con esa capa (nada que ver con ADMIN_API_SECRET, que es nuestro
+    // propio secreto de aplicación).
+    const bypassSecret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
     const res = await fetch(`${SITE_URL}/api/admin/pdp-research`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", "x-admin-secret": secret },
+      headers: {
+        "Content-Type": "application/json",
+        "x-admin-secret": secret,
+        ...(bypassSecret ? { "x-vercel-protection-bypass": bypassSecret } : {}),
+      },
       body: JSON.stringify({ brand, model, phone }),
       signal: AbortSignal.timeout(10_000),
     });
