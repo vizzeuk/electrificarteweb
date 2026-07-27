@@ -128,7 +128,6 @@ export function Navbar({ brands = [], vehicleTypes = [], electricTypes = [] }: N
                   onClick={() => setActiveDropdown(null)}
                 >
                   Ver todas las marcas
-                  <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
                 </Link>
               </div>
             </Dropdown>

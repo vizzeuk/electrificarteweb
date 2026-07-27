@@ -24,8 +24,8 @@ const DEFAULTS: ServicioExtra[] = [
   },
   {
     badge:       "Preferencial",
-    title:       "Contrata el seguro de tu auto eléctrico a valores preferenciales",
-    description: "Seguros especializados para vehículos eléctricos con coberturas exclusivas y precios únicos en Chile.",
+    title:       "Contrata el seguro de tu auto electrificado a valores preferenciales",
+    description: "Seguros especializados para vehículos electrificados con coberturas exclusivas y precios únicos en Chile.",
     ctaText:     "Cotizar seguro",
     ctaHref:     "https://seguro-auto.comparaonline.cl/quote",
     imageUrl:    "/images/seguros.webp",
@@ -103,7 +103,6 @@ export function ServiciosExtras({ items }: ServiciosExtrasProps) {
                     className="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold text-sm px-6 py-3 rounded-xl transition-colors duration-200"
                   >
                     {card.ctaText}
-                    <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
                   </a>
                 </div>
               </div>

@@ -756,7 +756,6 @@ export function LeadForm({ carOptions = [], carSlug, carName }: LeadFormProps) {
             ) : (
               <>
                 Solicitar mejor oferta
-                <Icon name="arrow_forward" />
               </>
             )}
           </button>

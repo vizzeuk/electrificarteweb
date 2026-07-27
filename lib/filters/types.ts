@@ -37,7 +37,6 @@ export type FacetId =
   | "precio"
   | "autonomia"
   | "asientos"
-  | "seguridad"
   | "traccion";
 
 /** Estado activo: por cada facet, lista de valores seleccionados. */

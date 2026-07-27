@@ -36,7 +36,7 @@ interface HeroProps {
 }
 
 export function Hero({ data }: HeroProps) {
-  const badge     = data?.badge          ?? "Marketplace #1 de autos eléctricos en Chile";
+  const badge     = data?.badge          ?? "Marketplace #1 de autos electrificados en Chile";
   const title     = data?.title          ?? "Estrena tu próximo";
   const highlight = data?.titleHighlight ?? "auto electrificado";
 
@@ -89,10 +89,7 @@ export function Hero({ data }: HeroProps) {
             <span className="text-primary">{highlight}</span>
           </h1>
           <p className="text-base md:text-lg text-white/70">
-            ¿No sabes cuál modelo elegir? Te ayudamos.
-          </p>
-          <p className="text-base md:text-lg text-white/50 mt-1">
-            ¿Ya te decidiste por tu próximo electrificado? Te conseguimos el mejor precio.
+            ¿No sabes cuál modelo elegir? Te ayudamos y conseguimos el mejor precio.
           </p>
         </div>
 
@@ -118,10 +115,9 @@ export function Hero({ data }: HeroProps) {
             </div>
             <Link
               href={advCtaHref}
-              className="inline-flex items-center justify-center gap-2 bg-amber hover:bg-amber-dark text-black font-bold px-6 py-3.5 rounded-xl transition-all text-base shadow-[0_6px_32px_rgba(245,158,11,0.30)] hover:shadow-[0_8px_40px_rgba(245,158,11,0.45)] hover:scale-[1.02] active:scale-[0.99]"
+              className="inline-flex items-center justify-center bg-amber hover:bg-amber-dark text-black font-bold px-6 py-3 rounded-xl transition-all text-base shadow-[0_6px_32px_rgba(245,158,11,0.30)] hover:shadow-[0_8px_40px_rgba(245,158,11,0.45)] hover:scale-[1.02] active:scale-[0.99]"
             >
               {advCtaText}
-              <Icon name="arrow_forward" size="sm" />
             </Link>
           </div>
 
@@ -145,10 +141,9 @@ export function Hero({ data }: HeroProps) {
             </div>
             <Link
               href={offerCtaHref}
-              className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-6 py-3.5 rounded-xl transition-all text-base shadow-[0_6px_32px_rgba(0,229,229,0.30)] hover:shadow-[0_8px_40px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]"
+              className="inline-flex items-center justify-center bg-primary hover:bg-primary-dark text-black font-bold px-6 py-3 rounded-xl transition-all text-base shadow-[0_6px_32px_rgba(0,229,229,0.30)] hover:shadow-[0_8px_40px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]"
             >
               {offerCtaText}
-              <Icon name="arrow_forward" size="sm" />
             </Link>
           </div>
         </div>

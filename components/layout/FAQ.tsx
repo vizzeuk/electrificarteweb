@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { m, AnimatePresence } from "framer-motion";
-import { Icon } from "@/components/ui/Icon";
 
 export interface FAQItem {
   question: string;
@@ -135,7 +134,7 @@ export function FAQ({ title = "Preguntas frecuentes", faqs }: FAQProps) {
                   className="flex-1 rounded-xl p-3.5 text-center"
                   style={{ backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)", border: "1px solid rgba(255,255,255,0.10)" }}
                 >
-                  <p className="text-primary text-xl font-headline font-bold">$19.990</p>
+                  <p className="text-primary text-xl font-headline font-bold">Desde $4.990</p>
                   <p className="text-[11px] mt-0.5" style={{ color: "rgba(255,255,255,0.5)" }}>Pago único</p>
                 </div>
                 <div
@@ -151,33 +150,36 @@ export function FAQ({ title = "Preguntas frecuentes", faqs }: FAQProps) {
               <div className="relative z-10 p-7 space-y-5">
                 <div className="h-px" style={{ backgroundColor: "rgba(255,255,255,0.15)" }} />
 
-                {/* Guarantee badge */}
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5" style={{ backgroundColor: "rgba(0,229,229,0.20)", border: "1px solid rgba(0,229,229,0.30)" }}>
-                    <Icon name="shield" className="text-primary" size="sm" />
-                  </div>
-                  <div>
-                    <p className="text-white font-headline font-bold text-base leading-snug">
-                      Garantía de devolución
-                    </p>
-                    <p className="text-xs mt-1 leading-relaxed" style={{ color: "rgba(255,255,255,0.60)" }}>
-                      Si no conseguimos un precio mejor al que encuentras por tu cuenta, te devolvemos el 100% de tu pago.
-                    </p>
-                  </div>
+                {/* Heading — clarifica la acción y las dos unidades de negocio */}
+                <div>
+                  <p className="text-primary text-[11px] font-bold uppercase tracking-widest mb-1.5">
+                    ¿Listo para empezar?
+                  </p>
+                  <p className="text-white font-headline font-bold text-lg leading-snug">
+                    Elige tu camino
+                  </p>
+                  <p className="text-xs mt-1.5 leading-relaxed" style={{ color: "rgba(255,255,255,0.60)" }}>
+                    Te ayudamos a decidir qué auto comprar, o negociamos el mejor precio del que ya elegiste.
+                  </p>
                 </div>
 
-                {/* CTA */}
-                <div className="space-y-2">
-                  <p className="text-xs text-center" style={{ color: "rgba(255,255,255,0.50)" }}>
-                    ¿Listo para conseguir tu mejor precio?
-                  </p>
+                {/* CTAs — una por unidad de negocio */}
+                <div className="space-y-2.5">
+                  <Link
+                    href="/asesoria/contratar"
+                    className="flex items-center justify-center w-full bg-amber hover:bg-amber-dark text-black font-bold py-3 rounded-xl transition-all text-sm shadow-[0_4px_20px_rgba(245,158,11,0.25)] hover:shadow-[0_6px_28px_rgba(245,158,11,0.40)] hover:scale-[1.02] active:scale-[0.99]"
+                  >
+                    Contratar asesoría · $4.990
+                  </Link>
                   <Link
                     href="/solicitar"
-                    className="flex items-center justify-center gap-2 w-full bg-primary hover:bg-primary-dark text-black font-bold py-3.5 rounded-xl transition-all text-sm shadow-[0_4px_20px_rgba(0,229,229,0.25)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.40)] hover:scale-[1.02] active:scale-[0.99]"
+                    className="flex items-center justify-center w-full bg-primary hover:bg-primary-dark text-black font-bold py-3 rounded-xl transition-all text-sm shadow-[0_4px_20px_rgba(0,229,229,0.25)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.40)] hover:scale-[1.02] active:scale-[0.99]"
                   >
-                    Solicitar oferta
-                    <Icon name="arrow_forward" size="sm" />
+                    Negociamos por ti · $19.990
                   </Link>
+                  <p className="text-[11px] text-center pt-1" style={{ color: "rgba(255,255,255,0.45)" }}>
+                    Garantía de devolución en la negociación: si no conseguimos un precio mejor, te devolvemos el 100%.
+                  </p>
                 </div>
               </div>
             </m.div>

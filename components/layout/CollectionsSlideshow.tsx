@@ -21,10 +21,10 @@ interface CollectionsSlideshowProps {
 const FALLBACK: CollectionCardData[] = [
   {
     _id:      "f1",
-    title:    "Autos eléctricos desde $20M",
+    title:    "Autos electrificados desde $20M",
     slug:     "desde-20-millones",
     badge:    "ACCESIBLES",
-    subtitle: "Los mejores precios del mercado eléctrico en Chile",
+    subtitle: "Los mejores precios del mercado electrificado en Chile",
     ctaText:  "Ver colección",
   },
   {
@@ -40,7 +40,7 @@ const FALLBACK: CollectionCardData[] = [
     title:    "Lo mejor de BYD",
     slug:     "mejores-byd",
     badge:    "BYD",
-    subtitle: "La marca más vendida del mundo en vehículos eléctricos",
+    subtitle: "La marca más vendida del mundo en vehículos electrificados",
     ctaText:  "Ver colección",
   },
 ];
@@ -180,7 +180,6 @@ export function CollectionsSlideshow({ collections }: CollectionsSlideshowProps)
                     )}
                     <span className="inline-flex items-center gap-1.5 text-primary font-bold text-sm">
                       {col.ctaText ?? "Ver colección"}
-                      <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
                     </span>
                   </div>
                 </div>
@@ -268,7 +267,6 @@ export function CollectionsSlideshow({ collections }: CollectionsSlideshowProps)
                     )}
                     <span className="inline-flex items-center gap-1.5 text-primary font-bold text-sm group-hover:gap-2.5 transition-all duration-200">
                       {col.ctaText ?? "Ver colección"}
-                      <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
                     </span>
                   </div>
                 </div>

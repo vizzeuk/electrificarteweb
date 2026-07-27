@@ -191,9 +191,6 @@ export function VehicleTypeGrid({ types }: ElectricTypeGridProps) {
                   )}
                   <span className="text-[11px] font-bold flex items-center gap-0.5" style={{ color: accent }}>
                     Ver todos
-                    <span className="material-symbols-outlined text-[13px] transition-transform group-hover:translate-x-0.5">
-                      arrow_forward
-                    </span>
                   </span>
                 </div>
               </div>
