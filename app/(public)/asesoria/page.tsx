@@ -80,17 +80,18 @@ export default async function AsesoriaPage() {
             Asesoría IA por WhatsApp
           </h1>
           <p className="text-lg text-white/60 leading-relaxed mb-8 max-w-2xl">
-            Francisco, nuestro asesor con inteligencia artificial, analiza tu uso y
-            presupuesto y te lleva al auto eléctrico ideal. Sin presión: es una
-            conversación, no una venta.
+            Francisco IA es un asesor especializado que conoce a fondo todos los
+            autos del sitio. Analiza tu uso, kilometraje y presupuesto por WhatsApp
+            y te lleva al modelo electrificado ideal con datos reales, comparando
+            marcas y versiones sin sesgo. Sin presión: es una conversación, no una
+            venta.
           </p>
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <Link
               href="/asesoria/contratar"
-              className="inline-flex items-center justify-center gap-2 bg-amber hover:bg-amber-dark text-black font-bold px-8 py-4 rounded-xl transition-all text-lg shadow-[0_6px_32px_rgba(245,158,11,0.30)] hover:shadow-[0_8px_40px_rgba(245,158,11,0.45)] hover:scale-[1.02] active:scale-[0.99]"
+              className="inline-flex items-center justify-center bg-amber hover:bg-amber-dark text-black font-bold px-6 py-3 rounded-xl transition-all text-base shadow-[0_6px_32px_rgba(245,158,11,0.30)] hover:shadow-[0_8px_40px_rgba(245,158,11,0.45)] hover:scale-[1.02] active:scale-[0.99]"
             >
               Contratar asesoría · {price}
-              <Icon name="arrow_forward" size="sm" />
             </Link>
             <span className="text-white/40 text-sm">Pago único · acceso por 10 días · respuesta inmediata</span>
           </div>
@@ -100,9 +101,15 @@ export default async function AsesoriaPage() {
       {/* ── Cómo funciona ── */}
       <section className="py-16 md:py-20 bg-white">
         <div className="max-w-5xl mx-auto px-4 md:px-8">
-          <h2 className="text-2xl md:text-3xl font-headline font-black uppercase tracking-tight text-center mb-12">
-            Cómo funciona la asesoría
-          </h2>
+          <div className="text-center mb-12">
+            <p className="text-amber text-[11px] uppercase tracking-widest font-bold mb-2">Así de simple</p>
+            <h2 className="text-2xl md:text-3xl font-headline font-black uppercase tracking-tight">
+              De la duda a tu auto ideal en 3 pasos
+            </h2>
+            <p className="text-text-muted max-w-xl mx-auto mt-3">
+              Sin formularios eternos ni jerga técnica: una conversación por WhatsApp y listo.
+            </p>
+          </div>
           <div className="grid gap-6 md:grid-cols-3">
             {STEPS.map((step, i) => (
               <div
@@ -129,7 +136,7 @@ export default async function AsesoriaPage() {
             Qué incluye
           </h2>
           <p className="text-text-muted text-center mb-10">
-            Ideal si estás entrando al mundo eléctrico y todavía no tienes claro qué modelo te conviene.
+            Ideal si estás entrando al mundo electrificado y todavía no tienes claro qué modelo te conviene.
           </p>
           <ul className="grid gap-4 sm:grid-cols-2">
             {INCLUYE.map((item) => (
@@ -155,10 +162,9 @@ export default async function AsesoriaPage() {
           </p>
           <Link
             href="/asesoria/contratar"
-            className="inline-flex items-center justify-center gap-2 bg-amber hover:bg-amber-dark text-black font-bold px-8 py-4 rounded-xl transition-all text-lg shadow-[0_6px_32px_rgba(245,158,11,0.30)] hover:shadow-[0_8px_40px_rgba(245,158,11,0.45)] hover:scale-[1.02] active:scale-[0.99]"
+            className="inline-flex items-center justify-center bg-amber hover:bg-amber-dark text-black font-bold px-6 py-3 rounded-xl transition-all text-base shadow-[0_6px_32px_rgba(245,158,11,0.30)] hover:shadow-[0_8px_40px_rgba(245,158,11,0.45)] hover:scale-[1.02] active:scale-[0.99]"
           >
             Contratar asesoría · {price}
-            <Icon name="arrow_forward" size="sm" />
           </Link>
           <p className="text-white/40 text-sm mt-6">
             ¿Ya sabes qué auto quieres?{" "}

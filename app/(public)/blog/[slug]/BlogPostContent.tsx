@@ -369,7 +369,6 @@ export function BlogPostContent({ post }: { post: BlogPost }) {
                       className="flex-shrink-0 inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-black font-bold text-sm px-6 py-3.5 rounded-xl transition-colors whitespace-nowrap"
                     >
                       {post.articleCta.buttonLabel}
-                      <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
                     </Link>
                   </div>
                 </div>
@@ -428,7 +427,7 @@ export function BlogPostContent({ post }: { post: BlogPost }) {
                     href="/solicitar"
                     className="block text-center bg-primary hover:bg-primary-dark text-black font-bold py-3 rounded-xl text-sm transition-colors"
                   >
-                    Solicitar oferta
+                    Negociamos por ti
                   </Link>
                 </div>
 
@@ -491,7 +490,7 @@ export function BlogPostContent({ post }: { post: BlogPost }) {
           href="/solicitar"
           className="block w-full text-center bg-primary hover:bg-primary-dark text-black font-bold py-3.5 rounded-xl text-sm transition-colors"
         >
-          Solicitar oferta personalizada
+          Negociamos por ti
         </Link>
       </div>
     </>

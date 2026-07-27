@@ -114,7 +114,6 @@ export function BlogPreview({ title, posts }: BlogPreviewProps) {
             className="flex items-center gap-2 text-primary-deep font-semibold text-sm hover:text-primary transition-colors flex-shrink-0"
           >
             Ver todos los artículos
-            <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
           </Link>
         </div>
 
@@ -160,7 +159,6 @@ export function BlogPreview({ title, posts }: BlogPreviewProps) {
                   className="flex items-center gap-1.5 text-primary font-bold text-sm hover:text-primary-dark transition-colors"
                 >
                   Leer artículo
-                  <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
                 </Link>
               </div>
             </div>

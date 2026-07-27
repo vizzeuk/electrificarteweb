@@ -122,7 +122,6 @@ function HotDealMobile({ c, brandDisplay, modelDisplay, bonusAmt, savingsPct, ur
             className="flex items-center justify-center gap-2 w-full bg-primary hover:bg-primary-dark text-black font-bold py-3 rounded-xl text-sm transition-colors"
           >
             Quiero esta oferta
-            <Icon name="arrow_forward" size="sm" />
           </Link>
         </div>
       </div>
@@ -170,7 +169,7 @@ function HotDealDesktop({ c, brandDisplay, modelDisplay, bonusAmt, savingsPct, u
               href={`/solicitar?auto=${c.slug}`}
               className="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-6 py-3 rounded-xl transition-all text-sm shadow-[0_4px_20px_rgba(0,229,229,0.25)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.38)] hover:scale-[1.02] active:scale-[0.99]"
             >
-              Quiero esta oferta <Icon name="arrow_forward" size="sm" />
+              Quiero esta oferta
             </Link>
             <Link
               href={`/auto/${c.slug}`}

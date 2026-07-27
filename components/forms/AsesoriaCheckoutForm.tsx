@@ -6,7 +6,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { m } from "framer-motion";
 import Link from "next/link";
-import { Icon } from "@/components/ui/Icon";
 
 const schema = z.object({
   fullName: z.string().min(2, "Ingresa tu nombre completo"),
@@ -147,7 +146,6 @@ export function AsesoriaCheckoutForm() {
             ) : (
               <>
                 Pagar $4.990 y activar mi asesoría
-                <Icon name="arrow_forward" size="sm" />
               </>
             )}
           </button>

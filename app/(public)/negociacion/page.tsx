@@ -118,10 +118,9 @@ export default async function NegociacionPage() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <Link
               href="/solicitar"
-              className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-8 py-4 rounded-xl transition-all text-lg shadow-[0_6px_32px_rgba(0,229,229,0.30)] hover:shadow-[0_8px_40px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]"
+              className="inline-flex items-center justify-center bg-primary hover:bg-primary-dark text-black font-bold px-6 py-3 rounded-xl transition-all text-base shadow-[0_6px_32px_rgba(0,229,229,0.30)] hover:shadow-[0_8px_40px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]"
             >
               Quiero mi oferta · {price}
-              <Icon name="arrow_forward" size="sm" />
             </Link>
             <span className="text-white/40 text-sm">Pago único · respuesta en 48-96 h</span>
           </div>
@@ -131,9 +130,15 @@ export default async function NegociacionPage() {
       {/* ── Cómo funciona ── */}
       <section className="py-16 md:py-20 bg-white">
         <div className="max-w-6xl mx-auto px-4 md:px-8">
-          <h2 className="text-2xl md:text-3xl font-headline font-black uppercase tracking-tight text-center mb-12">
-            Cómo funciona la negociación
-          </h2>
+          <div className="text-center mb-12">
+            <p className="text-primary-deep text-[11px] uppercase tracking-widest font-bold mb-2">Sin dar vueltas</p>
+            <h2 className="text-2xl md:text-3xl font-headline font-black uppercase tracking-tight">
+              Del modelo elegido a tu mejor precio en 4 pasos
+            </h2>
+            <p className="text-text-muted max-w-xl mx-auto mt-3">
+              Tú eliges el auto; nosotros hacemos la pega de negociar por ti con la red de vendedores.
+            </p>
+          </div>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {STEPS.map((step, i) => (
               <div
@@ -223,10 +228,9 @@ export default async function NegociacionPage() {
           </p>
           <Link
             href="/solicitar"
-            className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-8 py-4 rounded-xl transition-all text-lg shadow-[0_6px_32px_rgba(0,229,229,0.30)] hover:shadow-[0_8px_40px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]"
+            className="inline-flex items-center justify-center bg-primary hover:bg-primary-dark text-black font-bold px-6 py-3 rounded-xl transition-all text-base shadow-[0_6px_32px_rgba(0,229,229,0.30)] hover:shadow-[0_8px_40px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]"
           >
             Quiero mi oferta · {price}
-            <Icon name="arrow_forward" size="sm" />
           </Link>
           <p className="text-white/40 text-sm mt-6">
             ¿Aún no sabes qué auto elegir?{" "}

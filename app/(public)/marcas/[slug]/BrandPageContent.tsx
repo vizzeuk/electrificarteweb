@@ -263,7 +263,6 @@ export default function BrandPageContent({ slug, brand, hotDealUrgencyLabel }: B
                       className="shrink-0 inline-flex items-center gap-1.5 bg-primary hover:bg-primary-dark text-black font-bold px-5 py-2.5 rounded-xl text-sm transition-all hover:scale-[1.02] active:scale-[0.99]"
                     >
                       Ver modelo
-                      <span className="material-symbols-outlined text-[15px]">arrow_forward</span>
                     </Link>
                   </div>
 
@@ -394,7 +393,7 @@ export default function BrandPageContent({ slug, brand, hotDealUrgencyLabel }: B
                           </div>
                         </div>
                         <Link href={`/solicitar?auto=${deal.carSlug}`} className="flex items-center justify-center gap-2 w-full bg-primary hover:bg-primary-dark text-black font-bold py-3 rounded-xl text-sm transition-colors">
-                          Quiero esta oferta <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                          Quiero esta oferta
                         </Link>
                       </div>
                     </div>
@@ -425,7 +424,7 @@ export default function BrandPageContent({ slug, brand, hotDealUrgencyLabel }: B
                         </div>
                         <div className="flex gap-3">
                           <Link href={`/solicitar?auto=${deal.carSlug}`} className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-6 py-3 rounded-xl transition-all text-sm shadow-[0_4px_20px_rgba(0,229,229,0.30)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]">
-                            Quiero esta oferta <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                            Quiero esta oferta
                           </Link>
                           <Link href={`/auto/${deal.carSlug}`} className="inline-flex items-center justify-center gap-2 border border-white/20 hover:border-white/40 text-white font-medium px-6 py-3 rounded-xl transition-all text-sm">
                             Ver especificaciones
@@ -502,7 +501,7 @@ export default function BrandPageContent({ slug, brand, hotDealUrgencyLabel }: B
       <section id={`autos-${slug}`} className="py-20 md:py-24">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="mb-8">
-            <p className="text-[11px] uppercase tracking-widest text-primary-deep font-bold mb-2">Catálogo eléctrico</p>
+            <p className="text-[11px] uppercase tracking-widest text-primary-deep font-bold mb-2">Catálogo electrificado</p>
             <h2 className="text-3xl md:text-4xl font-headline font-black uppercase tracking-tighter mb-6">Autos {brand.name} disponibles</h2>
             <PlpFilters
               facetGroups={filters.facetGroups}
@@ -618,7 +617,7 @@ export default function BrandPageContent({ slug, brand, hotDealUrgencyLabel }: B
                 <p className="text-white/50 text-sm mt-1">Negociamos por ti con nuestra red exclusiva de vendedores oficiales en Chile.</p>
               </div>
               <Link href="/solicitar" className="flex-shrink-0 inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-black px-8 py-4 rounded-xl transition-all text-sm whitespace-nowrap shadow-[0_4px_20px_rgba(0,229,229,0.30)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]">
-                Solicitar oferta ahora <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                Negociamos por ti
               </Link>
             </div>
           </div>

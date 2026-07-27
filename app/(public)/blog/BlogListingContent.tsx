@@ -149,7 +149,7 @@ export function BlogListingContent({ posts }: { posts: BlogPreviewPost[] }) {
               Todo sobre <span className="text-primary">electromovilidad</span> en Chile
             </h1>
             <p className="text-white/60 text-base leading-relaxed max-w-xl">
-              Guías de compra, comparativas, costos reales de carga, legislación y tecnología. Todo lo que necesitas para dar el salto al eléctrico con confianza.
+              Guías de compra, comparativas, costos reales de carga, legislación y tecnología. Todo lo que necesitas para dar el salto al auto electrificado con confianza.
             </p>
           </div>
         </div>
@@ -229,7 +229,6 @@ export function BlogListingContent({ posts }: { posts: BlogPreviewPost[] }) {
                       className="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-6 py-2.5 rounded-xl text-sm transition-colors"
                     >
                       Leer artículo
-                      <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
                     </Link>
                   </div>
                 </m.article>
@@ -301,7 +300,7 @@ export function BlogListingContent({ posts }: { posts: BlogPreviewPost[] }) {
             <div>
               <p className="text-primary text-xs uppercase tracking-widest font-bold mb-2">¿Listo para dar el paso?</p>
               <h2 className="text-white font-headline font-black text-2xl md:text-3xl tracking-tight">
-                Encuentra el mejor precio en tu eléctrico
+                Encuentra el mejor precio en tu electrificado
               </h2>
               <p className="text-white/50 text-sm mt-1">Negociamos con toda la red de vendedores oficiales para darte el mejor precio disponible.</p>
             </div>
@@ -309,8 +308,7 @@ export function BlogListingContent({ posts }: { posts: BlogPreviewPost[] }) {
               href="/solicitar"
               className="flex-shrink-0 inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-black px-8 py-4 rounded-xl transition-colors text-sm whitespace-nowrap"
             >
-              Solicitar oferta
-              <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+              Negociamos por ti
             </Link>
           </div>
         </div>

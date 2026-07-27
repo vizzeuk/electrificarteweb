@@ -195,7 +195,7 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes, adCar, a
 
               <h1 className="text-5xl md:text-6xl font-headline font-black text-white tracking-tighter leading-[0.95] mb-5">
                 Autos <span className="text-primary">{meta.label}</span>{" "}
-                eléctricos en Chile
+                electrificados en Chile
               </h1>
 
               <p className="text-white/60 text-base leading-relaxed max-w-lg mb-8">
@@ -385,7 +385,7 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes, adCar, a
                           </div>
                         </div>
                         <Link href={`/solicitar?auto=${car.slug}`} className="flex items-center justify-center gap-2 w-full bg-primary hover:bg-primary-dark text-black font-bold py-3 rounded-xl text-sm transition-colors">
-                          Quiero esta oferta <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                          Quiero esta oferta
                         </Link>
                       </div>
                     </div>
@@ -418,7 +418,7 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes, adCar, a
                         </div>
                         <div className="flex gap-3">
                           <Link href={`/solicitar?auto=${car.slug}`} className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-6 py-3 rounded-xl transition-all text-sm shadow-[0_4px_20px_rgba(0,229,229,0.30)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]">
-                            Quiero esta oferta <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                            Quiero esta oferta
                           </Link>
                           <Link href={`/auto/${car.slug}`} className="inline-flex items-center justify-center gap-2 text-white font-medium px-6 py-3 rounded-xl transition-all text-sm" style={{ border: "1px solid rgba(255,255,255,0.20)" }}>
                             Ver especificaciones
@@ -499,7 +499,7 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes, adCar, a
               Catálogo completo
             </p>
             <h2 className="text-3xl md:text-4xl font-headline font-black uppercase tracking-tighter mb-6">
-              Todos los {meta.label} eléctricos
+              Todos los {meta.label} electrificados
             </h2>
 
             <PlpFilters
@@ -644,7 +644,7 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes, adCar, a
                 ¿Ya decidiste?
               </p>
               <h2 className="text-white font-headline font-black text-2xl md:text-3xl tracking-tight">
-                Consigue el mejor precio en tu {meta.label} eléctrico
+                Consigue el mejor precio en tu {meta.label} electrificado
               </h2>
               <p className="text-white/50 text-sm mt-1">
                 Negociamos por ti con nuestra red exclusiva de vendedores oficiales en Chile.
@@ -654,8 +654,7 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes, adCar, a
               href="/solicitar"
               className="flex-shrink-0 inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-black px-8 py-4 rounded-xl transition-all text-sm whitespace-nowrap shadow-[0_4px_20px_rgba(0,229,229,0.30)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]"
             >
-              Solicitar oferta ahora
-              <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+              Negociamos por ti
             </Link>
           </div>
         </div>

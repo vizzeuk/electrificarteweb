@@ -120,18 +120,6 @@ export const FACETS: Facet[] = [
     optionSort: (a, b) => seatOrder(a.value) - seatOrder(b.value),
   },
   {
-    id: "seguridad",
-    label: "Seguridad",
-    icon: "shield",
-    kind: "threshold",
-    metric: (c) => (c.euroNcap && c.euroNcap > 0 ? c.euroNcap : null),
-    tiers: [
-      { value: "5", label: "5 ★ Euro NCAP", min: 5 },
-      { value: "4", label: "4 ★ o más", min: 4 },
-      { value: "3", label: "3 ★ o más", min: 3 },
-    ],
-  },
-  {
     id: "traccion",
     label: "Tracción",
     icon: "settings_input_composite",

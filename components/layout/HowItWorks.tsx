@@ -138,10 +138,9 @@ function Track({
 
       <Link
         href={ctaHref}
-        className={`mt-7 inline-flex items-center justify-center gap-2 ${a.btn} text-black font-bold px-6 py-3.5 rounded-xl transition-all text-base`}
+        className={`mt-7 inline-flex items-center justify-center ${a.btn} text-black font-bold px-6 py-3 rounded-xl transition-all text-base`}
       >
         {ctaText}
-        <Icon name="arrow_forward" size="sm" />
       </Link>
     </div>
   );
@@ -197,7 +196,7 @@ export function HowItWorks({ title = "Cómo funciona Electrificarte", subtitle, 
               {title}
             </h2>
             <p className="text-text-muted max-w-2xl mx-auto">
-              Dos caminos, un mismo objetivo: que estrenes tu auto eléctrico al mejor precio de Chile. Elige según dónde estás hoy.
+              Dos caminos, un mismo objetivo: que estrenes tu auto electrificado al mejor precio de Chile. Elige según dónde estás hoy.
             </p>
           </div>
 
@@ -216,7 +215,7 @@ export function HowItWorks({ title = "Cómo funciona Electrificarte", subtitle, 
               heading="Ya sé qué auto quiero"
               description={ofertaDescription}
               steps={ofertaSteps}
-              ctaText="Solicitar mi oferta"
+              ctaText="Negociamos por ti"
               ctaHref="/solicitar"
             />
           </div>

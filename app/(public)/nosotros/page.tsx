@@ -84,7 +84,7 @@ export default function NosotrosPage() {
           </p>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-headline font-black text-white tracking-tight leading-[1.05] mb-5">
             Compramos mejor,<br />
-            <span className="text-primary">para que estrenes eléctrico</span>
+            <span className="text-primary">para que estrenes electrificado</span>
           </h1>
           <p className="text-lg text-white/60 leading-relaxed mb-8 max-w-2xl">
             Electrificarte es el marketplace de autos electrificados de Chile.
@@ -98,7 +98,6 @@ export default function NosotrosPage() {
               className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-8 py-4 rounded-xl transition-all text-lg shadow-[0_6px_32px_rgba(0,229,229,0.30)] hover:shadow-[0_8px_40px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]"
             >
               Conseguir mi oferta
-              <Icon name="arrow_forward" size="sm" />
             </Link>
             <Link href="/marcas" className="text-white/50 hover:text-white transition-colors text-sm">
               Explorar el catálogo →
@@ -165,7 +164,6 @@ export default function NosotrosPage() {
                 <p className="text-sm text-text-muted leading-relaxed mb-6 flex-1">{c.description}</p>
                 <Link href={c.href} className="inline-flex items-center gap-2 text-primary-deep font-bold text-sm hover:gap-3 transition-all">
                   {c.cta}
-                  <Icon name="arrow_forward" size="sm" />
                 </Link>
               </div>
             ))}
@@ -203,7 +201,6 @@ export default function NosotrosPage() {
               className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-8 py-4 rounded-xl transition-all text-lg shadow-[0_6px_32px_rgba(0,229,229,0.30)] hover:shadow-[0_8px_40px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]"
             >
               Conseguir mi oferta
-              <Icon name="arrow_forward" size="sm" />
             </Link>
             <Link href="/contacto" className="text-white/50 hover:text-white transition-colors text-sm">
               Hablar con el equipo →

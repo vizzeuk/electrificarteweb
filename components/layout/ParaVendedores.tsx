@@ -43,15 +43,11 @@ export function ParaVendedores() {
           <div className="relative z-10">
             {/* Encabezado */}
             <div className="text-center max-w-2xl mx-auto mb-12">
-              <p className="text-[11px] uppercase tracking-widest text-primary font-bold mb-3">
-                Para vendedores
-              </p>
               <h2
                 id="vendedores-title"
                 className="text-3xl md:text-4xl font-headline font-black uppercase tracking-tight text-white mb-4"
               >
-                Vende más autos electrificados
-                <br className="hidden md:block" /> sin buscar clientes
+                ¿Eres vendedor de un concesionario certificado?
               </h2>
               <p className="text-white/60 leading-relaxed">
                 Únete a la red de vendedores de Electrificarte y recibe leads
@@ -107,12 +103,9 @@ export function ParaVendedores() {
                 href={VENDEDORES_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-8 py-4 rounded-xl transition-all"
+                className="inline-flex items-center justify-center bg-primary hover:bg-primary-dark text-black font-bold px-6 py-3 rounded-xl transition-all"
               >
                 Quiero sumarme a la red
-                <span className="material-symbols-outlined text-[18px]">
-                  arrow_forward
-                </span>
               </a>
             </div>
           </div>

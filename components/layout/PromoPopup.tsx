@@ -185,7 +185,6 @@ export function PromoPopup({ car, urgencyLabel }: PromoPopupProps) {
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3.5 text-sm font-bold text-black shadow-[0_4px_20px_rgba(0,229,229,0.22)] transition-all hover:bg-primary-dark hover:scale-[1.02] active:scale-[0.99]"
               >
                 Quiero esta oferta
-                <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
               </Link>
 
               <button

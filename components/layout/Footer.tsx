@@ -158,7 +158,7 @@ export function Footer() {
               />
             </Link>
             <p className="text-white/50 text-sm mb-6 leading-relaxed">
-              Marketplace de autos eléctricos en Chile. Conectamos compradores
+              Marketplace de autos electrificados en Chile. Conectamos compradores
               con la mejor red de vendedores oficiales.
             </p>
             <div className="flex gap-3">
@@ -215,7 +215,7 @@ export function Footer() {
               Newsletter
             </h3>
             <p className="text-xs text-white/50 mb-4 leading-relaxed">
-              Recibe las mejores ofertas y novedades del mundo eléctrico en Chile.
+              Recibe las mejores ofertas y novedades del mundo electrificado en Chile.
             </p>
             <NewsletterForm />
           </div>

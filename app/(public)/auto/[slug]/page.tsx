@@ -57,7 +57,7 @@ export default async function CarDetailPage({ params }: PageProps) {
         <h1 className="font-headline font-black text-3xl">{slug.replace(/-/g, " ")}</h1>
         <p className="text-text-muted max-w-sm">Este modelo aún no está disponible en nuestro catálogo digital. Puedes solicitar una oferta de todos modos.</p>
         <Link href="/solicitar" className="bg-primary hover:bg-primary-dark text-black font-bold px-8 py-3 rounded-xl transition-colors">
-          Solicitar oferta de todos modos
+          Negociar de todos modos
         </Link>
       </div>
     );

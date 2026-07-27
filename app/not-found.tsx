@@ -60,7 +60,7 @@ export default function RootNotFound() {
             href="/solicitar"
             className="inline-flex items-center justify-center gap-2 border border-gray-200 hover:border-primary/50 text-text-main font-semibold px-8 py-3.5 rounded-xl transition-colors text-sm"
           >
-            Solicitar oferta
+            Negociamos por ti
           </Link>
         </div>
       </div>
