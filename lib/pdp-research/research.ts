@@ -47,6 +47,17 @@ export interface ResearchContext {
   log?: (line: string) => void;
 }
 
+export interface PendingElectricConfirm {
+  brand: string;
+  model: string;
+  specs: Record<string, unknown>;
+  images: string[];
+  sourceUrls: string[];
+  usedDealerFallback: boolean;
+  brandId: string;
+  vehicleTypeId: string | null;
+}
+
 export interface ResearchResult {
   status: "created" | "dry_run" | "duplicate" | "not_found" | "no_content" | "not_electrified" | "insufficient_data";
   message: string;
@@ -58,6 +69,9 @@ export interface ResearchResult {
   filledFields?: number;
   totalFields?: number;
   usedDealerFallback?: boolean;
+  // Solo en status "not_electrified" — permite terminar la ficha con lo ya investigado si
+  // Francisco confirma manualmente el tipo de electrificación, sin repetir la búsqueda desde cero.
+  pendingElectric?: PendingElectricConfirm;
 }
 
 // ─── Helpers reutilizados del patrón de import-cars.ts ────────────────────────
@@ -784,9 +798,9 @@ export async function researchCar(brand: string, model: string, ctx: ResearchCon
     return { status: "no_content", message: gathered.failureMessage ?? `Ninguna fuente devolvió contenido útil para ${brand} ${model}.` };
   }
   const specs = gathered.specs;
-  let allImages = gathered.images ?? [];
-  let sources = gathered.sources!;
-  let usedDealerFallback = !!gathered.usedDealerFallback;
+  const allImages = gathered.images ?? [];
+  const sources = gathered.sources!;
+  const usedDealerFallback = !!gathered.usedDealerFallback;
 
   const brandId = await getOrCreateBrand(ctx, brand);
   const vehicleTypeId = await resolveVehicleType(ctx, (specs.vehicleType as string) ?? null);
@@ -795,7 +809,9 @@ export async function researchCar(brand: string, model: string, ctx: ResearchCon
 
   // Regla de alcance de negocio (CLAUDE.md): Electrificarte excluye autos 100% a combustión.
   // Si no se pudo confirmar un tipo eléctrico válido en el texto fuente, no se crea la ficha —
-  // más vale revisar a mano que publicar (oculto) un auto fuera de alcance.
+  // más vale revisar a mano que publicar (oculto) un auto fuera de alcance. Se guarda lo ya
+  // investigado (pendingElectric) para que, si Francisco confirma a mano que sí es electrificado,
+  // se pueda terminar la ficha sin repetir la búsqueda desde cero (ver finishWithManualElectricType).
   if (!electricTypeId) {
     return {
       status: "not_electrified",
@@ -803,8 +819,58 @@ export async function researchCar(brand: string, model: string, ctx: ResearchCon
         `No se pudo confirmar un tipo de electrificación válido (EV/PHEV/HEV/EREV/MHEV) para ` +
         `${brand} ${model} en el material fuente (electricType: "${specs.electricType ?? "—"}"). ` +
         `Electrificarte solo cataloga autos electrificados.`,
+      pendingElectric: { brand, model, specs, images: allImages, sourceUrls: sources.urls, usedDealerFallback, brandId, vehicleTypeId },
     };
   }
+
+  return finalizeCar(brand, model, slug, specs, allImages, sources, usedDealerFallback, brandId, vehicleTypeId, electricTypeId, ctx);
+}
+
+/** Termina de crear la ficha reusando lo ya investigado (specs/fotos/fuentes) cuando Francisco
+ * confirma a mano el tipo de electrificación que el material fuente no dejó explícito — evita
+ * repetir toda la búsqueda (Claude + scraping) solo por ese dato. */
+export async function finishWithManualElectricType(
+  electricTag: string,
+  cached: PendingElectricConfirm,
+  ctx: ResearchContext
+): Promise<ResearchResult> {
+  const electricTypeId = await resolveElectricType(ctx, electricTag);
+  if (!electricTypeId) {
+    return { status: "not_electrified", message: `"${electricTag}" no es un tipo válido — usa EV, PHEV, HEV, EREV o MHEV.` };
+  }
+  const slug = slugify(`${cached.brand} ${cached.model}`);
+  const sources: SourceReport = { found: true, urls: cached.sourceUrls };
+  return finalizeCar(
+    cached.brand,
+    cached.model,
+    slug,
+    cached.specs,
+    cached.images,
+    sources,
+    cached.usedDealerFallback,
+    cached.brandId,
+    cached.vehicleTypeId,
+    electricTypeId,
+    ctx
+  );
+}
+
+async function finalizeCar(
+  brand: string,
+  model: string,
+  slug: string,
+  specs: Record<string, unknown>,
+  allImagesIn: string[],
+  sourcesIn: SourceReport,
+  usedDealerFallbackIn: boolean,
+  brandId: string,
+  vehicleTypeId: string | null,
+  electricTypeId: string,
+  ctx: ResearchContext
+): Promise<ResearchResult> {
+  let allImages = allImagesIn;
+  let sources = sourcesIn;
+  let usedDealerFallback = usedDealerFallbackIn;
 
   // El precio es obligatorio — sin él, la "plantilla" que revisa Francisco no sirve de mucho. La
   // misma exigencia corre para cada versión/trim si el modelo tiene varias (no solo el precio base

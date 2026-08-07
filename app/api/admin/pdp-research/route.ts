@@ -4,10 +4,11 @@ import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@sanity/client";
 import { chromium } from "playwright-core";
 import chromiumBinary from "@sparticuz/chromium";
-import { researchCar, findExistingCarId, fillMissingSpecs, type ResearchResult } from "@/lib/pdp-research/research";
+import { researchCar, findExistingCarId, fillMissingSpecs, finishWithManualElectricType, type ResearchResult } from "@/lib/pdp-research/research";
 import { sendProactiveText, sendProactiveImage } from "@/lib/whatsapp/outbound";
 import { loadAdminContext, saveAdminContext } from "@/lib/whatsapp/admin-context";
 import { saveReviewState } from "@/lib/whatsapp/admin-review-state";
+import { savePendingElectric, loadPendingElectric, clearPendingElectric } from "@/lib/whatsapp/admin-pending-electric";
 import type { ChatMessage } from "@/lib/whatsapp/advisor";
 
 // Investigación de PDP disparada desde el modo administrador de WhatsApp (M3, Fase 1.2 Flujo A).
@@ -116,10 +117,18 @@ async function notify(phone: string, brand: string, model: string, result: Resea
     return;
   }
 
+  if (result.status === "not_electrified" && result.pendingElectric) {
+    await savePendingElectric(phone, result.pendingElectric);
+  }
+
+  const manualHint =
+    result.status === "not_electrified" && result.pendingElectric
+      ? `\n\nSi sabes que sí es electrificado, dime el tipo (EV, PHEV, HEV, EREV o MHEV) y termino la ficha con lo que ya encontré — no hace falta repetir la búsqueda.`
+      : "";
   const msg =
     result.status === "duplicate"
       ? `= Ya existe un auto con ese nombre (${result.carId}). No se creó nada.`
-      : `❌ No se pudo investigar ${brand} ${model}.\n${result.message}`;
+      : `❌ No se pudo investigar ${brand} ${model}.\n${result.message}${manualHint}`;
   await sendProactiveText(phone, msg);
   await logToAdminContext(phone, [{ role: "assistant", content: msg }]);
 }
@@ -135,8 +144,9 @@ export async function POST(req: NextRequest) {
   const model = typeof body?.model === "string" ? body.model.trim() : "";
   const phone = typeof body?.phone === "string" ? body.phone.trim() : "";
   const carId = typeof body?.carId === "string" ? body.carId.trim() : "";
+  const electricType = typeof body?.electricType === "string" ? body.electricType.trim() : "";
 
-  if (!brand || !model || !phone) {
+  if (!phone || (!electricType && (!brand || !model))) {
     return NextResponse.json({ error: "Faltan brand/model/phone" }, { status: 400 });
   }
   if (!process.env.ANTHROPIC_API_KEY || !process.env.SANITY_API_TOKEN) {
@@ -150,6 +160,34 @@ export async function POST(req: NextRequest) {
     token: process.env.SANITY_API_TOKEN,
     useCdn: false,
   });
+
+  // Confirmación manual de tipo eléctrico sobre una investigación que ya se hizo (ver notify()) —
+  // reusa specs/fotos/fuentes ya encontradas en vez de repetir la búsqueda completa.
+  if (electricType) {
+    const pending = await loadPendingElectric(phone);
+    if (!pending) {
+      return NextResponse.json({ status: "no_pending" }, { status: 200 });
+    }
+    after(async () => {
+      const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
+      try {
+        const result = await finishWithManualElectricType(electricType, pending, {
+          anthropic,
+          sanity,
+          launchBrowser: launchBrowserForEnv,
+          log: (line) => console.log(`[pdp-research:manual-electric] ${line}`),
+        });
+        if (result.status !== "not_electrified") await clearPendingElectric(phone);
+        await notify(phone, pending.brand, pending.model, result, sanity);
+      } catch (err) {
+        console.error("[admin/pdp-research:manual-electric] error:", err);
+        const msg = `❌ Error terminando ${pending.brand} ${pending.model}: ${(err as Error).message}`;
+        await sendProactiveText(phone, msg);
+        await logToAdminContext(phone, [{ role: "assistant", content: msg }]);
+      }
+    });
+    return NextResponse.json({ status: "queued" }, { status: 202 });
+  }
 
   // Con carId: es un reintento para completar campos vacíos de un auto que YA existe — se salta
   // el chequeo de duplicado (no aplica) y va por un camino de encolado distinto (ver abajo).

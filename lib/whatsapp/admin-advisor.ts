@@ -26,6 +26,7 @@ const ADMIN_SYSTEM = `Eres el asistente interno de Francisco, dueño de Electrif
 1. **Investigar autos nuevos**: Francisco escribe algo como "agrega el GWM Ora 03 GT". Extrae marca y modelo y llama a start_research(brand, model). Si es ambiguo, pregunta antes de llamar la tool — nunca inventes marca/modelo. El resultado de la tool es uno de dos: "queued" → responde SOLO con 1-2 frases cortas confirmando que quedó en curso y que avisas cuando termine (puede tardar unos minutos). "duplicate:<id>" → ese auto YA existe, dile a Francisco que ya está en el catálogo y que no se creó nada nuevo — nunca digas "arranqué la investigación" en ese caso.
    REGLA DURA: cada vez que Francisco pida agregar/investigar un auto, llama a start_research de nuevo — SIEMPRE, sin excepción. Nunca respondas "ya existe" o "es la ficha que estás revisando" basado en lo que dijiste en un turno anterior de esta misma conversación; esa afirmación SOLO vale si viene de un resultado "duplicate:<id>" de ESTE llamado a la tool, recién hecho. Tu propio historial de chat puede contener respuestas tuyas equivocadas — no es una fuente confiable de qué existe realmente en la base de datos.
    REGLA DURA: cuando el resultado es "queued", tu respuesta termina ahí — NUNCA sigas escribiendo precio, batería, autonomía, versiones, link de Studio, ni nada con forma de resumen de specs. Ese mensaje (portada + specs) lo manda el sistema automáticamente, en un mensaje aparte, minutos después, cuando la investigación de verdad termina — vos en ese momento no tienes esos datos, cualquier cosa que "recuerdes" o "completes" ahí es inventada y puede ser falsa (precio, link, specs — todo). Si te tienta escribir algo que se parece a una ficha técnica en esta respuesta, es la señal de que estás alucinando: bórralo y deja solo la confirmación corta.
+   Si una investigación falla porque "no se pudo confirmar un tipo de electrificación válido" y Francisco te dice que sí es electrificado (ej. "es eléctrico" → EV, "es plug-in"/"enchufable" → PHEV, "es híbrido" a secas → HEV, "tiene extensor de rango" → EREV, "es mild hybrid/48V" → MHEV — si no está claro cuál de los cinco, pregúntale), llama a confirm_electric_type(type). Esto reusa la búsqueda ya hecha — nunca le digas que hay que investigar todo de nuevo.
 
 2. **Guiar la revisión antes de publicar** (dos pasos, en este orden — nunca te saltes uno):
    - **Paso "specs"**: Francisco ya recibió el resumen de specs/versiones + link a Studio. Si dice "sí"/"aprobado"/"dale" → llama approve_specs() (esto manda las fotos directo, no agregues texto propio describiendo fotos que no has visto). Si en cambio corrige un dato ("la autonomía es 420", "el precio son 25990000") → llama update_spec(field, value) con el campo que corresponda (basePrice, discountPrice, range, batteryCapacity, power, tagline, description, warranty) y responde confirmando el cambio, sin avanzar de paso todavía. Si Francisco dice que falta un dato y pide que lo busques de nuevo ("faltan specs", "reintenta", "búscalo tú") → llama retry_missing_specs() — NUNCA le pidas a Francisco que te pase el dato manualmente, ese es tu trabajo. retry_missing_specs() solo completa campos vacíos, nunca pisa uno ya confirmado; avísale que la búsqueda corre aparte y tarda unos minutos, igual que start_research.
@@ -95,6 +96,18 @@ const RETRY_SPECS_TOOL: Anthropic.Tool = {
   name: "retry_missing_specs",
   description: "Vuelve a buscar información para completar SOLO los campos vacíos de la ficha en revisión (solo durante el paso de specs) — nunca pisa un dato ya confirmado o corregido a mano. Tarda unos minutos, corre aparte.",
   input_schema: { type: "object", properties: {} },
+};
+
+const CONFIRM_ELECTRIC_TOOL: Anthropic.Tool = {
+  name: "confirm_electric_type",
+  description: "Cuando una investigación falló porque no se pudo confirmar el tipo de electrificación desde el texto fuente, pero Francisco confirma a mano que sí es electrificado — termina la ficha reusando la búsqueda ya hecha (specs/fotos), sin repetir el trabajo desde cero.",
+  input_schema: {
+    type: "object",
+    properties: {
+      type: { type: "string", enum: ["EV", "PHEV", "HEV", "EREV", "MHEV"], description: "EV: 100% eléctrico. PHEV: híbrido enchufable. HEV: híbrido no enchufable. EREV/REEV: eléctrico con extensor de rango a combustión. MHEV: híbrido leve (48V, no anda solo con el motor eléctrico)." },
+    },
+    required: ["type"],
+  },
 };
 
 const EDITABLE_FIELDS = ["basePrice", "discountPrice", "range", "batteryCapacity", "power", "tagline", "description", "warranty"] as const;
@@ -386,6 +399,33 @@ async function retryMissingSpecs(phone: string): Promise<string> {
   return callResearchEndpoint(state.brand, state.model, phone, state.carId);
 }
 
+async function confirmElectricType(phone: string, type: string): Promise<string> {
+  const secret = process.env.ADMIN_API_SECRET;
+  if (!secret) return "No se pudo continuar: falta configurar ADMIN_API_SECRET en el servidor.";
+  try {
+    const bypassSecret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
+    const baseUrl = process.env.ADMIN_API_BASE_URL ?? SITE_URL;
+    const res = await fetch(`${baseUrl}/api/admin/pdp-research`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-admin-secret": secret,
+        ...(bypassSecret ? { "x-vercel-protection-bypass": bypassSecret } : {}),
+      },
+      body: JSON.stringify({ phone, electricType: type }),
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (res.status === 202) return "queued";
+    if (res.status === 200) {
+      const respBody = await res.json().catch(() => null);
+      if (respBody?.status === "no_pending") return "No tengo ninguna investigación pendiente de confirmar tipo eléctrico — pide agregar el auto de nuevo.";
+    }
+    return `Error al continuar (status ${res.status}).`;
+  } catch (err) {
+    return `Error al continuar: ${(err as Error).message}`;
+  }
+}
+
 function normalizeForAnthropic(history: ChatMessage[]): ChatMessage[] {
   let start = 0;
   while (start < history.length && history[start].role === "assistant") start++;
@@ -417,6 +457,7 @@ export async function runAdminAdvisor(history: ChatMessage[], phone: string): Pr
       tools: [
         START_RESEARCH_TOOL,
         RETRY_SPECS_TOOL,
+        CONFIRM_ELECTRIC_TOOL,
         APPROVE_SPECS_TOOL,
         UPDATE_SPEC_TOOL,
         SET_COVER_TOOL,
@@ -449,6 +490,8 @@ export async function runAdminAdvisor(history: ChatMessage[], phone: string): Pr
         result = brand && model ? await triggerResearch(brand, model, phone) : "Faltó marca o modelo.";
       } else if (tu.name === "retry_missing_specs") {
         result = await retryMissingSpecs(phone);
+      } else if (tu.name === "confirm_electric_type") {
+        result = await confirmElectricType(phone, ((tu.input as { type?: string }).type ?? "").trim());
       } else if (tu.name === "approve_specs") {
         result = await approveSpecs(phone);
       } else if (tu.name === "update_spec") {
