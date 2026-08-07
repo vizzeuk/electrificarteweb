@@ -771,9 +771,10 @@ export async function researchCar(brand: string, model: string, ctx: ResearchCon
   if (!gathered.ok || !gathered.specs) {
     return { status: "no_content", message: gathered.failureMessage ?? `Ninguna fuente devolvió contenido útil para ${brand} ${model}.` };
   }
-  const { specs, images: allImages = [] } = gathered;
-  const sources = gathered.sources!;
-  const usedDealerFallback = !!gathered.usedDealerFallback;
+  const specs = gathered.specs;
+  let allImages = gathered.images ?? [];
+  let sources = gathered.sources!;
+  let usedDealerFallback = !!gathered.usedDealerFallback;
 
   const brandId = await getOrCreateBrand(ctx, brand);
   const vehicleTypeId = await resolveVehicleType(ctx, (specs.vehicleType as string) ?? null);
@@ -793,9 +794,33 @@ export async function researchCar(brand: string, model: string, ctx: ResearchCon
     };
   }
 
+  // El precio es obligatorio — sin él, la "plantilla" que revisa Francisco no sirve de mucho. Si
+  // la fuente original no lo trae (típico: el sitio oficial de fábrica no publica precio de
+  // lista), se prueba un concesionario autorizado antes de rendirse — mismo mecanismo que el
+  // reintento sobre autos ya creados (fillMissingSpecs / investigateViaDealer).
+  if (!(typeof specs.basePrice === "number" && specs.basePrice > 0) && !usedDealerFallback) {
+    ctx.log?.("\n▶ Sin precio en la fuente original — probando concesionario autorizado...");
+    const dealerGathered = await investigateViaDealer(brand, model, ctx);
+    if (dealerGathered.ok && dealerGathered.specs) {
+      for (const [key, val] of Object.entries(dealerGathered.specs)) {
+        if (key === "versions") continue; // no se mezclan versiones entre fuentes distintas
+        const cur = (specs as Record<string, unknown>)[key];
+        const curEmpty = cur === undefined || cur === null || cur === "" || (Array.isArray(cur) && cur.length === 0);
+        const valOk = val !== undefined && val !== null && val !== "" && !isPlaceholder(val) && !(Array.isArray(val) && val.length === 0);
+        if (curEmpty && valOk) (specs as Record<string, unknown>)[key] = val;
+      }
+      if (dealerGathered.images?.length) allImages = [...allImages, ...dealerGathered.images];
+      usedDealerFallback = true;
+      sources = { found: true, urls: [...sources.urls, ...dealerGathered.sources!.urls] };
+    } else if (dealerGathered.failureMessage) {
+      ctx.log?.(`  ${dealerGathered.failureMessage}`);
+    }
+  }
+
   // Regla de calidad: una ficha con muy pocas specs queda casi vacía en la PDP pública (que
   // muestra bastante más detalle que eso) — mejor no crearla que publicar algo pobre. También
-  // exige algo de equipamiento (seguridad/tecnología/confort), presente en todas las PDP del sitio.
+  // exige algo de equipamiento (seguridad/tecnología/confort) y precio confirmado, presentes en
+  // todas las PDP del sitio.
   const totalSchemaFields = Object.keys(EXTRACT_SCHEMA.properties).length;
   const filledSpecsCount = Object.keys(EXTRACT_SCHEMA.properties).filter((k) => {
     const v = (specs as Record<string, unknown>)[k];
@@ -807,13 +832,15 @@ export async function researchCar(brand: string, model: string, ctx: ResearchCon
     (Array.isArray(specs.safetyFeatures) && specs.safetyFeatures.length > 0) ||
     (Array.isArray(specs.techFeatures) && specs.techFeatures.length > 0) ||
     (Array.isArray(specs.comfortFeatures) && specs.comfortFeatures.length > 0);
+  const hasPrice = typeof specs.basePrice === "number" && specs.basePrice > 0;
 
-  if (filledSpecsCount < MIN_FILLED_SPECS || !hasEquipment) {
+  if (filledSpecsCount < MIN_FILLED_SPECS || !hasEquipment || !hasPrice) {
     return {
       status: "insufficient_data",
       message:
         `Solo se confirmaron ${filledSpecsCount}/${totalSchemaFields} specs para ${brand} ${model}` +
-        `${!hasEquipment ? " (y ninguna de equipamiento: seguridad, tecnología o confort)" : ""} — ` +
+        `${!hasEquipment ? " (sin equipamiento: seguridad, tecnología o confort)" : ""}` +
+        `${!hasPrice ? " (sin precio confirmado, ni en fuente oficial ni en concesionario)" : ""} — ` +
         `muy poco para una ficha completa. Fuente(s): ${sources.urls.join(", ") || "—"}.`,
       filledFields: filledSpecsCount,
       totalFields: totalSchemaFields,
