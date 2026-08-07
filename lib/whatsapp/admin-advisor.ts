@@ -332,7 +332,11 @@ async function triggerResearch(brand: string, model: string, phone: string): Pro
     // llamada interna no choque con esa capa (nada que ver con ADMIN_API_SECRET, que es nuestro
     // propio secreto de aplicación).
     const bypassSecret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
-    const res = await fetch(`${SITE_URL}/api/admin/pdp-research`, {
+    // ADMIN_API_BASE_URL permite apuntar esta llamada a otro lado (ej. http://localhost:3000
+    // corriendo con ngrok/tunnel) — así una corrida local no queda igual atada al límite de
+    // duración de la función en Vercel. Por defecto, producción.
+    const baseUrl = process.env.ADMIN_API_BASE_URL ?? SITE_URL;
+    const res = await fetch(`${baseUrl}/api/admin/pdp-research`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
