@@ -18,12 +18,20 @@ export const maxDuration = 300;
 
 type SanityClientInstance = ReturnType<typeof createClient>;
 
-async function launchServerlessBrowser() {
-  return chromium.launch({
-    args: chromiumBinary.args,
-    executablePath: await chromiumBinary.executablePath(),
-    headless: true,
-  });
+// El binario de @sparticuz/chromium es Linux-only (ENOEXEC en Mac/Windows) — en local (sin la
+// env var VERCEL, que Vercel setea solo en su propio entorno) se usa el Chromium normal que ya
+// instala Playwright (mismo que scripts/pdp-research.ts), para poder probar el flujo completo de
+// WhatsApp corriendo local + túnel sin pelear contra el límite de duración de Vercel.
+async function launchBrowserForEnv() {
+  if (process.env.VERCEL) {
+    return chromium.launch({
+      args: chromiumBinary.args,
+      executablePath: await chromiumBinary.executablePath(),
+      headless: true,
+    });
+  }
+  const { chromium: localChromium } = await import("playwright");
+  return localChromium.launch();
 }
 
 function fmtCLP(n?: number | null): string {
@@ -158,7 +166,7 @@ export async function POST(req: NextRequest) {
       const result = await researchCar(brand, model, {
         anthropic,
         sanity,
-        launchBrowser: launchServerlessBrowser,
+        launchBrowser: launchBrowserForEnv,
         log: (line) => console.log(`[pdp-research] ${line}`),
       });
       await notify(phone, brand, model, result, sanity);
