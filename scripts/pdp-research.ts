@@ -47,7 +47,7 @@ researchCar(brandArg, modelArg, {
   launchBrowser: () => chromium.launch(),
 })
   .then((result) => {
-    if (result.status === "no_content" || result.status === "not_found" || result.status === "not_electrified") {
+    if (result.status === "no_content" || result.status === "not_found" || result.status === "not_electrified" || result.status === "insufficient_data") {
       console.log(`\n✗ ${result.message}\n`);
     } else if (result.status === "duplicate") {
       console.log(`\n= ${result.message}\n`);

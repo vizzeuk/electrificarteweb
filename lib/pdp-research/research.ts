@@ -35,6 +35,7 @@ const MAX_TEXT_CHARS_PER_SOURCE = 12_000;
 const MAX_EXTRA_LINKS_PER_SOURCE = 2;
 const MAX_IMAGE_CANDIDATES = 12;
 const MIN_DESIRED_PHOTOS = 7; // 1 portada + 6 galería
+const MIN_FILLED_SPECS = 10; // si encuentra menos, la PDP queda casi vacía — mejor no crearla
 const SCRAPE_UA =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36";
 
@@ -47,7 +48,7 @@ export interface ResearchContext {
 }
 
 export interface ResearchResult {
-  status: "created" | "dry_run" | "duplicate" | "not_found" | "no_content" | "not_electrified";
+  status: "created" | "dry_run" | "duplicate" | "not_found" | "no_content" | "not_electrified" | "insufficient_data";
   message: string;
   carId?: string;
   slug?: string;
@@ -652,6 +653,33 @@ export async function researchCar(brand: string, model: string, ctx: ResearchCon
         `No se pudo confirmar un tipo de electrificación válido (EV/PHEV/HEV/EREV/MHEV) para ` +
         `${brand} ${model} en el material fuente (electricType: "${specs.electricType ?? "—"}"). ` +
         `Electrificarte solo cataloga autos electrificados.`,
+    };
+  }
+
+  // Regla de calidad: una ficha con muy pocas specs queda casi vacía en la PDP pública (que
+  // muestra bastante más detalle que eso) — mejor no crearla que publicar algo pobre. También
+  // exige algo de equipamiento (seguridad/tecnología/confort), presente en todas las PDP del sitio.
+  const totalSchemaFields = Object.keys(EXTRACT_SCHEMA.properties).length;
+  const filledSpecsCount = Object.keys(EXTRACT_SCHEMA.properties).filter((k) => {
+    const v = (specs as Record<string, unknown>)[k];
+    if (v === undefined || v === null || v === "" || isPlaceholder(v)) return false;
+    if (Array.isArray(v) && v.length === 0) return false;
+    return true;
+  }).length;
+  const hasEquipment =
+    (Array.isArray(specs.safetyFeatures) && specs.safetyFeatures.length > 0) ||
+    (Array.isArray(specs.techFeatures) && specs.techFeatures.length > 0) ||
+    (Array.isArray(specs.comfortFeatures) && specs.comfortFeatures.length > 0);
+
+  if (filledSpecsCount < MIN_FILLED_SPECS || !hasEquipment) {
+    return {
+      status: "insufficient_data",
+      message:
+        `Solo se confirmaron ${filledSpecsCount}/${totalSchemaFields} specs para ${brand} ${model}` +
+        `${!hasEquipment ? " (y ninguna de equipamiento: seguridad, tecnología o confort)" : ""} — ` +
+        `muy poco para una ficha completa. Fuente(s): ${sources.urls.join(", ") || "—"}.`,
+      filledFields: filledSpecsCount,
+      totalFields: totalSchemaFields,
     };
   }
 
