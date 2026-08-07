@@ -577,12 +577,15 @@ export async function researchCar(brand: string, model: string, ctx: ResearchCon
     return { status: "duplicate", message: `Ya existe un auto con slug "${slug}" (${existing.id}).`, carId: existing.id, slug };
   }
 
+  const noteParts: string[] = [];
+
   let sources = await findOfficialSources(ctx, brand, model);
   if (sources.found && sources.urls.length > 0) {
     ctx.log?.(`  ✓ ${sources.urls.length} fuente(s):`);
     sources.urls.forEach((u) => ctx.log?.(`    - ${u}`));
   } else {
     ctx.log?.(`  No se encontró fuente oficial confiable.${sources.note ? ` Nota: ${sources.note}` : ""}`);
+    if (sources.note) noteParts.push(sources.note);
   }
 
   ctx.log?.(`\n▶ Renderizando páginas con Chromium...`);
@@ -593,6 +596,10 @@ export async function researchCar(brand: string, model: string, ctx: ResearchCon
     ? await gatherAll(sources.urls, browser, visited, ctx.log)
     : { texts: [] as string[], images: [] as string[] };
   let usedDealerFallback = false;
+
+  if (sources.urls.length > 0 && chunks.length === 0) {
+    noteParts.push("Se encontraron fuentes oficiales pero no se pudo extraer contenido de ninguna (posible bloqueo del sitio a scraping).");
+  }
 
   if (chunks.length === 0) {
     ctx.log?.("\n▶ Sin contenido útil del sitio oficial — probando concesionario autorizado como respaldo...");
@@ -605,8 +612,12 @@ export async function researchCar(brand: string, model: string, ctx: ResearchCon
       allImages = dealerResult.images;
       usedDealerFallback = chunks.length > 0;
       if (usedDealerFallback) sources = dealerSources;
+      else if (dealerSources.urls.length > 0) {
+        noteParts.push("También se encontró un concesionario autorizado, pero tampoco se pudo extraer contenido de su sitio.");
+      }
     } else if (dealerSources.note) {
       ctx.log?.(`  Nota (fallback): ${dealerSources.note}`);
+      noteParts.push(dealerSources.note);
     }
   }
   await browser.close();
@@ -614,7 +625,10 @@ export async function researchCar(brand: string, model: string, ctx: ResearchCon
   if (chunks.length === 0) {
     return {
       status: "no_content",
-      message: `Ninguna fuente (oficial ni concesionario) devolvió contenido útil para ${brand} ${model}.`,
+      message:
+        noteParts.length > 0
+          ? noteParts.join(" ")
+          : `Ninguna fuente (oficial ni concesionario) devolvió contenido útil para ${brand} ${model}.`,
     };
   }
   if (usedDealerFallback) {
