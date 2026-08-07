@@ -1,4 +1,9 @@
 {
+  "functions": {
+    "app/api/admin/pdp-research/route.ts": {
+      "memory": 3009
+    }
+  },
   "crons": [
     {
       "path": "/api/cron/asesoria-reminder",
