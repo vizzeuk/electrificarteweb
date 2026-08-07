@@ -4,7 +4,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@sanity/client";
 import { chromium } from "playwright-core";
 import chromiumBinary from "@sparticuz/chromium";
-import { researchCar, findExistingCarId, type ResearchResult } from "@/lib/pdp-research/research";
+import { researchCar, findExistingCarId, fillMissingSpecs, type ResearchResult } from "@/lib/pdp-research/research";
 import { sendProactiveText, sendProactiveImage } from "@/lib/whatsapp/outbound";
 import { loadAdminContext, saveAdminContext } from "@/lib/whatsapp/admin-context";
 import { saveReviewState } from "@/lib/whatsapp/admin-review-state";
@@ -132,6 +132,7 @@ export async function POST(req: NextRequest) {
   const brand = typeof body?.brand === "string" ? body.brand.trim() : "";
   const model = typeof body?.model === "string" ? body.model.trim() : "";
   const phone = typeof body?.phone === "string" ? body.phone.trim() : "";
+  const carId = typeof body?.carId === "string" ? body.carId.trim() : "";
 
   if (!brand || !model || !phone) {
     return NextResponse.json({ error: "Faltan brand/model/phone" }, { status: 400 });
@@ -147,6 +148,36 @@ export async function POST(req: NextRequest) {
     token: process.env.SANITY_API_TOKEN,
     useCdn: false,
   });
+
+  // Con carId: es un reintento para completar campos vacíos de un auto que YA existe — se salta
+  // el chequeo de duplicado (no aplica) y va por un camino de encolado distinto (ver abajo).
+  if (carId) {
+    after(async () => {
+      const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
+      try {
+        const result = await fillMissingSpecs(carId, brand, model, {
+          anthropic,
+          sanity,
+          launchBrowser: launchBrowserForEnv,
+          log: (line) => console.log(`[pdp-research:retry] ${line}`),
+        });
+        const msg =
+          result.status === "updated"
+            ? `✅ ${result.message}`
+            : result.status === "no_new_data"
+              ? `La nueva búsqueda no trajo datos adicionales para ${brand} ${model}.`
+              : `❌ No se pudo completar la búsqueda de ${brand} ${model}.\n${result.message}`;
+        await sendProactiveText(phone, msg);
+        await logToAdminContext(phone, [{ role: "assistant", content: msg }]);
+      } catch (err) {
+        console.error("[admin/pdp-research:retry] error:", err);
+        const msg = `❌ Error reintentando ${brand} ${model}: ${(err as Error).message}`;
+        await sendProactiveText(phone, msg);
+        await logToAdminContext(phone, [{ role: "assistant", content: msg }]);
+      }
+    });
+    return NextResponse.json({ status: "queued" }, { status: 202 });
+  }
 
   // Chequeo de duplicado ANTES de encolar el trabajo en segundo plano — si no, quien dispara esto
   // (admin-advisor.ts) ya mandó "arranqué la investigación" antes de que researchCar() se entere

@@ -570,14 +570,19 @@ export async function findExistingCarId(
   return existing ? { id: existing, slug } : null;
 }
 
-export async function researchCar(brand: string, model: string, ctx: ResearchContext): Promise<ResearchResult> {
-  const slug = slugify(`${brand} ${model}`);
+interface InvestigateResult {
+  ok: boolean;
+  specs?: Record<string, unknown>;
+  sources?: SourceReport;
+  usedDealerFallback?: boolean;
+  images?: string[];
+  failureMessage?: string;
+}
 
-  const existing = await findExistingCarId(brand, model, ctx.sanity);
-  if (existing) {
-    return { status: "duplicate", message: `Ya existe un auto con slug "${slug}" (${existing.id}).`, carId: existing.id, slug };
-  }
-
+/** Búsqueda + scraping + extracción de specs — sin chequeo de duplicado ni creación del doc, para
+ * poder reusarse tanto en la creación inicial (researchCar) como en un reintento sobre un auto que
+ * ya existe (fillMissingSpecs). */
+async function investigate(brand: string, model: string, ctx: ResearchContext): Promise<InvestigateResult> {
   const noteParts: string[] = [];
 
   let sources = await findOfficialSources(ctx, brand, model);
@@ -625,8 +630,8 @@ export async function researchCar(brand: string, model: string, ctx: ResearchCon
 
   if (chunks.length === 0) {
     return {
-      status: "no_content",
-      message:
+      ok: false,
+      failureMessage:
         noteParts.length > 0
           ? noteParts.join(" ")
           : `Ninguna fuente (oficial ni concesionario) devolvió contenido útil para ${brand} ${model}.`,
@@ -637,6 +642,122 @@ export async function researchCar(brand: string, model: string, ctx: ResearchCon
   }
 
   const specs = await extractSpecs(ctx, brand, model, chunks.join("\n\n"));
+  return { ok: true, specs, sources, usedDealerFallback, images: allImages };
+}
+
+/** Repite el mismo paso de respaldo de investigate() (concesionario autorizado) pero de forma
+ * aislada — se usa en fillMissingSpecs cuando la fuente original SÍ tuvo contenido (por eso
+ * investigate() nunca activó su propio respaldo) pero igual no cubrió los campos que faltan. Un
+ * caso típico: el sitio oficial de fábrica no publica precio de lista, y ese dato solo aparece en
+ * sitios de concesionarios autorizados. */
+async function investigateViaDealer(brand: string, model: string, ctx: ResearchContext): Promise<InvestigateResult> {
+  const dealerSources = await findAuthorizedDealerSources(ctx, brand, model);
+  if (!dealerSources.found || dealerSources.urls.length === 0) {
+    return { ok: false, failureMessage: dealerSources.note ?? "No se encontró concesionario autorizado." };
+  }
+  ctx.log?.(`  ✓ ${dealerSources.urls.length} fuente(s) de concesionario:`);
+  dealerSources.urls.forEach((u) => ctx.log?.(`    - ${u}`));
+
+  const browser = await ctx.launchBrowser();
+  let texts: string[] = [];
+  let images: string[] = [];
+  try {
+    const gathered = await gatherAll(dealerSources.urls, browser, new Set<string>(), ctx.log);
+    texts = gathered.texts;
+    images = gathered.images;
+  } finally {
+    await browser.close();
+  }
+  if (texts.length === 0) {
+    return { ok: false, failureMessage: "El concesionario autorizado tampoco tuvo contenido útil." };
+  }
+  const specs = await extractSpecs(ctx, brand, model, texts.join("\n\n"));
+  return { ok: true, specs, sources: dealerSources, usedDealerFallback: true, images };
+}
+
+/** Reintenta la búsqueda sobre un auto que YA existe, y completa solo los campos que estén vacíos
+ * — nunca pisa un dato que Francisco ya confirmó o corrigió a mano. No toca fotos ni versiones
+ * (eso tiene su propio flujo de revisión). */
+export async function fillMissingSpecs(
+  carId: string,
+  brand: string,
+  model: string,
+  ctx: ResearchContext
+): Promise<{ status: "updated" | "no_content" | "no_new_data"; message: string; filledFields?: string[] }> {
+  const gathered = await investigate(brand, model, ctx);
+  if (!gathered.ok || !gathered.specs) {
+    return { status: "no_content", message: gathered.failureMessage ?? "No se encontró información nueva." };
+  }
+
+  const specFieldNames = Object.keys(EXTRACT_SCHEMA.properties).filter((k) => k !== "versions");
+  const current = await ctx.sanity.fetch<Record<string, unknown> | null>(
+    `*[_id == $id][0]{${specFieldNames.join(", ")}}`,
+    { id: carId }
+  );
+
+  function computePatch(specs: Record<string, unknown>): Record<string, unknown> {
+    const p: Record<string, unknown> = {};
+    for (const key of specFieldNames) {
+      const currentVal = current?.[key];
+      const isEmpty =
+        currentVal === undefined ||
+        currentVal === null ||
+        currentVal === "" ||
+        (Array.isArray(currentVal) && currentVal.length === 0);
+      if (!isEmpty) continue; // ya tiene dato (original o corregido a mano) — no se toca
+
+      const newVal = specs[key];
+      if (newVal === undefined || newVal === null || newVal === "" || isPlaceholder(newVal)) continue;
+      if (Array.isArray(newVal) && newVal.length === 0) continue;
+      p[key] = newVal;
+    }
+    return p;
+  }
+
+  let patch = computePatch(gathered.specs);
+
+  // La fuente original tuvo contenido (si no, investigate() ya habría probado el respaldo de
+  // concesionario por su cuenta), pero no aportó nada para los campos que faltaban — un caso
+  // real y esperable es que el sitio oficial no publique precio. Antes de rendirse, se prueba
+  // explícitamente un concesionario autorizado como fuente adicional distinta a la ya usada.
+  if (Object.keys(patch).length === 0 && !gathered.usedDealerFallback) {
+    ctx.log?.("\n▶ La fuente original no aportó datos nuevos — probando concesionario autorizado como fuente adicional...");
+    const dealerGathered = await investigateViaDealer(brand, model, ctx);
+    if (dealerGathered.ok && dealerGathered.specs) {
+      patch = computePatch(dealerGathered.specs);
+    } else if (dealerGathered.failureMessage) {
+      ctx.log?.(`  ${dealerGathered.failureMessage}`);
+    }
+  }
+
+  const filledFields = Object.keys(patch);
+  if (filledFields.length === 0) {
+    return { status: "no_new_data", message: "La nueva búsqueda no trajo datos adicionales para los campos que faltaban." };
+  }
+
+  await ctx.sanity.patch(carId).set(patch).commit();
+  return {
+    status: "updated",
+    message: `Se completaron ${filledFields.length} campo(s): ${filledFields.join(", ")}.`,
+    filledFields,
+  };
+}
+
+export async function researchCar(brand: string, model: string, ctx: ResearchContext): Promise<ResearchResult> {
+  const slug = slugify(`${brand} ${model}`);
+
+  const existing = await findExistingCarId(brand, model, ctx.sanity);
+  if (existing) {
+    return { status: "duplicate", message: `Ya existe un auto con slug "${slug}" (${existing.id}).`, carId: existing.id, slug };
+  }
+
+  const gathered = await investigate(brand, model, ctx);
+  if (!gathered.ok || !gathered.specs) {
+    return { status: "no_content", message: gathered.failureMessage ?? `Ninguna fuente devolvió contenido útil para ${brand} ${model}.` };
+  }
+  const { specs, images: allImages = [] } = gathered;
+  const sources = gathered.sources!;
+  const usedDealerFallback = !!gathered.usedDealerFallback;
 
   const brandId = await getOrCreateBrand(ctx, brand);
   const vehicleTypeId = await resolveVehicleType(ctx, (specs.vehicleType as string) ?? null);

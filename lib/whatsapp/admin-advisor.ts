@@ -26,7 +26,7 @@ const ADMIN_SYSTEM = `Eres el asistente interno de Francisco, dueño de Electrif
 1. **Investigar autos nuevos**: Francisco escribe algo como "agrega el GWM Ora 03 GT". Extrae marca y modelo y llama a start_research(brand, model). Si es ambiguo, pregunta antes de llamar la tool — nunca inventes marca/modelo. El resultado de la tool es uno de dos: "queued" → responde brevemente confirmando que quedó en curso y que avisas cuando termine (puede tardar unos minutos), sin inventar resultados. "duplicate:<id>" → ese auto YA existe, dile a Francisco que ya está en el catálogo y que no se creó nada nuevo — nunca digas "arranqué la investigación" en ese caso. Cuando la investigación de verdad termina, Francisco recibe automáticamente la portada + un resumen de specs y versiones (no lo generas tú, ya se manda directo).
 
 2. **Guiar la revisión antes de publicar** (dos pasos, en este orden — nunca te saltes uno):
-   - **Paso "specs"**: Francisco ya recibió el resumen de specs/versiones + link a Studio. Si dice "sí"/"aprobado"/"dale" → llama approve_specs() (esto manda las fotos directo, no agregues texto propio describiendo fotos que no has visto). Si en cambio corrige un dato ("la autonomía es 420", "el precio son 25990000") → llama update_spec(field, value) con el campo que corresponda (basePrice, discountPrice, range, batteryCapacity, power, tagline, description, warranty) y responde confirmando el cambio, sin avanzar de paso todavía.
+   - **Paso "specs"**: Francisco ya recibió el resumen de specs/versiones + link a Studio. Si dice "sí"/"aprobado"/"dale" → llama approve_specs() (esto manda las fotos directo, no agregues texto propio describiendo fotos que no has visto). Si en cambio corrige un dato ("la autonomía es 420", "el precio son 25990000") → llama update_spec(field, value) con el campo que corresponda (basePrice, discountPrice, range, batteryCapacity, power, tagline, description, warranty) y responde confirmando el cambio, sin avanzar de paso todavía. Si Francisco dice que falta un dato y pide que lo busques de nuevo ("faltan specs", "reintenta", "búscalo tú") → llama retry_missing_specs() — NUNCA le pidas a Francisco que te pase el dato manualmente, ese es tu trabajo. retry_missing_specs() solo completa campos vacíos, nunca pisa uno ya confirmado; avísale que la búsqueda corre aparte y tarda unos minutos, igual que start_research.
    - **Paso "photos"**: Francisco ya recibió todas las fotos numeradas. Si dice "portada N" → set_cover_photo(index). Si da números de fotos a sacar ("3, 7" o "saca la 5") → remove_gallery_photos(indexes). Si dice "LISTO"/"todas bien"/"publica" → publish_car().
    Estas tools (approve_specs, set_cover_photo, remove_gallery_photos) devuelven confirmaciones cortas — respóndelas tal cual, sin inventar detalle adicional sobre fotos o specs que no te devolvió la tool.
 
@@ -86,6 +86,12 @@ const DISMISS_FLAG_TOOL: Anthropic.Tool = {
 const APPROVE_SPECS_TOOL: Anthropic.Tool = {
   name: "approve_specs",
   description: "Francisco aprobó las specs de la ficha en revisión — manda la galería completa numerada para que revise las fotos y elija portada.",
+  input_schema: { type: "object", properties: {} },
+};
+
+const RETRY_SPECS_TOOL: Anthropic.Tool = {
+  name: "retry_missing_specs",
+  description: "Vuelve a buscar información para completar SOLO los campos vacíos de la ficha en revisión (solo durante el paso de specs) — nunca pisa un dato ya confirmado o corregido a mano. Tarda unos minutos, corre aparte.",
   input_schema: { type: "object", properties: {} },
 };
 
@@ -322,7 +328,7 @@ async function publishCar(phone: string): Promise<string> {
   return `🎉 ${state.brand} ${state.model} ya está publicado: ${publicUrl}`;
 }
 
-async function triggerResearch(brand: string, model: string, phone: string): Promise<string> {
+async function callResearchEndpoint(brand: string, model: string, phone: string, carId?: string): Promise<string> {
   const secret = process.env.ADMIN_API_SECRET;
   if (!secret) return "No se pudo iniciar: falta configurar ADMIN_API_SECRET en el servidor.";
   try {
@@ -343,7 +349,7 @@ async function triggerResearch(brand: string, model: string, phone: string): Pro
         "x-admin-secret": secret,
         ...(bypassSecret ? { "x-vercel-protection-bypass": bypassSecret } : {}),
       },
-      body: JSON.stringify({ brand, model, phone }),
+      body: JSON.stringify({ brand, model, phone, ...(carId ? { carId } : {}) }),
       signal: AbortSignal.timeout(10_000),
     });
     if (res.status === 202) return "queued";
@@ -355,6 +361,17 @@ async function triggerResearch(brand: string, model: string, phone: string): Pro
   } catch (err) {
     return `Error al iniciar: ${(err as Error).message}`;
   }
+}
+
+async function triggerResearch(brand: string, model: string, phone: string): Promise<string> {
+  return callResearchEndpoint(brand, model, phone);
+}
+
+async function retryMissingSpecs(phone: string): Promise<string> {
+  const state = await loadReviewState(phone);
+  if (!state) return "No hay ninguna ficha en revisión ahora mismo.";
+  if (state.step !== "specs") return "Ya se aprobaron las specs — para esta ficha ya no se puede reintentar la búsqueda automática, corrígelo a mano en Studio si falta algo.";
+  return callResearchEndpoint(state.brand, state.model, phone, state.carId);
 }
 
 function normalizeForAnthropic(history: ChatMessage[]): ChatMessage[] {
@@ -387,6 +404,7 @@ export async function runAdminAdvisor(history: ChatMessage[], phone: string): Pr
       messages,
       tools: [
         START_RESEARCH_TOOL,
+        RETRY_SPECS_TOOL,
         APPROVE_SPECS_TOOL,
         UPDATE_SPEC_TOOL,
         SET_COVER_TOOL,
@@ -417,6 +435,8 @@ export async function runAdminAdvisor(history: ChatMessage[], phone: string): Pr
         const brand = (input.brand ?? "").trim();
         const model = (input.model ?? "").trim();
         result = brand && model ? await triggerResearch(brand, model, phone) : "Faltó marca o modelo.";
+      } else if (tu.name === "retry_missing_specs") {
+        result = await retryMissingSpecs(phone);
       } else if (tu.name === "approve_specs") {
         result = await approveSpecs(phone);
       } else if (tu.name === "update_spec") {
