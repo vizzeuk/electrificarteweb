@@ -747,14 +747,26 @@ export async function fillMissingSpecs(
   }
 
   const filledFields = Object.keys(patch);
+  const remaining = stillMissing();
+  // El precio es el campo que más le importa a Francisco y el más caro de re-buscar (investigar
+  // de nuevo implica repetir todo el pipeline) — si ya se agotaron oficial + concesionario y sigue
+  // sin aparecer, se lo dice explícito para que no seguir pidiendo "reintenta" quemando tokens de
+  // nuevo sobre la misma fuente que ya sabemos que no lo tiene.
+  const remainingNote = !remaining.includes("basePrice")
+    ? ""
+    : " El precio no se encontró en ninguna fuente (ni oficial ni concesionario) — no tiene sentido reintentar de nuevo, hay que completarlo a mano en Studio.";
+
   if (filledFields.length === 0) {
-    return { status: "no_new_data", message: "La nueva búsqueda no trajo datos adicionales para los campos que faltaban." };
+    return {
+      status: "no_new_data",
+      message: `La nueva búsqueda no trajo datos adicionales para los campos que faltaban.${remainingNote}`,
+    };
   }
 
   await ctx.sanity.patch(carId).set(patch).commit();
   return {
     status: "updated",
-    message: `Se completaron ${filledFields.length} campo(s): ${filledFields.join(", ")}.`,
+    message: `Se completaron ${filledFields.length} campo(s): ${filledFields.join(", ")}.${remainingNote}`,
     filledFields,
   };
 }
@@ -794,20 +806,33 @@ export async function researchCar(brand: string, model: string, ctx: ResearchCon
     };
   }
 
-  // El precio es obligatorio — sin él, la "plantilla" que revisa Francisco no sirve de mucho. Si
-  // la fuente original no lo trae (típico: el sitio oficial de fábrica no publica precio de
-  // lista), se prueba un concesionario autorizado antes de rendirse — mismo mecanismo que el
-  // reintento sobre autos ya creados (fillMissingSpecs / investigateViaDealer).
-  if (!(typeof specs.basePrice === "number" && specs.basePrice > 0) && !usedDealerFallback) {
-    ctx.log?.("\n▶ Sin precio en la fuente original — probando concesionario autorizado...");
+  // El precio es obligatorio — sin él, la "plantilla" que revisa Francisco no sirve de mucho. La
+  // misma exigencia corre para cada versión/trim si el modelo tiene varias (no solo el precio base
+  // del modelo). Si la fuente original no lo trae (típico: el sitio oficial de fábrica no publica
+  // precio de lista), se prueba un concesionario autorizado antes de rendirse — mismo mecanismo
+  // que el reintento sobre autos ya creados (fillMissingSpecs / investigateViaDealer).
+  const rawVersions = (specs.versions as Array<Record<string, unknown>>) ?? [];
+  const hasBasePrice = typeof specs.basePrice === "number" && specs.basePrice > 0;
+  const versionMissingPrice = rawVersions.some((v) => !(typeof v.price === "number" && v.price > 0));
+
+  if ((!hasBasePrice || versionMissingPrice) && !usedDealerFallback) {
+    ctx.log?.("\n▶ Precio incompleto en la fuente original — probando concesionario autorizado...");
     const dealerGathered = await investigateViaDealer(brand, model, ctx);
     if (dealerGathered.ok && dealerGathered.specs) {
       for (const [key, val] of Object.entries(dealerGathered.specs)) {
-        if (key === "versions") continue; // no se mezclan versiones entre fuentes distintas
+        if (key === "versions") continue; // las versiones se completan aparte, solo el precio (abajo)
         const cur = (specs as Record<string, unknown>)[key];
         const curEmpty = cur === undefined || cur === null || cur === "" || (Array.isArray(cur) && cur.length === 0);
         const valOk = val !== undefined && val !== null && val !== "" && !isPlaceholder(val) && !(Array.isArray(val) && val.length === 0);
         if (curEmpty && valOk) (specs as Record<string, unknown>)[key] = val;
+      }
+      // Completa SOLO el precio de versiones que ya existían y no lo tenían, matcheando por
+      // nombre — nunca agrega versiones nuevas ni pisa otros campos de la versión original.
+      const dealerVersions = (dealerGathered.specs.versions as Array<Record<string, unknown>>) ?? [];
+      for (const v of rawVersions) {
+        if (typeof v.price === "number" && v.price > 0) continue;
+        const match = dealerVersions.find((dv) => slugify(String(dv.name ?? "")) === slugify(String(v.name ?? "")));
+        if (match && typeof match.price === "number" && match.price > 0) v.price = match.price;
       }
       if (dealerGathered.images?.length) allImages = [...allImages, ...dealerGathered.images];
       usedDealerFallback = true;

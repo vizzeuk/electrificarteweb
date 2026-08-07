@@ -63,7 +63,9 @@ function buildSpecsMessage(car: CarSummaryDoc, studioUrl?: string): string {
   if (car.warranty) lines.push(`Garantía: ${car.warranty}`);
   if (car.versions?.length) {
     lines.push("", "*Versiones:*");
-    car.versions.forEach((v) => lines.push(`  - ${v.name}${typeof v.price === "number" ? `: ${fmtCLP(v.price)}` : ""}`));
+    car.versions.forEach((v) =>
+      lines.push(`  - ${v.name}: ${typeof v.price === "number" ? fmtCLP(v.price) : "precio no encontrado en ninguna fuente"}`)
+    );
   }
   if (studioUrl) lines.push("", `Revisar en Studio: ${studioUrl}`);
   lines.push("", `Responde *SI* para aprobar y pasar a revisar las fotos, o dime qué corregir (ej: "la autonomía es 420").`);
