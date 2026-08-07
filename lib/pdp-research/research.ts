@@ -714,17 +714,33 @@ export async function fillMissingSpecs(
     return p;
   }
 
-  let patch = computePatch(gathered.specs);
+  const patch = computePatch(gathered.specs);
 
-  // La fuente original tuvo contenido (si no, investigate() ya habría probado el respaldo de
-  // concesionario por su cuenta), pero no aportó nada para los campos que faltaban — un caso
-  // real y esperable es que el sitio oficial no publique precio. Antes de rendirse, se prueba
-  // explícitamente un concesionario autorizado como fuente adicional distinta a la ya usada.
-  if (Object.keys(patch).length === 0 && !gathered.usedDealerFallback) {
-    ctx.log?.("\n▶ La fuente original no aportó datos nuevos — probando concesionario autorizado como fuente adicional...");
+  function stillMissing(): string[] {
+    return specFieldNames.filter((key) => {
+      const currentVal = current?.[key];
+      const isEmpty =
+        currentVal === undefined ||
+        currentVal === null ||
+        currentVal === "" ||
+        (Array.isArray(currentVal) && currentVal.length === 0);
+      return isEmpty && !(key in patch);
+    });
+  }
+
+  // Un solo "reintenta" debe agotar las fuentes disponibles de una — Francisco no debería tener
+  // que pedirlo de nuevo campo por campo. Si tras la fuente original todavía quedan campos vacíos
+  // (aunque haya rellenado algo, ej. la descripción, pero no el precio), se prueba un concesionario
+  // autorizado como fuente adicional — el precio de lista suele publicarse solo ahí, no en el sitio
+  // oficial de fábrica. Los datos del concesionario nunca pisan lo que ya trajo la fuente original.
+  if (stillMissing().length > 0 && !gathered.usedDealerFallback) {
+    ctx.log?.("\n▶ Todavía quedan campos vacíos — probando concesionario autorizado como fuente adicional...");
     const dealerGathered = await investigateViaDealer(brand, model, ctx);
     if (dealerGathered.ok && dealerGathered.specs) {
-      patch = computePatch(dealerGathered.specs);
+      const dealerPatch = computePatch(dealerGathered.specs);
+      for (const [key, value] of Object.entries(dealerPatch)) {
+        if (!(key in patch)) patch[key] = value;
+      }
     } else if (dealerGathered.failureMessage) {
       ctx.log?.(`  ${dealerGathered.failureMessage}`);
     }
