@@ -550,15 +550,31 @@ async function extractSpecs(ctx: ResearchContext, brand: string, model: string, 
 
 // ─── Entry point compartido ───────────────────────────────────────────────────
 
-export async function researchCar(brand: string, model: string, ctx: ResearchContext): Promise<ResearchResult> {
+/**
+ * Chequeo rápido (una sola query) de si ya existe un auto con este nombre — sin tocar Claude ni
+ * Playwright. Se usa también fuera de researchCar() (ver app/api/admin/pdp-research/route.ts)
+ * para responder "ya existe" de inmediato, en vez de recién enterarse después de encolar el
+ * trabajo en segundo plano y mandar dos mensajes contradictorios por WhatsApp.
+ */
+export async function findExistingCarId(
+  brand: string,
+  model: string,
+  sanity: SanityClientInstance
+): Promise<{ id: string; slug: string } | null> {
   const slug = slugify(`${brand} ${model}`);
-
-  const existing = await ctx.sanity.fetch<string | null>(
+  const existing = await sanity.fetch<string | null>(
     `*[_type == "car" && slug.current == $slug && !(_id in path("drafts.**"))][0]._id`,
     { slug }
   );
+  return existing ? { id: existing, slug } : null;
+}
+
+export async function researchCar(brand: string, model: string, ctx: ResearchContext): Promise<ResearchResult> {
+  const slug = slugify(`${brand} ${model}`);
+
+  const existing = await findExistingCarId(brand, model, ctx.sanity);
   if (existing) {
-    return { status: "duplicate", message: `Ya existe un auto con slug "${slug}" (${existing}).`, carId: existing, slug };
+    return { status: "duplicate", message: `Ya existe un auto con slug "${slug}" (${existing.id}).`, carId: existing.id, slug };
   }
 
   let sources = await findOfficialSources(ctx, brand, model);
