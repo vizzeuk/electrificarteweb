@@ -37,8 +37,15 @@ export async function checkChatRateLimit(ip: string): Promise<boolean> {
   const rl = getRatelimit();
 
   if (rl) {
-    const { success } = await rl.limit(ip);
-    return !success;
+    // Falla abierto ante un error de Redis (ver lib/rate-limit-redis.ts) — el tope global
+    // de gasto de lib/chat/spend-cap.ts es la red de seguridad de costo si esto degrada.
+    try {
+      const { success } = await rl.limit(ip);
+      return !success;
+    } catch (err) {
+      console.error("[chat rate-limit] Redis falló, dejando pasar:", err);
+      return false;
+    }
   }
 
   // Fallback in-memory

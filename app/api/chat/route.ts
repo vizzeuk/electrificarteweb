@@ -11,7 +11,14 @@ import {
   OFFTOPIC_RESPONSE,
 } from "@/lib/chat/guards";
 import { validateOutput } from "@/lib/chat/output-validator";
+import { exceedsGlobalChatQuota, CHAT_QUOTA_MESSAGE } from "@/lib/chat/spend-cap";
 import { ASESORIA_CHECKOUT_URL } from "@/lib/products";
+
+// El timeout de la llamada a Claude (LLM_TIMEOUT_MS) tiene que caber DENTRO de la duración
+// máxima de la función, si no Vercel mata el request antes de que el timeout del cliente
+// dispare y el usuario recibe un 504 crudo en vez del mensaje de error nuestro.
+export const runtime = "nodejs";
+export const maxDuration = 30;
 
 // ─── Singletons ───────────────────────────────────────────────────────────────
 
@@ -30,26 +37,44 @@ const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 // La URL vive en lib/products.ts para compartirse con la página /asesoria.
 const ASESORIA_URL = ASESORIA_CHECKOUT_URL;
 
-// ─── Brand cache (5-min TTL) ──────────────────────────────────────────────────
+// ─── Caché en memoria (5-min TTL) ─────────────────────────────────────────────
+// El catálogo cambia rara vez, pero estas queries corrían en CADA mensaje del chat: con
+// tráfico alto son 3-4 round-trips a Sanity por turno, puro costo y latencia. 5 minutos de
+// desfase es irrelevante para specs/precios y ya es el TTL que usaban las marcas.
+// La caché es por instancia serverless (no compartida), que es justo lo que se necesita
+// acá: evita el fan-out sin sumar dependencia de Redis en el camino caliente.
 
-interface Brand { name: string; slug: string }
+const CACHE_TTL_MS = 5 * 60 * 1000;
 
-let _brandCache: { data: Brand[]; expiresAt: number } | null = null;
+const _cache = new Map<string, { data: unknown; expiresAt: number }>();
 
-async function getBrands(): Promise<Brand[]> {
-  if (_brandCache && Date.now() < _brandCache.expiresAt) return _brandCache.data;
-  const data = await sanityFetch(
-    () => sanity.fetch<Brand[]>(
-      groq`*[_type == "brand" && !(_id in path("drafts.**"))] | order(name asc) { name, "slug": slug.current }`
-    ),
-    [],
-    3_000,
-  );
-  _brandCache = { data, expiresAt: Date.now() + 5 * 60 * 1000 };
+async function cached<T>(key: string, fetcher: () => Promise<T>): Promise<T> {
+  const hit = _cache.get(key);
+  if (hit && Date.now() < hit.expiresAt) return hit.data as T;
+  const data = await fetcher();
+  _cache.set(key, { data, expiresAt: Date.now() + CACHE_TTL_MS });
   return data;
 }
 
+interface Brand { name: string; slug: string }
+
+async function getBrands(): Promise<Brand[]> {
+  return cached("brands", () =>
+    sanityFetch(
+      () => sanity.fetch<Brand[]>(
+        groq`*[_type == "brand" && !(_id in path("drafts.**"))] | order(name asc) { name, "slug": slug.current }`
+      ),
+      [],
+      3_000,
+    )
+  );
+}
+
 // ─── Input validation ─────────────────────────────────────────────────────────
+
+// Holgura contra maxDuration (30s): deja margen para las queries a Sanity de antes y para
+// que el error se serialice, en vez de que Vercel corte la función a mitad.
+const LLM_TIMEOUT_MS = 20_000;
 
 const MAX_MSG_LEN = 1_000;          // límite de entrada del usuario (abuso/costo)
 const MAX_ASSISTANT_LEN = 4_000;    // los mensajes del asistente son salida propia
@@ -224,7 +249,7 @@ async function handleChat(messages: ChatMessage[]): Promise<string> {
   const allBrands = await getBrands();
 
   const [hotDeals, cheapCars, longRangeCars] = await Promise.all([
-    sanityFetch(
+    cached("hotDeals", () => sanityFetch(
       () => sanity.fetch<CarResult[]>(
         groq`*[_type == "car" && !(_id in path("drafts.**")) && isHotDeal == true]
           | order(coalesce(discountPrice, basePrice) asc) [0..5] {
@@ -235,8 +260,8 @@ async function handleChat(messages: ChatMessage[]): Promise<string> {
           }`
       ),
       [],
-    ),
-    sanityFetch(
+    )),
+    cached("cheapCars", () => sanityFetch(
       () => sanity.fetch<CarResult[]>(
         groq`*[_type == "car" && !(_id in path("drafts.**"))]
           | order(coalesce(discountPrice, basePrice) asc) [0..5] {
@@ -247,8 +272,8 @@ async function handleChat(messages: ChatMessage[]): Promise<string> {
           }`
       ),
       [],
-    ),
-    sanityFetch(
+    )),
+    cached("longRangeCars", () => sanityFetch(
       () => sanity.fetch<CarResult[]>(
         groq`*[_type == "car" && !(_id in path("drafts.**")) && defined(range) && range > 0]
           | order(range desc) [0..5] {
@@ -259,13 +284,13 @@ async function handleChat(messages: ChatMessage[]): Promise<string> {
           }`
       ),
       [],
-    ),
+    )),
   ]);
 
   const matchedBrand = allBrands.find((b) => lastMsg.includes(b.name.toLowerCase()));
   let brandCars: CarResult[] = [];
   if (matchedBrand) {
-    brandCars = await sanityFetch(
+    brandCars = await cached(`brandCars:${matchedBrand.slug}`, () => sanityFetch(
       () => sanity.fetch<CarResult[]>(
         groq`*[_type == "car" && !(_id in path("drafts.**")) && brand->slug.current == $slug]
           | order(coalesce(discountPrice, basePrice) asc) [0..6] {
@@ -278,7 +303,7 @@ async function handleChat(messages: ChatMessage[]): Promise<string> {
       ),
       [],
       3_000,
-    );
+    ));
   }
 
   // Slugs y precios válidos para la validación de output
@@ -326,7 +351,7 @@ REGLAS:
       system: systemPrompt,
       messages,
     },
-    { timeout: 15_000 },
+    { timeout: LLM_TIMEOUT_MS },
   );
 
   const block = response.content[0];
@@ -349,9 +374,16 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // El parseo va FUERA del try de abajo: un body inválido es error del cliente (400) y no
+  // debe caer en el fallback amable, que existe solo para fallos nuestros (LLM/Sanity).
+  let body: { mode?: string; messages?: unknown; budget?: string; vehicleType?: string; electricType?: string };
   try {
-    const body = await req.json();
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Solicitud inválida." }, { status: 400 });
+  }
 
+  try {
     let message: string;
 
     if (body.mode === "recommend") {
@@ -372,6 +404,12 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ message: OFFTOPIC_RESPONSE });
       }
 
+      // Se consume el tope global solo acá: es el único camino que gasta tokens (el modo
+      // "recommend" y las respuestas de guardia son estáticas y no deben contar).
+      if (await exceedsGlobalChatQuota()) {
+        return NextResponse.json({ message: CHAT_QUOTA_MESSAGE });
+      }
+
       message = await handleChat(messages);
     } else {
       return NextResponse.json({ error: "Payload inválido." }, { status: 400 });
@@ -380,6 +418,23 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message });
   } catch (err) {
     console.error("[chat api]", err);
-    return NextResponse.json({ error: "Error interno del servidor." }, { status: 500 });
+    return NextResponse.json({ message: fallbackMessage(err) });
   }
+}
+
+/**
+ * Con tráfico alto, sobrecarga (529) y rate limit (429) de Anthropic son escenarios
+ * esperables, no bugs. Devolver un 500 crudo deja al usuario con un error rojo y sin
+ * salida; se responde 200 con un mensaje útil que lo empuja a los flujos que no dependen
+ * del LLM (catálogo, formularios) para no perder la conversión.
+ */
+function fallbackMessage(err: unknown): string {
+  const status = (err as { status?: number })?.status;
+  const overloaded = status === 429 || status === 529 || status === 500 || status === 503;
+
+  const base = overloaded
+    ? "Estoy recibiendo muchas consultas en este momento y no pude procesar la tuya 🙏."
+    : "Tuve un problema procesando tu consulta.";
+
+  return `${base}\n\nMientras tanto puedes:\n\n[MENU]\n1. Ver el catálogo completo → /marcas\n2. Negociar el mejor precio de un modelo → /solicitar\n3. Escribirnos directamente → /contacto\n[/MENU]`;
 }

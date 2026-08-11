@@ -67,12 +67,20 @@ export async function checkRateLimitRedis(
   const limiter = getLimiter(opts);
 
   if (limiter) {
-    const { success } = await limiter.limit(ip);
-    if (!success) {
-      return NextResponse.json(
-        { error: "Demasiadas solicitudes. Intenta en un momento." },
-        { status: 429, headers: { "Retry-After": String(opts.windowSeconds) } },
-      );
+    // Falla ABIERTO a propósito: si Upstash tiene un problema, esta excepción subía hasta
+    // la ruta y tumbaba el request entero — incluido /api/checkout, o sea nadie podía
+    // pagar por un hipo del rate limiter. Un limitador caído debe degradar a "sin límite",
+    // nunca a "sin servicio".
+    try {
+      const { success } = await limiter.limit(ip);
+      if (!success) {
+        return NextResponse.json(
+          { error: "Demasiadas solicitudes. Intenta en un momento." },
+          { status: 429, headers: { "Retry-After": String(opts.windowSeconds) } },
+        );
+      }
+    } catch (err) {
+      console.error(`[rate-limit] Redis falló (bucket=${opts.bucket}), dejando pasar:`, err);
     }
     return null;
   }

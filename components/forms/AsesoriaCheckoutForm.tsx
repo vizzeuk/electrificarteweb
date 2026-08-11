@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -27,6 +27,10 @@ function FieldLabel({ children, required }: { children: React.ReactNode; require
 
 export function AsesoriaCheckoutForm() {
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
+  // Guard SÍNCRONO contra doble envío. `status` no alcanza: setState es asíncrono, así que
+  // un doble-tap rápido (habitual en móvil) puede entrar dos veces a onSubmit antes de que
+  // React deshabilite el botón — y cada entrada crea un cobro nuevo en Reveniu.
+  const submitting = useRef(false);
 
   const {
     register,
@@ -39,6 +43,8 @@ export function AsesoriaCheckoutForm() {
   });
 
   async function onSubmit(data: FormValues) {
+    if (submitting.current) return;
+    submitting.current = true;
     setStatus("loading");
     try {
       const payload = {
@@ -70,7 +76,10 @@ export function AsesoriaCheckoutForm() {
       form.appendChild(input);
       document.body.appendChild(form);
       form.submit();
+      // No se libera el guard: el navegador ya está navegando a la pasarela. Liberarlo acá
+      // permitiría un segundo cobro si el submit tarda en navegar.
     } catch {
+      submitting.current = false; // falló antes de navegar — puede reintentar
       setStatus("error");
     }
   }

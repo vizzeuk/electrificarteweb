@@ -362,6 +362,10 @@ export function LeadForm({ carOptions = [], carSlug, carName }: LeadFormProps) {
   const [status, setStatus]   = useState<"idle" | "loading" | "success" | "error">("idle");
   const [photos, setPhotos]   = useState<string[]>([]);
   const [photoError, setPhotoError] = useState("");
+  // Guard SÍNCRONO contra doble envío. `status` no alcanza: setState es asíncrono, así que
+  // un doble-tap rápido (habitual en móvil) puede entrar dos veces a onSubmit antes de que
+  // React deshabilite el botón — y cada entrada crea un cobro nuevo en Reveniu.
+  const submitting = useRef(false);
 
   // Match carName against available options at mount time (synchronous — carOptions is from server)
   const initialCarSearch = carName
@@ -385,11 +389,13 @@ export function LeadForm({ carOptions = [], carSlug, carName }: LeadFormProps) {
   const selectedRegion = watch("region");
 
   async function onSubmit(data: FormValues) {
+    if (submitting.current) return;
     // Validate photos if trade-in
     if (data.tradeIn === "si" && photos.length < 4) {
       setPhotoError("Sube al menos 4 fotos de tu auto");
       return;
     }
+    submitting.current = true;
     setPhotoError("");
     setStatus("loading");
 
@@ -423,7 +429,10 @@ export function LeadForm({ carOptions = [], carSlug, carName }: LeadFormProps) {
       form.appendChild(input);
       document.body.appendChild(form);
       form.submit();
+      // No se libera el guard: el navegador ya está navegando a la pasarela. Liberarlo acá
+      // permitiría un segundo cobro si el submit tarda en navegar.
     } catch {
+      submitting.current = false; // falló antes de navegar — puede reintentar
       setStatus("error");
     }
   }

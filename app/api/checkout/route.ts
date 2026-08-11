@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { after } from "next/server";
 import crypto from "crypto";
 import { z } from "zod";
 import { signOrderToken } from "@/lib/order-token";
@@ -19,6 +20,13 @@ import { checkRateLimitRedis } from "@/lib/rate-limit-redis";
 
 // Producción: https://api.reveniu.com/api/v1 · Sandbox: ver REVENIU_API_BASE en .env
 const REVENIU_API = process.env.REVENIU_API_BASE ?? "https://api.reveniu.com/api/v1";
+
+// Esta ruta cobra de verdad: si la función muere a mitad, ya se creó el cargo en Reveniu
+// pero el usuario nunca recibe la URL de pago — ve un error, reintenta, y se genera un
+// segundo orderId/cargo huérfano. maxDuration explícito + timeouts en TODAS las llamadas
+// salientes (ver abajo) para que eso no dependa del default del plan.
+export const runtime = "nodejs";
+export const maxDuration = 30;
 
 // Validación mínima del payload — los datos extra del formulario se pasan a
 // n8n tal cual, pero al menos garantizamos email y nombre válidos antes de
@@ -106,16 +114,33 @@ export async function POST(req: NextRequest) {
   }
 
   // ── 2. Mandar el lead pendiente a n8n ──────────────────────────────────────
+  // Va en after() y con timeout propio a propósito: en este punto el cargo en Reveniu YA
+  // existe, así que el usuario tiene que recibir su completionUrl sí o sí. Si n8n está
+  // lento o caído, esperarlo acá mataba la función entera y el usuario terminaba
+  // reintentando y generando un segundo cargo. El lead "pendiente" es recuperable (el
+  // webhook de pago de Reveniu trae el mismo orderId); un cargo duplicado no lo es.
   const webhookUrl = isAdvisory
     ? (process.env.N8N_ADVISORY_WEBHOOK_URL ?? process.env.N8N_WEBHOOK_URL)
     : process.env.N8N_WEBHOOK_URL;
 
   if (webhookUrl) {
-    await fetch(webhookUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ orderId, status: "pendiente", type: isAdvisory ? "advisory" : "lead", ...data }),
-    }).catch((err) => console.error("Error notificando a n8n:", err));
+    after(async () => {
+      try {
+        const res = await fetch(webhookUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ orderId, status: "pendiente", type: isAdvisory ? "advisory" : "lead", ...data }),
+          signal: AbortSignal.timeout(8_000),
+        });
+        if (!res.ok) {
+          // Se logea con el orderId para poder reconciliar a mano: el pago puede
+          // confirmarse igual y quedar sin fila "pendiente" previa en Supabase.
+          console.error(`[checkout] n8n respondió ${res.status} para orderId=${orderId}`);
+        }
+      } catch (err) {
+        console.error(`[checkout] error notificando a n8n orderId=${orderId}:`, err);
+      }
+    });
   }
 
   // ── 3. Cookie firmada + URL de pago ─────────────────────────────────────────
