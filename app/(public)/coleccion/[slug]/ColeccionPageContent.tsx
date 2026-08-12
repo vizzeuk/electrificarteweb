@@ -5,6 +5,7 @@ import Link from "next/link";
 import { m } from "framer-motion";
 import { formatCLP } from "@/lib/utils";
 import { CarCard } from "@/components/car/CarCard";
+import { Icon } from "@/components/ui/Icon";
 
 const PAGE_SIZE = 9;
 
@@ -129,7 +130,7 @@ export default function ColeccionPageContent({ col, cars }: Props) {
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full"
                   style={{ backgroundColor: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.10)", backdropFilter: "blur(4px)" }}
                 >
-                  <span className="material-symbols-outlined text-primary text-[14px]">sell</span>
+                  <Icon name="sell" className="text-primary text-[14px]" />
                   <span className="text-xs font-semibold" style={{ color: "rgba(255,255,255,0.70)" }}>Desde {formatCLP(minPrice)}</span>
                 </div>
               )}
@@ -138,7 +139,7 @@ export default function ColeccionPageContent({ col, cars }: Props) {
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full"
                   style={{ backgroundColor: "rgba(245,158,11,0.10)", border: "1px solid rgba(245,158,11,0.30)", backdropFilter: "blur(4px)" }}
                 >
-                  <span className="material-symbols-outlined text-amber text-[14px]">local_fire_department</span>
+                  <Icon name="local_fire_department" className="text-amber text-[14px]" />
                   <span className="text-amber text-xs font-bold">{hotDeals.length} Hot Deal{hotDeals.length !== 1 ? "s" : ""}</span>
                 </div>
               )}
@@ -211,9 +212,7 @@ export default function ColeccionPageContent({ col, cars }: Props) {
                   className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
                   style={{ backgroundColor: `${ACCENT}18` }}
                 >
-                  <span className="material-symbols-outlined text-[20px]" style={{ color: ACCENT }}>
-                    {h.icon}
-                  </span>
+                  <Icon name={h.icon} className="text-[20px]" style={{ color: ACCENT }} />
                 </div>
                 <div>
                   <p className="font-headline font-bold text-sm leading-snug mb-1 text-text-main">{h.title}</p>
@@ -231,7 +230,7 @@ export default function ColeccionPageContent({ col, cars }: Props) {
 
           {cars.length === 0 ? (
             <div className="text-center py-24">
-              <span className="material-symbols-outlined text-[64px] text-gray-200">electric_car</span>
+              <Icon name="electric_car" className="text-[64px] text-gray-200" />
               <h2 className="text-xl font-headline font-bold text-text-main mt-4 mb-2">
                 Sin autos en esta colección todavía
               </h2>
@@ -240,7 +239,7 @@ export default function ColeccionPageContent({ col, cars }: Props) {
                 href="/"
                 className="inline-flex items-center gap-2 bg-primary text-black font-bold px-6 py-3 rounded-xl transition-all hover:bg-primary-dark shadow-[0_4px_20px_rgba(0,229,229,0.30)]"
               >
-                <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+                <Icon name="arrow_back" className="text-[18px]" />
                 Volver al inicio
               </Link>
             </div>
@@ -250,7 +249,7 @@ export default function ColeccionPageContent({ col, cars }: Props) {
               {hotDeals.length > 0 && (
                 <div className="mb-12">
                   <div className="flex items-center gap-3 mb-6">
-                    <span className="material-symbols-outlined text-amber text-[22px]">local_fire_department</span>
+                    <Icon name="local_fire_department" className="text-amber text-[22px]" />
                     <h2 className="font-headline font-black text-xl uppercase tracking-tight">Hot Deals</h2>
                     <span className="text-text-ghost text-sm">— precios especiales negociados</span>
                   </div>
@@ -322,7 +321,7 @@ export default function ColeccionPageContent({ col, cars }: Props) {
                         className="inline-flex items-center gap-2 border border-gray-200 hover:border-primary/40 text-text-main hover:text-primary font-semibold px-8 py-3 rounded-xl transition-all"
                       >
                         Ver más autos
-                        <span className="material-symbols-outlined text-[18px]">expand_more</span>
+                        <Icon name="expand_more" className="text-[18px]" />
                       </button>
                     </div>
                   )}

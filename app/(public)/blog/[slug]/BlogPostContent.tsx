@@ -5,6 +5,7 @@ import Link from "next/link";
 import { PortableText, type PortableTextComponents } from "@portabletext/react";
 import { formatCLP, formatFecha } from "@/lib/utils";
 import { safeJsonLd } from "@/lib/seo";
+import { Icon } from "@/components/ui/Icon";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -236,7 +237,7 @@ export function BlogPostContent({ post }: { post: BlogPost }) {
               {CATEGORY_LABELS[post.category] ?? post.category}
             </span>
             <span className="text-white/40 text-xs flex items-center gap-1">
-              <span className="material-symbols-outlined text-[13px]">schedule</span>
+              <Icon name="schedule" className="text-[13px]" />
               {post.readingTime} min de lectura
             </span>
             <span className="text-white/40 text-xs">
@@ -259,7 +260,7 @@ export function BlogPostContent({ post }: { post: BlogPost }) {
                 <img src={post.author.avatar.url} alt={post.author.name} className="w-9 h-9 rounded-full object-cover" loading="lazy" decoding="async" />
               ) : (
                 <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-white/40 text-[18px]">person</span>
+                  <Icon name="person" className="text-white/40 text-[18px]" />
                 </div>
               )}
               <div>
@@ -294,7 +295,7 @@ export function BlogPostContent({ post }: { post: BlogPost }) {
               {post.featuredSnippet && (
                 <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6 mb-8">
                   <div className="flex items-center gap-2 mb-3">
-                    <span className="material-symbols-outlined text-primary text-[18px]">lightbulb</span>
+                    <Icon name="lightbulb" className="text-primary text-[18px]" />
                     <span className="text-primary-deep text-xs font-bold uppercase tracking-wide">Resumen rápido</span>
                   </div>
                   <p className="text-text-main text-base leading-relaxed font-medium">
@@ -332,9 +333,7 @@ export function BlogPostContent({ post }: { post: BlogPost }) {
                       <details key={i} className="group border border-gray-200 rounded-2xl overflow-hidden">
                         <summary className="flex items-center justify-between px-5 py-4 cursor-pointer list-none font-semibold text-sm hover:bg-surface transition-colors">
                           {faq.question}
-                          <span className="material-symbols-outlined text-[18px] text-text-ghost group-open:rotate-180 transition-transform flex-shrink-0 ml-3">
-                            expand_more
-                          </span>
+                          <Icon name="expand_more" className="text-[18px] text-text-ghost group-open:rotate-180 transition-transform flex-shrink-0 ml-3" />
                         </summary>
                         <div className="px-5 pb-4 text-text-muted text-sm leading-relaxed">
                           {faq.answer}
@@ -352,7 +351,7 @@ export function BlogPostContent({ post }: { post: BlogPost }) {
                   <div className="relative z-10 p-8 md:p-10 flex flex-col sm:flex-row sm:items-center gap-6">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-3">
-                        <span className="material-symbols-outlined text-primary text-[16px]">bolt</span>
+                        <Icon name="bolt" className="text-primary text-[16px]" />
                         <span className="text-primary text-[10px] font-black uppercase tracking-widest">Electrificarte</span>
                       </div>
                       <h3 className="font-headline font-black text-white text-xl md:text-2xl leading-tight mb-2">
@@ -390,7 +389,7 @@ export function BlogPostContent({ post }: { post: BlogPost }) {
                           className="group flex gap-4 border border-gray-100 hover:border-primary/40 rounded-2xl p-4 transition-all hover:shadow-sm"
                         >
                           <div className="w-16 h-16 bg-gray-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                            <span className="material-symbols-outlined text-[28px] text-gray-200">electric_car</span>
+                            <Icon name="electric_car" className="text-[28px] text-gray-200" />
                           </div>
                           <div className="min-w-0">
                             <p className="text-text-ghost text-[11px] uppercase tracking-wide mb-0.5">{car.brand?.name}</p>
@@ -449,7 +448,7 @@ export function BlogPostContent({ post }: { post: BlogPost }) {
                               <img src={rp.coverImage.asset.url} alt={rp.title} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center">
-                                <span className="material-symbols-outlined text-[20px] text-gray-300">article</span>
+                                <Icon name="article" className="text-[20px] text-gray-300" />
                               </div>
                             )}
                           </div>
@@ -473,7 +472,7 @@ export function BlogPostContent({ post }: { post: BlogPost }) {
                       onClick={() => navigator.clipboard.writeText(window.location.href)}
                       className="flex-1 flex items-center justify-center gap-1.5 border border-gray-200 hover:border-primary/40 hover:text-primary-deep rounded-xl py-2 text-xs font-semibold transition-all"
                     >
-                      <span className="material-symbols-outlined text-[15px]">link</span>
+                      <Icon name="link" className="text-[15px]" />
                       Copiar link
                     </button>
                   </div>

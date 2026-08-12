@@ -122,7 +122,9 @@ export const FACETS: Facet[] = [
   {
     id: "traccion",
     label: "Tracción",
-    icon: "settings_input_composite",
+    // "settings_input_composite" no existe en el build de Material Symbols que servimos:
+    // se renderizaba como texto literal. Ver scripts/subset-icon-font.ts.
+    icon: "tune",
     kind: "multi",
     getEntry: (c) => {
       const t = (c.traction || "").toUpperCase();

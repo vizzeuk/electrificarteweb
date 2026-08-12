@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Icon } from "@/components/ui/Icon";
 
 // ─── Social SVG icons (brand-accurate) ───────────────────────────────────────
 function IconInstagram() {
@@ -102,7 +103,7 @@ function NewsletterForm() {
   if (status === "success") {
     return (
       <div className="flex items-center gap-2 text-primary text-sm font-medium">
-        <span className="material-symbols-outlined text-[18px]">check_circle</span>
+        <Icon name="check_circle" className="text-[18px]" />
         ¡Gracias! Te avisaremos de las mejores ofertas.
       </div>
     );

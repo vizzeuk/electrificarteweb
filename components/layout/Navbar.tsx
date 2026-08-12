@@ -149,9 +149,7 @@ export function Navbar({ brands = [], vehicleTypes = [], electricTypes = [] }: N
                     className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-surface transition-colors group"
                     onClick={() => setActiveDropdown(null)}
                   >
-                    <span className="material-symbols-outlined text-[18px] text-text-ghost group-hover:text-primary-deep transition-colors">
-                      {t.icon ?? "directions_car"}
-                    </span>
+                    <Icon name={t.icon ?? "directions_car"} className="text-[18px] text-text-ghost group-hover:text-primary-deep transition-colors" />
                     <div>
                       <p className="font-bold text-xs text-text-main group-hover:text-primary-deep transition-colors leading-none">
                         {t.label}
@@ -180,9 +178,7 @@ export function Navbar({ brands = [], vehicleTypes = [], electricTypes = [] }: N
                     className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-surface transition-colors group"
                     onClick={() => setActiveDropdown(null)}
                   >
-                    <span className="material-symbols-outlined text-[18px] text-text-ghost group-hover:text-primary-deep transition-colors">
-                      {t.icon ?? "bolt"}
-                    </span>
+                    <Icon name={t.icon ?? "bolt"} className="text-[18px] text-text-ghost group-hover:text-primary-deep transition-colors" />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5">
                         <p className="font-bold text-xs text-text-main group-hover:text-primary-deep transition-colors leading-none truncate">
@@ -278,7 +274,7 @@ export function Navbar({ brands = [], vehicleTypes = [], electricTypes = [] }: N
                     className="flex items-center gap-2.5 py-2 px-3 rounded-xl hover:bg-surface transition-colors"
                     onClick={() => setMobileOpen(false)}
                   >
-                    <span className="material-symbols-outlined text-[16px] text-text-ghost">{t.icon ?? "directions_car"}</span>
+                    <Icon name={t.icon ?? "directions_car"} className="text-[16px] text-text-ghost" />
                     <span className="font-semibold text-sm">{t.label}</span>
                   </Link>
                 ))}
@@ -297,7 +293,7 @@ export function Navbar({ brands = [], vehicleTypes = [], electricTypes = [] }: N
                     className="flex items-center gap-2.5 py-2 px-3 rounded-xl hover:bg-surface transition-colors"
                     onClick={() => setMobileOpen(false)}
                   >
-                    <span className="material-symbols-outlined text-[16px] text-text-ghost">{t.icon ?? "bolt"}</span>
+                    <Icon name={t.icon ?? "bolt"} className="text-[16px] text-text-ghost" />
                     <div className="flex items-center gap-1.5">
                       <span className="font-semibold text-sm">{t.label}</span>
                       {t.tag && <span className="text-[9px] font-black text-text-ghost bg-surface px-1.5 py-0.5 rounded">{t.tag}</span>}
@@ -312,7 +308,7 @@ export function Navbar({ brands = [], vehicleTypes = [], electricTypes = [] }: N
                   className="flex items-center justify-center gap-2 w-full text-center bg-primary hover:bg-primary-dark text-black font-bold py-3 rounded-xl transition-colors"
                   onClick={() => setMobileOpen(false)}
                 >
-                  <span className="material-symbols-outlined text-[18px]">calculate</span>
+                  <Icon name="calculate" className="text-[18px]" />
                   Calcula tu ahorro
                 </Link>
               </div>
@@ -358,9 +354,9 @@ function Dropdown({
         <m.span
           animate={{ rotate: active ? 180 : 0 }}
           transition={{ duration: 0.2 }}
-          className="material-symbols-outlined text-[16px] leading-none"
+          className="leading-none"
         >
-          expand_more
+          <Icon name="expand_more" className="text-[16px]" />
         </m.span>
       </button>
 
@@ -405,9 +401,8 @@ function MobileAccordion({
         <m.span
           animate={{ rotate: open ? 180 : 0 }}
           transition={{ duration: 0.2 }}
-          className="material-symbols-outlined text-[18px]"
         >
-          expand_more
+          <Icon name="expand_more" className="text-[18px]" />
         </m.span>
       </button>
       <AnimatePresence>

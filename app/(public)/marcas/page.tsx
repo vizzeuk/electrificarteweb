@@ -6,6 +6,7 @@ import { allBrandsQuery } from "@/lib/queries/car";
 import { getBrandCountry } from "@/lib/utils/brand-country";
 import { MarcasGrid } from "./MarcasGrid";
 import type { Brand } from "./MarcasGrid";
+import { Icon } from "@/components/ui/Icon";
 
 export const revalidate = 3600;
 
@@ -43,7 +44,7 @@ export default async function MarcasPage() {
 
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full mb-6">
-              <span className="material-symbols-outlined text-primary text-[16px]">verified</span>
+              <Icon name="verified" className="text-primary text-[16px]" />
               <span className="text-white/60 text-xs font-semibold uppercase tracking-wider">
                 {brands.length} marcas disponibles
               </span>
@@ -97,7 +98,7 @@ export default async function MarcasPage() {
                 href="/comparador"
                 className="inline-flex items-center justify-center gap-2 border border-white/20 hover:border-white/40 text-white font-medium px-8 py-4 rounded-xl transition-colors text-sm whitespace-nowrap"
               >
-                <span className="material-symbols-outlined text-[18px]">compare_arrows</span>
+                <Icon name="compare_arrows" className="text-[18px]" />
                 Comparador
               </Link>
             </div>

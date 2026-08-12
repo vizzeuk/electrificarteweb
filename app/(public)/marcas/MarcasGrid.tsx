@@ -4,6 +4,7 @@ import React, { useState, useMemo } from "react";
 import { m } from "framer-motion";
 import Link from "next/link";
 import { getBrandCountry } from "@/lib/utils/brand-country";
+import { Icon } from "@/components/ui/Icon";
 
 export interface Brand {
   _id: string;
@@ -39,9 +40,7 @@ export function MarcasGrid({ brands }: { brands: Brand[] }) {
       <section className="sticky top-16 md:top-20 z-30 bg-white border-b border-gray-100 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-3 flex flex-col sm:flex-row gap-3 items-center">
           <div className="relative flex-1 w-full">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-ghost text-[18px]">
-              search
-            </span>
+            <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-text-ghost text-[18px]" />
             <input
               type="search"
               placeholder="Buscar marca o país..."
@@ -75,7 +74,7 @@ export function MarcasGrid({ brands }: { brands: Brand[] }) {
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           {filtered.length === 0 ? (
             <div className="py-24 text-center">
-              <span className="material-symbols-outlined text-[48px] text-gray-200 block mb-3">search_off</span>
+              <Icon name="search_off" className="text-[48px] text-gray-200 block mb-3" />
               <p className="text-text-muted font-medium">No hay marcas con ese nombre.</p>
               <button
                 onClick={() => setSearch("")}
@@ -126,7 +125,7 @@ export function MarcasGrid({ brands }: { brands: Brand[] }) {
                         <p className="text-[10px] text-text-ghost uppercase tracking-wide mb-2">{country}</p>
                       )}
                       <span className="mt-auto inline-flex items-center gap-0.5 text-[10px] font-bold text-text-ghost bg-surface px-2 py-0.5 rounded-full">
-                        <span className="material-symbols-outlined text-[11px]">directions_car</span>
+                        <Icon name="directions_car" className="text-[11px]" />
                         {brand.carCount} {brand.carCount === 1 ? "modelo" : "modelos"}
                       </span>
                       {brand.isFeatured && (

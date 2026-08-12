@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Icon } from "@/components/ui/Icon";
 
 const SEEN_KEY = "ea_feedback_ts";
 const DAYS_UNTIL_RESHOWN = 30;
@@ -114,12 +115,7 @@ export function FeedbackWidget() {
             aria-label="Danos tu opinión"
             className="flex items-center justify-center gap-2 bg-amber text-black rounded-full shadow-lg h-12 w-12 sm:h-auto sm:w-auto sm:px-4 sm:py-3 hover:brightness-105 active:scale-95 transition-all duration-200"
           >
-            <span
-              className="material-symbols-outlined text-[20px]"
-              style={{ fontVariationSettings: '"FILL" 1' }}
-            >
-              sentiment_satisfied
-            </span>
+            <Icon name="sentiment_satisfied" className="text-[20px]" filled />
             <span className="hidden sm:inline font-black text-[11px] uppercase tracking-widest">
               Feedback
             </span>
@@ -131,7 +127,7 @@ export function FeedbackWidget() {
             title="Ocultar"
             className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-black text-white/70 shadow-md hover:text-white transition-colors"
           >
-            <span className="material-symbols-outlined text-[12px]">close</span>
+            <Icon name="close" className="text-[12px]" />
           </button>
         </div>
       )}
@@ -151,12 +147,7 @@ export function FeedbackWidget() {
         >
           {submitted ? (
             <div className="px-5 py-8 text-center">
-              <span
-                className="material-symbols-outlined text-[48px] text-emerald-500 block mb-3"
-                style={{ fontVariationSettings: '"FILL" 1' }}
-              >
-                sentiment_very_satisfied
-              </span>
+              <Icon name="sentiment_very_satisfied" className="text-[48px] text-emerald-500 block mb-3" filled />
               <p className="font-headline font-black text-lg">¡Gracias por tu opinión!</p>
               <p className="text-gray-500 text-sm mt-1 leading-snug">
                 Tu feedback nos ayuda a mejorar la experiencia para todos.
@@ -172,7 +163,7 @@ export function FeedbackWidget() {
                   className="text-white/50 hover:text-white transition-colors"
                   aria-label="Cerrar"
                 >
-                  <span className="material-symbols-outlined text-[18px]">close</span>
+                  <Icon name="close" className="text-[18px]" />
                 </button>
               </div>
 
@@ -203,14 +194,13 @@ export function FeedbackWidget() {
                         title={face.label}
                         className="transition-transform hover:scale-125 active:scale-95"
                       >
-                        <span
-                          className={`material-symbols-outlined text-[28px] sm:text-[34px] transition-colors ${
+                        <Icon
+                          name={face.icon}
+                          className={`text-[28px] sm:text-[34px] transition-colors ${
                             isActive ? face.color : "text-gray-300"
                           }`}
-                          style={{ fontVariationSettings: '"FILL" 1' }}
-                        >
-                          {face.icon}
-                        </span>
+                          filled
+                        />
                       </button>
                     );
                   })}

@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { m } from "framer-motion";
 import Link from "next/link";
+import { Icon } from "@/components/ui/Icon";
 
 const schema = z.object({
   fullName: z.string().min(2, "Ingresa tu nombre completo"),
@@ -149,7 +150,7 @@ export function AsesoriaCheckoutForm() {
           >
             {status === "loading" ? (
               <>
-                <span className="material-symbols-outlined text-[20px] animate-spin">progress_activity</span>
+                <Icon name="progress_activity" className="text-[20px] animate-spin" />
                 Procesando...
               </>
             ) : (

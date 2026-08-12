@@ -1,6 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import type { Metadata } from "next";
+import { Icon } from "@/components/ui/Icon";
 
 export const metadata: Metadata = {
   title: "Página no encontrada",
@@ -27,9 +28,7 @@ export default function RootNotFound() {
           <p className="text-[120px] md:text-[160px] font-headline font-black text-gray-100 leading-none select-none">
             404
           </p>
-          <span className="material-symbols-outlined absolute inset-0 m-auto w-fit h-fit text-[56px] text-primary">
-            electric_car
-          </span>
+          <Icon name="electric_car" className="absolute inset-0 m-auto w-fit h-fit text-[56px] text-primary" />
         </div>
 
         <div className="max-w-md">
@@ -47,7 +46,7 @@ export default function RootNotFound() {
             href="/"
             className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-8 py-3.5 rounded-xl transition-colors text-sm"
           >
-            <span className="material-symbols-outlined text-[18px]">home</span>
+            <Icon name="home" className="text-[18px]" />
             Ir al inicio
           </Link>
           <Link

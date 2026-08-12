@@ -6,6 +6,7 @@ import Image from "next/image";
 import { m, AnimatePresence } from "framer-motion";
 import { formatCLP } from "@/lib/utils";
 import type { CalcCar, CalcVersion } from "./types";
+import { Icon } from "@/components/ui/Icon";
 
 // ─── Constantes Chile ────────────────────────────────────────────────────────
 const ELECTRICITY_CLP_KWH  = 200;   // CLP/kWh tarifa residencial promedio
@@ -112,7 +113,7 @@ function Slider({
     <div className={disabled ? "opacity-40 pointer-events-none" : ""}>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-primary text-[18px]">{icon}</span>
+          <Icon name={icon} className="text-primary text-[18px]" />
           <span className="text-white/80 text-sm font-semibold">{label}</span>
         </div>
         {editable ? (
@@ -171,8 +172,8 @@ function StatCard({
     >
       <div className={["w-10 h-10 rounded-xl flex items-center justify-center mb-2",
         highlight ? "bg-primary/20" : "bg-gray-50"].join(" ")}>
-        <span className={["material-symbols-outlined text-[22px]",
-          highlight ? "text-primary" : "text-primary-deep"].join(" ")}>{icon}</span>
+        <Icon name={icon} className={["text-[22px]",
+          highlight ? "text-primary" : "text-primary-deep"].join(" ")} />
       </div>
       <p className={["text-xs font-bold uppercase tracking-widest",
         highlight ? "text-primary/70" : "text-text-ghost"].join(" ")}>{label}</p>
@@ -233,13 +234,13 @@ function CarPickerModal({
               <p className="text-text-ghost text-xs mt-0.5">{cars.length} modelos disponibles</p>
             </div>
             <button onClick={onClose} className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors">
-              <span className="material-symbols-outlined text-[18px] text-text-muted">close</span>
+              <Icon name="close" className="text-[18px] text-text-muted" />
             </button>
           </div>
 
           <div className="px-5 py-3 border-b border-gray-100 flex-shrink-0">
             <div className="flex items-center gap-2.5 bg-gray-50 rounded-xl px-3 py-2.5">
-              <span className="material-symbols-outlined text-[18px] text-text-ghost">search</span>
+              <Icon name="search" className="text-[18px] text-text-ghost" />
               <input
                 ref={inputRef}
                 type="text"
@@ -250,7 +251,7 @@ function CarPickerModal({
               />
               {query && (
                 <button onClick={() => setQuery("")}>
-                  <span className="material-symbols-outlined text-[16px] text-text-ghost hover:text-text-main">close</span>
+                  <Icon name="close" className="text-[16px] text-text-ghost hover:text-text-main" />
                 </button>
               )}
             </div>
@@ -259,7 +260,7 @@ function CarPickerModal({
           <div className="overflow-y-auto flex-1 p-4">
             {filtered.length === 0 ? (
               <div className="text-center py-12">
-                <span className="material-symbols-outlined text-[48px] text-gray-200">search_off</span>
+                <Icon name="search_off" className="text-[48px] text-gray-200" />
                 <p className="text-text-muted text-sm mt-3">No se encontraron resultados para "{query}"</p>
               </div>
             ) : (
@@ -285,7 +286,7 @@ function CarPickerModal({
                             className="w-full h-full object-cover" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
-                            <span className="material-symbols-outlined text-[24px] text-gray-300">electric_car</span>
+                            <Icon name="electric_car" className="text-[24px] text-gray-300" />
                           </div>
                         )}
                       </div>
@@ -300,7 +301,7 @@ function CarPickerModal({
                       <div className="flex-shrink-0 text-right">
                         {isSelected ? (
                           <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
-                            <span className="material-symbols-outlined text-[14px] text-black">check</span>
+                            <Icon name="check" className="text-[14px] text-black" />
                           </div>
                         ) : (
                           <p className="text-xs font-bold text-text-main">{formatCLP(price)}</p>
@@ -457,7 +458,7 @@ export default function CalculadoraContent({ cars }: Props) {
             {/* Left – inputs */}
             <div>
               <div className="inline-flex items-center gap-1.5 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full mb-5">
-                <span className="material-symbols-outlined text-primary text-[14px]">calculate</span>
+                <Icon name="calculate" className="text-primary text-[14px]" />
                 <span className="text-white/60 text-xs font-semibold">Calculadora gratuita</span>
               </div>
 
@@ -479,7 +480,7 @@ export default function CalculadoraContent({ cars }: Props) {
                           className="w-full h-full object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
-                          <span className="material-symbols-outlined text-[20px] text-white/20">electric_car</span>
+                          <Icon name="electric_car" className="text-[20px] text-white/20" />
                         </div>
                       )}
                     </div>
@@ -496,7 +497,7 @@ export default function CalculadoraContent({ cars }: Props) {
                         onClick={() => setSelectedCar(null)}
                         className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
                       >
-                        <span className="material-symbols-outlined text-[14px] text-white/50">close</span>
+                        <Icon name="close" className="text-[14px] text-white/50" />
                       </button>
                     </div>
                   </div>
@@ -506,13 +507,13 @@ export default function CalculadoraContent({ cars }: Props) {
                     className="w-full flex items-center gap-3 border border-dashed border-white/20 hover:border-primary/50 hover:bg-white/[0.03] rounded-xl px-4 py-3.5 transition-all group"
                   >
                     <div className="w-10 h-10 rounded-lg bg-white/5 group-hover:bg-primary/10 flex items-center justify-center transition-colors">
-                      <span className="material-symbols-outlined text-[20px] text-white/30 group-hover:text-primary transition-colors">search</span>
+                      <Icon name="search" className="text-[20px] text-white/30 group-hover:text-primary transition-colors" />
                     </div>
                     <div className="text-left">
                       <p className="text-white/60 text-sm font-semibold group-hover:text-white transition-colors">Seleccionar un auto</p>
                       <p className="text-white/30 text-xs">Elige el modelo que te interesa para un cálculo exacto</p>
                     </div>
-                    <span className="material-symbols-outlined text-[18px] text-white/20 ml-auto group-hover:text-primary/60 transition-colors">arrow_forward_ios</span>
+                    <Icon name="arrow_forward_ios" className="text-[18px] text-white/20 ml-auto group-hover:text-primary/60 transition-colors" />
                   </button>
                 )}
               </div>
@@ -587,7 +588,7 @@ export default function CalculadoraContent({ cars }: Props) {
                       }}
                     >
                       {useDefaultRend && (
-                        <span className="material-symbols-outlined text-black absolute inset-0 flex items-center justify-center leading-none" style={{ fontSize: 11 }}>check</span>
+                        <Icon name="check" className="text-black absolute inset-0 flex items-center justify-center leading-none" style={{ fontSize: 11 }} />
                       )}
                     </div>
                     <span className="text-white/40 text-xs group-hover:text-white/60 transition-colors">
@@ -613,7 +614,7 @@ export default function CalculadoraContent({ cars }: Props) {
                         <img src={selectedCar.brandLogoUrl} alt={selectedCar.brand}
                           className="h-5 w-auto max-w-[40px] object-contain opacity-70 flex-shrink-0" loading="lazy" decoding="async" />
                       ) : (
-                        <span className="material-symbols-outlined text-primary text-[16px] flex-shrink-0">electric_car</span>
+                        <Icon name="electric_car" className="text-primary text-[16px] flex-shrink-0" />
                       )}
                       <p className="text-primary text-sm font-bold truncate">{selectedCar.brand} {selectedCar.name}</p>
                     </div>
@@ -750,7 +751,7 @@ export default function CalculadoraContent({ cars }: Props) {
                   <div className="hidden sm:flex flex-shrink-0 w-8 h-8 rounded-full items-center justify-center"
                     style={{ background: isSelected ? "rgba(0,229,229,0.15)" : "#f9fafb" }}>
                     {isSelected ? (
-                      <span className="material-symbols-outlined text-[16px] text-primary">star</span>
+                      <Icon name="star" className="text-[16px] text-primary" />
                     ) : (
                       <span className="font-headline font-black text-sm text-text-ghost">{i + 1}</span>
                     )}
@@ -762,7 +763,7 @@ export default function CalculadoraContent({ cars }: Props) {
                         className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
-                        <span className="material-symbols-outlined text-[28px] sm:text-[36px] text-gray-200">electric_car</span>
+                        <Icon name="electric_car" className="text-[28px] sm:text-[36px] text-gray-200" />
                       </div>
                     )}
                   </div>
@@ -781,7 +782,7 @@ export default function CalculadoraContent({ cars }: Props) {
                     )}
                     {isSelected && (
                       <span className="inline-flex items-center gap-1 mt-1 bg-primary/10 text-primary text-[10px] font-bold px-2 py-0.5 rounded-full">
-                        <span className="material-symbols-outlined text-[11px]">check_circle</span>
+                        <Icon name="check_circle" className="text-[11px]" />
                         Tu selección
                       </span>
                     )}
@@ -829,7 +830,7 @@ export default function CalculadoraContent({ cars }: Props) {
                 onClick={() => setPickerOpen(true)}
                 className="inline-flex items-center gap-2 border border-primary/30 hover:border-primary text-primary-deep hover:text-primary font-semibold px-6 py-3 rounded-xl transition-all text-sm"
               >
-                <span className="material-symbols-outlined text-[18px]">search</span>
+                <Icon name="search" className="text-[18px]" />
                 Buscar mi auto ideal
               </button>
               <p className="text-text-ghost text-xs mt-2">Selecciona el auto que te interesa para ver su ahorro exacto</p>

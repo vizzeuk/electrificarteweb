@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { m, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import type { ActiveFacets, FacetGroupOptions, FacetId } from "@/lib/filters/types";
+import { Icon } from "@/components/ui/Icon";
 
 interface FilterPanelProps {
   open: boolean;
@@ -80,7 +81,7 @@ export function FilterPanel({
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100 flex-shrink-0">
               <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-[20px] text-primary-deep">tune</span>
+                <Icon name="tune" className="text-[20px] text-primary-deep" />
                 <h2 className="font-headline font-bold text-lg">Filtros</h2>
                 {activeCount > 0 && (
                   <span className="bg-primary-deep text-white text-[10px] font-black rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center">
@@ -93,7 +94,7 @@ export function FilterPanel({
                 aria-label="Cerrar filtros"
                 className="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors"
               >
-                <span className="material-symbols-outlined text-[18px] text-text-muted">close</span>
+                <Icon name="close" className="text-[18px] text-text-muted" />
               </button>
             </div>
 
@@ -158,9 +159,7 @@ function PanelGroup({
         className="flex items-center justify-between w-full text-left group"
       >
         <span className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-[18px] text-text-ghost group-hover:text-primary-deep transition-colors">
-            {group.icon}
-          </span>
+          <Icon name={group.icon} className="text-[18px] text-text-ghost group-hover:text-primary-deep transition-colors" />
           <span className="font-semibold text-sm text-text-main">{group.label}</span>
           {active.length > 0 && (
             <span className="bg-primary/10 text-primary-deep text-[10px] font-black rounded-full px-1.5 py-0.5">
@@ -168,14 +167,10 @@ function PanelGroup({
             </span>
           )}
         </span>
-        <span
-          className={cn(
-            "material-symbols-outlined text-[18px] text-text-ghost transition-transform duration-200",
+        <Icon name="expand_more" className={cn(
+            "text-[18px] text-text-ghost transition-transform duration-200",
             open ? "rotate-180" : ""
-          )}
-        >
-          expand_more
-        </span>
+          )} />
       </button>
 
       {open && (

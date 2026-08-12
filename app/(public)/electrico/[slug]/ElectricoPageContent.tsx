@@ -8,6 +8,7 @@ import { PlpFilters } from "@/components/filters/PlpFilters";
 import { useCarFilters } from "@/hooks/useCarFilters";
 import type { FacetCar } from "@/lib/filters/types";
 import { ElectricTypeBadge } from "@/components/car/ElectricTypeBadge";
+import { Icon } from "@/components/ui/Icon";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -195,7 +196,7 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full"
                     style={{ backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)" }}
                   >
-                    <span className="material-symbols-outlined text-[14px]" style={{ color: meta.color }}>sell</span>
+                    <Icon name="sell" className="text-[14px]" style={{ color: meta.color }} />
                     <span className="text-xs font-semibold" style={{ color: "rgba(255,255,255,0.60)" }}>Desde {formatCLP(Math.min(...cars.map((c) => c.discountPrice)))}</span>
                   </div>
                 )}
@@ -204,7 +205,7 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full"
                     style={{ backgroundColor: "rgba(245,158,11,0.10)", border: "1px solid rgba(245,158,11,0.30)" }}
                   >
-                    <span className="material-symbols-outlined text-amber text-[14px]">local_fire_department</span>
+                    <Icon name="local_fire_department" className="text-amber text-[14px]" />
                     <span className="text-amber text-xs font-bold">{hotDeals.length} Hot Deal{hotDeals.length !== 1 ? "s" : ""}</span>
                   </div>
                 )}
@@ -241,7 +242,7 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
                   className="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-6 py-3 rounded-xl transition-all text-sm shadow-[0_4px_20px_rgba(0,229,229,0.30)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]"
                 >
                   Ver modelos
-                  <span className="material-symbols-outlined text-[16px]">arrow_downward</span>
+                  <Icon name="arrow_downward" className="text-[16px]" />
                 </a>
               </div>
             </div>
@@ -263,7 +264,7 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" decoding="async" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
-                          <span className="material-symbols-outlined text-[64px] text-white/10">electric_car</span>
+                          <Icon name="electric_car" className="text-[64px] text-white/10" />
                         </div>
                       )}
                     </div>
@@ -316,7 +317,7 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
                 className="flex flex-col items-start gap-3 bg-white border border-gray-100 rounded-2xl p-5"
               >
                 <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${meta.color}18` }}>
-                  <span className="material-symbols-outlined text-[20px]" style={{ color: meta.color }}>{h.icon}</span>
+                  <Icon name={h.icon} className="text-[20px]" style={{ color: meta.color }} />
                 </div>
                 <div>
                   <p className="font-headline font-bold text-sm leading-snug mb-1 text-text-main">{h.title}</p>
@@ -335,12 +336,10 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
                   onClick={() => setOpenHowItem(openHowItem === i ? null : i)}
                 >
                   <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${meta.color}18` }}>
-                    <span className="material-symbols-outlined text-[18px]" style={{ color: meta.color }}>{h.icon}</span>
+                    <Icon name={h.icon} className="text-[18px]" style={{ color: meta.color }} />
                   </div>
                   <span className="font-headline font-bold text-sm text-text-main flex-1 leading-tight">{h.title}</span>
-                  <span className={["material-symbols-outlined text-[20px] text-text-ghost transition-transform duration-200 flex-shrink-0", openHowItem === i ? "rotate-180" : ""].join(" ")}>
-                    expand_more
-                  </span>
+                  <Icon name="expand_more" className={["text-[20px] text-text-ghost transition-transform duration-200 flex-shrink-0", openHowItem === i ? "rotate-180" : ""].join(" ")} />
                 </button>
                 <AnimatePresence>
                   {openHowItem === i && (
@@ -427,7 +426,7 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
                         <img src={car.imageUrl} alt={`${car.brand} ${car.name}`} className="w-full h-40 object-cover" loading="lazy" decoding="async" />
                       ) : (
                         <div className="w-full h-40 flex items-center justify-center">
-                          <span className="material-symbols-outlined text-[64px]" style={{ color: `${meta.color}4D` }}>electric_car</span>
+                          <Icon name="electric_car" className="text-[64px]" style={{ color: `${meta.color}4D` }} />
                         </div>
                       )}
                       <div className="p-4 space-y-3">
@@ -503,7 +502,7 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
                           <img src={car.imageUrl} alt={`${car.brand} ${car.name}`} className="w-full aspect-[16/9] object-cover" loading="lazy" decoding="async" />
                         ) : (
                           <div className="w-full aspect-[16/9] flex items-center justify-center flex-col gap-2">
-                            <span className="material-symbols-outlined text-[80px]" style={{ color: `${meta.color}4D` }}>electric_car</span>
+                            <Icon name="electric_car" className="text-[80px]" style={{ color: `${meta.color}4D` }} />
                             <p className="text-white/40 text-sm">{car.brand} {car.name}</p>
                           </div>
                         )}
@@ -533,7 +532,7 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
                 aria-label="Anterior"
                 className="hidden lg:flex items-center justify-center w-6 h-6 rounded-full border border-white/20 hover:border-primary hover:bg-primary/10 transition-all"
               >
-                <span className="material-symbols-outlined text-white/50 text-[14px]">chevron_left</span>
+                <Icon name="chevron_left" className="text-white/50 text-[14px]" />
               </button>
               <div className="flex items-center gap-2">
                 {hotDeals.map((_, i) => (
@@ -556,7 +555,7 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
                 aria-label="Siguiente"
                 className="hidden lg:flex items-center justify-center w-6 h-6 rounded-full border border-white/20 hover:border-primary hover:bg-primary/10 transition-all"
               >
-                <span className="material-symbols-outlined text-white/50 text-[14px]">chevron_right</span>
+                <Icon name="chevron_right" className="text-white/50 text-[14px]" />
               </button>
             </div>
           )}
@@ -589,7 +588,7 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
 
           {filtered.length === 0 ? (
             <div className="py-16 text-center">
-              <span className="material-symbols-outlined text-[40px] text-gray-200 block mb-3">search_off</span>
+              <Icon name="search_off" className="text-[40px] text-gray-200 block mb-3" />
               <p className="text-text-muted font-medium">No hay autos con estos filtros.</p>
             </div>
           ) : (
@@ -612,7 +611,7 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
                         <img src={car.imageUrl} alt={`${car.brand} ${car.name}`} className="object-cover w-full h-full" loading="lazy" decoding="async" />
                       ) : (
                         <>
-                          <span className="material-symbols-outlined text-[64px] text-gray-200">electric_car</span>
+                          <Icon name="electric_car" className="text-[64px] text-gray-200" />
                           <span className="text-[10px] uppercase tracking-widest text-text-ghost font-bold mt-1">{car.brand}</span>
                         </>
                       )}
@@ -655,7 +654,7 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
                           className="relative z-[1] px-3 border border-gray-200 hover:border-primary/40 text-text-muted hover:text-primary-deep rounded-xl flex items-center transition-colors"
                           title="Comparar"
                         >
-                          <span className="material-symbols-outlined text-[18px]">compare_arrows</span>
+                          <Icon name="compare_arrows" className="text-[18px]" />
                         </Link>
                       </div>
                     </div>
@@ -672,7 +671,7 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
                 className="inline-flex items-center gap-2 border border-gray-200 hover:border-primary/40 hover:text-primary-deep text-text-muted font-semibold px-8 py-3 rounded-xl transition-all text-sm"
               >
                 Ver más autos
-                <span className="material-symbols-outlined text-[18px]">expand_more</span>
+                <Icon name="expand_more" className="text-[18px]" />
               </button>
             </div>
           )}
@@ -686,7 +685,7 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
             <div className="bg-white rounded-2xl p-6 border border-gray-100">
               <div className="flex items-center gap-2 mb-5">
                 <div className="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center">
-                  <span className="material-symbols-outlined text-green-500 text-[16px]">thumb_up</span>
+                  <Icon name="thumb_up" className="text-green-500 text-[16px]" />
                 </div>
                 <h3 className="font-headline font-bold">Ventajas</h3>
               </div>
@@ -702,7 +701,7 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
             <div className="bg-white rounded-2xl p-6 border border-gray-100">
               <div className="flex items-center gap-2 mb-5">
                 <div className="w-8 h-8 bg-red-50 rounded-lg flex items-center justify-center">
-                  <span className="material-symbols-outlined text-red-400 text-[16px]">thumb_down</span>
+                  <Icon name="thumb_down" className="text-red-400 text-[16px]" />
                 </div>
                 <h3 className="font-headline font-bold">A tener en cuenta</h3>
               </div>
@@ -718,7 +717,7 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
             <div className="bg-white rounded-2xl p-6 border border-gray-100">
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
-                  <span className="material-symbols-outlined text-primary-deep text-[16px]">person</span>
+                  <Icon name="person" className="text-primary-deep text-[16px]" />
                 </div>
                 <h3 className="font-headline font-bold">Ideal para</h3>
               </div>
@@ -731,7 +730,7 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
       {/* Fallback when no cars */}
       {cars.length === 0 && (
         <section className="py-24 text-center">
-          <span className="material-symbols-outlined text-[64px] text-gray-200 block mb-4">electric_car</span>
+          <Icon name="electric_car" className="text-[64px] text-gray-200 block mb-4" />
           <p className="text-text-muted font-medium mb-6">
             Estamos cargando el catálogo {meta.tag}. Vuelve pronto.
           </p>
@@ -760,9 +759,7 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
                     href={`/electrico/${t.slug}`}
                     className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-100 hover:border-primary/40 hover:text-primary-deep rounded-xl text-sm font-semibold transition-all group"
                   >
-                    <span className="material-symbols-outlined text-[16px] text-text-ghost group-hover:text-primary-deep transition-colors">
-                      {t.icon}
-                    </span>
+                    <Icon name={t.icon} className="text-[16px] text-text-ghost group-hover:text-primary-deep transition-colors" />
                     {t.label}
                     <span className="text-[9px] font-black text-text-ghost bg-surface px-1.5 py-0.5 rounded">{t.tag}</span>
                   </Link>

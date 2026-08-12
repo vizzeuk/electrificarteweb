@@ -166,7 +166,7 @@ export function Opportunities({ title = "Destacados Electrificarte", cars }: Opp
               aria-label="Anterior"
               className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-text-muted hover:border-primary hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all"
             >
-              <span className="material-symbols-outlined text-[20px]">chevron_left</span>
+              <Icon name="chevron_left" className="text-[20px]" />
             </button>
             <button
               onClick={() => { stopAuto(); scroll("right"); startAuto(); }}
@@ -174,7 +174,7 @@ export function Opportunities({ title = "Destacados Electrificarte", cars }: Opp
               aria-label="Siguiente"
               className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-text-muted hover:border-primary hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all"
             >
-              <span className="material-symbols-outlined text-[20px]">chevron_right</span>
+              <Icon name="chevron_right" className="text-[20px]" />
             </button>
           </div>
         </div>
@@ -319,7 +319,7 @@ export function Opportunities({ title = "Destacados Electrificarte", cars }: Opp
                       title="Comparar"
                       className="relative z-[1] px-3 border border-gray-200 hover:border-primary/40 text-text-muted hover:text-primary-deep rounded-lg flex items-center transition-colors"
                     >
-                      <span className="material-symbols-outlined text-[18px]">compare_arrows</span>
+                      <Icon name="compare_arrows" className="text-[18px]" />
                     </Link>
                   </div>
                 </div>

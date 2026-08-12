@@ -5,6 +5,7 @@ import Link from "next/link";
 import { m } from "framer-motion";
 import type { BlogPreviewPost } from "@/components/layout/BlogPreview";
 import { formatFecha } from "@/lib/utils";
+import { Icon } from "@/components/ui/Icon";
 
 // ─── Static fallback posts ────────────────────────────────────────────────────
 const FALLBACK_POSTS: BlogPreviewPost[] = [
@@ -142,7 +143,7 @@ export function BlogListingContent({ posts }: { posts: BlogPreviewPost[] }) {
           </nav>
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full mb-6">
-              <span className="material-symbols-outlined text-primary text-[16px]">article</span>
+              <Icon name="article" className="text-primary text-[16px]" />
               <span className="text-white/60 text-xs font-semibold uppercase tracking-wider">Blog & Guías</span>
             </div>
             <h1 className="text-3xl sm:text-5xl md:text-6xl font-headline font-black text-white tracking-tighter leading-[0.95] mb-5">
@@ -182,7 +183,7 @@ export function BlogListingContent({ posts }: { posts: BlogPreviewPost[] }) {
 
           {filtered.length === 0 ? (
             <div className="py-24 text-center">
-              <span className="material-symbols-outlined text-[48px] text-gray-200 block mb-4">search_off</span>
+              <Icon name="search_off" className="text-[48px] text-gray-200 block mb-4" />
               <p className="text-text-muted font-medium">No hay artículos en esta categoría aún.</p>
             </div>
           ) : (
@@ -256,7 +257,7 @@ export function BlogListingContent({ posts }: { posts: BlogPreviewPost[] }) {
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
-                            <span className="material-symbols-outlined text-[48px] text-gray-200">article</span>
+                            <Icon name="article" className="text-[48px] text-gray-200" />
                           </div>
                         )}
                         <span className={`absolute top-3 left-3 text-[10px] font-bold px-2.5 py-1 rounded-full border ${CATEGORY_COLORS[post.category] ?? "bg-gray-100 text-gray-600 border-gray-200"}`}>
@@ -276,7 +277,7 @@ export function BlogListingContent({ posts }: { posts: BlogPreviewPost[] }) {
                         </p>
                         <div className="flex items-center justify-between pt-3 border-t border-gray-100">
                           <span className="text-text-ghost text-[11px] flex items-center gap-1">
-                            <span className="material-symbols-outlined text-[13px]">schedule</span>
+                            <Icon name="schedule" className="text-[13px]" />
                             {post.readingTime} min
                           </span>
                           <span className="text-text-ghost text-[11px]">

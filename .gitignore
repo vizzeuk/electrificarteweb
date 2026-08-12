@@ -61,3 +61,7 @@ public/JSON/json-antiguo.json.txt
 
 # Datos de trabajo de los scripts (scraping, CSVs, JSON intermedios) — solo local
 /data/
+
+# Fuente completa de Material Symbols (~3,9 MB) — insumo de scripts/subset-icon-font.ts.
+# Descargar de https://fonts.google.com/icons ; el subset SÍ se versiona.
+app/fonts/material-symbols-outlined-full.woff2

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { formatCLP } from "@/lib/utils";
+import { Icon } from "@/components/ui/Icon";
 
 interface Rival {
   slug: string;
@@ -30,7 +31,7 @@ export function ComparePromo({
       {/* Cabecera — mismo formato que las filas del acordeón de equipamiento */}
       <div className="flex items-center gap-3 px-6 py-5 border-b border-gray-100">
         <div className="w-9 h-9 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0">
-          <span className="material-symbols-outlined text-primary-deep text-[18px]">compare_arrows</span>
+          <Icon name="compare_arrows" className="text-primary-deep text-[18px]" />
         </div>
         <div>
           <p className="font-headline font-bold text-sm">Comparador</p>
@@ -63,7 +64,7 @@ export function ComparePromo({
           href={`/comparador?add=${carSlug}`}
           className="flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold py-3 rounded-xl text-sm transition-colors"
         >
-          <span className="material-symbols-outlined text-[18px]">compare_arrows</span>
+          <Icon name="compare_arrows" className="text-[18px]" />
           Comparar el {carName}
         </Link>
       </div>

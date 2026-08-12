@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { m, AnimatePresence } from "framer-motion";
+import { Icon } from "@/components/ui/Icon";
 
 export interface FAQItem {
   question: string;
@@ -64,9 +65,7 @@ export function FAQ({ title = "Preguntas frecuentes", faqs }: FAQProps) {
                         {String(i + 1).padStart(2, "0")}
                       </span>
                       <div className="w-8 h-8 rounded-lg bg-primary/8 flex items-center justify-center">
-                        <span className="material-symbols-outlined text-[16px] text-primary-deep">
-                          {faq.icon ?? "help"}
-                        </span>
+                        <Icon name={faq.icon ?? "help"} className="text-[16px] text-primary-deep" />
                       </div>
                     </div>
 
@@ -77,9 +76,9 @@ export function FAQ({ title = "Preguntas frecuentes", faqs }: FAQProps) {
                     <m.span
                       animate={{ rotate: openIndex === i ? 45 : 0 }}
                       transition={{ duration: 0.2 }}
-                      className="material-symbols-outlined text-[20px] text-gray-300 flex-shrink-0"
+                      className="flex-shrink-0"
                     >
-                      add
+                      <Icon name="add" className="text-[20px] text-gray-300" />
                     </m.span>
                   </button>
 

@@ -5,6 +5,7 @@ import { m, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import { formatCLP } from "@/lib/utils";
+import { Icon } from "@/components/ui/Icon";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 export interface Car {
@@ -91,9 +92,7 @@ function CarImage({ url, name, size = "md" }: { url?: string; name: string; size
   }
   return (
     <div className={`${dims} bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl flex items-center justify-center flex-shrink-0`}>
-      <span className="material-symbols-outlined text-gray-300" style={{ fontSize: size === "sm" ? 20 : size === "md" ? 24 : 40 }}>
-        electric_car
-      </span>
+      <Icon name="electric_car" className="text-gray-300" style={{ fontSize: size === "sm" ? 20 : size === "md" ? 24 : 40 }} />
     </div>
   );
 }
@@ -112,7 +111,9 @@ function HeroInfo() {
       desc: "Ves el precio lista y el precio negociado por nosotros, lado a lado, para cada auto.",
     },
     {
-      icon: "emoji_events",
+      // "emoji_events" no existe en el build de Material Symbols que servimos:
+      // se renderizaba como texto literal. Ver scripts/subset-icon-font.ts.
+      icon: "trophy",
       title: "Ganador resaltado",
       desc: "El mejor valor en cada spec se marca automáticamente. Sin hojas de cálculo.",
     },
@@ -130,7 +131,7 @@ function HeroInfo() {
         {features.map(f => (
           <div key={f.title} className="bg-white/[0.04] border border-white/[0.08] rounded-2xl p-4 flex flex-col gap-2">
             <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ backgroundColor: "rgba(0,229,229,0.12)" }}>
-              <span className="material-symbols-outlined text-[18px] text-primary">{f.icon}</span>
+              <Icon name={f.icon} className="text-[18px] text-primary" />
             </div>
             <p className="text-white font-bold text-sm leading-snug">{f.title}</p>
             <p className="text-white/40 text-xs leading-relaxed">{f.desc}</p>
@@ -222,7 +223,7 @@ export default function ComparadorClient({ allCars, initialId }: ComparadorClien
             {/* Left */}
             <div>
               <div className="inline-flex items-center gap-1.5 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full mb-5">
-                <span className="material-symbols-outlined text-primary text-[14px]">compare_arrows</span>
+                <Icon name="compare_arrows" className="text-primary text-[14px]" />
                 <span className="text-white/60 text-xs font-semibold">Herramienta gratuita</span>
               </div>
               <h1 className="text-5xl md:text-6xl font-headline font-black text-white tracking-tighter leading-[0.92] mb-4">
@@ -293,7 +294,7 @@ export default function ComparadorClient({ allCars, initialId }: ComparadorClien
               className="mt-6 md:mt-0 md:px-8"
             >
               <div className="flex md:hidden items-center gap-1.5 px-4 mb-2 text-text-ghost">
-                <span className="material-symbols-outlined text-[14px]">swipe</span>
+                <Icon name="swipe" className="text-[14px]" />
                 <p className="text-[11px]">Desliza para ver todas las columnas</p>
               </div>
               <div className="overflow-x-auto rounded-2xl border border-gray-100 shadow-sm bg-white">
@@ -330,7 +331,7 @@ export default function ComparadorClient({ allCars, initialId }: ComparadorClien
             </m.div>
           ) : (
             <div className="text-center py-10 text-text-ghost px-4 md:px-8">
-              <span className="material-symbols-outlined text-[40px] mb-2 block text-gray-200">compare_arrows</span>
+              <Icon name="compare_arrows" className="text-[40px] mb-2 block text-gray-200" />
               <p className="font-medium text-sm">Agrega al menos 2 autos para ver la comparación</p>
             </div>
           )}
@@ -373,16 +374,14 @@ export default function ComparadorClient({ allCars, initialId }: ComparadorClien
                   onClick={closePicker}
                   className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors flex-shrink-0"
                 >
-                  <span className="material-symbols-outlined text-[18px]">close</span>
+                  <Icon name="close" className="text-[18px]" />
                 </button>
               </div>
 
               {/* Search */}
               <div className="px-4 py-3 border-b border-gray-100 flex-shrink-0">
                 <div className="relative">
-                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-text-ghost pointer-events-none">
-                    search
-                  </span>
+                  <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-text-ghost pointer-events-none" />
                   <input
                     type="text"
                     value={search}
@@ -396,7 +395,7 @@ export default function ComparadorClient({ allCars, initialId }: ComparadorClien
                       onClick={() => setSearch("")}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-text-ghost hover:text-text-main transition-colors"
                     >
-                      <span className="material-symbols-outlined text-[16px]">close</span>
+                      <Icon name="close" className="text-[16px]" />
                     </button>
                   )}
                 </div>
@@ -406,7 +405,7 @@ export default function ComparadorClient({ allCars, initialId }: ComparadorClien
               <div className="overflow-y-auto flex-1 min-h-0 p-3 space-y-0.5">
                 {filteredPicker.length === 0 ? (
                   <div className="py-16 text-center">
-                    <span className="material-symbols-outlined text-[36px] text-gray-200 block mb-2">search_off</span>
+                    <Icon name="search_off" className="text-[36px] text-gray-200 block mb-2" />
                     <p className="text-sm text-text-ghost font-medium">Sin resultados para &ldquo;{search}&rdquo;</p>
                     <button
                       onClick={() => setSearch("")}
@@ -432,7 +431,7 @@ export default function ComparadorClient({ allCars, initialId }: ComparadorClien
                           <Image src={car.imageUrl} alt={car.name} width={56} height={44}
                             className="w-full h-full object-cover" />
                         ) : (
-                          <span className="material-symbols-outlined text-[22px] text-gray-300">electric_car</span>
+                          <Icon name="electric_car" className="text-[22px] text-gray-300" />
                         )}
                       </div>
 
@@ -517,7 +516,7 @@ function DesktopCarSlot({ car, onRemove, onAdd }: { car: Car | undefined; onRemo
           className="absolute top-3 right-3 w-6 h-6 bg-gray-100 hover:bg-red-50 hover:text-red-500 rounded-full flex items-center justify-center text-text-ghost transition-colors"
           aria-label="Quitar"
         >
-          <span className="material-symbols-outlined text-[14px]">close</span>
+          <Icon name="close" className="text-[14px]" />
         </button>
 
         {/* Car image */}
@@ -526,7 +525,7 @@ function DesktopCarSlot({ car, onRemove, onAdd }: { car: Car | undefined; onRemo
             <Image src={car.imageUrl} alt={car.name} width={112} height={80}
               className="w-full h-full object-cover" />
           ) : (
-            <span className="material-symbols-outlined text-[40px] text-gray-200">electric_car</span>
+            <Icon name="electric_car" className="text-[40px] text-gray-200" />
           )}
         </div>
 
@@ -556,7 +555,7 @@ function DesktopCarSlot({ car, onRemove, onAdd }: { car: Car | undefined; onRemo
       onClick={onAdd}
       className="border-2 border-dashed border-gray-200 hover:border-primary/40 rounded-2xl p-5 flex flex-col items-center justify-center gap-2 text-text-ghost hover:text-primary-deep transition-colors group min-h-[200px]"
     >
-      <span className="material-symbols-outlined text-[32px] group-hover:scale-110 transition-transform">add_circle</span>
+      <Icon name="add_circle" className="text-[32px] group-hover:scale-110 transition-transform" />
       <span className="text-xs font-semibold">Agregar auto</span>
     </button>
   );
@@ -585,7 +584,7 @@ function MobileCarSlot({ car, onRemove, onAdd }: { car: Car | undefined; onRemov
           className="absolute top-2 right-2 w-5 h-5 bg-gray-100 hover:bg-red-50 hover:text-red-500 rounded-full flex items-center justify-center text-text-ghost transition-colors"
           aria-label="Quitar"
         >
-          <span className="material-symbols-outlined text-[12px]">close</span>
+          <Icon name="close" className="text-[12px]" />
         </button>
 
         <div className="mx-auto w-20 h-14 rounded-lg overflow-hidden bg-gray-50 flex items-center justify-center mb-2">
@@ -593,7 +592,7 @@ function MobileCarSlot({ car, onRemove, onAdd }: { car: Car | undefined; onRemov
             <Image src={car.imageUrl} alt={car.name} width={80} height={56}
               className="w-full h-full object-cover" />
           ) : (
-            <span className="material-symbols-outlined text-[28px] text-gray-200">electric_car</span>
+            <Icon name="electric_car" className="text-[28px] text-gray-200" />
           )}
         </div>
 
@@ -615,7 +614,7 @@ function MobileCarSlot({ car, onRemove, onAdd }: { car: Car | undefined; onRemov
       onClick={onAdd}
       className="border-2 border-dashed border-gray-200 hover:border-primary/40 rounded-2xl flex-shrink-0 w-[140px] min-h-[160px] flex flex-col items-center justify-center gap-2 text-text-ghost hover:text-primary-deep transition-colors"
     >
-      <span className="material-symbols-outlined text-[28px]">add_circle</span>
+      <Icon name="add_circle" className="text-[28px]" />
       <span className="text-[11px] font-semibold">Agregar auto</span>
     </button>
   );

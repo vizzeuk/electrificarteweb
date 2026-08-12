@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import { Icon } from "@/components/ui/Icon";
 
 export default function Error({
   error,
@@ -12,9 +13,7 @@ export default function Error({
 }) {
   return (
     <main className="min-h-[70vh] flex flex-col items-center justify-center gap-8 px-4 text-center bg-white">
-      <span className="material-symbols-outlined text-[64px] text-amber-400">
-        error
-      </span>
+      <Icon name="error" className="text-[64px] text-amber-400" />
 
       <div className="max-w-md">
         <h1 className="font-headline font-black text-2xl md:text-3xl text-text-main mb-3">
@@ -33,14 +32,14 @@ export default function Error({
           onClick={reset}
           className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-8 py-3.5 rounded-xl transition-colors text-sm"
         >
-          <span className="material-symbols-outlined text-[18px]">refresh</span>
+          <Icon name="refresh" className="text-[18px]" />
           Intentar de nuevo
         </button>
         <Link
           href="/"
           className="inline-flex items-center justify-center gap-2 border border-gray-200 hover:border-primary/50 text-text-main font-semibold px-8 py-3.5 rounded-xl transition-colors text-sm"
         >
-          <span className="material-symbols-outlined text-[18px]">home</span>
+          <Icon name="home" className="text-[18px]" />
           Ir al inicio
         </Link>
       </div>

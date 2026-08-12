@@ -7,6 +7,7 @@ import { carBySlugQuery, similarCarsQuery } from "@/lib/queries/car";
 import { stripBrandSuffix } from "@/lib/utils";
 import AutoPageClient, { type CarData, type SimilarCarData } from "./AutoPageClient";
 import { CarStructuredData } from "@/components/car/CarStructuredData";
+import { Icon } from "@/components/ui/Icon";
 
 export const revalidate = 60;
 
@@ -53,7 +54,7 @@ export default async function CarDetailPage({ params }: PageProps) {
     // Graceful fallback for slugs not in Sanity yet
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-6 px-4 text-center">
-        <span className="material-symbols-outlined text-[64px] text-gray-200">electric_car</span>
+        <Icon name="electric_car" className="text-[64px] text-gray-200" />
         <h1 className="font-headline font-black text-3xl">{slug.replace(/-/g, " ")}</h1>
         <p className="text-text-muted max-w-sm">Este modelo aún no está disponible en nuestro catálogo digital. Puedes solicitar una oferta de todos modos.</p>
         <Link href="/solicitar" className="bg-primary hover:bg-primary-dark text-black font-bold px-8 py-3 rounded-xl transition-colors">

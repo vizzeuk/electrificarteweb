@@ -5,6 +5,7 @@ import Link from "next/link";
 import { m, AnimatePresence } from "framer-motion";
 import { formatCLP, heroStats, classifyElectric } from "@/lib/utils";
 import { ComparePromo } from "@/components/car/ComparePromo";
+import { Icon } from "@/components/ui/Icon";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export interface VersionData {
@@ -276,7 +277,7 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
                 {car.brandLogoUrl ? (
                   <img src={car.brandLogoUrl} alt={car.brand} className="h-5 sm:h-6 w-auto object-contain flex-shrink-0" loading="lazy" decoding="async" />
                 ) : (
-                  <span className="material-symbols-outlined text-primary text-[18px] flex-shrink-0">electric_car</span>
+                  <Icon name="electric_car" className="text-primary text-[18px] flex-shrink-0" />
                 )}
                 <div className="min-w-0">
                   <p className="font-headline font-bold text-xs sm:text-sm truncate leading-tight">{car.brand} {car.name}</p>
@@ -324,7 +325,7 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
               decoding="async"
             />
           ) : (
-            <span className="material-symbols-outlined text-[240px] text-white/5">electric_car</span>
+            <Icon name="electric_car" className="text-[240px] text-white/5" />
           )}
         </div>
 
@@ -382,7 +383,7 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
                   href={`/comparador?add=${car.slug}`}
                   className="inline-flex items-center justify-center gap-2 border border-white/20 hover:border-white/40 text-white font-medium px-5 py-4 rounded-xl transition-colors"
                 >
-                  <span className="material-symbols-outlined text-[18px]">compare_arrows</span>
+                  <Icon name="compare_arrows" className="text-[18px]" />
                   Comparar
                 </Link>
               </div>
@@ -454,7 +455,7 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
                 href={`/comparador?add=${car.slug}`}
                 className="inline-flex items-center justify-center gap-2 border border-white/20 hover:border-white/40 text-white font-medium px-5 py-4 rounded-xl transition-colors"
               >
-                <span className="material-symbols-outlined text-[18px]">compare_arrows</span>
+                <Icon name="compare_arrows" className="text-[18px]" />
                 Comparar
               </Link>
             </div>
@@ -542,11 +543,7 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
                           : car.versions[activeVersion].price
                       )}
                     </p>
-                    <span
-                      className={`material-symbols-outlined text-white/50 text-[22px] transition-transform duration-200 ${versionOpen ? "rotate-180" : ""}`}
-                    >
-                      expand_more
-                    </span>
+                    <Icon name="expand_more" className={`text-white/50 text-[22px] transition-transform duration-200 ${versionOpen ? "rotate-180" : ""}`} />
                   </div>
                 </button>
 
@@ -586,7 +583,7 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
                                   </span>
                                   {isActive && (
                                     <span className="w-4 h-4 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
-                                      <span className="material-symbols-outlined text-black text-[10px]">check</span>
+                                      <Icon name="check" className="text-black text-[10px]" />
                                     </span>
                                   )}
                                 </div>
@@ -658,7 +655,7 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
                       <span className={["font-headline font-bold text-sm", isActive ? "text-primary" : "text-white"].join(" ")}>{v.name}</span>
                       {isActive && (
                         <span className="w-5 h-5 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
-                          <span className="material-symbols-outlined text-black text-[12px]">check</span>
+                          <Icon name="check" className="text-black text-[12px]" />
                         </span>
                       )}
                     </div>
@@ -700,7 +697,7 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
                 <div className={imgLeft ? "lg:order-2" : ""}>
                   {(hl.badge || hl.icon) && (
                     <div className="flex items-center gap-2 mb-4">
-                      {hl.icon && <span className="material-symbols-outlined text-primary text-[18px]">{hl.icon}</span>}
+                      {hl.icon && <Icon name={hl.icon} className="text-primary text-[18px]" />}
                       {hl.badge && <span className="text-[11px] uppercase tracking-widest text-primary-deep font-bold">{hl.badge}</span>}
                     </div>
                   )}
@@ -720,7 +717,7 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
                       <img src={hl.imageUrl} alt={hl.title} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                     ) : (
                       <div className="w-full h-full flex flex-col items-center justify-center gap-3">
-                        <span className="material-symbols-outlined text-[64px] text-gray-200">{hl.icon ?? "photo_camera"}</span>
+                        <Icon name={hl.icon ?? "photo_camera"} className="text-[64px] text-gray-200" />
                         <span className="text-[10px] uppercase tracking-widest text-gray-300 font-bold">Foto próximamente</span>
                       </div>
                     )}
@@ -760,7 +757,7 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
                 ].map((h) => (
                   <div key={h.icon} className="flex items-center gap-3 bg-surface rounded-xl p-3.5">
                     <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "rgba(0,229,229,0.10)" }}>
-                      <span className="material-symbols-outlined text-primary text-[16px]">{h.icon}</span>
+                      <Icon name={h.icon} className="text-primary text-[16px]" />
                     </div>
                     <span className="text-text-muted text-sm">{h.text}</span>
                   </div>
@@ -793,16 +790,14 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
                   >
                     <div className="flex items-center gap-3">
                       <div className={`w-9 h-9 ${group.bgCls} rounded-xl flex items-center justify-center flex-shrink-0`}>
-                        <span className={`material-symbols-outlined ${group.iconCls} text-[18px]`}>{group.icon}</span>
+                        <Icon name={group.icon} className={`${group.iconCls} text-[18px]`} />
                       </div>
                       <div>
                         <p className="font-headline font-bold text-sm">{group.label}</p>
                         <p className="text-text-ghost text-xs">{group.features.length} características</p>
                       </div>
                     </div>
-                    <span className={`material-symbols-outlined text-[20px] text-text-ghost transition-transform duration-200 ${openEquip[group.key] ? "rotate-180" : ""}`}>
-                      expand_more
-                    </span>
+                    <Icon name="expand_more" className={`text-[20px] text-text-ghost transition-transform duration-200 ${openEquip[group.key] ? "rotate-180" : ""}`} />
                   </button>
                   {openEquip[group.key] && (
                     <div className="px-6 pb-5 pt-1 border-t border-gray-50">
@@ -844,7 +839,7 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
             {car.fichaUrl && car.fichaUrl !== "#" && (
               <a href={car.fichaUrl} target="_blank" rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 border border-gray-200 hover:border-primary/40 text-text-muted hover:text-primary-deep font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors flex-shrink-0">
-                <span className="material-symbols-outlined text-[16px]">open_in_new</span>
+                <Icon name="open_in_new" className="text-[16px]" />
                 Ver ficha oficial {car.brand}
               </a>
             )}
@@ -902,10 +897,10 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
             </div>
             <div className="flex gap-2">
               <button onClick={() => setGalleryIndex((i) => (i === 0 ? galleryCount - 1 : i - 1))} className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors" aria-label="Anterior">
-                <span className="material-symbols-outlined text-[18px]">chevron_left</span>
+                <Icon name="chevron_left" className="text-[18px]" />
               </button>
               <button onClick={() => setGalleryIndex((i) => (i === galleryCount - 1 ? 0 : i + 1))} className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors" aria-label="Siguiente">
-                <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+                <Icon name="chevron_right" className="text-[18px]" />
               </button>
             </div>
           </div>
@@ -920,7 +915,7 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="w-60 h-60 bg-primary/8 rounded-full blur-3xl" />
                     </div>
-                    <span className="material-symbols-outlined text-[100px] text-white/10 relative z-10">electric_car</span>
+                    <Icon name="electric_car" className="text-[100px] text-white/10 relative z-10" />
                     <span className="absolute bottom-4 right-4 text-white/20 text-xs uppercase tracking-widest font-bold">{galleryIndex + 1} / {galleryCount}</span>
                   </div>
                 )}
@@ -936,7 +931,7 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
                   <img src={galleryImages[i]} alt={`Foto ${i + 1}`} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                 ) : (
                   <div className={`w-full h-full bg-gradient-to-br ${galleryGradients[i % galleryGradients.length]} flex items-center justify-center`}>
-                    <span className="material-symbols-outlined text-white/20 text-[16px]">electric_car</span>
+                    <Icon name="electric_car" className="text-white/20 text-[16px]" />
                   </div>
                 )}
               </button>
@@ -959,7 +954,7 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
                       <img src={s.imageUrl} alt={`${s.brand} ${s.name}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" decoding="async" />
                     ) : (
                       <div className="w-full h-full flex flex-col items-center justify-center">
-                        <span className="material-symbols-outlined text-[56px] text-gray-200">electric_car</span>
+                        <Icon name="electric_car" className="text-[56px] text-gray-200" />
                         <span className="text-[10px] uppercase tracking-widest text-text-ghost font-bold mt-1">{s.brand}</span>
                       </div>
                     )}

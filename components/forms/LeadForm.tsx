@@ -183,9 +183,7 @@ function CarCombobox({
           placeholder="Busca por marca o modelo..."
           className={[INPUT_CLS, error ? "ring-2 ring-red-300" : ""].join(" ")}
         />
-        <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-[18px] text-text-ghost pointer-events-none">
-          {open ? "expand_less" : "search"}
-        </span>
+        <Icon name={open ? "expand_less" : "search"} className="absolute right-3 top-1/2 -translate-y-1/2 text-[18px] text-text-ghost pointer-events-none" />
       </div>
 
       <AnimatePresence>
@@ -292,7 +290,7 @@ function PhotoUploader({
                 onClick={() => remove(i)}
                 className="absolute top-1 right-1 w-5 h-5 bg-black/60 hover:bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
               >
-                <span className="material-symbols-outlined text-[12px]">close</span>
+                <Icon name="close" className="text-[12px]" />
               </button>
             </div>
           ))}
@@ -312,9 +310,7 @@ function PhotoUploader({
             : "border-gray-200 bg-gray-50 hover:bg-gray-100",
         ].join(" ")}
       >
-        <span className="material-symbols-outlined text-[28px] text-text-ghost">
-          {processing ? "hourglass_top" : "add_photo_alternate"}
-        </span>
+        <Icon name={processing ? "hourglass_top" : "add_photo_alternate"} className="text-[28px] text-text-ghost" />
         <span className="text-sm font-semibold text-text-muted">
           {processing
             ? "Procesando fotos…"
@@ -344,7 +340,7 @@ function SectionHeading({ icon, title }: { icon: string; title: string }) {
   return (
     <div className="flex items-center gap-2.5 mb-5 pb-3 border-b border-gray-100">
       <div className="w-7 h-7 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-        <span className="material-symbols-outlined text-primary-deep text-[16px]">{icon}</span>
+        <Icon name={icon} className="text-primary-deep text-[16px]" />
       </div>
       <h3 className="font-headline font-bold text-base">{title}</h3>
     </div>
@@ -759,7 +755,7 @@ export function LeadForm({ carOptions = [], carSlug, carName }: LeadFormProps) {
           >
             {status === "loading" ? (
               <>
-                <span className="material-symbols-outlined text-[20px] animate-spin">progress_activity</span>
+                <Icon name="progress_activity" className="text-[20px] animate-spin" />
                 Enviando...
               </>
             ) : (

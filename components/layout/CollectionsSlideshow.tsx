@@ -3,6 +3,7 @@
 import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import { sanityImg } from "@/lib/sanityImage";
+import { Icon } from "@/components/ui/Icon";
 
 export interface CollectionCardData {
   _id:           string;
@@ -116,7 +117,7 @@ export function CollectionsSlideshow({ collections }: CollectionsSlideshowProps)
               aria-label="Anterior"
               className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-text-muted hover:border-primary hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all"
             >
-              <span className="material-symbols-outlined text-[20px]">chevron_left</span>
+              <Icon name="chevron_left" className="text-[20px]" />
             </button>
             <button
               onClick={() => scroll("right")}
@@ -124,7 +125,7 @@ export function CollectionsSlideshow({ collections }: CollectionsSlideshowProps)
               aria-label="Siguiente"
               className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-text-muted hover:border-primary hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all"
             >
-              <span className="material-symbols-outlined text-[20px]">chevron_right</span>
+              <Icon name="chevron_right" className="text-[20px]" />
             </button>
           </div>
         </div>

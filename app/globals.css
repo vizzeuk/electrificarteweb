@@ -28,7 +28,11 @@
    la definición original de Google verbatim (incl. font-size 24px) para
    preservar el comportamiento de tamaños existente. */
 .material-symbols-outlined {
-  font-family: var(--font-symbols), sans-serif;
+  /* SIN fallback a propósito. Con `sans-serif` en la pila, cualquier demora de la fuente de
+     íconos hacía que el navegador dibujara el nombre del ícono como texto ("home",
+     "check_circle") — el flash que se veía al cargar, sobre todo en móvil. Sin fallback el
+     navegador respeta font-display:block y no muestra nada hasta tener el glifo. */
+  font-family: var(--font-symbols);
   font-weight: normal;
   font-style: normal;
   font-size: 24px;

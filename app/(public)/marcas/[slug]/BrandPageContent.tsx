@@ -8,6 +8,7 @@ import { PlpFilters } from "@/components/filters/PlpFilters";
 import { useCarFilters } from "@/hooks/useCarFilters";
 import type { FacetCar } from "@/lib/filters/types";
 import { ElectricTypeBadge } from "@/components/car/ElectricTypeBadge";
+import { Icon } from "@/components/ui/Icon";
 
 // ─── Interfaces ───────────────────────────────────────────────────────────────
 
@@ -213,7 +214,7 @@ export default function BrandPageContent({ slug, brand, hotDealUrgencyLabel }: B
               <div className="flex flex-wrap gap-3">
                 <a href={`#autos-${slug}`} className="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-6 py-3 rounded-xl transition-all text-sm shadow-[0_4px_20px_rgba(0,229,229,0.30)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]">
                   Ver modelos
-                  <span className="material-symbols-outlined text-[16px]">arrow_downward</span>
+                  <Icon name="arrow_downward" className="text-[16px]" />
                 </a>
               </div>
             </m.div>
@@ -241,7 +242,7 @@ export default function BrandPageContent({ slug, brand, hotDealUrgencyLabel }: B
                       />
                     ) : (
                       <div className="w-full aspect-[16/10] flex items-center justify-center">
-                        <span className="material-symbols-outlined text-[80px] text-white/10">electric_car</span>
+                        <Icon name="electric_car" className="text-[80px] text-white/10" />
                       </div>
                     )}
                   </Link>
@@ -363,7 +364,7 @@ export default function BrandPageContent({ slug, brand, hotDealUrgencyLabel }: B
                         <img src={deal.imageUrl} alt={`${brand.name} ${deal.carName}`} className="w-full h-40 object-cover" loading="lazy" decoding="async" />
                       ) : (
                         <div className="w-full h-40 flex items-center justify-center">
-                          <span className="material-symbols-outlined text-[64px] text-primary/30">electric_car</span>
+                          <Icon name="electric_car" className="text-[64px] text-primary/30" />
                         </div>
                       )}
                       <div className="p-4 space-y-3">
@@ -437,7 +438,7 @@ export default function BrandPageContent({ slug, brand, hotDealUrgencyLabel }: B
                           <img src={deal.imageUrl} alt={`${brand.name} ${deal.carName}`} className="w-full aspect-[16/9] object-cover" loading="lazy" decoding="async" />
                         ) : (
                           <div className="w-full aspect-[16/9] flex items-center justify-center flex-col gap-2">
-                            <span className="material-symbols-outlined text-[80px] text-primary/30">electric_car</span>
+                            <Icon name="electric_car" className="text-[80px] text-primary/30" />
                             <p className="text-white/40 text-sm">{brand.name} {deal.carName}</p>
                           </div>
                         )}
@@ -467,7 +468,7 @@ export default function BrandPageContent({ slug, brand, hotDealUrgencyLabel }: B
                 aria-label="Anterior"
                 className="hidden lg:flex items-center justify-center w-6 h-6 rounded-full border border-white/20 hover:border-primary hover:bg-primary/10 transition-all"
               >
-                <span className="material-symbols-outlined text-white/50 text-[14px]">chevron_left</span>
+                <Icon name="chevron_left" className="text-white/50 text-[14px]" />
               </button>
               <div className="flex items-center gap-2">
                 {hotDeals.map((_, i) => (
@@ -490,7 +491,7 @@ export default function BrandPageContent({ slug, brand, hotDealUrgencyLabel }: B
                 aria-label="Siguiente"
                 className="hidden lg:flex items-center justify-center w-6 h-6 rounded-full border border-white/20 hover:border-primary hover:bg-primary/10 transition-all"
               >
-                <span className="material-symbols-outlined text-white/50 text-[14px]">chevron_right</span>
+                <Icon name="chevron_right" className="text-white/50 text-[14px]" />
               </button>
             </div>
           )}
@@ -518,7 +519,7 @@ export default function BrandPageContent({ slug, brand, hotDealUrgencyLabel }: B
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
             {filtered.length === 0 ? (
               <div className="col-span-3 py-16 text-center">
-                <span className="material-symbols-outlined text-[40px] text-gray-200 block mb-3">search_off</span>
+                <Icon name="search_off" className="text-[40px] text-gray-200 block mb-3" />
                 <p className="text-text-muted font-medium">No hay autos con estos filtros.</p>
               </div>
             ) : visibleCars.map((car, i) => {
@@ -534,7 +535,7 @@ export default function BrandPageContent({ slug, brand, hotDealUrgencyLabel }: B
                       <img src={car.imageUrl} alt={`${brand.name} ${car.name}`} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                     ) : (
                       <>
-                        <span className="material-symbols-outlined text-[72px] text-gray-200">electric_car</span>
+                        <Icon name="electric_car" className="text-[72px] text-gray-200" />
                         <span className="text-[10px] uppercase tracking-widest text-text-ghost font-bold mt-1">{car.category}</span>
                       </>
                     )}
@@ -557,7 +558,7 @@ export default function BrandPageContent({ slug, brand, hotDealUrgencyLabel }: B
                       </Link>
                       <Link href={`/comparador?add=${car.slug}`} title="Comparar"
                         className="relative z-[1] px-3 border border-gray-200 hover:border-primary/40 text-text-muted hover:text-primary-deep rounded-xl flex items-center transition-colors">
-                        <span className="material-symbols-outlined text-[18px]">compare_arrows</span>
+                        <Icon name="compare_arrows" className="text-[18px]" />
                       </Link>
                     </div>
                   </div>
@@ -573,7 +574,7 @@ export default function BrandPageContent({ slug, brand, hotDealUrgencyLabel }: B
                 className="inline-flex items-center gap-2 border border-gray-200 hover:border-primary/40 hover:text-primary-deep text-text-muted font-semibold px-8 py-3 rounded-xl transition-all text-sm"
               >
                 Ver más autos
-                <span className="material-symbols-outlined text-[18px]">expand_more</span>
+                <Icon name="expand_more" className="text-[18px]" />
               </button>
             </div>
           )}
@@ -595,10 +596,10 @@ export default function BrandPageContent({ slug, brand, hotDealUrgencyLabel }: B
                   <div className="aspect-video bg-gradient-to-br from-gray-900 to-gray-800 relative flex items-center justify-center overflow-hidden">
                     <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.1) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.1) 1px,transparent 1px)", backgroundSize: "24px 24px" }} />
                     <div className="absolute inset-0 flex items-center justify-center"><div className="w-32 h-32 rounded-full blur-3xl opacity-30" style={{ backgroundColor: brand.logoColor }} /></div>
-                    <span className="material-symbols-outlined text-[48px] text-white/20 relative z-10">electric_car</span>
+                    <Icon name="electric_car" className="text-[48px] text-white/20 relative z-10" />
                     <div className="absolute inset-0 flex items-center justify-center z-20">
                       <div className="w-14 h-14 bg-white/10 group-hover:bg-primary/90 backdrop-blur-sm border border-white/20 group-hover:border-primary rounded-full flex items-center justify-center transition-all duration-300 shadow-lg group-hover:scale-110">
-                        <span className="material-symbols-outlined text-white group-hover:text-black text-[22px] ml-0.5 transition-colors">play_arrow</span>
+                        <Icon name="play_arrow" className="text-white group-hover:text-black text-[22px] ml-0.5 transition-colors" />
                       </div>
                     </div>
                     {video.duration && <span className="absolute bottom-2 right-2 bg-black/80 text-white text-[11px] font-bold px-2 py-0.5 rounded">{video.duration}</span>}

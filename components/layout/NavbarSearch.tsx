@@ -96,7 +96,7 @@ export function NavbarSearch({ transparent }: { transparent: boolean }) {
                 <div className="bg-white rounded-b-2xl border border-gray-100 shadow-lg shadow-black/10 overflow-hidden">
                   {/* Input */}
                   <div className="flex items-center gap-3 px-4 md:px-5 h-14 border-b border-gray-100">
-                    <span className="material-symbols-outlined text-[20px] text-text-ghost">search</span>
+                    <Icon name="search" className="text-[20px] text-text-ghost" />
                     <input
                       ref={inputRef}
                       type="text"
@@ -147,7 +147,7 @@ export function NavbarSearch({ transparent }: { transparent: boolean }) {
                                   decoding="async"
                                 />
                               ) : (
-                                <span className="material-symbols-outlined text-[18px] text-gray-200">electric_car</span>
+                                <Icon name="electric_car" className="text-[18px] text-gray-200" />
                               )}
                             </span>
                             <span className="flex items-baseline gap-2 min-w-0">

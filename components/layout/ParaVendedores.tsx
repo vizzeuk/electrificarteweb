@@ -2,6 +2,8 @@
 // Resume la propuesta de la red de vendedores (landing vendedores.electrificarte.com):
 // tráfico orgánico → prospección → cierre, con leads precalificados.
 
+import { Icon } from "@/components/ui/Icon";
+
 const VENDEDORES_URL = "https://vendedores.electrificarte.com";
 
 const STEPS = [
@@ -65,9 +67,7 @@ export function ParaVendedores() {
                 >
                   <div className="flex items-center gap-3 mb-3">
                     <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-primary">
-                      <span className="material-symbols-outlined text-[22px]">
-                        {s.icon}
-                      </span>
+                      <Icon name={s.icon} className="text-[22px]" />
                     </span>
                     <span className="text-primary/50 font-headline font-black text-lg">
                       0{i + 1}

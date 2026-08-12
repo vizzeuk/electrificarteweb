@@ -6,6 +6,7 @@ import { FilterPill } from "./FilterPill";
 import { FilterPanel } from "./FilterPanel";
 import { SORT_OPTIONS } from "@/lib/filters/facets";
 import type { ActiveFacets, FacetGroupOptions, FacetId, SortKey } from "@/lib/filters/types";
+import { Icon } from "@/components/ui/Icon";
 
 interface PlpFiltersProps {
   facetGroups: FacetGroupOptions[];
@@ -63,7 +64,7 @@ export function PlpFilters({
           onClick={() => setPanelOpen(true)}
           className="inline-flex items-center gap-2 flex-shrink-0 bg-white border border-gray-200 hover:border-primary/40 text-text-main font-semibold text-sm rounded-xl px-4 py-2 transition-all"
         >
-          <span className="material-symbols-outlined text-[18px] text-primary-deep">tune</span>
+          <Icon name="tune" className="text-[18px] text-primary-deep" />
           Filtros
           {activeCount > 0 && (
             <span className="bg-primary-deep text-white text-[10px] font-black rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center">
@@ -132,7 +133,7 @@ export function PlpFilters({
             className="inline-flex items-center gap-1 pl-3 pr-2 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary-deep border border-primary/20 hover:bg-primary/20 transition-colors"
           >
             {chip.label}
-            <span className="material-symbols-outlined text-[14px]">close</span>
+            <Icon name="close" className="text-[14px]" />
           </button>
         ))}
 
@@ -141,7 +142,7 @@ export function PlpFilters({
             onClick={onClearAll}
             className="flex items-center gap-1 text-xs font-semibold text-text-muted hover:text-primary-deep transition-colors"
           >
-            <span className="material-symbols-outlined text-[14px]">close</span>
+            <Icon name="close" className="text-[14px]" />
             Limpiar filtros
           </button>
         )}

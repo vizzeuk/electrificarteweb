@@ -54,7 +54,7 @@ function SolicitarInner({ carOptions, servicePrice = "$19.990" }: SolicitarConte
                   key={item.label}
                   className="flex items-center gap-1.5 bg-white/5 border border-white/10 text-white/60 text-xs px-3 py-1.5 rounded-full"
                 >
-                  <span className="material-symbols-outlined text-primary text-[14px]">{item.icon}</span>
+                  <Icon name={item.icon} className="text-primary text-[14px]" />
                   {item.label}
                 </div>
               ))}
@@ -73,7 +73,7 @@ function SolicitarInner({ carOptions, servicePrice = "$19.990" }: SolicitarConte
                 className="flex items-start gap-3 rounded-2xl bg-white/[0.03] border border-white/10 p-3.5 hover:bg-white/[0.06] hover:border-primary/25 transition-colors"
               >
                 <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
-                  <span className="material-symbols-outlined text-primary text-[16px]">{s.icon}</span>
+                  <Icon name={s.icon} className="text-primary text-[16px]" />
                 </div>
                 <div className="min-w-0">
                   <p className="text-white/30 text-[9px] font-bold tracking-widest mb-0.5">{s.n}</p>

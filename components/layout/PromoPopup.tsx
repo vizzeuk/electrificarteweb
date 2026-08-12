@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, m } from "framer-motion";
 import { formatCLP, DEFAULT_HOT_DEAL_LABEL } from "@/lib/utils";
+import { Icon } from "@/components/ui/Icon";
 import type { HotDealCarData } from "@/components/layout/HotDeal";
 
 const STORAGE_KEY = "electrificarte_promo_seen";
@@ -100,7 +101,7 @@ export function PromoPopup({ car, urgencyLabel }: PromoPopupProps) {
               aria-label="Cerrar"
               className="absolute top-3 right-3 z-10 flex h-9 w-9 items-center justify-center rounded-lg bg-black/40 backdrop-blur-sm text-white/60 transition-colors hover:text-white"
             >
-              <span className="material-symbols-outlined text-xl">close</span>
+              <Icon name="close" className="text-xl" />
             </button>
 
             {/* Foto del auto */}

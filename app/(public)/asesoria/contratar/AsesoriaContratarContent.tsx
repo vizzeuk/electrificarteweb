@@ -56,7 +56,7 @@ export function AsesoriaContratarContent() {
                 className="flex items-start gap-3 rounded-2xl bg-white/[0.03] border border-white/10 p-3.5 hover:bg-white/[0.06] hover:border-amber/25 transition-colors"
               >
                 <div className="w-9 h-9 rounded-xl bg-amber/10 border border-amber/20 flex items-center justify-center shrink-0">
-                  <span className="material-symbols-outlined text-amber text-[16px]">{s.icon}</span>
+                  <Icon name={s.icon} className="text-amber text-[16px]" />
                 </div>
                 <div className="min-w-0">
                   <p className="text-white/30 text-[9px] font-bold tracking-widest mb-0.5">{s.n}</p>

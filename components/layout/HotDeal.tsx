@@ -285,7 +285,7 @@ export function HotDeal({ car, cars, urgencyLabel }: HotDealProps) {
         aria-label="Anterior"
         className="hidden lg:flex items-center justify-center w-6 h-6 rounded-full border border-white/20 hover:border-primary hover:bg-primary/10 transition-all"
       >
-        <span className="material-symbols-outlined text-white/50 hover:text-primary text-[14px]">chevron_left</span>
+        <Icon name="chevron_left" className="text-white/50 hover:text-primary text-[14px]" />
       </button>
 
       {/* Dots */}
@@ -312,7 +312,7 @@ export function HotDeal({ car, cars, urgencyLabel }: HotDealProps) {
         aria-label="Siguiente"
         className="hidden lg:flex items-center justify-center w-6 h-6 rounded-full border border-white/20 hover:border-primary hover:bg-primary/10 transition-all"
       >
-        <span className="material-symbols-outlined text-white/50 hover:text-primary text-[14px]">chevron_right</span>
+        <Icon name="chevron_right" className="text-white/50 hover:text-primary text-[14px]" />
       </button>
     </div>
   );

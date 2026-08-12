@@ -3,6 +3,7 @@
 import { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import { CarCard } from "@/components/car/CarCard";
 import { useInViewport } from "@/lib/useInViewport";
+import { Icon } from "@/components/ui/Icon";
 
 export interface LaunchCarData {
   _id?: string;
@@ -151,7 +152,7 @@ export function LatestLaunches({ title = "Últimos lanzamientos", cars }: Latest
             aria-label="Anterior"
             className="hidden sm:flex flex-shrink-0 w-11 h-11 rounded-full bg-black hover:bg-primary text-white hover:text-black items-center justify-center shadow-[0_4px_20px_rgba(0,0,0,0.35)] transition-all duration-200 disabled:opacity-0 disabled:pointer-events-none"
           >
-            <span className="material-symbols-outlined text-[22px]">chevron_left</span>
+            <Icon name="chevron_left" className="text-[22px]" />
           </button>
 
           <div className="flex-1 overflow-hidden">
@@ -208,7 +209,7 @@ export function LatestLaunches({ title = "Últimos lanzamientos", cars }: Latest
             aria-label="Siguiente"
             className="hidden sm:flex flex-shrink-0 w-11 h-11 rounded-full bg-black hover:bg-primary text-white hover:text-black items-center justify-center shadow-[0_4px_20px_rgba(0,0,0,0.35)] transition-all duration-200"
           >
-            <span className="material-symbols-outlined text-[22px]">chevron_right</span>
+            <Icon name="chevron_right" className="text-[22px]" />
           </button>
         </div>
       </div>

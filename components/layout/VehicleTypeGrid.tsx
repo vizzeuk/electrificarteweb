@@ -4,6 +4,7 @@ import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import { sanityImg } from "@/lib/sanityImage";
 import { electricTypeColor } from "@/components/car/ElectricTypeBadge";
+import { Icon } from "@/components/ui/Icon";
 
 export interface ElectricTypeItem {
   _id: string;
@@ -79,7 +80,7 @@ export function VehicleTypeGrid({ types }: ElectricTypeGridProps) {
               aria-label="Anterior"
               className="w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center text-text-muted hover:border-primary hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all"
             >
-              <span className="material-symbols-outlined text-[18px]">chevron_left</span>
+              <Icon name="chevron_left" className="text-[18px]" />
             </button>
             <button
               onClick={() => scroll("right")}
@@ -87,7 +88,7 @@ export function VehicleTypeGrid({ types }: ElectricTypeGridProps) {
               aria-label="Siguiente"
               className="w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center text-text-muted hover:border-primary hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all"
             >
-              <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+              <Icon name="chevron_right" className="text-[18px]" />
             </button>
           </div>
         </div>
@@ -162,9 +163,7 @@ export function VehicleTypeGrid({ types }: ElectricTypeGridProps) {
                 >
                   {type.tag}
                 </span>
-                <span className="material-symbols-outlined text-[26px] opacity-80" style={{ color: accent }}>
-                  {type.icon ?? "bolt"}
-                </span>
+                <Icon name={type.icon ?? "bolt"} className="text-[26px] opacity-80" style={{ color: accent }} />
               </div>
 
               <div className="flex-1" />

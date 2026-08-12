@@ -4,6 +4,7 @@ import React, { useRef, useState } from "react";
 import Link from "next/link";
 import { sanityImg } from "@/lib/sanityImage";
 import { formatFecha } from "@/lib/utils";
+import { Icon } from "@/components/ui/Icon";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -181,7 +182,7 @@ export function BlogPreview({ title, posts }: BlogPreviewProps) {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" decoding="async" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <span className="material-symbols-outlined text-[40px] text-gray-200">article</span>
+                      <Icon name="article" className="text-[40px] text-gray-200" />
                     </div>
                   )}
                   <span className={`absolute top-3 left-3 text-[10px] font-bold px-2.5 py-1 rounded-full ${CATEGORY_COLORS[post.category] ?? "bg-gray-100 text-gray-600"}`}>
