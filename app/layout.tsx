@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Space_Grotesk, Inter } from "next/font/google";
 import localFont from "next/font/local";
+import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
 import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
@@ -107,6 +108,7 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased bg-white text-text-main">
         {children}
+        <GoogleAnalytics />
       </body>
     </html>
   );
