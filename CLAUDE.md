@@ -154,9 +154,56 @@ Tres tiers, cada uno con su propio comportamiento. La tabla Supabase determina e
 - **Env vars**: `CRON_SECRET` (auth del cron), `KAPSO_API_KEY`, `KAPSO_PHONE_NUMBER_ID`, `ASESORIA_REMINDER_TEMPLATE`. Opcionales: `ASESORIA_WINDOW_DAYS` (10), `ASESORIA_REMINDER_DAY` (9), `KAPSO_BASE_URL`.
 - **Limitación**: si el cron no corre un día (outage), esa cohorte se pierde (la ventana es de 1 día). Aceptable para un nudge.
 
+## Trampas operativas — leer antes de tocar nada
+
+Cosas que costaron horas y no son obvias leyendo el código.
+
+- **Vercel Hobby corta las funciones a 60 s**, ignorando el `maxDuration` del código. Los
+  `maxDuration = 120` (webhook WhatsApp) y `= 300` (pdp-research) **no aplican en Hobby**.
+- **GROQ: `campo != "valor"` también matchea `null`/`undefined`.** Para filtro positivo
+  exclusivo usar `campo in ["a","b"]`.
+- **`math::min()` no acepta `coalesce()` en proyección directa** — proyectar primero:
+  `math::min(*[...]{"p": coalesce(a,b)}.p)`.
+- **Para probar flujos largos en local usar `npx next dev --webpack`.** Con Turbopack los
+  trabajos en `after()` quedan colgados sin terminar y sin error.
+- **El log del server local bufferea** — verificar el resultado real (Sanity/Redis), no el log.
+- **La fuente de íconos es un subset generado.** Al agregar un ícono (en código o en Sanity,
+  que son campos de texto libre) hay que regenerar o no se dibuja:
+  `npx tsx --env-file=.env.local scripts/subset-icon-font.ts`
+- **Los rate limiters fallan abiertos a propósito.** Si Upstash cae y el limitador lanza,
+  tumba el request completo — incluido el checkout.
+- **`lib/whatsapp/advisor.ts` usa `temperature: 0.4`.** Sonnet 5 rechaza los parámetros de
+  sampling con 400: subir ese modelo sin quitar la línea rompe el asesor pagado.
+
+## Reglas de negocio no negociables
+
+1. Un auto se crea siempre **oculto**; solo se publica cuando Francisco lo dice explícitamente.
+2. **Nunca inventar datos de un auto** — specs/precio/tipo salen de la fuente o quedan vacíos.
+   Mejor no crear la ficha que publicar un dato falso.
+3. **El bot nunca inventa resultados**: si una investigación quedó en curso, responde eso y
+   nada más (esto pasó de verdad — ver docs/HANDOFF-CONDUCTOR.md §6).
+4. Terminología: **"vendedores oficiales"**, nunca "concesionarios"; "electrificado" como
+   categoría, "Electrificarte" solo como marca.
+
+## Documentación
+
+- `docs/HANDOFF-CONDUCTOR.md` — estado actual, historial de bugs corregidos y **la fase
+  siguiente** (marketplace de ofertas de vendedores) con las preguntas abiertas.
+- `docs/ADMIN_WHATSAPP_RESEARCH_SPEC.md` — spec completa del motor de investigación de PDP.
+- `docs/HANDOFF.md` — traspaso de julio 2026 (Fase 1.2, ya completada; histórico).
+
 ## Pendientes conocidos
-- WhatsApp hardcodeado como `+56912345678` en `components/layout/Navbar.tsx` (líneas ~215 y ~339) — reemplazar con número real
+
+Bloqueantes de lanzamiento (detalle en `docs/HANDOFF-CONDUCTOR.md` §8):
+- **Vercel Pro** — sin esto el asesor pagado puede cortarse a los 60 s
+- **Verificar Supabase en producción** — el gating es fail-closed: si las llaves están mal,
+  todos los clientes que pagaron ven "contrata la asesoría"
+- **`NEXT_PUBLIC_GA_ID`** en Vercel, o GA4 no carga
+- Decidir www vs no-www (canonical usa no-www, Reveniu retorna a www)
+
+Otros:
 - `N8N_CONTACT_URL` en Vercel necesita URL de producción (sin `-test`)
+- Terminología "concesionario" → "vendedores oficiales": quedan 3 archivos
 - 10 autos sin imágenes: Tesla Model Y, Chevrolet Blazer/Bolt/Equinox/Spark, Cupra Tavascan, JAC E-JS1/JS4, Skoda Elroq, Changan Hunter E
 - 11 marcas sin logo: DFSK, Deepal, GAC, GWM, Jaecoo, MINI, Nammi, Ora, Riddara, Skoda, Ssangyong
 
