@@ -9,16 +9,45 @@ actual y el punto de partida de la fase siguiente.
 
 ---
 
-## 1. Mapa de repos
+## 1. Mapa de proyectos
 
-Tres piezas, dos repos locales, una plataforma externa.
+**Son TRES proyectos separados**, más dos plataformas externas. Los tres están fuertemente
+acoplados: un cambio en el modelo de leads los toca a todos.
 
-| Pieza | Ubicación | Qué es | Estado |
+| Proyecto | Ubicación | Qué es | Estado |
 |---|---|---|---|
-| **electrificarteweb** | `~/proyects/electrificarteweb` | Sitio público + APIs + bot de WhatsApp. Next.js 16, Sanity, Vercel. | En producción, pre-lanzamiento |
-| **electrificarte-dashboard** | `~/proyects/electrificarte-dashboard` | Panel interno Admin/Vendedor. Next.js 16, shadcn. | **100% datos mock**, sin backend |
-| **n8n** | VPS propia (fuera de estos repos) | Orquesta pagos y automatizaciones. Lo mantiene Matías. | En uso |
-| **Supabase** | Externo | Base de datos (`leads`, `leads_vendors`, `advisory_payments`). Escribe n8n. | En uso |
+| **1. Web principal** (`electrificarteweb`) | `~/proyects/electrificarteweb` | Sitio público + APIs + bot de WhatsApp. Next.js 16, Sanity, Vercel. Genera los leads. | En producción, pre-lanzamiento |
+| **2. Página de vendedores** | ⚠️ **NO está en esta máquina** | `vendedores.electrificarte.com` — landing y captación de la red de vendedores ($12.990/mes). | Ver aviso abajo |
+| **3. Dashboard** (`electrificarte-dashboard`) | `~/proyects/electrificarte-dashboard` | Panel interno Admin/Vendedor. Next.js 16, shadcn. | **100% datos mock**, sin backend |
+| n8n | VPS propia | Orquesta pagos y automatizaciones. Lo mantiene Matías. | En uso |
+| Supabase | Externo | BD (`leads`, `leads_vendors`, `advisory_payments`). Escribe n8n. | En uso |
+
+### ⚠️ La página de vendedores no está en esta máquina
+
+Se buscó en todo el equipo y **no aparece**: los únicos proyectos Next.js locales son
+`electrificarteweb`, `electrificarte-dashboard`, `frank` (otro producto, sin relación con
+Electrificarte) y `portfolio`. Vive en otra máquina (probablemente la de Matías) o en un repo
+al que esta máquina no tiene acceso.
+
+**Antes de trabajar en la fase siguiente hay que ubicarla y clonarla**, porque es donde el
+vendedor se suscribe y desde donde entra al pool de leads — o sea, es la puerta de entrada del
+tercer flujo de negocio.
+
+Lo que el código de la web principal sí sabe de ella:
+
+- URL: `https://vendedores.electrificarte.com`, y `/unirse` para el alta
+  (`components/layout/Footer.tsx`).
+- La promesa al vendedor está en `components/layout/ParaVendedores.tsx`, y es la que define lo
+  que la fase siguiente tiene que cumplir:
+  1. **Tráfico orgánico** — Electrificarte atrae compradores.
+  2. **"Te prospectamos el lead"** — se le informa del interés por un modelo y **entra a
+     competir por ser la mejor oferta de la red (48-96 h)**.
+  3. **"Tú cierras la venta"** — si convence al cliente se los conecta; la comisión es 100%
+     del vendedor.
+- Cifras publicadas: 48-96 h de entrega del lead, "100% leads con intención".
+
+Ese punto 2 —*competir por ser la mejor oferta*— es exactamente el marketplace de ofertas de
+la sección 7, y confirma que el cliente compara varias ofertas, no solo una.
 
 `docs/ADMIN_WHATSAPP_RESEARCH_SPEC.md` es la especificación completa del motor de
 investigación de autos por WhatsApp — se escribió para que Matías lo reimplemente en n8n sobre
@@ -216,8 +245,20 @@ Francisco. Construir sin respuesta acá es la forma más rápida de rehacer todo
 - ¿Dónde vive la oferta? ¿Tabla nueva en Supabase? ¿Quién escribe, n8n o el dashboard?
 - ¿El dashboard se despliega dónde? (hoy no está desplegado)
 
+### Qué proyecto toca cada parte
+
+| Parte | Proyecto |
+|---|---|
+| Alta y suscripción del vendedor ($12.990/mes) | **Página de vendedores** (falta ubicar) |
+| Pool de leads + formulario de oferta | **Dashboard** (hoy mock) |
+| Origen de los leads (`leads` con status `pagado`) | **Web principal** — ya funciona |
+| Envío de la oferta al cliente por WhatsApp | **n8n** + bot de la web principal |
+| Tabla de ofertas, ponderación, notificaciones | **n8n + Supabase** |
+
 ### Sugerencia de secuencia
 
+0. **Ubicar y clonar la página de vendedores.** Sin ella no se puede cerrar el flujo: es donde
+   el vendedor se da de alta y paga.
 1. Cerrar las preguntas de arriba con Francisco.
 2. Modelar los datos primero (tabla de ofertas + relación con `leads` y `leads_vendors`),
    porque de eso dependen la ponderación, la similitud y la garantía.

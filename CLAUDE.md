@@ -185,6 +185,17 @@ Cosas que costaron horas y no son obvias leyendo el código.
 4. Terminología: **"vendedores oficiales"**, nunca "concesionarios"; "electrificado" como
    categoría, "Electrificarte" solo como marca.
 
+## Los tres proyectos
+
+Electrificarte son **tres proyectos separados** y acoplados entre sí:
+
+1. **Web principal** (este repo) — sitio público, APIs, bot de WhatsApp. Genera los leads.
+2. **Página de vendedores** — `vendedores.electrificarte.com`, alta y suscripción de la red
+   ($12.990/mes). ⚠️ **No está en esta máquina**; hay que ubicarla antes de la fase siguiente.
+3. **Dashboard** — `~/proyects/electrificarte-dashboard`, panel Admin/Vendedor (hoy mock).
+
+Más n8n (VPS de Matías) y Supabase. Un cambio en el modelo de leads toca a los tres.
+
 ## Documentación
 
 - `docs/HANDOFF-CONDUCTOR.md` — estado actual, historial de bugs corregidos y **la fase
