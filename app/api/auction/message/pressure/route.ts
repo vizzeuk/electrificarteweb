@@ -13,6 +13,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabase } from "@/lib/whatsapp/subscription";
 import { generatePressureMessage } from "@/lib/auction/pressure-message";
+import { renderEmail, CLP } from "@/lib/auction/emails";
+import { DASHBOARD_URL } from "@/lib/auction/config";
 
 export const runtime = "nodejs";
 
@@ -71,9 +73,20 @@ export async function POST(req: NextRequest): Promise<Response> {
   // Marca que esta oferta fue presionada ahora (throttle del cron de presión).
   await sb.from("ofertas").update({ ultima_presion_at: new Date().toISOString() }).eq("id", offer.id);
 
+  const modelo = offer.leads?.target_model ?? "el modelo solicitado";
+  const horas = body.horasRestantes ?? DEFAULT_HORAS_RESTANTES;
+  const htmlEmail = renderEmail("presion-vendedor", {
+    modelo,
+    competidores: precios.length,
+    mejor_precio: CLP(mejorPrecioActual),
+    horas,
+    cta_url: DASHBOARD_URL,
+  });
+
   return NextResponse.json({
     offerId: offer.id,
     message,
+    htmlEmail,
     vendor: {
       nombre: offer.leads_vendors?.nombre ?? null,
       telefono: offer.leads_vendors?.telefono ?? null,
@@ -81,7 +94,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     },
     // Datos estructurados para la plantilla `mejora_tu_oferta` (envío en frío).
     datos: {
-      modelo: offer.leads?.target_model ?? "el modelo solicitado",
+      modelo,
       vendedoresCompitiendo: precios.length,
       mejorPrecioActual,
     },

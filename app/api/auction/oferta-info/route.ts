@@ -9,6 +9,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabase } from "@/lib/whatsapp/subscription";
+import { renderEmail } from "@/lib/auction/emails";
 
 export const runtime = "nodejs";
 
@@ -51,11 +52,14 @@ export async function POST(req: NextRequest): Promise<Response> {
     data.leads?.target_model ||
     "el vehículo";
 
+  const htmlEmail = renderEmail("confirmacion-puja", { modelo, precio: CLP(data.precio_oferta) });
+
   return NextResponse.json({
     offerId: data.id,
     modelo,
     precio: data.precio_oferta,
     precioFmt: CLP(data.precio_oferta),
+    htmlEmail,
     vendor: {
       nombre: data.leads_vendors?.nombre ?? null,
       telefono: data.leads_vendors?.telefono ?? null,

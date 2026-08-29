@@ -10,7 +10,8 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabase } from "@/lib/whatsapp/subscription";
-import { OOS_HOURS } from "@/lib/auction/config";
+import { OOS_HOURS, WHATSAPP_LINK } from "@/lib/auction/config";
+import { renderEmail } from "@/lib/auction/emails";
 
 export const runtime = "nodejs";
 
@@ -45,11 +46,13 @@ export async function POST(req: NextRequest): Promise<Response> {
   for (const o of data ?? []) {
     await sb.from("ofertas").update({ oos_at: ahora }).eq("id", o.id);
     const modelo = [o.marca_ofertada, o.modelo_ofertado].filter(Boolean).join(" ") || o.leads?.target_model || "tu auto";
+    const nombre = o.leads?.first_name ?? "";
     pendientes.push({
       offerId: o.id,
       leadId: o.lead_id,
       modelo,
       cliente: { nombre: o.leads?.first_name ?? null, telefono: o.leads?.telefono ?? null, email: o.leads?.email ?? null },
+      htmlEmail: renderEmail("seguimiento-oos", { nombre, modelo, whatsapp_url: WHATSAPP_LINK }),
     });
   }
 

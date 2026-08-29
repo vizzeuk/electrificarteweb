@@ -20,6 +20,9 @@ const nextConfig: NextConfig = {
       "./node_modules/playwright-core/**/*",
       "./node_modules/@sparticuz/chromium/**/*",
     ],
+    // Las plantillas de correo (emails/*.html) se leen en runtime para armar los
+    // correos de la subasta — hay que incluirlas en el bundle serverless.
+    "/api/auction/**": ["./emails/**"],
   },
   images: {
     // Negocia automáticamente AVIF (más eficiente) → WebP → original.

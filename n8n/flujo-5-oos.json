@@ -57,7 +57,7 @@
         "method": "POST", "url": "https://api.resend.com/emails",
         "authentication": "genericCredentialType", "genericAuthType": "httpHeaderAuth",
         "sendBody": true, "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ from: 'Electrificarte <no-reply@electrificarte.com>', to: [$json.cliente.email], subject: '¿Cómo va con tu ' + $json.modelo + '?', html: '<p>Hola ' + ($json.cliente.nombre || '') + ', ¿lograste concretar la compra del ' + $json.modelo + '? Cuéntanos cómo te fue para ayudarte en lo que necesites.</p>' }) }}",
+        "jsonBody": "={{ JSON.stringify({ from: 'Electrificarte <no-reply@electrificarte.com>', to: [$json.cliente.email], subject: '¿Cómo va con tu ' + $json.modelo + '?', html: $json.htmlEmail }) }}",
         "options": {}
       },
       "id": "f5-resend",

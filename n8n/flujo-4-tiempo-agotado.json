@@ -85,7 +85,7 @@
         "method": "POST", "url": "https://api.resend.com/emails",
         "authentication": "genericCredentialType", "genericAuthType": "httpHeaderAuth",
         "sendBody": true, "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ from: 'Electrificarte <no-reply@electrificarte.com>', to: [$json.cliente.email], subject: 'Tus ofertas para el ' + $json.datos.modelo, html: '<p>' + $json.message.replace(/\\n/g,'<br>') + '</p>' }) }}",
+        "jsonBody": "={{ JSON.stringify({ from: 'Electrificarte <no-reply@electrificarte.com>', to: [$json.cliente.email], subject: 'Tus ofertas para el ' + $json.datos.modelo, html: $json.htmlEmailCliente }) }}",
         "options": {}
       },
       "id": "f4-resend-cliente",
@@ -126,7 +126,7 @@
         "method": "POST", "url": "https://api.resend.com/emails",
         "authentication": "genericCredentialType", "genericAuthType": "httpHeaderAuth",
         "sendBody": true, "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ from: 'Electrificarte <no-reply@electrificarte.com>', to: [$json.email], subject: 'Resultado del lead — ' + $json.datos.modelo, html: '<p>El lead de ' + $json.datos.modelo + ' se cerró. La oferta ganadora fue de ' + $json.valorReferenciaFmt + '. Te avisaremos del próximo que calce contigo.</p>' }) }}",
+        "jsonBody": "={{ JSON.stringify({ from: 'Electrificarte <no-reply@electrificarte.com>', to: [$json.email], subject: 'Resultado del lead — ' + $json.datos.modelo, html: $json.htmlEmailPerdedor }) }}",
         "options": {}
       },
       "id": "f4-resend-perd",

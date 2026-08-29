@@ -16,6 +16,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabase } from "@/lib/whatsapp/subscription";
 import { normalize } from "@/lib/auction/geo";
 import { generateClientComparison, type OfferForMessage } from "@/lib/auction/offer-message";
+import { renderEmail, buildOfertasCards, CERCANIA_UBICACION, horasATexto, type OfertaCard } from "@/lib/auction/emails";
+import { WHATSAPP_LINK } from "@/lib/auction/config";
 import type { CercaniaZona, VersionMatch } from "@/lib/auction/score";
 
 export const runtime = "nodejs";
@@ -139,11 +141,31 @@ export async function POST(req: NextRequest): Promise<Response> {
     .filter((v): v is NonNullable<typeof v> => Boolean(v && (v.telefono || v.email)))
     .map((v) => ({ nombre: v.nombre, telefono: v.telefono, email: v.email }));
 
+  // Correos ya armados (diseño de emails/) para que n8n solo los envíe.
+  const cards: OfertaCard[] = top.map((o) => ({
+    modelo: [o.marca_ofertada, o.modelo_ofertado].filter(Boolean).join(" ") || lead.target_model,
+    precio: CLP(o.precio_oferta),
+    ahorro: CLP((o.precio_publicado ?? o.precio_oferta) - o.precio_oferta),
+    ubicacion: CERCANIA_UBICACION[o.cercania_zona ?? "distante"],
+    entrega: horasATexto(o.horas_entrega),
+  }));
+  const htmlEmailCliente = renderEmail(
+    "ofertas-cliente",
+    { nombre: lead.first_name ?? "", modelo: lead.target_model, whatsapp_url: WHATSAPP_LINK },
+    { ofertas_cards: buildOfertasCards(cards) },
+  );
+  const htmlEmailPerdedor = renderEmail("lead-no-adjudicado", {
+    modelo: lead.target_model,
+    valor_ganador: CLP(mejor.precio_oferta),
+  });
+
   return NextResponse.json({
     leadId: body.leadId,
     yaCerrada: false,
     cliente: { nombre: lead.first_name ?? null, telefono: lead.telefono ?? null, email: lead.email ?? null },
     message,
+    htmlEmailCliente,
+    htmlEmailPerdedor,
     datos: { nombre: lead.first_name ?? "", modelo: lead.target_model, nOfertas: top.length },
     offerIds: sentIds,
     valorReferenciaFmt: CLP(mejor.precio_oferta), // mejor oferta, anonimizada, para perdedores

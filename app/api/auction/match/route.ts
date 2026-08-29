@@ -13,7 +13,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabase } from "@/lib/whatsapp/subscription";
 import { getBrandNames } from "@/lib/auction/pricing";
 import { matchVendors, type VendorProfile } from "@/lib/auction/routing";
-import { WINDOW_HOURS } from "@/lib/auction/config";
+import { WINDOW_HOURS, DASHBOARD_URL } from "@/lib/auction/config";
+import { renderEmail } from "@/lib/auction/emails";
 
 export const runtime = "nodejs";
 
@@ -85,6 +86,12 @@ export async function POST(req: NextRequest): Promise<Response> {
       return { vendorId: v.id, nombre: v.nombre, telefono: v.telefono, email: v.email, cercania: m.cercania };
     });
 
+  const htmlEmail = renderEmail("nuevo-lead-vendedor", {
+    modelo: lead.target_model,
+    comuna: lead.comuna ?? "tu zona",
+    cta_url: DASHBOARD_URL,
+  });
+
   return NextResponse.json({
     leadId: body.leadId,
     targetModel: lead.target_model,
@@ -93,5 +100,6 @@ export async function POST(req: NextRequest): Promise<Response> {
     cierraAt,
     total: eligible.length,
     eligible,
+    htmlEmail,
   });
 }
