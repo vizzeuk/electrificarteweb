@@ -40,6 +40,23 @@ al dashboard): **"vendedores oficiales"**, nunca "concesionarios";
    correo (Resend) o WhatsApp (Kapso). Al entrar, el dashboard valida la sesión +
    que `leads_vendors.estado` esté activo.
 
+## Mapa del repo (lo que YA existe — no arrancar de cero)
+
+Stack: Next.js (dev en `-p 3001`), shadcn/ui + Radix, Tailwind. Rama `main`.
+Estructura (`src/`):
+- `app/vendedor/` — panel del vendedor: `page.tsx`, `layout.tsx`,
+  `leads-disponibles/page.tsx` (el pool), `leads-activos/page.tsx`.
+- `app/admin/` — panel admin: `page.tsx`, `vendedores/`, `leads-oferta/`,
+  `leads-asesoria/`.
+- `components/` — tablas y UI: `ofertar-dialog.tsx` (la puja, hoy muestra toast y
+  no escribe), `leads-oferta-table.tsx`, `vendedores-table.tsx`, `traffic-chart.tsx`,
+  `site-analytics.tsx`, `components/ui/` (shadcn).
+- `lib/mock/` — **la data mock a reemplazar por Supabase real**.
+
+**El trabajo es conectar lo que ya está**, no rehacer: (1) reemplazar `lib/mock`
+por lecturas reales a Supabase, (2) que `ofertar-dialog` inserte en `ofertas`
+(estado `pendiente`), (3) auth de vendedor.
+
 ## Modelo de datos (Supabase)
 
 **No hay stock central nuestro.** Cada vendedor maneja su inventario por fuera;
