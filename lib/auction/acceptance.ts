@@ -16,6 +16,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSupabase, normalizePhone } from "@/lib/whatsapp/subscription";
 import { sendProactiveText } from "@/lib/whatsapp/outbound";
+import { offerRecovery } from "@/lib/auction/recovery";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const MODEL = "claude-haiku-4-5-20251001";
@@ -152,12 +153,10 @@ export async function handleClientOfferDecision(
 
   if (d.decision === "rechaza") {
     await sb.from("ofertas").update({ estado: "rechazada" }).eq("lead_id", ctx.leadId).eq("estado", "enviada_cliente");
-    return {
-      handled: true,
-      reply:
-        "Entendido, no te convencen estas ofertas. Cuéntame qué buscas y vemos otras opciones; " +
-        "recuerda que si no logramos un ahorro, tu pago es reembolsable. 🙌",
-    };
+    // Ofrece recuperación (buscar otro auto sin re-cobro). La respuesta del
+    // cliente con el modelo la maneja handleRecoveryReply en el bot.
+    const reply = await offerRecovery(sb, ctx.leadId, ctx.targetModel);
+    return { handled: true, reply };
   }
 
   // Acepta la oferta d.index

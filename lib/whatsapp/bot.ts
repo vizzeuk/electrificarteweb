@@ -17,6 +17,7 @@ import { isAdminPhone } from "@/lib/whatsapp/admin";
 import { runAdminAdvisor } from "@/lib/whatsapp/admin-advisor";
 import { loadAdminContext, saveAdminContext } from "@/lib/whatsapp/admin-context";
 import { handleClientOfferDecision } from "@/lib/auction/acceptance";
+import { handleRecoveryReply } from "@/lib/auction/recovery";
 
 // ─── Bot singleton ────────────────────────────────────────────────────────────
 // Memory state is fine for the SDK's internal dedup/lock needs; we handle
@@ -127,6 +128,16 @@ bot.onDirectMessage(async (thread, message) => {
     } catch (err) {
       console.error("[bot] handleClientOfferDecision error:", err instanceof Error ? err.message : err);
       // ante un error, cae al asesor normal
+    }
+    // Recuperación: si se le ofreció buscar otro auto y responde con un modelo.
+    try {
+      const rec = await handleRecoveryReply(phone, text);
+      if (rec.handled) {
+        await thread.post(rec.reply ?? "Listo, lo ingresamos.");
+        return;
+      }
+    } catch (err) {
+      console.error("[bot] handleRecoveryReply error:", err instanceof Error ? err.message : err);
     }
   }
 

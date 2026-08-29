@@ -21,3 +21,10 @@ export const DASHBOARD_URL = process.env.DASHBOARD_URL ?? "https://www.electrifi
 /** Link de WhatsApp del negocio (botón "Responder por WhatsApp" de los correos al cliente).
  *  Configurar WHATSAPP_LINK con el wa.me real del número de Electrificarte. */
 export const WHATSAPP_LINK = process.env.WHATSAPP_LINK ?? "https://wa.me/56900000000";
+
+/** Máximo de recuperaciones (búsquedas sin re-cobro) por cada pago (anti-abuso, default 2). */
+export const RECOVERY_CAP = Number(process.env.AUCTION_RECOVERY_CAP ?? 2);
+
+/** Webhook de n8n que notifica a vendedores un lead nuevo (flujo 2). Se llama al
+ *  crear un lead de recuperación, para que entre al embudo. Best-effort. */
+export const N8N_LEAD_PAID_URL = process.env.N8N_LEAD_PAID_URL ?? "";
