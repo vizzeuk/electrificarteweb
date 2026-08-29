@@ -1,0 +1,81 @@
+{
+  "name": "Subasta · Flujo 2 — Entra un lead (notificar vendedores)",
+  "nodes": [
+    {
+      "parameters": { "httpMethod": "POST", "path": "auction-lead-paid", "responseMode": "onReceived", "options": {} },
+      "id": "f2-webhook",
+      "name": "Lead pagado (webhook)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 300],
+      "webhookId": "auction-lead-paid",
+      "notes": "Encadenar desde el flujo de pagos (rama 'cliente'), o llamar con { leadId }."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://electrificarte.com/api/auction/match",
+        "authentication": "genericCredentialType", "genericAuthType": "httpHeaderAuth",
+        "sendBody": true, "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ leadId: $json.body.leadId }) }}",
+        "options": {}
+      },
+      "id": "f2-match",
+      "name": "Match vendedores",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [240, 300],
+      "credentials": { "httpHeaderAuth": { "id": "REEMPLAZAR", "name": "Electrificarte Admin (x-admin-secret)" } },
+      "notes": "Devuelve { eligible[], targetModel, comuna } y sella cierra_at del lead."
+    },
+    {
+      "parameters": { "fieldToSplitOut": "eligible", "include": "allOtherFields", "options": {} },
+      "id": "f2-split",
+      "name": "Un item por vendedor",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.kapso.ai/meta/whatsapp/v24.0/{{ $env.KAPSO_PHONE_NUMBER_ID }}/messages",
+        "authentication": "genericCredentialType", "genericAuthType": "httpHeaderAuth",
+        "sendBody": true, "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ messaging_product: 'whatsapp', to: $json.telefono, type: 'template', template: { name: 'nuevo_lead_vendedor', language: { code: 'es' }, components: [ { type: 'body', parameters: [ { type: 'text', text: $json.targetModel }, { type: 'text', text: $json.comuna || 'tu zona' } ] } ] } }) }}",
+        "options": {}
+      },
+      "id": "f2-kapso",
+      "name": "WhatsApp vendedor (Kapso)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [720, 200],
+      "credentials": { "httpHeaderAuth": { "id": "REEMPLAZAR", "name": "Kapso (X-API-Key)" } }
+    },
+    {
+      "parameters": {
+        "method": "POST", "url": "https://api.resend.com/emails",
+        "authentication": "genericCredentialType", "genericAuthType": "httpHeaderAuth",
+        "sendBody": true, "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ from: 'Electrificarte <no-reply@electrificarte.com>', to: [$json.email], subject: 'Nuevo lead: ' + $json.targetModel, html: '<p>Tienes un nuevo lead: alguien busca un <b>' + $json.targetModel + '</b>' + ($json.comuna ? ' en ' + $json.comuna : '') + '. Ingresa al panel para ofertar.</p>' }) }}",
+        "options": {}
+      },
+      "id": "f2-resend",
+      "name": "Correo vendedor (Resend)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [720, 400],
+      "credentials": { "httpHeaderAuth": { "id": "REEMPLAZAR", "name": "Resend (Authorization Bearer)" } }
+    }
+  ],
+  "connections": {
+    "Lead pagado (webhook)": { "main": [[{ "node": "Match vendedores", "type": "main", "index": 0 }]] },
+    "Match vendedores": { "main": [[{ "node": "Un item por vendedor", "type": "main", "index": 0 }]] },
+    "Un item por vendedor": { "main": [[
+      { "node": "WhatsApp vendedor (Kapso)", "type": "main", "index": 0 },
+      { "node": "Correo vendedor (Resend)", "type": "main", "index": 0 }
+    ]] }
+  },
+  "settings": {},
+  "pinData": {}
+}

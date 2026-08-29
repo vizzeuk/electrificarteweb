@@ -1,0 +1,116 @@
+{
+  "name": "Subasta · Flujo 1 — Entra una puja (confirmar al vendedor)",
+  "nodes": [
+    {
+      "parameters": { "httpMethod": "POST", "path": "auction-puja", "responseMode": "onReceived", "options": {} },
+      "id": "f1-webhook",
+      "name": "Puja nueva (Supabase)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 300],
+      "webhookId": "auction-puja",
+      "notes": "Supabase Database Webhook: INSERT en ofertas. body.record = la puja."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://electrificarte.com/api/auction/evaluate",
+        "authentication": "genericCredentialType", "genericAuthType": "httpHeaderAuth",
+        "sendBody": true, "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ leadId: $json.body.record.lead_id }) }}",
+        "options": {}
+      },
+      "id": "f1-eval",
+      "name": "Evaluar pujas (asigna puntaje)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [220, 300],
+      "credentials": { "httpHeaderAuth": { "id": "REEMPLAZAR", "name": "Electrificarte Admin (x-admin-secret)" } },
+      "notes": "El endpoint YA guarda score_total/estado (no hace falta un 'update row' extra). Si el lead ya cerró, marca la puja 'expirada' y devuelve leadCerrada:true."
+    },
+    {
+      "parameters": {
+        "conditions": { "options": { "caseSensitive": true, "typeValidation": "loose" },
+          "conditions": [ { "leftValue": "={{ $json.leadCerrada === true }}", "rightValue": "", "operator": { "type": "boolean", "operation": "true", "singleValue": true } } ],
+          "combinator": "and" }
+      },
+      "id": "f1-if",
+      "name": "¿Lead ya cerrado?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [440, 300],
+      "notes": "Si el lead ya cerró (puja tardía), no se confirma nada."
+    },
+    {
+      "parameters": {},
+      "id": "f1-noop",
+      "name": "Puja tardía (fin)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [660, 440]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://electrificarte.com/api/auction/oferta-info",
+        "authentication": "genericCredentialType", "genericAuthType": "httpHeaderAuth",
+        "sendBody": true, "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ offerId: $('Puja nueva (Supabase)').item.json.body.record.id }) }}",
+        "options": {}
+      },
+      "id": "f1-info",
+      "name": "Datos de la puja",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [660, 220],
+      "credentials": { "httpHeaderAuth": { "id": "REEMPLAZAR", "name": "Electrificarte Admin (x-admin-secret)" } },
+      "notes": "Devuelve { vendor:{telefono,email}, modelo, precioFmt } para confirmar."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.kapso.ai/meta/whatsapp/v24.0/{{ $env.KAPSO_PHONE_NUMBER_ID }}/messages",
+        "authentication": "genericCredentialType", "genericAuthType": "httpHeaderAuth",
+        "sendBody": true, "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ messaging_product: 'whatsapp', to: $json.vendor.telefono, type: 'template', template: { name: 'confirmacion_puja', language: { code: 'es' }, components: [ { type: 'body', parameters: [ { type: 'text', text: $json.modelo }, { type: 'text', text: $json.precioFmt } ] } ] } }) }}",
+        "options": {}
+      },
+      "id": "f1-kapso",
+      "name": "WhatsApp confirmación (Kapso)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [900, 140],
+      "credentials": { "httpHeaderAuth": { "id": "REEMPLAZAR", "name": "Kapso (X-API-Key)" } },
+      "notes": "POST (no GET). Plantilla confirmacion_puja: {{1}}=modelo, {{2}}=precio."
+    },
+    {
+      "parameters": {
+        "method": "POST", "url": "https://api.resend.com/emails",
+        "authentication": "genericCredentialType", "genericAuthType": "httpHeaderAuth",
+        "sendBody": true, "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ from: 'Electrificarte <no-reply@electrificarte.com>', to: [$json.vendor.email], subject: 'Recibimos tu oferta — ' + $json.modelo, html: '<p>Registramos tu oferta de <b>' + $json.precioFmt + '</b> por el ' + $json.modelo + '. Te avisaremos si el cliente la elige.</p>' }) }}",
+        "options": {}
+      },
+      "id": "f1-resend",
+      "name": "Correo confirmación (Resend)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [900, 300],
+      "credentials": { "httpHeaderAuth": { "id": "REEMPLAZAR", "name": "Resend (Authorization Bearer)" } }
+    }
+  ],
+  "connections": {
+    "Puja nueva (Supabase)": { "main": [[{ "node": "Evaluar pujas (asigna puntaje)", "type": "main", "index": 0 }]] },
+    "Evaluar pujas (asigna puntaje)": { "main": [[{ "node": "¿Lead ya cerrado?", "type": "main", "index": 0 }]] },
+    "¿Lead ya cerrado?": { "main": [
+      [ { "node": "Puja tardía (fin)", "type": "main", "index": 0 } ],
+      [ { "node": "Datos de la puja", "type": "main", "index": 0 } ]
+    ] },
+    "Datos de la puja": { "main": [[
+      { "node": "WhatsApp confirmación (Kapso)", "type": "main", "index": 0 },
+      { "node": "Correo confirmación (Resend)", "type": "main", "index": 0 }
+    ]] }
+  },
+  "settings": {},
+  "pinData": {}
+}

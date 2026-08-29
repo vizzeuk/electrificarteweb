@@ -1,0 +1,99 @@
+{
+  "name": "Subasta · Flujo 3 — Presión (X h antes del cierre)",
+  "nodes": [
+    {
+      "parameters": { "rule": { "interval": [ { "field": "hours", "hoursInterval": 3 } ] } },
+      "id": "f3-cron",
+      "name": "Cada 3 horas (Schedule)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 300],
+      "notes": "Solo REVISA cada 3h. Cada vendedor recibe presión como mucho cada 12h (throttle), y solo en las últimas 24h antes del cierre."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://electrificarte.com/api/auction/ofertas-a-presionar",
+        "authentication": "genericCredentialType", "genericAuthType": "httpHeaderAuth",
+        "sendBody": true, "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({}) }}",
+        "options": {}
+      },
+      "id": "f3-revisar",
+      "name": "Revisar no ganadores",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [240, 300],
+      "credentials": { "httpHeaderAuth": { "id": "REEMPLAZAR", "name": "Electrificarte Admin (x-admin-secret)" } },
+      "notes": "Devuelve { ofertas: [{offerId, horasRestantes}] } de leads cerca del cierre, que no lideran y no fueron presionadas hace poco (throttle)."
+    },
+    {
+      "parameters": { "fieldToSplitOut": "ofertas", "options": {} },
+      "id": "f3-split",
+      "name": "Un item por oferta",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [480, 300],
+      "notes": "FALTABA en tu versión: sin esto solo se presiona a la primera."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://electrificarte.com/api/auction/message/pressure",
+        "authentication": "genericCredentialType", "genericAuthType": "httpHeaderAuth",
+        "sendBody": true, "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ offerId: $json.offerId, horasRestantes: $json.horasRestantes }) }}",
+        "options": {}
+      },
+      "id": "f3-pressure",
+      "name": "Generar mensaje presión",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [720, 300],
+      "credentials": { "httpHeaderAuth": { "id": "REEMPLAZAR", "name": "Electrificarte Admin (x-admin-secret)" } },
+      "notes": "Devuelve { message, vendor, datos } y marca ultima_presion_at (throttle)."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.kapso.ai/meta/whatsapp/v24.0/{{ $env.KAPSO_PHONE_NUMBER_ID }}/messages",
+        "authentication": "genericCredentialType", "genericAuthType": "httpHeaderAuth",
+        "sendBody": true, "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ messaging_product: 'whatsapp', to: $json.vendor.telefono, type: 'template', template: { name: 'mejora_tu_oferta', language: { code: 'es' }, components: [ { type: 'body', parameters: [ { type: 'text', text: $json.datos.modelo }, { type: 'text', text: String($json.datos.vendedoresCompitiendo) }, { type: 'text', text: '$' + Number($json.datos.mejorPrecioActual).toLocaleString('es-CL') } ] } ] } }) }}",
+        "options": {}
+      },
+      "id": "f3-kapso",
+      "name": "WhatsApp presión (Kapso)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [960, 200],
+      "credentials": { "httpHeaderAuth": { "id": "REEMPLAZAR", "name": "Kapso (X-API-Key)" } }
+    },
+    {
+      "parameters": {
+        "method": "POST", "url": "https://api.resend.com/emails",
+        "authentication": "genericCredentialType", "genericAuthType": "httpHeaderAuth",
+        "sendBody": true, "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ from: 'Electrificarte <no-reply@electrificarte.com>', to: [$json.vendor.email], subject: 'Mejora tu oferta — ' + $json.datos.modelo, html: '<p>' + $json.message.replace(/\\n/g,'<br>') + '</p>' }) }}",
+        "options": {}
+      },
+      "id": "f3-resend",
+      "name": "Correo presión (Resend)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [960, 400],
+      "credentials": { "httpHeaderAuth": { "id": "REEMPLAZAR", "name": "Resend (Authorization Bearer)" } }
+    }
+  ],
+  "connections": {
+    "Cada 3 horas (Schedule)": { "main": [[{ "node": "Revisar no ganadores", "type": "main", "index": 0 }]] },
+    "Revisar no ganadores": { "main": [[{ "node": "Un item por oferta", "type": "main", "index": 0 }]] },
+    "Un item por oferta": { "main": [[{ "node": "Generar mensaje presión", "type": "main", "index": 0 }]] },
+    "Generar mensaje presión": { "main": [[
+      { "node": "WhatsApp presión (Kapso)", "type": "main", "index": 0 },
+      { "node": "Correo presión (Resend)", "type": "main", "index": 0 }
+    ]] }
+  },
+  "settings": {},
+  "pinData": {}
+}
