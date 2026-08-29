@@ -2,12 +2,23 @@
 
 > **Cómo usar este archivo:** es un traspaso portátil para trabajar el dashboard
 > (`~/proyects/electrificarte-dashboard`) en su propio workspace, sin haber
-> estado en las conversaciones de la web principal. Copiá este archivo a la raíz
-> del repo del dashboard. Para el detalle canónico, los docs viven en la web
-> principal (misma máquina, se leen por ruta absoluta):
-> - `~/proyects/electrificarteweb/docs/AUCTION_N8N_CONTRACT.md` (endpoints)
-> - `~/proyects/electrificarteweb/docs/HANDOFF-CONDUCTOR.md` (§7 = esta fase)
-> - `~/proyects/electrificarteweb/CLAUDE.md` (negocio + terminología + diseño)
+> estado en las conversaciones de la web principal.
+>
+> **Contexto completo de la web principal (este repo, misma máquina).** La copia
+> actualizada vive en el workspace de Conductor donde se hizo todo el trabajo de la
+> subasta (el worktree `~/proyects/electrificarteweb` puede estar desactualizado —
+> si es así, hacé `git pull` en él, o leé directo desde el workspace):
+>
+> `BASE = ~/conductor/workspaces/electrificarteweb/kingston`
+>
+> - `$BASE/CLAUDE.md` — negocio, terminología, reglas, stack.
+> - `$BASE/DESIGN.md` — sistema de diseño (colores, tipografías, componentes).
+> - `$BASE/docs/HANDOFF-CONDUCTOR.md` — estado general del proyecto.
+> - `$BASE/docs/AUCTION_N8N_CONTRACT.md` — endpoints de la subasta.
+> - `$BASE/docs/FLUJO-WHATSAPP-PERFILES-Y-RECUPERACION.md` — tiers/perfiles + recuperación.
+> - `$BASE/n8n/README.md` — flujos n8n. `$BASE/emails/` — plantillas de correo.
+>
+> Leé este archivo + esos para tener el panorama de los 3 proyectos acoplados.
 
 ## Los tres proyectos
 
@@ -105,6 +116,56 @@ completo en `AUCTION_N8N_CONTRACT.md`. Los que le importan al dashboard:
 
 El dashboard **no** recalcula scores: inserta la puja y lee el `score_total`/
 `estado` que el backend escribe.
+
+## Seguridad (LEER ANTES DE TOCAR DATOS — crítico a escala)
+
+El dashboard corre en el **navegador de los vendedores**. Cualquier cosa que llegue
+al cliente es pública. Reglas duras:
+
+1. **El `SUPABASE_SERVICE_ROLE_KEY` NUNCA va al browser.** Bypassea toda la
+   seguridad (RLS). Jamás en código cliente ni en variables `NEXT_PUBLIC_*`. Vive
+   solo server-side (server actions / route handlers del dashboard).
+
+2. **Auth de vendedor con Supabase Auth** (magic link / OTP). Al entrar, se valida
+   la sesión + que su fila en `leads_vendors` esté activa. Hace falta un vínculo
+   entre el usuario de Auth y la fila del vendedor (columna `user_id uuid` →
+   `auth.users`, o match por email verificado). n8n crea/activa esa fila y el
+   usuario al confirmarse el pago del plan.
+
+3. **RLS (Row Level Security) ON en todas las tablas** que toca el dashboard, con
+   políticas por vendedor autenticado:
+   - `leads_vendors`: cada vendedor lee/edita **solo su propia fila**.
+   - `ofertas`: cada vendedor **inserta** ofertas a su nombre (`vendor_id` = el suyo)
+     y **lee solo las suyas**. No puede ver ni tocar ofertas de otros.
+   - `leads` (el pool): un vendedor activo puede LEER los leads disponibles
+     (`status=pagado`, `cerrada_at` null), pero **con columnas limitadas** (ver #4).
+
+4. **PII del cliente protegida.** El pool (leads-disponibles) **NO** debe exponer
+   `telefono`, `email` ni `rut` del comprador. Solo lo necesario para ofertar:
+   `target_model`, `region`, `comuna`, `financing`, `parte_pago_*`. El contacto del
+   cliente se revela **solo al vendedor ganador**, y llega por la notificación de
+   aceptación (WhatsApp/correo que ya envía el flujo), **no por el dashboard**.
+   → En la práctica: exponer el pool con una **vista** (o columnas explícitas) sin PII.
+
+5. **Patrón de acceso recomendado:**
+   - Lecturas del vendedor (su perfil, sus ofertas, el pool sin PII) → cliente
+     Supabase con **anon key + RLS**.
+   - Escrituras con reglas de negocio (crear puja, validar tope) → mejor por un
+     **route handler / server action del dashboard** (server-side, valida la sesión;
+     puede usar service role ahí, nunca en el browser). Al insertar una puja en
+     `ofertas` (estado `pendiente`), el **Supabase Database Webhook** dispara el
+     flujo n8n que ya existe — el dashboard no llama endpoints de la subasta.
+
+6. **Panel admin** (`app/admin`): rol distinto, acceso restringido a
+   Electrificarte. Gatearlo con su propia verificación (no mezclar con el rol
+   vendedor). El admin sí ve más datos, pero detrás de auth de admin.
+
+7. **Rate limiting / escala:** las lecturas van con RLS (Supabase escala bien); las
+   escrituras sensibles pasan por el server del dashboard, donde se puede limitar.
+   No exponer operaciones masivas sin límite al cliente.
+
+> Regla mental: **el browser solo puede hacer lo que RLS + la sesión del vendedor
+> permiten.** Todo lo demás (service role, reglas de negocio, PII) vive server-side.
 
 ## Reglas de diseño (no romper)
 
