@@ -16,6 +16,7 @@ import { alreadyProcessed, withPhoneLock } from "@/lib/whatsapp/concurrency";
 import { isAdminPhone } from "@/lib/whatsapp/admin";
 import { runAdminAdvisor } from "@/lib/whatsapp/admin-advisor";
 import { loadAdminContext, saveAdminContext } from "@/lib/whatsapp/admin-context";
+import { handleClientOfferDecision } from "@/lib/auction/acceptance";
 
 // ─── Bot singleton ────────────────────────────────────────────────────────────
 // Memory state is fine for the SDK's internal dedup/lock needs; we handle
@@ -111,6 +112,22 @@ bot.onDirectMessage(async (thread, message) => {
   if (!tier) {
     await thread.post(subscribeMessage());
     return;
+  }
+
+  // 2b. Cliente con ofertas esperando su decisión → interpretar su elección.
+  //     Aislado del asesor pagado: solo aplica a tier 'oferta' con ofertas en
+  //     'enviada_cliente'. Si no hay nada esperando, sigue el flujo normal.
+  if (tier === "oferta") {
+    try {
+      const decision = await handleClientOfferDecision(phone, text);
+      if (decision.handled) {
+        await thread.post(decision.reply ?? "Gracias, lo registramos.");
+        return;
+      }
+    } catch (err) {
+      console.error("[bot] handleClientOfferDecision error:", err instanceof Error ? err.message : err);
+      // ante un error, cae al asesor normal
+    }
   }
 
   // 3. Injection guard (input-side)

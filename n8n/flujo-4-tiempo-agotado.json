@@ -50,16 +50,16 @@
       "typeVersion": 4.2,
       "position": [720, 320],
       "credentials": { "httpHeaderAuth": { "id": "REEMPLAZAR", "name": "Electrificarte Admin (x-admin-secret)" } },
-      "notes": "Atómico: elige ganadora (1 por vendedor), marca ganadora/perdedoras, cierra el lead, arma el mensaje al cliente. Devuelve todo para notificar."
+      "notes": "Atómico: manda las 1-2 mejores al cliente (a esperar su decisión), marca perdedoras (las no mostradas) y cierra el lead. Devuelve todo para notificar."
     },
     {
       "parameters": {
         "conditions": { "options": { "caseSensitive": true, "typeValidation": "loose" },
-          "conditions": [ { "leftValue": "={{ $json.ganadora ? $json.ganadora.offerId : '' }}", "rightValue": "", "operator": { "type": "string", "operation": "notEmpty", "singleValue": true } } ],
+          "conditions": [ { "leftValue": "={{ ($json.offerIds || []).length }}", "rightValue": 0, "operator": { "type": "number", "operation": "gt", "singleValue": true } } ],
           "combinator": "and" }
       },
       "id": "f4-if",
-      "name": "¿Hubo ganadora?",
+      "name": "¿Hubo ofertas?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [960, 320]
@@ -110,7 +110,7 @@
         "url": "=https://api.kapso.ai/meta/whatsapp/v24.0/{{ $env.KAPSO_PHONE_NUMBER_ID }}/messages",
         "authentication": "genericCredentialType", "genericAuthType": "httpHeaderAuth",
         "sendBody": true, "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ messaging_product: 'whatsapp', to: $json.telefono, type: 'template', template: { name: 'lead_no_adjudicado', language: { code: 'es' }, components: [ { type: 'body', parameters: [ { type: 'text', text: $json.datos.modelo }, { type: 'text', text: $json.ganadora.valorFmt } ] } ] } }) }}",
+        "jsonBody": "={{ JSON.stringify({ messaging_product: 'whatsapp', to: $json.telefono, type: 'template', template: { name: 'lead_no_adjudicado', language: { code: 'es' }, components: [ { type: 'body', parameters: [ { type: 'text', text: $json.datos.modelo }, { type: 'text', text: $json.valorReferenciaFmt } ] } ] } }) }}",
         "options": {}
       },
       "id": "f4-kapso-perd",
@@ -126,7 +126,7 @@
         "method": "POST", "url": "https://api.resend.com/emails",
         "authentication": "genericCredentialType", "genericAuthType": "httpHeaderAuth",
         "sendBody": true, "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ from: 'Electrificarte <no-reply@electrificarte.com>', to: [$json.email], subject: 'Resultado del lead — ' + $json.datos.modelo, html: '<p>El lead de ' + $json.datos.modelo + ' se cerró. La oferta ganadora fue de ' + $json.ganadora.valorFmt + '. Te avisaremos del próximo que calce contigo.</p>' }) }}",
+        "jsonBody": "={{ JSON.stringify({ from: 'Electrificarte <no-reply@electrificarte.com>', to: [$json.email], subject: 'Resultado del lead — ' + $json.datos.modelo, html: '<p>El lead de ' + $json.datos.modelo + ' se cerró. La oferta ganadora fue de ' + $json.valorReferenciaFmt + '. Te avisaremos del próximo que calce contigo.</p>' }) }}",
         "options": {}
       },
       "id": "f4-resend-perd",
@@ -149,8 +149,8 @@
     "Cada 15 min (Schedule)": { "main": [[{ "node": "Leads por cerrar", "type": "main", "index": 0 }]] },
     "Leads por cerrar": { "main": [[{ "node": "Un item por lead", "type": "main", "index": 0 }]] },
     "Un item por lead": { "main": [[{ "node": "Cerrar subasta", "type": "main", "index": 0 }]] },
-    "Cerrar subasta": { "main": [[{ "node": "¿Hubo ganadora?", "type": "main", "index": 0 }]] },
-    "¿Hubo ganadora?": { "main": [
+    "Cerrar subasta": { "main": [[{ "node": "¿Hubo ofertas?", "type": "main", "index": 0 }]] },
+    "¿Hubo ofertas?": { "main": [
       [
         { "node": "WhatsApp ofertas (Kapso)", "type": "main", "index": 0 },
         { "node": "Correo ofertas (Resend)", "type": "main", "index": 0 },

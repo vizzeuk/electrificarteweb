@@ -38,17 +38,18 @@ async function main() {
 
   console.log("\nCierre:");
   const cerrar1 = await (await cerrarPOST(req({ leadId }))).json();
-  check("cierra con ganadora y perdedores", () => {
+  check("cierra: envía las 2 mejores al cliente (a esperar decisión)", () => {
     assert.equal(cerrar1.yaCerrada, false);
-    assert.ok(cerrar1.ganadora?.offerId, "sin ganadora");
-    assert.ok(cerrar1.perdedores.length >= 1, "sin perdedores");
+    assert.equal(cerrar1.offerIds.length, 2, "debería enviar las 2 mejores");
+    assert.ok(cerrar1.valorReferenciaFmt, "sin valor de referencia para perdedores");
   });
 
   const { data: rows } = await sb.from("ofertas").select("estado, vendor_id").eq("lead_id", leadId);
-  check("1 ganadora + 2 perdidas en la BD", () => {
-    const g = rows!.filter((r) => r.estado === "ganadora").length;
+  check("2 'enviada_cliente' + 1 'perdida' en la BD (sin ganadora automática)", () => {
+    const e = rows!.filter((r) => r.estado === "enviada_cliente").length;
     const p = rows!.filter((r) => r.estado === "perdida").length;
-    assert.equal(g, 1); assert.equal(p, 2);
+    const g = rows!.filter((r) => r.estado === "ganadora").length;
+    assert.equal(e, 2); assert.equal(p, 1); assert.equal(g, 0);
   });
   const { data: leadRow } = await sb.from("leads").select("cerrada_at").eq("id", leadId).single();
   check("el lead queda cerrado (cerrada_at)", () => assert.ok(leadRow!.cerrada_at));

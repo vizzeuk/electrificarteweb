@@ -95,6 +95,19 @@ Te avisaremos si el cliente la elige. Si aparece competencia, te vamos a dar la 
 
 ---
 
+### 7. `seguimiento_oos` — UTILITY
+Al cliente, X horas después de aceptar, para saber si la venta se concretó (Flujo 5).
+
+**Body:**
+```
+Hola {{1}} 👋 ¿Cómo va con el {{2}}? ¿Lograste concretar la compra?
+
+Cuéntanos cómo te fue para ayudarte con lo que necesites.
+```
+- `{{1}}` = nombre · `{{2}}` = modelo
+
+---
+
 ## Textos que NO necesitan plantilla (van en sesión)
 
 Estos ocurren cuando la persona **ya está respondiendo** (dentro de las 24 h),

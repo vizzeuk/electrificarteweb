@@ -11,12 +11,21 @@ credenciales de n8n.
 | `flujo-2-entra-un-lead.json` | Notifica a los vendedores que calzan | Flujo de pagos (rama cliente) |
 | `flujo-3-presion.json` | Presiona a los que no van ganando | **Schedule (cron)** cada 3 h |
 | `flujo-4-tiempo-agotado.json` | Cierra la subasta y manda ofertas al cliente | **Schedule (cron)** cada 15 min |
+| `flujo-5-oos.json` | Pregunta al cliente si se concretó la venta (OOS) | **Schedule (cron)** cada 6 h |
+
+**"Cliente acepta" NO es un flujo de n8n.** Cuando el cliente responde por WhatsApp
+cuál oferta elige, el mensaje entra por el **bot** (`/api/whatsapp/kapso`), que
+interpreta su elección con IA, marca la oferta `aceptada`, avisa al vendedor
+ganador y le confirma al cliente. Vive en el código (`lib/auction/acceptance.ts`),
+enganchado en `lib/whatsapp/bot.ts`. n8n solo entra después, con el OOS (flujo 5).
 
 ## ⚠️ Antes de nada: correr la migración
 
-Estos flujos usan la **hora de cierre** de cada subasta. Corré en Supabase:
-`scripts/sql/2026-08-28_ventana.sql` (agrega `leads.cierra_at`, `leads.cerrada_at`,
-`ofertas.ultima_presion_at`). **Sin esto, `/match` y los crons fallan.**
+Corré en Supabase estas dos migraciones (aditivas):
+- `scripts/sql/2026-08-28_ventana.sql` — `leads.cierra_at`, `leads.cerrada_at`,
+  `ofertas.ultima_presion_at`. **Sin esto, `/match` y los crons fallan.**
+- `scripts/sql/2026-08-29_acepta.sql` — `ofertas.aceptada_at`, `ofertas.oos_at`.
+  **Sin esto, el flujo "cliente acepta" y el OOS fallan.**
 
 Variables de entorno de la subasta (opcionales, con default): `AUCTION_WINDOW_HOURS`
 (48), `AUCTION_PRESSURE_HOURS_BEFORE` (24), `AUCTION_PRESSURE_THROTTLE_HOURS` (6).

@@ -97,8 +97,8 @@ export async function POST(req: NextRequest): Promise<Response> {
     (a, b) => (b.score_total ?? 0) - (a.score_total ?? 0) || a.precio_oferta - b.precio_oferta,
   );
 
-  const ganadora = ranked[0];
-  const top = ranked.slice(0, 2); // 1–2 mejores para el cliente
+  const top = ranked.slice(0, 2); // 1–2 mejores que se le muestran al cliente
+  const mejor = ranked[0]; // referencia de precio para avisar a los perdedores
 
   const offersMsg: OfferForMessage[] = top.map((o) => ({
     marca: o.marca_ofertada ?? "",
@@ -124,14 +124,17 @@ export async function POST(req: NextRequest): Promise<Response> {
     offersMsg,
   );
 
-  // Estados: ganadora, luego el resto de las evaluadas → perdida, y cierra el lead.
-  await sb.from("ofertas").update({ estado: "ganadora" }).eq("id", ganadora.id);
+  // Las 1–2 mejores → 'enviada_cliente' (esperando que el cliente elija).
+  // El resto de las evaluadas → 'perdida'. Y se cierra la puja del lead.
+  const sentIds = top.map((o) => o.id);
+  await sb.from("ofertas").update({ estado: "enviada_cliente" }).in("id", sentIds);
   await sb.from("ofertas").update({ estado: "perdida" }).eq("lead_id", body.leadId).eq("estado", "evaluada");
   await sb.from("leads").update({ cerrada_at: new Date().toISOString() }).eq("id", body.leadId);
 
-  // Perdedores (para avisarles con el valor ganador anonimizado).
+  // Perdedores del cierre = los que NO se le muestran al cliente (más allá del top).
+  // (Los del top que el cliente no elija se marcan perdida al aceptar.)
   const perdedores = ranked
-    .slice(1)
+    .slice(top.length)
     .map((o) => o.leads_vendors)
     .filter((v): v is NonNullable<typeof v> => Boolean(v && (v.telefono || v.email)))
     .map((v) => ({ nombre: v.nombre, telefono: v.telefono, email: v.email }));
@@ -142,8 +145,8 @@ export async function POST(req: NextRequest): Promise<Response> {
     cliente: { nombre: lead.first_name ?? null, telefono: lead.telefono ?? null, email: lead.email ?? null },
     message,
     datos: { nombre: lead.first_name ?? "", modelo: lead.target_model, nOfertas: top.length },
-    offerIds: top.map((o) => o.id),
-    ganadora: { offerId: ganadora.id, valor: ganadora.precio_oferta, valorFmt: CLP(ganadora.precio_oferta) },
+    offerIds: sentIds,
+    valorReferenciaFmt: CLP(mejor.precio_oferta), // mejor oferta, anonimizada, para perdedores
     perdedores,
   });
 }

@@ -11,3 +11,6 @@ export const PRESSURE_HOURS_BEFORE = Number(process.env.AUCTION_PRESSURE_HOURS_B
 
 /** Mínimo de horas entre presiones a una misma oferta (anti-spam, default 12). */
 export const PRESSURE_THROTTLE_HOURS = Number(process.env.AUCTION_PRESSURE_THROTTLE_HOURS ?? 12);
+
+/** Horas tras la aceptación para preguntar si la venta se concretó (OOS, default 48). */
+export const OOS_HOURS = Number(process.env.AUCTION_OOS_HOURS ?? 48);

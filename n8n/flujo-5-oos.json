@@ -1,0 +1,81 @@
+{
+  "name": "Subasta · Flujo 5 — Seguimiento OOS (¿se concretó la venta?)",
+  "nodes": [
+    {
+      "parameters": { "rule": { "interval": [ { "field": "hours", "hoursInterval": 6 } ] } },
+      "id": "f5-cron",
+      "name": "Cada 6 horas (Schedule)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 300],
+      "notes": "Cron. Busca ventas aceptadas hace más de OOS_HOURS (48h) sin preguntar aún."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.electrificarte.com/api/auction/oos-pendientes",
+        "authentication": "genericCredentialType", "genericAuthType": "httpHeaderAuth",
+        "sendBody": true, "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({}) }}",
+        "options": {}
+      },
+      "id": "f5-oos",
+      "name": "OOS pendientes",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [240, 300],
+      "credentials": { "httpHeaderAuth": { "id": "REEMPLAZAR", "name": "Electrificarte Admin (x-admin-secret)" } },
+      "notes": "Devuelve { pendientes: [{ modelo, cliente:{nombre,telefono,email} }] } y marca oos_at para no repetir."
+    },
+    {
+      "parameters": { "fieldToSplitOut": "pendientes", "options": {} },
+      "id": "f5-split",
+      "name": "Un item por venta",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.kapso.ai/meta/whatsapp/v24.0/{{ $env.KAPSO_PHONE_NUMBER_ID }}/messages",
+        "authentication": "genericCredentialType", "genericAuthType": "httpHeaderAuth",
+        "sendBody": true, "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ messaging_product: 'whatsapp', to: $json.cliente.telefono, type: 'template', template: { name: 'seguimiento_oos', language: { code: 'es' }, components: [ { type: 'body', parameters: [ { type: 'text', text: $json.cliente.nombre || 'Hola' }, { type: 'text', text: $json.modelo } ] } ] } }) }}",
+        "options": {}
+      },
+      "id": "f5-kapso",
+      "name": "WhatsApp OOS (Kapso)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [720, 200],
+      "credentials": { "httpHeaderAuth": { "id": "REEMPLAZAR", "name": "Kapso (X-API-Key)" } },
+      "notes": "Plantilla seguimiento_oos: {{1}}=nombre, {{2}}=modelo."
+    },
+    {
+      "parameters": {
+        "method": "POST", "url": "https://api.resend.com/emails",
+        "authentication": "genericCredentialType", "genericAuthType": "httpHeaderAuth",
+        "sendBody": true, "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ from: 'Electrificarte <no-reply@electrificarte.com>', to: [$json.cliente.email], subject: '¿Cómo va con tu ' + $json.modelo + '?', html: '<p>Hola ' + ($json.cliente.nombre || '') + ', ¿lograste concretar la compra del ' + $json.modelo + '? Cuéntanos cómo te fue para ayudarte en lo que necesites.</p>' }) }}",
+        "options": {}
+      },
+      "id": "f5-resend",
+      "name": "Correo OOS (Resend)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [720, 400],
+      "credentials": { "httpHeaderAuth": { "id": "REEMPLAZAR", "name": "Resend (Authorization Bearer)" } }
+    }
+  ],
+  "connections": {
+    "Cada 6 horas (Schedule)": { "main": [[{ "node": "OOS pendientes", "type": "main", "index": 0 }]] },
+    "OOS pendientes": { "main": [[{ "node": "Un item por venta", "type": "main", "index": 0 }]] },
+    "Un item por venta": { "main": [[
+      { "node": "WhatsApp OOS (Kapso)", "type": "main", "index": 0 },
+      { "node": "Correo OOS (Resend)", "type": "main", "index": 0 }
+    ]] }
+  },
+  "settings": {},
+  "pinData": {}
+}
