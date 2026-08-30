@@ -15,7 +15,21 @@ negro, sin badges/emojis/degradados. Terminología corregida ("Punto de venta", 
 | `registro-vendedor.html` | Vendedor paga su suscripción | Vendedor | `nombre`, `nombre_concesionario`, `marcas` |
 | `nuevo-vendedor-francisco.html` | (mismo evento) | **Francisco** (interno) | `nombre`, `apellido`, `nombre_concesionario`, `telefono`, `marcas` |
 
-## Cómo insertarlos en n8n
+## Forma fácil: importar los nodos ya armados
+
+En `n8n/ventas-correos.json` están los **4 nodos Resend ya listos** (con `from`,
+`to`, `subject` y el `html` completo con las expresiones adentro). En n8n:
+**Workflows → Import from File → `n8n/ventas-correos.json`**. Te quedan los 4 nodos
++ un Manual Trigger para probar. **Copiá los nodos que quieras a tu flujo de ventas,
+conectalos y borrá el resto** (y el Manual Trigger). Solo tenés que:
+- Asignar la credencial **Resend (Header Auth)** en cada nodo (dice "REEMPLAZAR").
+- Ajustar el `to` de los `*-francisco` (hoy `francisco@electrificarte.com`) y, si tus
+  nodos se llaman distinto, las expresiones (ver abajo).
+
+El `html` va en modo expresión (empieza con `=`), así n8n evalúa las `{{ $(...) }}`
+adentro. Si preferís pegarlo a mano, seguí lo de abajo.
+
+## Cómo insertarlos a mano
 
 Cada uno reemplaza (o agrega) un nodo **Resend** (HTTP Request a
 `https://api.resend.com/emails`):

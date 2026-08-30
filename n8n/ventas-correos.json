@@ -1,0 +1,234 @@
+{
+  "name": "Correos de ventas (pegar nodos en tu flujo)",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "trigger",
+      "name": "Probar (Manual Trigger)",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "keypair",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "from",
+              "value": "Electrificarte <no-reply@electrificarte.com>"
+            },
+            {
+              "name": "to",
+              "value": "={{ $('HTTP Request2').item.json.customer.email }}"
+            },
+            {
+              "name": "subject",
+              "value": "Tu pago fue confirmado — Electrificarte"
+            },
+            {
+              "name": "html",
+              "value": "=<!DOCTYPE html>\n<html lang=\"es\">\n<head>\n  <meta charset=\"utf-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n  <meta name=\"color-scheme\" content=\"light\">\n  <title>Pago confirmado — Electrificarte</title>\n</head>\n<!--\n  VENTAS · Cliente que pagó la Oferta Exclusiva ($19.990). Va DIRECTO al nodo Resend de n8n.\n  Expresiones n8n (verificá los nombres de nodo contra tu flujo):\n    {{ $('HTTP Request2').item.json.customer.name }}  → nombre del cliente\n    {{ $json.descripcion_interes }}                    → vehículo de interés\n-->\n<body style=\"margin:0;padding:0;background:#F3F4F6;font-family:'Helvetica Neue',Arial,sans-serif;-webkit-font-smoothing:antialiased;\">\n  <div style=\"display:none;max-height:0;overflow:hidden;opacity:0;\">Tu pago fue confirmado y tu solicitud ya está en proceso.</div>\n\n  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#F3F4F6;\">\n    <tr><td align=\"center\" style=\"padding:24px 12px;\">\n      <table role=\"presentation\" width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:100%;max-width:600px;background:#FFFFFF;border:1px solid #E5E7EB;border-radius:16px;overflow:hidden;\">\n\n        <tr><td style=\"padding:26px 32px;border-bottom:1px solid #F3F4F6;\">\n          <img src=\"https://www.electrificarte.com/logo-email.png\" alt=\"Electrificarte\" height=\"28\" style=\"display:block;border:0;height:28px;width:auto;\">\n        </td></tr>\n\n        <tr><td style=\"padding:36px 32px 8px;\">\n          <p style=\"margin:0 0 8px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#00A6A6;\">Pago confirmado</p>\n          <h1 style=\"margin:0 0 16px;font-size:24px;font-weight:800;line-height:1.2;color:#111827;letter-spacing:-0.01em;\">Tu solicitud está en proceso</h1>\n          <p style=\"margin:0 0 16px;font-size:15px;line-height:1.65;color:#4B5563;\">Hola <strong style=\"color:#111827;\">{{ $('HTTP Request2').item.json.customer.name }}</strong>, tu pago se procesó con éxito. Nuestro equipo ya está buscando la mejor oferta para tu auto en la red de vendedores oficiales y te contactará a la brevedad.</p>\n\n          <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"border:1px solid #E5E7EB;border-radius:12px;margin:8px 0 20px;\">\n            <tr><td style=\"padding:16px 20px;\">\n              <div style=\"font-size:11px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;color:#9CA3AF;\">Vehículo de interés</div>\n              <div style=\"font-size:16px;font-weight:700;color:#111827;margin-top:3px;\">{{ $json.descripcion_interes }}</div>\n            </td></tr>\n          </table>\n\n          <p style=\"margin:0 0 24px;font-size:14px;line-height:1.6;color:#4B5563;\">En un plazo máximo de <strong style=\"color:#111827;\">72 horas hábiles</strong> recibirás un correo con los próximos pasos para avanzar.</p>\n        </td></tr>\n\n        <tr><td style=\"padding:0 32px 36px;\">\n          <table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n            <td style=\"border-radius:12px;background:#00E5E5;\">\n              <a href=\"https://www.electrificarte.com\" style=\"display:inline-block;padding:15px 34px;font-size:14px;font-weight:700;color:#000000;text-decoration:none;border-radius:12px;\">Ver vehículos</a>\n            </td>\n          </tr></table>\n        </td></tr>\n\n        <tr><td style=\"padding:28px 32px;background:#000000;\">\n          <p style=\"margin:0 0 6px;font-size:13px;font-weight:700;color:#FFFFFF;letter-spacing:-0.01em;\">ELECTRIFICARTE<span style=\"color:#00E5E5;\">.COM</span></p>\n          <p style=\"margin:0;font-size:12px;line-height:1.6;color:rgba(255,255,255,0.55);\">Marketplace de autos electrificados en Chile.<br>\n          <a href=\"https://www.electrificarte.com\" style=\"color:#00E5E5;text-decoration:none;\">www.electrificarte.com</a> · contacto@electrificarte.com</p>\n        </td></tr>\n\n      </table>\n    </td></tr>\n  </table>\n</body>\n</html>\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "pago-confirmado-cliente.html",
+      "name": "Correo pago confirmado (cliente)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        260,
+        120
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Resend (Authorization Bearer)"
+        }
+      },
+      "notes": "Ajustá el 'to' y las expresiones a los nombres de nodo de tu flujo."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "keypair",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "from",
+              "value": "Electrificarte <no-reply@electrificarte.com>"
+            },
+            {
+              "name": "to",
+              "value": "francisco@electrificarte.com"
+            },
+            {
+              "name": "subject",
+              "value": "Nuevo lead de Oferta Exclusiva"
+            },
+            {
+              "name": "html",
+              "value": "=<!DOCTYPE html>\n<html lang=\"es\">\n<head>\n  <meta charset=\"utf-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n  <meta name=\"color-scheme\" content=\"light\">\n  <title>Nuevo lead de Oferta Exclusiva</title>\n</head>\n<!--\n  VENTAS · USO INTERNO (Francisco). Se dispara cuando un cliente paga la Oferta\n  Exclusiva ($19.990). Va DIRECTO al nodo Resend de n8n.\n  Expresiones n8n (verificá los nombres de nodo/campo contra tu flujo):\n    {{ $('HTTP Request2').item.json.customer.name }}  → nombre del cliente\n    {{ $json.descripcion_interes }}                    → vehículo buscado\n    {{ $json.telefono }}   {{ $json.email }}           → contacto del cliente\n    {{ $json.region }}     {{ $json.comuna }}          → ubicación (opcional)\n-->\n<body style=\"margin:0;padding:0;background:#F3F4F6;font-family:'Helvetica Neue',Arial,sans-serif;-webkit-font-smoothing:antialiased;\">\n  <div style=\"display:none;max-height:0;overflow:hidden;opacity:0;\">Nuevo cliente pagó la Oferta Exclusiva — a buscar la mejor oferta.</div>\n\n  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#F3F4F6;\">\n    <tr><td align=\"center\" style=\"padding:24px 12px;\">\n      <table role=\"presentation\" width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:100%;max-width:600px;background:#FFFFFF;border:1px solid #E5E7EB;border-radius:16px;overflow:hidden;\">\n\n        <tr><td style=\"padding:26px 32px;border-bottom:1px solid #F3F4F6;\">\n          <table role=\"presentation\" width=\"100%\"><tr>\n            <td><img src=\"https://www.electrificarte.com/logo-email.png\" alt=\"Electrificarte\" height=\"28\" style=\"display:block;border:0;height:28px;width:auto;\"></td>\n            <td align=\"right\" style=\"font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:#9CA3AF;\">Uso interno</td>\n          </tr></table>\n        </td></tr>\n\n        <tr><td style=\"padding:36px 32px 8px;\">\n          <p style=\"margin:0 0 8px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#00A6A6;\">Nuevo lead · Oferta Exclusiva</p>\n          <h1 style=\"margin:0 0 16px;font-size:24px;font-weight:800;line-height:1.2;color:#111827;letter-spacing:-0.01em;\">Un cliente pagó los $19.990</h1>\n          <p style=\"margin:0 0 20px;font-size:15px;line-height:1.65;color:#4B5563;\">Hola <strong style=\"color:#111827;\">Francisco</strong>, entró un cliente nuevo que ya decidió su auto y busca el mejor precio en la red. Hay que conseguirle una oferta dentro de las próximas 72 horas.</p>\n\n          <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"border:1px solid #E5E7EB;border-radius:12px;margin:0 0 20px;\">\n            <tr><td style=\"padding:14px 20px;border-bottom:1px solid #F3F4F6;\">\n              <div style=\"font-size:11px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;color:#9CA3AF;\">Cliente</div>\n              <div style=\"font-size:15px;font-weight:700;color:#111827;margin-top:3px;\">{{ $('HTTP Request2').item.json.customer.name }}</div>\n            </td></tr>\n            <tr><td style=\"padding:14px 20px;border-bottom:1px solid #F3F4F6;\">\n              <div style=\"font-size:11px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;color:#9CA3AF;\">Vehículo buscado</div>\n              <div style=\"font-size:15px;font-weight:700;color:#006A61;margin-top:3px;\">{{ $json.descripcion_interes }}</div>\n            </td></tr>\n            <tr>\n              <td style=\"padding:14px 20px;\">\n                <div style=\"font-size:11px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;color:#9CA3AF;\">Teléfono</div>\n                <div style=\"font-size:15px;font-weight:700;color:#111827;margin-top:3px;\">{{ $json.telefono }}</div>\n              </td>\n            </tr>\n          </table>\n        </td></tr>\n\n        <tr><td style=\"padding:0 32px 36px;\">\n          <table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n            <td style=\"border-radius:12px;background:#00E5E5;\">\n              <a href=\"https://wa.me/{{ $json.telefono }}\" style=\"display:inline-block;padding:15px 34px;font-size:14px;font-weight:700;color:#000000;text-decoration:none;border-radius:12px;\">Escribir al cliente</a>\n            </td>\n          </tr></table>\n        </td></tr>\n\n        <tr><td style=\"padding:28px 32px;background:#000000;\">\n          <p style=\"margin:0 0 6px;font-size:13px;font-weight:700;color:#FFFFFF;letter-spacing:-0.01em;\">ELECTRIFICARTE<span style=\"color:#00E5E5;\">.COM</span></p>\n          <p style=\"margin:0;font-size:12px;line-height:1.6;color:rgba(255,255,255,0.55);\">Alerta interna generada automáticamente.</p>\n        </td></tr>\n\n      </table>\n    </td></tr>\n  </table>\n</body>\n</html>\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "nuevo-lead-francisco.html",
+      "name": "Correo nuevo lead (Francisco)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        260,
+        320
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Resend (Authorization Bearer)"
+        }
+      },
+      "notes": "Ajustá el 'to' y las expresiones a los nombres de nodo de tu flujo."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "keypair",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "from",
+              "value": "Electrificarte <no-reply@electrificarte.com>"
+            },
+            {
+              "name": "to",
+              "value": "={{ $('Create a row1').item.json.email }}"
+            },
+            {
+              "name": "subject",
+              "value": "Registro confirmado — Electrificarte"
+            },
+            {
+              "name": "html",
+              "value": "=<!DOCTYPE html>\n<html lang=\"es\">\n<head>\n  <meta charset=\"utf-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n  <meta name=\"color-scheme\" content=\"light\">\n  <title>Registro confirmado — Electrificarte</title>\n</head>\n<!--\n  VENTAS · Vendedor que pagó su suscripción. Va DIRECTO al nodo Resend de n8n.\n  Expresiones n8n:\n    {{ $('Create a row1').item.json.nombre }}                → nombre\n    {{ $('Create a row1').item.json.nombre_concesionario }}  → punto de venta\n    {{ $('Create a row1').item.json.marcas }}                → marcas\n-->\n<body style=\"margin:0;padding:0;background:#F3F4F6;font-family:'Helvetica Neue',Arial,sans-serif;-webkit-font-smoothing:antialiased;\">\n  <div style=\"display:none;max-height:0;overflow:hidden;opacity:0;\">Tu registro fue confirmado — bienvenido a la red de vendedores oficiales.</div>\n\n  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#F3F4F6;\">\n    <tr><td align=\"center\" style=\"padding:24px 12px;\">\n      <table role=\"presentation\" width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:100%;max-width:600px;background:#FFFFFF;border:1px solid #E5E7EB;border-radius:16px;overflow:hidden;\">\n\n        <tr><td style=\"padding:26px 32px;border-bottom:1px solid #F3F4F6;\">\n          <img src=\"https://www.electrificarte.com/logo-email.png\" alt=\"Electrificarte\" height=\"28\" style=\"display:block;border:0;height:28px;width:auto;\">\n        </td></tr>\n\n        <tr><td style=\"padding:36px 32px 8px;\">\n          <p style=\"margin:0 0 8px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#00A6A6;\">Registro confirmado</p>\n          <h1 style=\"margin:0 0 16px;font-size:24px;font-weight:800;line-height:1.2;color:#111827;letter-spacing:-0.01em;\">¡Bienvenido a la red de vendedores!</h1>\n          <p style=\"margin:0 0 20px;font-size:15px;line-height:1.65;color:#4B5563;\">Hola <strong style=\"color:#111827;\">{{ $('Create a row1').item.json.nombre }}</strong>, recibimos tu registro y pago correctamente. Tu cuenta está en revisión y en breve te contactamos para empezar a operar y recibir leads.</p>\n\n          <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"border:1px solid #E5E7EB;border-radius:12px;margin:0 0 20px;\">\n            <tr><td style=\"padding:14px 20px;border-bottom:1px solid #F3F4F6;\">\n              <div style=\"font-size:11px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;color:#9CA3AF;\">Nombre</div>\n              <div style=\"font-size:15px;font-weight:700;color:#111827;margin-top:3px;\">{{ $('Create a row1').item.json.nombre }}</div>\n            </td></tr>\n            <tr><td style=\"padding:14px 20px;border-bottom:1px solid #F3F4F6;\">\n              <div style=\"font-size:11px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;color:#9CA3AF;\">Punto de venta</div>\n              <div style=\"font-size:15px;font-weight:700;color:#111827;margin-top:3px;\">{{ $('Create a row1').item.json.nombre_concesionario }}</div>\n            </td></tr>\n            <tr><td style=\"padding:14px 20px;\">\n              <div style=\"font-size:11px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;color:#9CA3AF;\">Marcas</div>\n              <div style=\"font-size:15px;font-weight:700;color:#006A61;margin-top:3px;\">{{ $('Create a row1').item.json.marcas }}</div>\n            </td></tr>\n          </table>\n\n          <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#F9FAFB;border:1px solid #E5E7EB;border-radius:12px;margin:0 0 24px;\">\n            <tr><td style=\"padding:16px 20px;\">\n              <div style=\"font-size:11px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;color:#9CA3AF;margin-bottom:8px;\">¿Qué sigue?</div>\n              <div style=\"font-size:14px;line-height:1.7;color:#4B5563;\">1. Revisamos tu información.<br>2. Te contactamos para activar tu acceso.<br>3. Empiezas a recibir leads de clientes interesados.</div>\n            </td></tr>\n          </table>\n        </td></tr>\n\n        <tr><td style=\"padding:0 32px 36px;\">\n          <table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n            <td style=\"border-radius:12px;background:#00E5E5;\">\n              <a href=\"https://www.electrificarte.com\" style=\"display:inline-block;padding:15px 34px;font-size:14px;font-weight:700;color:#000000;text-decoration:none;border-radius:12px;\">Visitar Electrificarte</a>\n            </td>\n          </tr></table>\n        </td></tr>\n\n        <tr><td style=\"padding:28px 32px;background:#000000;\">\n          <p style=\"margin:0 0 6px;font-size:13px;font-weight:700;color:#FFFFFF;letter-spacing:-0.01em;\">ELECTRIFICARTE<span style=\"color:#00E5E5;\">.COM</span></p>\n          <p style=\"margin:0;font-size:12px;line-height:1.6;color:rgba(255,255,255,0.55);\">Marketplace de autos electrificados en Chile.<br>\n          <a href=\"https://www.electrificarte.com\" style=\"color:#00E5E5;text-decoration:none;\">www.electrificarte.com</a> · vendedores@electrificarte.com</p>\n        </td></tr>\n\n      </table>\n    </td></tr>\n  </table>\n</body>\n</html>\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "registro-vendedor.html",
+      "name": "Correo registro (vendedor)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        260,
+        520
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Resend (Authorization Bearer)"
+        }
+      },
+      "notes": "Ajustá el 'to' y las expresiones a los nombres de nodo de tu flujo."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "keypair",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "from",
+              "value": "Electrificarte <no-reply@electrificarte.com>"
+            },
+            {
+              "name": "to",
+              "value": "francisco@electrificarte.com"
+            },
+            {
+              "name": "subject",
+              "value": "Nuevo vendedor registrado"
+            },
+            {
+              "name": "html",
+              "value": "=<!DOCTYPE html>\n<html lang=\"es\">\n<head>\n  <meta charset=\"utf-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n  <meta name=\"color-scheme\" content=\"light\">\n  <title>Nuevo vendedor — Electrificarte</title>\n</head>\n<!--\n  VENTAS · USO INTERNO (Francisco). Se dispara cuando un vendedor paga su\n  suscripción. Va DIRECTO al nodo Resend de n8n.\n  Expresiones n8n:\n    {{ $('Create a row1').item.json.nombre }} {{ $('Create a row1').item.json.apellido }}\n    {{ $('Create a row1').item.json.nombre_concesionario }}  → punto de venta\n    {{ $('Create a row1').item.json.telefono }}              → contacto\n    {{ $('Create a row1').item.json.marcas }}                → marcas\n-->\n<body style=\"margin:0;padding:0;background:#F3F4F6;font-family:'Helvetica Neue',Arial,sans-serif;-webkit-font-smoothing:antialiased;\">\n  <div style=\"display:none;max-height:0;overflow:hidden;opacity:0;\">Nuevo vendedor pagó su suscripción — contactar para activar.</div>\n\n  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#F3F4F6;\">\n    <tr><td align=\"center\" style=\"padding:24px 12px;\">\n      <table role=\"presentation\" width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:100%;max-width:600px;background:#FFFFFF;border:1px solid #E5E7EB;border-radius:16px;overflow:hidden;\">\n\n        <tr><td style=\"padding:26px 32px;border-bottom:1px solid #F3F4F6;\">\n          <table role=\"presentation\" width=\"100%\"><tr>\n            <td><img src=\"https://www.electrificarte.com/logo-email.png\" alt=\"Electrificarte\" height=\"28\" style=\"display:block;border:0;height:28px;width:auto;\"></td>\n            <td align=\"right\" style=\"font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:#9CA3AF;\">Uso interno</td>\n          </tr></table>\n        </td></tr>\n\n        <tr><td style=\"padding:36px 32px 8px;\">\n          <p style=\"margin:0 0 8px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#00A6A6;\">Nuevo vendedor · suscripción pagada</p>\n          <h1 style=\"margin:0 0 16px;font-size:24px;font-weight:800;line-height:1.2;color:#111827;letter-spacing:-0.01em;\">Registro de vendedor completado</h1>\n          <p style=\"margin:0 0 20px;font-size:15px;line-height:1.65;color:#4B5563;\">Hola <strong style=\"color:#111827;\">Francisco</strong>, un nuevo vendedor completó su suscripción. Contactalo para verificar sus datos y activar su cuenta.</p>\n\n          <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"border:1px solid #E5E7EB;border-radius:12px;margin:0 0 20px;\">\n            <tr><td style=\"padding:14px 20px;border-bottom:1px solid #F3F4F6;\">\n              <div style=\"font-size:11px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;color:#9CA3AF;\">Vendedor</div>\n              <div style=\"font-size:15px;font-weight:700;color:#111827;margin-top:3px;\">{{ $('Create a row1').item.json.nombre }} {{ $('Create a row1').item.json.apellido }}</div>\n            </td></tr>\n            <tr><td style=\"padding:14px 20px;border-bottom:1px solid #F3F4F6;\">\n              <div style=\"font-size:11px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;color:#9CA3AF;\">Punto de venta</div>\n              <div style=\"font-size:15px;font-weight:700;color:#111827;margin-top:3px;\">{{ $('Create a row1').item.json.nombre_concesionario }}</div>\n            </td></tr>\n            <tr>\n              <td width=\"50%\" style=\"padding:14px 20px;border-right:1px solid #F3F4F6;\">\n                <div style=\"font-size:11px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;color:#9CA3AF;\">Teléfono</div>\n                <div style=\"font-size:15px;font-weight:700;color:#111827;margin-top:3px;\">{{ $('Create a row1').item.json.telefono }}</div>\n              </td>\n              <td width=\"50%\" style=\"padding:14px 20px;\">\n                <div style=\"font-size:11px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;color:#9CA3AF;\">Marcas</div>\n                <div style=\"font-size:15px;font-weight:700;color:#006A61;margin-top:3px;\">{{ $('Create a row1').item.json.marcas }}</div>\n              </td>\n            </tr>\n          </table>\n\n          <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#F9FAFB;border:1px solid #E5E7EB;border-radius:12px;margin:0 0 24px;\">\n            <tr><td style=\"padding:16px 20px;\">\n              <div style=\"font-size:11px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;color:#9CA3AF;margin-bottom:8px;\">Próximos pasos</div>\n              <div style=\"font-size:14px;line-height:1.7;color:#4B5563;\">1. Contactar al vendedor por WhatsApp o teléfono.<br>2. Verificar sus datos y marcas.<br>3. Activar su cuenta en el panel.</div>\n            </td></tr>\n          </table>\n        </td></tr>\n\n        <tr><td style=\"padding:0 32px 36px;\">\n          <table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n            <td style=\"border-radius:12px;background:#00E5E5;\">\n              <a href=\"https://wa.me/{{ $('Create a row1').item.json.telefono }}\" style=\"display:inline-block;padding:15px 30px;font-size:14px;font-weight:700;color:#000000;text-decoration:none;border-radius:12px;\">Escribir al vendedor</a>\n            </td>\n          </tr></table>\n        </td></tr>\n\n        <tr><td style=\"padding:28px 32px;background:#000000;\">\n          <p style=\"margin:0 0 6px;font-size:13px;font-weight:700;color:#FFFFFF;letter-spacing:-0.01em;\">ELECTRIFICARTE<span style=\"color:#00E5E5;\">.COM</span></p>\n          <p style=\"margin:0;font-size:12px;line-height:1.6;color:rgba(255,255,255,0.55);\">Alerta interna generada automáticamente.</p>\n        </td></tr>\n\n      </table>\n    </td></tr>\n  </table>\n</body>\n</html>\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "nuevo-vendedor-francisco.html",
+      "name": "Correo nuevo vendedor (Francisco)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        260,
+        720
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Resend (Authorization Bearer)"
+        }
+      },
+      "notes": "Ajustá el 'to' y las expresiones a los nombres de nodo de tu flujo."
+    }
+  ],
+  "connections": {
+    "Probar (Manual Trigger)": {
+      "main": [
+        [
+          {
+            "node": "Correo pago confirmado (cliente)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Correo nuevo lead (Francisco)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Correo registro (vendedor)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Correo nuevo vendedor (Francisco)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {},
+  "pinData": {}
+}
