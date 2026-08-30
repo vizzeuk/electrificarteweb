@@ -35,3 +35,11 @@ plantillas hay dos caminos:
 
 > Estos archivos son la **fuente de diseño**. Cuando el look esté aprobado, se
 > conectan (camino 1) para que se usen automáticamente en todos los correos.
+
+## Correos del flujo de VENTAS (`ventas/`)
+
+Los de esta carpeta (subasta) los renderiza el código (`renderEmail`, placeholders
+`{{clave}}`). Los del **flujo de pagos/suscripción** (cliente $19.990, vendedor,
+avisos a Francisco) están en **`emails/ventas/`** y son distintos: van **directo**
+al nodo Resend de n8n con **expresiones de n8n** (`{{ $('Nodo').item.json.campo }}`),
+no pasan por el código. Ver `emails/ventas/README.md`.

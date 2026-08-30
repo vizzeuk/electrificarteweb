@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Registro confirmado — Electrificarte</title>
+</head>
+<!--
+  VENTAS · Vendedor que pagó su suscripción. Va DIRECTO al nodo Resend de n8n.
+  Expresiones n8n:
+    {{ $('Create a row1').item.json.nombre }}                → nombre
+    {{ $('Create a row1').item.json.nombre_concesionario }}  → punto de venta
+    {{ $('Create a row1').item.json.marcas }}                → marcas
+-->
+<body style="margin:0;padding:0;background:#F3F4F6;font-family:'Helvetica Neue',Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">Tu registro fue confirmado — bienvenido a la red de vendedores oficiales.</div>
+
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F3F4F6;">
+    <tr><td align="center" style="padding:24px 12px;">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;background:#FFFFFF;border:1px solid #E5E7EB;border-radius:16px;overflow:hidden;">
+
+        <tr><td style="padding:26px 32px;border-bottom:1px solid #F3F4F6;">
+          <img src="https://www.electrificarte.com/logo-email.png" alt="Electrificarte" height="28" style="display:block;border:0;height:28px;width:auto;">
+        </td></tr>
+
+        <tr><td style="padding:36px 32px 8px;">
+          <p style="margin:0 0 8px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#00A6A6;">Registro confirmado</p>
+          <h1 style="margin:0 0 16px;font-size:24px;font-weight:800;line-height:1.2;color:#111827;letter-spacing:-0.01em;">¡Bienvenido a la red de vendedores!</h1>
+          <p style="margin:0 0 20px;font-size:15px;line-height:1.65;color:#4B5563;">Hola <strong style="color:#111827;">{{ $('Create a row1').item.json.nombre }}</strong>, recibimos tu registro y pago correctamente. Tu cuenta está en revisión y en breve te contactamos para empezar a operar y recibir leads.</p>
+
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #E5E7EB;border-radius:12px;margin:0 0 20px;">
+            <tr><td style="padding:14px 20px;border-bottom:1px solid #F3F4F6;">
+              <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;color:#9CA3AF;">Nombre</div>
+              <div style="font-size:15px;font-weight:700;color:#111827;margin-top:3px;">{{ $('Create a row1').item.json.nombre }}</div>
+            </td></tr>
+            <tr><td style="padding:14px 20px;border-bottom:1px solid #F3F4F6;">
+              <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;color:#9CA3AF;">Punto de venta</div>
+              <div style="font-size:15px;font-weight:700;color:#111827;margin-top:3px;">{{ $('Create a row1').item.json.nombre_concesionario }}</div>
+            </td></tr>
+            <tr><td style="padding:14px 20px;">
+              <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;color:#9CA3AF;">Marcas</div>
+              <div style="font-size:15px;font-weight:700;color:#006A61;margin-top:3px;">{{ $('Create a row1').item.json.marcas }}</div>
+            </td></tr>
+          </table>
+
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F9FAFB;border:1px solid #E5E7EB;border-radius:12px;margin:0 0 24px;">
+            <tr><td style="padding:16px 20px;">
+              <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;color:#9CA3AF;margin-bottom:8px;">¿Qué sigue?</div>
+              <div style="font-size:14px;line-height:1.7;color:#4B5563;">1. Revisamos tu información.<br>2. Te contactamos para activar tu acceso.<br>3. Empiezas a recibir leads de clientes interesados.</div>
+            </td></tr>
+          </table>
+        </td></tr>
+
+        <tr><td style="padding:0 32px 36px;">
+          <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+            <td style="border-radius:12px;background:#00E5E5;">
+              <a href="https://www.electrificarte.com" style="display:inline-block;padding:15px 34px;font-size:14px;font-weight:700;color:#000000;text-decoration:none;border-radius:12px;">Visitar Electrificarte</a>
+            </td>
+          </tr></table>
+        </td></tr>
+
+        <tr><td style="padding:28px 32px;background:#000000;">
+          <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:#FFFFFF;letter-spacing:-0.01em;">ELECTRIFICARTE<span style="color:#00E5E5;">.COM</span></p>
+          <p style="margin:0;font-size:12px;line-height:1.6;color:rgba(255,255,255,0.55);">Marketplace de autos electrificados en Chile.<br>
+          <a href="https://www.electrificarte.com" style="color:#00E5E5;text-decoration:none;">www.electrificarte.com</a> · vendedores@electrificarte.com</p>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>
