@@ -27,6 +27,7 @@ interface VendorRow {
   comuna: string | null;
   marcas: string | null;
   estado: string | null;
+  financiamientos: string | null;
 }
 
 export async function POST(req: NextRequest): Promise<Response> {
@@ -49,7 +50,7 @@ export async function POST(req: NextRequest): Promise<Response> {
 
   const { data: lead, error: leadErr } = await sb
     .from("leads")
-    .select("id, region, comuna, target_model, cierra_at")
+    .select("id, region, comuna, target_model, financing, cierra_at")
     .eq("id", body.leadId)
     .single();
   if (leadErr || !lead) return NextResponse.json({ error: "Lead no encontrado" }, { status: 404 });
@@ -64,16 +65,16 @@ export async function POST(req: NextRequest): Promise<Response> {
 
   const { data: vendors, error: vendorsErr } = await sb
     .from("leads_vendors")
-    .select("id, nombre, telefono, email, region, comuna, marcas, estado")
+    .select("id, nombre, telefono, email, region, comuna, marcas, estado, financiamientos")
     .returns<VendorRow[]>();
   if (vendorsErr) return NextResponse.json({ error: `No se pudieron leer los vendedores: ${vendorsErr.message}` }, { status: 500 });
 
   const brands = await getBrandNames();
   const profiles: VendorProfile[] = (vendors ?? []).map((v) => ({
-    id: v.id, nombre: v.nombre, region: v.region, comuna: v.comuna, marcas: v.marcas, estado: v.estado,
+    id: v.id, nombre: v.nombre, region: v.region, comuna: v.comuna, marcas: v.marcas, estado: v.estado, financiamientos: v.financiamientos,
   }));
   const matches = matchVendors(
-    { region: lead.region, comuna: lead.comuna, targetModel: lead.target_model },
+    { region: lead.region, comuna: lead.comuna, targetModel: lead.target_model, financing: lead.financing },
     profiles,
     { knownBrands: brands },
   );

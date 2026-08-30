@@ -86,5 +86,22 @@ test("vendedor suspendido queda no elegible con motivo", () => {
   assert.ok(v4.motivos.some((m) => m.includes("no activo")));
 });
 
+console.log("\nMatch de financiamiento:");
+const leadCredito = { ...lead, financing: "credito-convencional" };
+const vendorsFin: VendorProfile[] = [
+  { id: "f1", nombre: "Acepta convencional", region: "Metropolitana de Santiago", comuna: "Providencia", marcas: "BYD", estado: "activo", financiamientos: "contado, credito-convencional" },
+  { id: "f2", nombre: "Solo contado", region: "Metropolitana de Santiago", comuna: "Providencia", marcas: "BYD", estado: "activo", financiamientos: "contado" },
+  { id: "f3", nombre: "Sin declarar (degrada)", region: "Metropolitana de Santiago", comuna: "Providencia", marcas: "BYD", estado: "activo", financiamientos: null },
+];
+test("excluye al vendedor que no acepta el financiamiento del lead", () => {
+  const r = matchVendors(leadCredito, vendorsFin, { knownBrands: ["BYD"] });
+  const elegibles = r.filter((m) => m.elegible).map((m) => m.vendor.id).sort();
+  assert.deepEqual(elegibles, ["f1", "f3"], "f1 acepta convencional; f3 sin declarar (degrada a sí); f2 solo contado → fuera");
+});
+test("lead 'no-seguro' no filtra por financiamiento", () => {
+  const r = matchVendors({ ...lead, financing: "no-seguro" }, vendorsFin, { knownBrands: ["BYD"] });
+  assert.equal(r.filter((m) => m.elegible).length, 3);
+});
+
 console.log(`\n${failed === 0 ? "✓" : "✗"} ${passed} pasaron, ${failed} fallaron\n`);
 process.exit(failed === 0 ? 0 : 1);

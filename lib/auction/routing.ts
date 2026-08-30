@@ -21,12 +21,31 @@ export interface VendorProfile {
   /** Marcas que maneja el vendedor (texto libre: "BYD, Tesla", "byd"...). */
   marcas?: string | null;
   estado?: string | null;
+  /** Financiamientos que acepta (mismos valores que leads.financing, separados por coma). */
+  financiamientos?: string | null;
 }
 
 export interface LeadForRouting {
   region?: string | null;
   comuna?: string | null;
   targetModel: string;
+  /** Financiamiento que busca el lead (contado | credito-convencional | credito-inteligente | no-seguro). */
+  financing?: string | null;
+}
+
+/**
+ * ¿El vendedor acepta el financiamiento que busca el lead? Degrada con gracia:
+ * - Si el lead no tiene requisito concreto (contado / no-seguro / vacío) → true.
+ * - Si el vendedor aún no declaró sus financiamientos (dato de la web de
+ *   vendedores, hoy puede estar vacío) → true (no filtra hasta tener el dato).
+ * - Si no, el lead.financing debe estar en la lista del vendedor.
+ */
+export function vendorAcceptsFinancing(leadFinancing?: string | null, vendorFinanciamientos?: string | null): boolean {
+  const lead = normalize(leadFinancing);
+  if (lead === "" || lead === "no-seguro" || lead === "contado") return true;
+  const vend = normalize(vendorFinanciamientos);
+  if (vend === "") return true;
+  return vend.includes(lead);
 }
 
 export interface VendorMatch {
@@ -35,8 +54,10 @@ export interface VendorMatch {
   brandMatch: boolean;
   /** El vendedor está activo (no suspendido/dado de baja). */
   activo: boolean;
+  /** El vendedor acepta el financiamiento que busca el lead. */
+  financiamientoOk: boolean;
   cercania: CercaniaZona;
-  /** Recibe el lead: activo + marca calza. */
+  /** Recibe el lead: activo + marca calza + financiamiento calza. */
   elegible: boolean;
   motivos: string[];
 }
@@ -83,7 +104,8 @@ export function matchVendors(
     const marcas = normalize(vendor.marcas);
     const brandMatch = brand != null && marcas !== "" && marcas.includes(brand);
     const cercania = cercaniaZona(lead.region, lead.comuna, vendor.region, vendor.comuna);
-    const elegible = activo && brandMatch;
+    const financiamientoOk = vendorAcceptsFinancing(lead.financing, vendor.financiamientos);
+    const elegible = activo && brandMatch && financiamientoOk;
 
     const motivos: string[] = [];
     if (!activo) motivos.push(`vendedor no activo (estado: ${vendor.estado ?? "—"})`);
@@ -94,9 +116,10 @@ export function matchVendors(
           : `no maneja la marca "${brand}" (marcas: ${vendor.marcas ?? "—"})`,
       );
     }
-    if (elegible) motivos.push(`calza marca + cercanía ${cercania}`);
+    if (!financiamientoOk) motivos.push(`no acepta el financiamiento del lead (${lead.financing})`);
+    if (elegible) motivos.push(`calza marca + financiamiento + cercanía ${cercania}`);
 
-    return { vendor, brandMatch, activo, cercania, elegible, motivos };
+    return { vendor, brandMatch, activo, financiamientoOk, cercania, elegible, motivos };
   });
 
   return matches.sort((a, b) => {

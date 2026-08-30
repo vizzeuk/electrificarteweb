@@ -15,6 +15,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabase } from "@/lib/whatsapp/subscription";
 import { getPublishedPrice } from "@/lib/auction/pricing";
 import { cercaniaZona, normalize } from "@/lib/auction/geo";
+import { vendorAcceptsFinancing } from "@/lib/auction/routing";
 import {
   evaluateOffer,
   type LeadScoringInput,
@@ -39,7 +40,7 @@ interface OfferRow {
   valor_regalias: number;
   precio_publicado: number | null;
   estado: string;
-  leads_vendors: { region: string | null; comuna: string | null; estado: string | null } | null;
+  leads_vendors: { region: string | null; comuna: string | null; estado: string | null; financiamientos: string | null } | null;
 }
 
 /** El lead requiere financiamiento salvo que pague al contado o no esté seguro. */
@@ -97,7 +98,7 @@ export async function POST(req: NextRequest): Promise<Response> {
   const { data: offers, error: offersErr } = await sb
     .from("ofertas")
     .select(
-      "id, vendor_id, precio_oferta, horas_entrega, version_match, cercania_zona, acepta_financiamiento, valor_regalias, precio_publicado, estado, leads_vendors(region, comuna, estado)",
+      "id, vendor_id, precio_oferta, horas_entrega, version_match, cercania_zona, acepta_financiamiento, valor_regalias, precio_publicado, estado, leads_vendors(region, comuna, estado, financiamientos)",
     )
     .eq("lead_id", leadId)
     .returns<OfferRow[]>();
@@ -138,7 +139,9 @@ export async function POST(req: NextRequest): Promise<Response> {
       horasEntrega: o.horas_entrega,
       version: o.version_match,
       cercania,
-      aceptaFinanciamiento: o.acepta_financiamiento,
+      // El financiamiento ya no viene en la puja: se deriva del PERFIL del vendedor
+      // (qué financiamientos acepta vs. el que busca el lead). Degrada con gracia.
+      aceptaFinanciamiento: vendorAcceptsFinancing(lead.financing, o.leads_vendors?.financiamientos),
       valorRegalias: o.valor_regalias,
       oferenteVerificado: !["suspendido", "inactivo", "baja", "rechazado", "eliminado"].includes(
         normalize(o.leads_vendors?.estado),
