@@ -27,7 +27,7 @@ const materialSymbols = localFont({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://electrificarte.com"),
+  metadataBase: new URL("https://www.electrificarte.com"),
   title: {
     default: "Electrificarte | Ahorra millones en tu auto electrificado en Chile",
     template: "%s | Electrificarte",
@@ -64,7 +64,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "es_CL",
-    url: "https://electrificarte.com",
+    url: "https://www.electrificarte.com",
     siteName: "Electrificarte",
     title: "Electrificarte | Ahorra millones en tu auto electrificado en Chile",
     description:

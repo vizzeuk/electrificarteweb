@@ -12,7 +12,7 @@ const sanity = createClient({
   useCdn: true,
 });
 
-const PDP_BASE = "https://electrificarte.com/auto/";
+const PDP_BASE = "https://www.electrificarte.com/auto/";
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 

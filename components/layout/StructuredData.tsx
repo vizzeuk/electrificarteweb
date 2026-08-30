@@ -6,8 +6,8 @@ export function HomeStructuredData() {
     "@type": "Organization",
     name: "Electrificarte",
     alternateName: "Electrificarte S.P.A.",
-    url: "https://electrificarte.com",
-    logo: "https://electrificarte.com/logos-electrificarte/logo-elec-sin%20auto.webp",
+    url: "https://www.electrificarte.com",
+    logo: "https://www.electrificarte.com/logos-electrificarte/logo-elec-sin%20auto.webp",
     description:
       "Marketplace de autos electrificados en Chile. Intermediario entre compradores y vendedores oficiales que garantiza el mejor precio del mercado.",
     foundingDate: "2023",
@@ -35,7 +35,7 @@ export function HomeStructuredData() {
       "@type": "ContactPoint",
       contactType: "sales",
       availableLanguage: "Spanish",
-      url: "https://electrificarte.com/contacto",
+      url: "https://www.electrificarte.com/contacto",
     },
     hasOfferCatalog: {
       "@type": "OfferCatalog",
@@ -61,13 +61,13 @@ export function HomeStructuredData() {
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: "Electrificarte",
-    url: "https://electrificarte.com",
+    url: "https://www.electrificarte.com",
     inLanguage: "es-CL",
     potentialAction: {
       "@type": "SearchAction",
       target: {
         "@type": "EntryPoint",
-        urlTemplate: "https://electrificarte.com/marcas?q={search_term_string}",
+        urlTemplate: "https://www.electrificarte.com/marcas?q={search_term_string}",
       },
       "query-input": "required name=search_term_string",
     },
@@ -158,7 +158,7 @@ export function HomeStructuredData() {
     name: "Electrificarte",
     description:
       "Marketplace de autos electricos en Chile con asesoria personalizada para obtener el mejor precio del mercado.",
-    url: "https://electrificarte.com",
+    url: "https://www.electrificarte.com",
     address: {
       "@type": "PostalAddress",
       addressLocality: "Santiago",

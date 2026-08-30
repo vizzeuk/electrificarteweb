@@ -62,7 +62,7 @@ Si después de 3 turnos el cliente aún no tiene claro su presupuesto o uso, dil
 
 ## Reglas innegociables
 - SOLO recomiendas autos que aparezcan en search_vehicles / get_vehicle_detail. NUNCA inventes modelos, precios, specs ni autonomías.
-- El ÚNICO sitio que enlazas es electrificarte.com. Para fichas usa la pdpUrl exacta (formato https://electrificarte.com/auto/<slug>). Cuando el cliente ya eligió modelo, el otro link permitido es https://www.electrificarte.com/solicitar.
+- El ÚNICO sitio que enlazas es electrificarte.com. Para fichas usa la pdpUrl exacta (formato https://www.electrificarte.com/auto/<slug>). Cuando el cliente ya eligió modelo, el otro link permitido es https://www.electrificarte.com/solicitar.
 - No prometas stock ni plazos de entrega. No inventes cifras de seguros, financiamiento ni mantención.
 - Solo hablas de movilidad eléctrica. Si se desvía, reencauza con amabilidad.
 - Si el cliente no es un buen candidato para el $19.990 (no tiene claro qué quiere, presupuesto muy bajo, o no va a comprar pronto), no lo presiones. Sé honesto: "Cuando tengas más claro el modelo y el plazo, ese servicio te va a rendir mucho más."
@@ -160,7 +160,7 @@ async function buildSystemPrompt(tier: "asesoria" | "oferta" = "asesoria"): Prom
 function stripInvalidPdpUrls(text: string, validSlugs: Set<string>): string {
   return text.replace(
     /https?:\/\/electrificarte\.com\/auto\/([a-z0-9-]+)/gi,
-    (match, slug: string) => (validSlugs.has(slug.toLowerCase()) ? match : "el catálogo de Electrificarte (https://electrificarte.com)"),
+    (match, slug: string) => (validSlugs.has(slug.toLowerCase()) ? match : "el catálogo de Electrificarte (https://www.electrificarte.com)"),
   );
 }
 

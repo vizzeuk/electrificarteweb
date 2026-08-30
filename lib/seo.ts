@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 /** Dominio de producción — fuente única de verdad para canonicals, sitemap, OG y schema. */
-export const SITE_URL = "https://electrificarte.com";
+export const SITE_URL = "https://www.electrificarte.com";
 export const SITE_NAME = "Electrificarte";
 export const SITE_LOCALE = "es_CL";
 
