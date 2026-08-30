@@ -64,10 +64,12 @@ async function main() {
   const matchRes = await matchPOST(req(secret, { leadId }));
   check("200 OK", () => assert.equal(matchRes.status, 200));
   const matchJson = await matchRes.json();
-  check("rutea a los 3 vendedores BYD, excluye Tesla", () => {
-    assert.equal(matchJson.total, 3);
-    const nombres = matchJson.eligible.map((e: { nombre: string }) => e.nombre).sort();
-    assert.deepEqual(nombres, ["BYD Providencia", "BYD Temuco", "BYD Viña"]);
+  check("rutea a los BYD de QA, excluye el Tesla de QA (tolera vendedores reales)", () => {
+    const nombres = matchJson.eligible.map((e: { nombre: string }) => e.nombre);
+    for (const n of ["BYD Providencia", "BYD Temuco", "BYD Viña"]) {
+      assert.ok(nombres.includes(n), `falta ${n} en elegibles`);
+    }
+    assert.ok(!nombres.includes("Tesla Las Condes"), "el Tesla de QA no debería ser elegible");
   });
   check("cada elegible trae contacto (telefono/email) para notificar", () => {
     for (const e of matchJson.eligible) assert.ok(e.telefono || e.email, "sin contacto");
