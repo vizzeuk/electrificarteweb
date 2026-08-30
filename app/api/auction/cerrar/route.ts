@@ -18,6 +18,9 @@ import { normalize } from "@/lib/auction/geo";
 import { generateClientComparison, type OfferForMessage } from "@/lib/auction/offer-message";
 import { renderEmail, buildOfertasCards, CERCANIA_UBICACION, horasATexto, type OfertaCard } from "@/lib/auction/emails";
 import { WHATSAPP_LINK } from "@/lib/auction/config";
+import { offerRecovery } from "@/lib/auction/recovery";
+import { adminPhones } from "@/lib/whatsapp/admin";
+import { sendProactiveText } from "@/lib/whatsapp/outbound";
 import type { CercaniaZona, VersionMatch } from "@/lib/auction/score";
 
 export const runtime = "nodejs";
@@ -82,10 +85,29 @@ export async function POST(req: NextRequest): Promise<Response> {
     .returns<OfferRow[]>();
   if (offersErr) return NextResponse.json({ error: offersErr.message }, { status: 500 });
 
-  // Sin ofertas válidas: se cierra el lead igual (sin ganador).
+  // Sin ofertas: nadie pujó. Se cierra, se le ofrece recuperación al cliente
+  // (o devolución si está en el tope) y se le avisa a Francisco.
   if (!offers || offers.length === 0) {
     await sb.from("leads").update({ cerrada_at: new Date().toISOString() }).eq("id", body.leadId);
-    return NextResponse.json({ leadId: body.leadId, yaCerrada: false, sinOfertas: true });
+    const recoveryMsg = await offerRecovery(sb, body.leadId, lead.target_model);
+    const htmlEmailSinOfertas = renderEmail("sin-ofertas", {
+      nombre: lead.first_name ?? "",
+      modelo: lead.target_model,
+      whatsapp_url: WHATSAPP_LINK,
+    });
+    // Aviso a Francisco (best-effort).
+    for (const p of adminPhones()) {
+      await sendProactiveText(p, `⚠️ El lead #${body.leadId} (${lead.target_model}) cerró SIN ofertas de vendedores.`).catch(() => {});
+    }
+    return NextResponse.json({
+      leadId: body.leadId,
+      yaCerrada: false,
+      sinOfertas: true,
+      cliente: { nombre: lead.first_name ?? null, telefono: lead.telefono ?? null, email: lead.email ?? null },
+      message: recoveryMsg,
+      htmlEmailSinOfertas,
+      datos: { modelo: lead.target_model },
+    });
   }
 
   // Una oferta por vendedor: la de mejor score (resuelve las re-pujas).

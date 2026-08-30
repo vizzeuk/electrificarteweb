@@ -108,6 +108,21 @@ Cuéntanos cómo te fue para ayudarte con lo que necesites.
 
 ---
 
+### 8. `sin_ofertas_cliente` — UTILITY
+Al cliente cuando su búsqueda cerró sin que nadie ofertara (Flujo 4, rama sin ofertas).
+
+**Body:**
+```
+Hola 👋 Esta vez no conseguimos ofertas para tu {{1}}. Podemos buscarte otro auto sin costo adicional, y si aun así no hay un buen precio, tu pago es reembolsable.
+
+Respóndenos con el modelo que te interesa y lo ingresamos de nuevo.
+```
+- `{{1}}` = modelo
+
+*(A Francisco se le avisa por WhatsApp directo desde el servidor — no necesita plantilla.)*
+
+---
+
 ## Textos que NO necesitan plantilla (van en sesión)
 
 Estos ocurren cuando la persona **ya está respondiendo** (dentro de las 24 h),

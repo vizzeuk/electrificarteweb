@@ -137,12 +137,56 @@
       "credentials": { "httpHeaderAuth": { "id": "REEMPLAZAR", "name": "Resend (Authorization Bearer)" } }
     },
     {
+      "parameters": {
+        "conditions": { "options": { "caseSensitive": true, "typeValidation": "loose" },
+          "conditions": [ { "leftValue": "={{ $json.sinOfertas === true }}", "rightValue": "", "operator": { "type": "boolean", "operation": "true", "singleValue": true } } ],
+          "combinator": "and" }
+      },
+      "id": "f4-if-sin",
+      "name": "¿Cerró sin ofertas?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [1220, 640]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.kapso.ai/meta/whatsapp/v24.0/{{ $env.KAPSO_PHONE_NUMBER_ID }}/messages",
+        "authentication": "genericCredentialType", "genericAuthType": "httpHeaderAuth",
+        "sendBody": true, "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ messaging_product: 'whatsapp', to: $json.cliente.telefono, type: 'template', template: { name: 'sin_ofertas_cliente', language: { code: 'es' }, components: [ { type: 'body', parameters: [ { type: 'text', text: $json.datos.modelo } ] } ] } }) }}",
+        "options": {}
+      },
+      "id": "f4-kapso-sin",
+      "name": "WhatsApp sin ofertas (Kapso)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1480, 720],
+      "credentials": { "httpHeaderAuth": { "id": "REEMPLAZAR", "name": "Kapso (X-API-Key)" } },
+      "notes": "Plantilla sin_ofertas_cliente: {{1}}=modelo."
+    },
+    {
+      "parameters": {
+        "method": "POST", "url": "https://api.resend.com/emails",
+        "authentication": "genericCredentialType", "genericAuthType": "httpHeaderAuth",
+        "sendBody": true, "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ from: 'Electrificarte <no-reply@electrificarte.com>', to: [$json.cliente.email], subject: 'Sobre tu búsqueda del ' + $json.datos.modelo, html: $json.htmlEmailSinOfertas }) }}",
+        "options": {}
+      },
+      "id": "f4-resend-sin",
+      "name": "Correo sin ofertas (Resend)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1480, 860],
+      "credentials": { "httpHeaderAuth": { "id": "REEMPLAZAR", "name": "Resend (Authorization Bearer)" } }
+    },
+    {
       "parameters": {},
       "id": "f4-noop",
-      "name": "Sin ofertas (fin)",
+      "name": "Cerrado (fin)",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
-      "position": [1220, 620]
+      "position": [1480, 980]
     }
   ],
   "connections": {
@@ -156,7 +200,14 @@
         { "node": "Correo ofertas (Resend)", "type": "main", "index": 0 },
         { "node": "Un item por perdedor", "type": "main", "index": 0 }
       ],
-      [ { "node": "Sin ofertas (fin)", "type": "main", "index": 0 } ]
+      [ { "node": "¿Cerró sin ofertas?", "type": "main", "index": 0 } ]
+    ] },
+    "¿Cerró sin ofertas?": { "main": [
+      [
+        { "node": "WhatsApp sin ofertas (Kapso)", "type": "main", "index": 0 },
+        { "node": "Correo sin ofertas (Resend)", "type": "main", "index": 0 }
+      ],
+      [ { "node": "Cerrado (fin)", "type": "main", "index": 0 } ]
     ] },
     "Un item por perdedor": { "main": [[
       { "node": "WhatsApp perdedor (Kapso)", "type": "main", "index": 0 },
