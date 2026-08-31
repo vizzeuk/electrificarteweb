@@ -59,7 +59,7 @@ export default async function HomePage() {
   const toBrand = (b: any) =>
     typeof b === "string" || b == null ? b : { name: b.name, slug: toSlug(b.slug), logoUrl: b.logoUrl };
 
-  const latestCars = mergeAndDedup(page?.latestLaunchesCars, newCars, 6)
+  const latestCars = mergeAndDedup(page?.latestLaunchesCars, newCars, 10)
     .map((c: any) => ({
       _id:                  c._id,
       name:                 c.name,

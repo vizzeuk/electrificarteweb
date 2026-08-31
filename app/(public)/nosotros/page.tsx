@@ -7,12 +7,12 @@ export const revalidate = 60;
 export const metadata: Metadata = {
   title: "Quiénes somos",
   description:
-    "Electrificarte es el marketplace de autos electrificados de Chile. Conectamos a compradores con nuestra red de vendedores oficiales para conseguir el mejor precio del mercado, sin vueltas ni presión de venta.",
+    "Electrificarte negocia por ti el mejor precio en autos electrificados de Chile. Conectamos a compradores con nuestra red de vendedores oficiales para conseguir el mejor precio del mercado, sin vueltas ni presión de venta.",
   alternates: { canonical: "/nosotros" },
   openGraph: {
     title: "Quiénes somos | Electrificarte",
     description:
-      "El marketplace de autos electrificados de Chile. Negociamos por ti con nuestra red de vendedores oficiales para que ahorres de verdad.",
+      "Negociamos por ti el mejor precio en autos electrificados de Chile, con nuestra red de vendedores oficiales, para que ahorres de verdad.",
     url: "/nosotros",
     type: "website",
   },
@@ -87,9 +87,9 @@ export default function NosotrosPage() {
             <span className="text-primary">para que estrenes electrificado</span>
           </h1>
           <p className="text-lg text-white/60 leading-relaxed mb-8 max-w-2xl">
-            Electrificarte es el marketplace de autos electrificados de Chile.
-            Ponemos de tu lado el poder de negociación que un comprador solo no
-            tiene: concentramos la demanda y negociamos por ti con una red de
+            Electrificarte negocia por ti el mejor precio en autos electrificados
+            de Chile. Ponemos de tu lado el poder de negociación que un comprador
+            solo no tiene: concentramos la demanda y negociamos por ti con una red de
             vendedores oficiales para que consigas el mejor precio del mercado.
           </p>
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">

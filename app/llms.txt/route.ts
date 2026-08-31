@@ -49,9 +49,9 @@ export async function GET() {
 
   const body = `# Electrificarte
 
-> Marketplace chileno de vehículos electrificados (100% eléctricos e híbridos). No vende
-> autos directamente: conecta al comprador con su red de vendedores oficiales y negocia por
-> él un precio mejor que el de lista.
+> Servicio chileno de negociación de vehículos electrificados (100% eléctricos e híbridos).
+> No vende autos directamente: conecta al comprador con su red de vendedores oficiales y
+> negocia por él un precio mejor que el de lista.
 
 ## Qué es
 

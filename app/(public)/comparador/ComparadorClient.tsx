@@ -484,7 +484,7 @@ export default function ComparadorClient({ allCars, initialId }: ComparadorClien
               href={selected.length > 0 ? `/solicitar?auto=${selected[0].slug}` : "/solicitar"}
               className="flex-shrink-0 inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-black px-8 py-4 rounded-xl transition-all text-sm whitespace-nowrap shadow-[0_4px_20px_rgba(0,229,229,0.30)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]"
             >
-              Negociamos por ti
+              Quiero mi oferta
             </Link>
           </div>
         </div>
@@ -545,7 +545,7 @@ function DesktopCarSlot({ car, onRemove, onAdd }: { car: Car | undefined; onRemo
           href={`/solicitar?auto=${car.slug}`}
           className="mt-4 block w-full bg-primary hover:bg-primary-dark text-black font-bold text-xs py-2 rounded-xl transition-colors shadow-[0_2px_10px_rgba(0,229,229,0.20)] hover:shadow-[0_4px_16px_rgba(0,229,229,0.35)]"
         >
-          Negociamos por ti
+          Quiero mi oferta
         </Link>
       </m.div>
     );

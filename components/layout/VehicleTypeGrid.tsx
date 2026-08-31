@@ -94,15 +94,16 @@ export function VehicleTypeGrid({ types }: ElectricTypeGridProps) {
         </div>
       </div>
 
-      {/* Carousel track — full-bleed */}
+      {/* Carousel track — limitado al contenedor y centrado (como los demás
+          carruseles del home). Antes era full-bleed con padding calculado, lo
+          que dejaba las tarjetas pegadas a la izquierda y un hueco en blanco a
+          la derecha en pantallas anchas cuando hay pocas tarjetas. */}
       <div
         ref={trackRef}
-        className="flex gap-4 overflow-x-auto pb-2 scroll-smooth"
+        className="flex gap-4 overflow-x-auto pb-2 scroll-smooth max-w-7xl mx-auto px-4 md:px-8"
         style={{
           scrollSnapType: "x mandatory",
           WebkitOverflowScrolling: "touch",
-          paddingLeft:  "max(1rem, calc((100vw - 1280px) / 2 + 2rem))",
-          paddingRight: "max(1rem, calc((100vw - 1280px) / 2 + 2rem))",
           msOverflowStyle: "none",
           scrollbarWidth: "none",
         }}

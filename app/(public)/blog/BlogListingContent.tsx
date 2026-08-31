@@ -309,7 +309,7 @@ export function BlogListingContent({ posts }: { posts: BlogPreviewPost[] }) {
               href="/solicitar"
               className="flex-shrink-0 inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-black px-8 py-4 rounded-xl transition-colors text-sm whitespace-nowrap"
             >
-              Negociamos por ti
+              Quiero mi oferta
             </Link>
           </div>
         </div>

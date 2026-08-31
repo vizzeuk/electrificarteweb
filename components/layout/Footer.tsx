@@ -159,8 +159,8 @@ export function Footer() {
               />
             </Link>
             <p className="text-white/50 text-sm mb-6 leading-relaxed">
-              Marketplace de autos electrificados en Chile. Conectamos compradores
-              con la mejor red de vendedores oficiales.
+              Negociamos por ti el mejor precio en autos electrificados de Chile,
+              con nuestra red de vendedores oficiales.
             </p>
             <div className="flex gap-3">
               {socialLinks.map((s) => (

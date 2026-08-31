@@ -68,7 +68,7 @@ export function StickyCTA() {
                 href="/solicitar"
                 className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-8 py-3 rounded-xl transition-all text-sm shadow-[0_4px_20px_rgba(0,229,229,0.25)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.38)] hover:scale-[1.02] active:scale-[0.99]"
               >
-                Negociamos por ti
+                Quiero mi oferta
               </Link>
             </div>
           </div>

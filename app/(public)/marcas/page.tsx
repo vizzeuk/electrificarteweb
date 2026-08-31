@@ -92,7 +92,7 @@ export default async function MarcasPage() {
                 href="/solicitar"
                 className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-8 py-4 rounded-xl transition-colors text-sm whitespace-nowrap"
               >
-                Negociamos por ti
+                Quiero mi oferta
               </Link>
               <Link
                 href="/comparador"

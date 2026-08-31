@@ -297,7 +297,7 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
                   href={`/solicitar?auto=${car.slug}&nombre=${encodeURIComponent(car.brand + " " + car.name)}`}
                   className="bg-primary hover:bg-primary-dark text-black font-bold px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm transition-colors whitespace-nowrap"
                 >
-                  Negociamos por ti
+                  Quiero mi oferta
                 </Link>
               </div>
             </div>
@@ -987,7 +987,7 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
               </p>
             </div>
             <Link href={`/solicitar?auto=${car.slug}&nombre=${encodeURIComponent(car.brand + " " + car.name)}`} className="flex-shrink-0 inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-black px-8 py-4 rounded-xl transition-colors text-sm whitespace-nowrap">
-              Negociamos por ti
+              Quiero mi oferta
             </Link>
           </div>
         </div>
