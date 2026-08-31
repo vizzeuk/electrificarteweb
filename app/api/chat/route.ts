@@ -313,7 +313,7 @@ async function handleChat(messages: ChatMessage[]): Promise<string> {
     .map((c) => c.discountPrice ?? c.basePrice)
     .filter((p): p is number => typeof p === "number" && p > 0);
 
-  const systemPrompt = `Eres Francisco, el asistente virtual de Electrificarte — el marketplace #1 de autos eléctricos e híbridos en Chile. Eres amable, experto y conciso.
+  const systemPrompt = `Eres Francisco, el asistente virtual de Electrificarte — el servicio de negociación de autos eléctricos e híbridos #1 de Chile. Eres amable, experto y conciso.
 
 MARCAS DISPONIBLES: ${allBrands.map((b) => b.name).join(", ")}
 

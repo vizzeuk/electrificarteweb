@@ -63,10 +63,14 @@ export const featuredCarsQuery = groq`
   }
 `;
 
-// ─── Autos recientes — fallback para Últimos Lanzamientos ────────────────────
-// isNew=true primero, luego por fecha — evita concatenación GROQ que rompe asset->url
+// ─── Autos recientes — Últimos Lanzamientos (100% automático) ────────────────
+// Orden por fecha de alta en el catálogo (_createdAt desc): los últimos autos
+// agregados salen primero. Sin curación ni flags manuales, cero mantención.
+// OJO: no usar `order(isNew desc, ...)`: en GROQ los ~50 autos con isNew sin
+// setear (null) ordenan por ENCIMA de los marcados true, así que el flag no solo
+// no funcionaba sino que hundía a los realmente marcados.
 export const newCarsForHomeQuery = groq`
-  *[_type == "car" && hidden != true] | order(isNew desc, _createdAt desc) [0...6] {
+  *[_type == "car" && hidden != true] | order(_createdAt desc) [0...10] {
     _id,
     name,
     "slug": slug.current,

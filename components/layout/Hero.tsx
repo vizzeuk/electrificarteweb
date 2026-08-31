@@ -7,20 +7,18 @@ export interface HeroData {
   badge?: string;
   title?: string;
   titleHighlight?: string;
-  // ─── Panel Oferta ($19.990) — alimentado por Sanity ───
+  // ─── Flujo principal: Oferta ($19.990) — alimentado por Sanity ───
   subtitle?: string;
   cta1Text?: string;
   cta1Href?: string;
   cta2Text?: string;
   offerPrice?: string;
-  // ─── Panel Asesoría ($4.990) — hoy con fallbacks; listo para subir a Sanity ───
-  advisoryEyebrow?: string;
+  // ─── Flujo secundario: Asesoría ($4.990) — fallbacks; listo para Sanity ───
   advisoryTitle?: string;
-  advisorySubtitle?: string;
   advisoryPrice?: string;
   advisoryCtaText?: string;
   advisoryCtaHref?: string;
-  // ─── Campos heredados (aún llegan desde page.tsx; no se renderizan hoy) ───
+  // ─── Stats de confianza ───
   statSavings?: string;
   statCars?: string;
   statDiscount?: string;
@@ -36,37 +34,44 @@ interface HeroProps {
 }
 
 export function Hero({ data }: HeroProps) {
-  const badge     = data?.badge          ?? "Marketplace #1 de autos electrificados en Chile";
-  const title     = data?.title          ?? "Estrena tu próximo";
+  const badge     = data?.badge          ?? "El mejor precio en autos electrificados de Chile";
+  const title     = data?.title          ?? "Ahorra millones en tu próximo";
   const highlight = data?.titleHighlight ?? "auto electrificado";
 
-  // Panel Oferta ($19.990)
-  const offerSubtitle = data?.subtitle  ?? "Ya sabes qué auto quieres. Negociamos con nuestra red de vendedores oficiales y te traemos la mejor oferta del mercado en 48-96 horas. Si no ahorras, te devolvemos el dinero.";
-  const offerCtaText  = data?.cta1Text  ?? "Quiero mi oferta";
-  const offerCtaHref  = data?.cta1Href  ?? "/solicitar";
+  // Flujo principal — Oferta ($19.990)
+  const offerSubtitle = data?.subtitle  ?? "Ya sabes qué auto quieres. Por un pago único negociamos con nuestra red de vendedores oficiales y te traemos la mejor oferta del mercado en 48-96 h.";
+  // El hero vende el flujo pago: la acción principal lleva al formulario de la
+  // Oferta ($19.990), no al catálogo. Por eso no usamos el cta1 de Sanity
+  // (que hoy es "Ver autos disponibles" → /marcas).
+  const offerCtaHref  = "/solicitar";
   const offerPrice    = data?.offerPrice ?? data?.offerNewPrice ?? "$19.990";
 
-  // Panel Asesoría ($4.990)
-  const advEyebrow  = data?.advisoryEyebrow  ?? "Aún no sé cuál elegir";
-  const advTitle    = data?.advisoryTitle    ?? "Te ayudamos a decidir";
-  const advSubtitle = data?.advisorySubtitle ?? "Francisco, nuestro asesor IA, analiza tu uso y presupuesto por WhatsApp y te ayuda a encontrar tu modelo ideal, sin presión de venta.";
-  const advCtaText  = data?.advisoryCtaText  ?? "Quiero asesoría";
+  // Flujo secundario — Asesoría ($4.990)
   const advCtaHref  = data?.advisoryCtaHref  ?? "/asesoria";
   const advPrice    = data?.advisoryPrice    ?? "$4.990";
+
+  // Prueba social + ancla de ahorro (venden el ROI de la oferta paga)
+  const avgSavings = data?.statSavings ?? "$4.200.000";
+  const avatars = [
+    "/images/testimonial-person-1.jpg",
+    "/images/testimonial-person-2.jpg",
+    "/images/testimonial-person-3.jpg",
+  ];
 
   return (
     <section
       className="relative min-h-[90vh] flex items-center overflow-hidden bg-black pt-16 md:pt-20"
       aria-label="Bienvenida"
     >
+      {/* Fondo — video con poster para pintado instantáneo */}
       <div className="absolute inset-0 z-0">
-        {/* Background video with poster frame for instant paint */}
         <HeroBgVideo
           poster="/images/video-fondo-hero-poster.jpg"
           srcMp4="/images/video-fondo-hero.mp4"
         />
-        {/* Dark overlay keeps text readable */}
-        <div className="absolute inset-0 bg-black/78" />
+        {/* Overlay base + degradado a la izquierda para legibilidad del texto */}
+        <div className="absolute inset-0 bg-black/72" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/55 to-black/30" />
         <div
           className="absolute inset-0 opacity-[0.03]"
           style={{
@@ -75,86 +80,103 @@ export function Hero({ data }: HeroProps) {
             backgroundSize: "60px 60px",
           }}
         />
-        <div className="absolute bottom-0 left-0 w-[500px] h-[400px] bg-primary/5 rounded-full blur-[140px]" />
+        <div className="absolute bottom-0 left-0 w-[500px] h-[400px] bg-primary/10 rounded-full blur-[140px]" />
         <div className="absolute top-0 right-0 w-[500px] h-[400px] bg-amber/5 rounded-full blur-[140px]" />
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 py-12 md:py-20 lg:py-24 w-full">
-        {/* Shared header. Plain <div> (not m.div) — keeps CSS entry animation
-            without adding a framer-motion consumer that choked iOS Safari. */}
-        <div className="hero-fade-in text-center max-w-3xl mx-auto mb-10 md:mb-12">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 py-14 md:py-20 lg:py-24 w-full">
+        {/* Bloque editorial — alineado a la izquierda, con jerarquía clara */}
+        <div className="hero-fade-in max-w-3xl">
           <Badge variant="primary" className="mb-5">{badge}</Badge>
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-headline font-extrabold text-white leading-[1.05] mb-4">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-[4.25rem] font-headline font-extrabold text-white leading-[1.03] mb-5">
             {title}{" "}
             <span className="text-primary">{highlight}</span>
           </h1>
-          <p className="text-base md:text-lg text-white/70">
-            ¿No sabes cuál modelo elegir? Te ayudamos y conseguimos el mejor precio.
+          <p className="text-base md:text-lg text-white/70 leading-relaxed max-w-xl mb-8">
+            {offerSubtitle}
+          </p>
+
+          {/* CTA principal (Oferta paga) + camino secundario (Asesoría).
+              Ambos comparten estructura ícono + dos líneas; el principal va
+              relleno (teal) para marcar jerarquía y vender el flujo de $19.990. */}
+          <div className="flex flex-col sm:flex-row sm:items-stretch gap-3 sm:gap-4">
+            <Link
+              href={offerCtaHref}
+              className="group inline-flex items-center gap-3 rounded-xl bg-primary hover:bg-primary-dark text-black px-5 py-4 transition-all shadow-[0_6px_32px_rgba(0,229,229,0.30)] hover:shadow-[0_10px_44px_rgba(0,229,229,0.50)] hover:scale-[1.02] active:scale-[0.99]"
+            >
+              <span className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-black/15 shrink-0">
+                <Icon name="sell" className="text-[20px]" />
+              </span>
+              <span className="text-left leading-tight">
+                <span className="block text-base md:text-lg font-extrabold">Consigue tu mejor precio</span>
+                <span className="block text-xs font-semibold text-black/70">Pagas {offerPrice} y negociamos por ti</span>
+              </span>
+              <Icon name="chevron_right" className="text-[20px] transition-transform group-hover:translate-x-0.5" />
+            </Link>
+
+            <Link
+              href={advCtaHref}
+              className="group inline-flex items-center gap-3 rounded-xl border border-white/15 hover:border-amber/50 bg-white/[0.02] hover:bg-white/[0.05] px-5 py-4 transition-all"
+            >
+              <span className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-amber/15 text-amber shrink-0">
+                <Icon name="forum" className="text-[20px]" />
+              </span>
+              <span className="text-left leading-tight">
+                <span className="block text-base md:text-lg font-extrabold text-white">Aún no sé cuál elegir</span>
+                <span className="block text-xs font-semibold text-white/55">Te ayudamos a decidir por {advPrice}</span>
+              </span>
+              <Icon name="chevron_right" className="text-[20px] text-white/40 transition-transform group-hover:translate-x-0.5" />
+            </Link>
+          </div>
+
+          {/* Microcopy de garantía */}
+          <p className="text-xs text-white/45 mt-5">
+            Garantía real: si no conseguimos un precio mejor que el de lista, te devolvemos el 100%.
           </p>
         </div>
 
-        {/* Two co-equal panels. On mobile they stack (Asesoría first). */}
-        <div className="grid gap-4 md:gap-6 md:grid-cols-2 max-w-5xl mx-auto items-stretch">
-          {/* ── Panel Asesoría (amber) ── */}
-          <div className="card-fade-in flex flex-col rounded-2xl border border-amber/30 bg-white/[0.03] p-6 md:p-8 hover:border-amber/60 hover:bg-white/[0.05] transition-all">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-amber/15 text-amber">
-                <Icon name="forum" />
-              </span>
-              <span className="text-[11px] font-bold uppercase tracking-widest text-amber">{advEyebrow}</span>
+        {/* Prueba social + ancla de ahorro — vende el ROI, no un tablero de stats */}
+        <div className="hero-fade-in mt-11 md:mt-14 flex flex-col sm:flex-row sm:items-center gap-6 sm:gap-8">
+          {/* Red de vendedores — el mecanismo real que consigue el descuento */}
+          <div className="flex items-center gap-3.5">
+            <div className="flex -space-x-3">
+              {avatars.map((src) => (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  key={src}
+                  src={src}
+                  alt=""
+                  aria-hidden
+                  className="w-10 h-10 rounded-full border-2 border-black object-cover"
+                  loading="lazy"
+                  decoding="async"
+                />
+              ))}
             </div>
-            <h2 className="text-2xl md:text-3xl font-headline font-bold text-white mb-3 leading-tight">
-              {advTitle}
-            </h2>
-            <p className="text-sm md:text-base text-white/60 leading-relaxed mb-6 flex-1">
-              {advSubtitle}
-            </p>
-            <div className="flex items-center gap-3 mb-5">
-              <span className="text-3xl md:text-4xl font-headline font-extrabold text-white">{advPrice}</span>
-              <span className="text-xs text-white/40">pago único · acceso por 10 días</span>
+            <div className="leading-tight">
+              <p className="text-white text-sm font-bold">+15 vendedores oficiales</p>
+              <p className="text-xs text-white/55 mt-0.5">compiten por tu mejor precio</p>
             </div>
-            <Link
-              href={advCtaHref}
-              className="inline-flex items-center justify-center bg-amber hover:bg-amber-dark text-black font-bold px-6 py-3 rounded-xl transition-all text-base shadow-[0_6px_32px_rgba(245,158,11,0.30)] hover:shadow-[0_8px_40px_rgba(245,158,11,0.45)] hover:scale-[1.02] active:scale-[0.99]"
-            >
-              {advCtaText}
-            </Link>
           </div>
 
-          {/* ── Panel Oferta (teal) ── */}
-          <div className="card-fade-in flex flex-col rounded-2xl border border-primary/30 bg-white/[0.03] p-6 md:p-8 hover:border-primary/60 hover:bg-white/[0.05] transition-all">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-primary/15 text-primary">
-                <Icon name="verified" />
-              </span>
-              <span className="text-[11px] font-bold uppercase tracking-widest text-primary">Ya sé qué quiero</span>
-            </div>
-            <h2 className="text-2xl md:text-3xl font-headline font-bold text-white mb-3 leading-tight">
-              Conseguimos tu mejor precio
-            </h2>
-            <p className="text-sm md:text-base text-white/60 leading-relaxed mb-6 flex-1">
-              {offerSubtitle}
+          <div className="hidden sm:block w-px h-11 bg-white/15" />
+
+          {/* Ancla de ahorro — el argumento de venta del pago */}
+          <div className="leading-tight">
+            <p className="text-xs text-white/55">Nuestros clientes ahorran en promedio</p>
+            <p className="font-headline font-extrabold text-white text-xl md:text-2xl mt-0.5">
+              <span className="text-primary">{avgSavings}</span> por auto
             </p>
-            <div className="flex items-center gap-3 mb-5">
-              <span className="text-3xl md:text-4xl font-headline font-extrabold text-white">{offerPrice}</span>
-              <span className="text-xs text-white/40">pago único</span>
-            </div>
-            <Link
-              href={offerCtaHref}
-              className="inline-flex items-center justify-center bg-primary hover:bg-primary-dark text-black font-bold px-6 py-3 rounded-xl transition-all text-base shadow-[0_6px_32px_rgba(0,229,229,0.30)] hover:shadow-[0_8px_40px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]"
-            >
-              {offerCtaText}
-            </Link>
           </div>
         </div>
 
-        {/* Secondary CTA — anchors to the two-track "Cómo funciona" section */}
-        <div className="text-center mt-8">
+        {/* Enlace secundario a "Cómo funciona" */}
+        <div className="mt-8">
           <a
             href="#como-funciona"
-            className="inline-flex items-center justify-center gap-1.5 text-white/50 hover:text-white text-sm font-medium transition-colors"
+            className="inline-flex items-center gap-1.5 text-white/50 hover:text-white text-sm font-medium transition-colors"
           >
-            ¿Cómo funciona cada uno?
+            ¿Cómo funciona cada camino?
             <Icon name="expand_more" size="sm" />
           </a>
         </div>

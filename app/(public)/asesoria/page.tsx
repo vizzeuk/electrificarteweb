@@ -91,7 +91,7 @@ export default async function AsesoriaPage() {
               href="/asesoria/contratar"
               className="inline-flex items-center justify-center bg-amber hover:bg-amber-dark text-black font-bold px-6 py-3 rounded-xl transition-all text-base shadow-[0_6px_32px_rgba(245,158,11,0.30)] hover:shadow-[0_8px_40px_rgba(245,158,11,0.45)] hover:scale-[1.02] active:scale-[0.99]"
             >
-              Contratar asesoría · {price}
+              Quiero asesoría · {price}
             </Link>
             <span className="text-white/40 text-sm">Pago único · acceso por 10 días · respuesta inmediata</span>
           </div>
@@ -164,7 +164,7 @@ export default async function AsesoriaPage() {
             href="/asesoria/contratar"
             className="inline-flex items-center justify-center bg-amber hover:bg-amber-dark text-black font-bold px-6 py-3 rounded-xl transition-all text-base shadow-[0_6px_32px_rgba(245,158,11,0.30)] hover:shadow-[0_8px_40px_rgba(245,158,11,0.45)] hover:scale-[1.02] active:scale-[0.99]"
           >
-            Contratar asesoría · {price}
+            Quiero asesoría · {price}
           </Link>
           <p className="text-white/40 text-sm mt-6">
             ¿Ya sabes qué auto quieres?{" "}

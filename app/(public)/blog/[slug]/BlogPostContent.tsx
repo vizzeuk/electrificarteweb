@@ -426,7 +426,7 @@ export function BlogPostContent({ post }: { post: BlogPost }) {
                     href="/solicitar"
                     className="block text-center bg-primary hover:bg-primary-dark text-black font-bold py-3 rounded-xl text-sm transition-colors"
                   >
-                    Negociamos por ti
+                    Quiero mi oferta
                   </Link>
                 </div>
 
@@ -489,7 +489,7 @@ export function BlogPostContent({ post }: { post: BlogPost }) {
           href="/solicitar"
           className="block w-full text-center bg-primary hover:bg-primary-dark text-black font-bold py-3.5 rounded-xl text-sm transition-colors"
         >
-          Negociamos por ti
+          Quiero mi oferta
         </Link>
       </div>
     </>

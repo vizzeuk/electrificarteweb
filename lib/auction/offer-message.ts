@@ -99,7 +99,7 @@ function deterministicMessage(lead: LeadForMessage, offers: OfferForMessage[]): 
   return `${saludo} ${intro}\n\n${bloques}${cierre}`;
 }
 
-const SYSTEM = `Eres el asistente de Electrificarte, marketplace chileno de autos electrificados.
+const SYSTEM = `Eres el asistente de Electrificarte, servicio chileno de negociación de autos electrificados.
 Le escribes por WhatsApp a un cliente que ya pagó por conseguir la mejor oferta de su auto.
 Recibes 1 o 2 ofertas ya evaluadas, con sus HECHOS verificados.
 

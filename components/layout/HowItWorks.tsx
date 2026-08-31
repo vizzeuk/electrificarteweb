@@ -215,7 +215,7 @@ export function HowItWorks({ title = "Cómo funciona Electrificarte", subtitle, 
               heading="Ya sé qué auto quiero"
               description={ofertaDescription}
               steps={ofertaSteps}
-              ctaText="Negociamos por ti"
+              ctaText="Quiero mi oferta"
               ctaHref="/solicitar"
             />
           </div>

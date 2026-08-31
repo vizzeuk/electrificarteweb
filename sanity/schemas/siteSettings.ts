@@ -21,7 +21,7 @@ export const siteSettings = defineType({
     defineField({
       name: "siteTagline", title: "Tagline general", type: "string",
       group: "general",
-      description: 'Ej: "El marketplace #1 de autos eléctricos en Chile"',
+      description: 'Ej: "El mejor precio en autos eléctricos de Chile"',
     }),
     defineField({
       name: "hotDealUrgencyLabel",
@@ -100,7 +100,7 @@ export const siteSettings = defineType({
     defineField({
       name: "footerTagline", title: "Tagline del footer", type: "string",
       group: "footer",
-      description: 'Ej: "El marketplace de autos eléctricos más confiable de Chile"',
+      description: 'Ej: "El servicio de autos eléctricos más confiable de Chile"',
     }),
     defineField({
       name: "footerLegal", title: "Texto legal / copyright", type: "string",

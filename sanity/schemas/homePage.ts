@@ -17,8 +17,8 @@ export const homePage = defineType({
     // ════════════════════════════════════════════════════════════════════════
     defineField({
       name: "heroBadge", title: "Badge del hero", type: "string",
-      group: "hero", initialValue: "Marketplace #1 en Chile",
-      description: 'Texto en el badge verde arriba del título. Ej: "Marketplace #1 en Chile"',
+      group: "hero", initialValue: "El mejor precio en autos electrificados de Chile",
+      description: 'Texto en el badge verde arriba del título. Ej: "El mejor precio en Chile" o "Más de 100 compras negociadas".',
     }),
     defineField({
       name: "heroTitle", title: "Título principal", type: "string",

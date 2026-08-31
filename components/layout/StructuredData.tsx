@@ -9,7 +9,7 @@ export function HomeStructuredData() {
     url: "https://www.electrificarte.com",
     logo: "https://www.electrificarte.com/logos-electrificarte/logo-elec-sin%20auto.webp",
     description:
-      "Marketplace de autos electrificados en Chile. Intermediario entre compradores y vendedores oficiales que garantiza el mejor precio del mercado.",
+      "Servicio de negociación de autos electrificados en Chile. Intermediario entre compradores y vendedores oficiales que consigue el mejor precio del mercado.",
     foundingDate: "2023",
     address: {
       "@type": "PostalAddress",
@@ -157,7 +157,7 @@ export function HomeStructuredData() {
     "@type": "AutoDealer",
     name: "Electrificarte",
     description:
-      "Marketplace de autos electricos en Chile con asesoria personalizada para obtener el mejor precio del mercado.",
+      "Servicio de negociación de autos eléctricos en Chile con asesoría personalizada para obtener el mejor precio del mercado.",
     url: "https://www.electrificarte.com",
     address: {
       "@type": "PostalAddress",

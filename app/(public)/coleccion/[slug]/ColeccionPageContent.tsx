@@ -181,7 +181,7 @@ export default function ColeccionPageContent({ col, cars }: Props) {
                 href="/solicitar"
                 className="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-6 py-3 rounded-xl transition-all text-sm shadow-[0_4px_20px_rgba(0,229,229,0.30)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]"
               >
-                Negociamos por ti
+                Quiero mi oferta
               </Link>
               <a
                 href={`#catalogo-${col.slug}`}
@@ -349,7 +349,7 @@ export default function ColeccionPageContent({ col, cars }: Props) {
               href="/solicitar"
               className="flex-shrink-0 inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-black px-8 py-4 rounded-xl transition-all text-sm whitespace-nowrap shadow-[0_4px_20px_rgba(0,229,229,0.30)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]"
             >
-              Negociamos por ti
+              Quiero mi oferta
             </Link>
           </div>
         </div>
