@@ -8,12 +8,39 @@ Diseño unificado con la línea nueva: header con logo, tarjetas con borde, foot
 negro, sin badges/emojis/degradados. Terminología corregida ("Punto de venta", no
 "concesionario"); dominio `www`.
 
+**Logo modo claro/oscuro:** el header usa `<picture>` con
+`media="(prefers-color-scheme: dark)"` → logo **blanco**
+(`/logo-email-white.png`) cuando el cliente está en modo oscuro (Apple Mail, iOS),
+y **negro** (`/logo-email.png`) en modo claro o donde no se soporte (Gmail cae al
+`<img>` negro). Así el logo acompaña al resto del correo en vez de quedar negro
+sobre fondo oscuro. Ambos PNG viven en `public/` y se sirven desde `www`.
+
 | Archivo | Cuándo se envía | A quién | Expresiones que usa |
 |---|---|---|---|
 | `pago-confirmado-cliente.html` | Cliente paga la Oferta Exclusiva ($19.990) | Cliente | `customer.name`, `descripcion_interes` |
 | `nuevo-lead-francisco.html` | (mismo evento) | **Francisco** (interno) | `customer.name`, `descripcion_interes`, `telefono` |
 | `registro-vendedor.html` | Vendedor paga su suscripción | Vendedor | `nombre`, `nombre_concesionario`, `marcas` |
 | `nuevo-vendedor-francisco.html` | (mismo evento) | **Francisco** (interno) | `nombre`, `apellido`, `nombre_concesionario`, `telefono`, `marcas` |
+
+## Probar los 4 correos directo en n8n (sin tu flujo real)
+
+Si importás `ventas-correos.json` y le das *Test* suelto, n8n tira
+**"Referenced node doesn't exist"**: el HTML tiene expresiones como
+`{{ $('HTTP Request2')... }}` / `{{ $('Create a row1')... }}` que apuntan a nodos de
+**tu flujo de pagos** — que no existen en ese workflow suelto.
+
+Para probarlos aislados, importá **`n8n/ventas-correos-test.json`**. Es autónomo: trae
+dos nodos *Set* llamados exactamente `HTTP Request2` y `Create a row1` con datos de
+ejemplo, así todas las expresiones resuelven. Pasos:
+1. **Import from File → `n8n/ventas-correos-test.json`**.
+2. Abrí los nodos *Set* (`HTTP Request2` y `Create a row1`) y cambiá el campo `email`
+   por **tu correo** (los 4 `to` van a `{{ $json.email }}`, así te llegan todos a vos).
+3. Asigná la credencial **Resend (Header Auth)** en los 4 nodos Resend.
+4. **Execute Workflow** (Manual Trigger) → llegan los 4 correos a tu inbox.
+
+> Este es solo para *ver* que rendericen. Para producción usá `ventas-correos.json`
+> (abajo) y conectá los nodos a tu flujo real, donde `HTTP Request2`/`Create a row1`
+> sí existen.
 
 ## Forma fácil: importar los nodos ya armados
 

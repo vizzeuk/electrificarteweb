@@ -1,5 +1,5 @@
 {
-  "name": "Correos de ventas (pegar nodos en tu flujo)",
+  "name": "Correos de ventas · PRUEBA (autónomo)",
   "nodes": [
     {
       "parameters": {},
@@ -8,9 +8,41 @@
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        0,
-        400
+        -200,
+        300
       ]
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"customer\": {\n    \"name\": \"Camila Rojas\",\n    \"email\": \"TU_CORREO@gmail.com\"\n  },\n  \"descripcion_interes\": \"BYD Dolphin 2025\",\n  \"email\": \"TU_CORREO@gmail.com\",\n  \"telefono\": \"56912345678\",\n  \"comuna\": \"Providencia\",\n  \"region\": \"Metropolitana\"\n}",
+        "options": {}
+      },
+      "id": "HTTP_Request2",
+      "name": "HTTP Request2",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        40,
+        140
+      ],
+      "notes": "DATOS DE PRUEBA — reemplazá 'email' por tu correo."
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"nombre\": \"Vicente\",\n  \"apellido\": \"Cossio\",\n  \"nombre_concesionario\": \"Automotora del Sur\",\n  \"marcas\": \"BYD, MG\",\n  \"telefono\": \"56912345678\",\n  \"email\": \"TU_CORREO@gmail.com\"\n}",
+        "options": {}
+      },
+      "id": "Create_a_row1",
+      "name": "Create a row1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        40,
+        460
+      ],
+      "notes": "DATOS DE PRUEBA — reemplazá 'email' por tu correo."
     },
     {
       "parameters": {
@@ -29,11 +61,11 @@
             },
             {
               "name": "to",
-              "value": "={{ $('HTTP Request2').item.json.customer.email }}"
+              "value": "={{ $json.email }}"
             },
             {
               "name": "subject",
-              "value": "Tu pago fue confirmado — Electrificarte"
+              "value": "[PRUEBA] Tu pago fue confirmado — Electrificarte"
             },
             {
               "name": "html",
@@ -43,21 +75,20 @@
         },
         "options": {}
       },
-      "id": "pago-confirmado-cliente.html",
-      "name": "Correo pago confirmado (cliente)",
+      "id": "pago",
+      "name": "Resend · pago confirmado (cliente)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        260,
-        120
+        320,
+        60
       ],
       "credentials": {
         "httpHeaderAuth": {
           "id": "REEMPLAZAR",
           "name": "Resend (Authorization Bearer)"
         }
-      },
-      "notes": "Ajustá el 'to' y las expresiones a los nombres de nodo de tu flujo."
+      }
     },
     {
       "parameters": {
@@ -76,11 +107,11 @@
             },
             {
               "name": "to",
-              "value": "francisco@electrificarte.com"
+              "value": "={{ $json.email }}"
             },
             {
               "name": "subject",
-              "value": "Nuevo lead de Oferta Exclusiva"
+              "value": "[PRUEBA] Nuevo lead de Oferta Exclusiva"
             },
             {
               "name": "html",
@@ -90,21 +121,20 @@
         },
         "options": {}
       },
-      "id": "nuevo-lead-francisco.html",
-      "name": "Correo nuevo lead (Francisco)",
+      "id": "lead",
+      "name": "Resend · nuevo lead (Francisco)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        260,
-        320
+        320,
+        240
       ],
       "credentials": {
         "httpHeaderAuth": {
           "id": "REEMPLAZAR",
           "name": "Resend (Authorization Bearer)"
         }
-      },
-      "notes": "Ajustá el 'to' y las expresiones a los nombres de nodo de tu flujo."
+      }
     },
     {
       "parameters": {
@@ -123,11 +153,11 @@
             },
             {
               "name": "to",
-              "value": "={{ $('Create a row1').item.json.email }}"
+              "value": "={{ $json.email }}"
             },
             {
               "name": "subject",
-              "value": "Registro confirmado — Electrificarte"
+              "value": "[PRUEBA] Registro confirmado — Electrificarte"
             },
             {
               "name": "html",
@@ -137,21 +167,20 @@
         },
         "options": {}
       },
-      "id": "registro-vendedor.html",
-      "name": "Correo registro (vendedor)",
+      "id": "reg",
+      "name": "Resend · registro (vendedor)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        260,
-        520
+        320,
+        400
       ],
       "credentials": {
         "httpHeaderAuth": {
           "id": "REEMPLAZAR",
           "name": "Resend (Authorization Bearer)"
         }
-      },
-      "notes": "Ajustá el 'to' y las expresiones a los nombres de nodo de tu flujo."
+      }
     },
     {
       "parameters": {
@@ -170,11 +199,11 @@
             },
             {
               "name": "to",
-              "value": "francisco@electrificarte.com"
+              "value": "={{ $json.email }}"
             },
             {
               "name": "subject",
-              "value": "Nuevo vendedor registrado"
+              "value": "[PRUEBA] Nuevo vendedor registrado"
             },
             {
               "name": "html",
@@ -184,21 +213,20 @@
         },
         "options": {}
       },
-      "id": "nuevo-vendedor-francisco.html",
-      "name": "Correo nuevo vendedor (Francisco)",
+      "id": "ven",
+      "name": "Resend · nuevo vendedor (Francisco)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        260,
-        720
+        320,
+        580
       ],
       "credentials": {
         "httpHeaderAuth": {
           "id": "REEMPLAZAR",
           "name": "Resend (Authorization Bearer)"
         }
-      },
-      "notes": "Ajustá el 'to' y las expresiones a los nombres de nodo de tu flujo."
+      }
     }
   ],
   "connections": {
@@ -206,22 +234,44 @@
       "main": [
         [
           {
-            "node": "Correo pago confirmado (cliente)",
+            "node": "HTTP Request2",
             "type": "main",
             "index": 0
           },
           {
-            "node": "Correo nuevo lead (Francisco)",
+            "node": "Create a row1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "Resend · pago confirmado (cliente)",
             "type": "main",
             "index": 0
           },
           {
-            "node": "Correo registro (vendedor)",
+            "node": "Resend · nuevo lead (Francisco)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a row1": {
+      "main": [
+        [
+          {
+            "node": "Resend · registro (vendedor)",
             "type": "main",
             "index": 0
           },
           {
-            "node": "Correo nuevo vendedor (Francisco)",
+            "node": "Resend · nuevo vendedor (Francisco)",
             "type": "main",
             "index": 0
           }
