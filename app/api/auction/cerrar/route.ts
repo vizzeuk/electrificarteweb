@@ -75,6 +75,20 @@ export async function POST(req: NextRequest): Promise<Response> {
   if (leadErr || !lead) return NextResponse.json({ error: "Lead no encontrado" }, { status: 404 });
   if (lead.cerrada_at) return NextResponse.json({ leadId: body.leadId, yaCerrada: true });
 
+  // Cierre ATÓMICO: reclamamos el lead con un update condicional (cerrada_at IS NULL).
+  // Si dos crons disparan /cerrar casi a la vez, solo UNO afecta la fila; el otro sale
+  // sin enviar nada. Sin esto (leer-y-después-escribir) ambos mandarían las ofertas al
+  // cliente → correo/WhatsApp duplicado. Se reclama ANTES de armar/enviar nada.
+  const cerradaAt = new Date().toISOString();
+  const { data: claimed, error: claimErr } = await sb
+    .from("leads")
+    .update({ cerrada_at: cerradaAt })
+    .eq("id", body.leadId)
+    .is("cerrada_at", null)
+    .select("id");
+  if (claimErr) return NextResponse.json({ error: claimErr.message }, { status: 500 });
+  if (!claimed || claimed.length === 0) return NextResponse.json({ leadId: body.leadId, yaCerrada: true });
+
   const { data: offers, error: offersErr } = await sb
     .from("ofertas")
     .select(
@@ -88,7 +102,7 @@ export async function POST(req: NextRequest): Promise<Response> {
   // Sin ofertas: nadie pujó. Se cierra, se le ofrece recuperación al cliente
   // (o devolución si está en el tope) y se le avisa a Francisco.
   if (!offers || offers.length === 0) {
-    await sb.from("leads").update({ cerrada_at: new Date().toISOString() }).eq("id", body.leadId);
+    // cerrada_at ya quedó seteado por el claim atómico de arriba.
     const recoveryMsg = await offerRecovery(sb, body.leadId, lead.target_model);
     const htmlEmailSinOfertas = renderEmail("sin-ofertas", {
       nombre: lead.first_name ?? "",
@@ -153,7 +167,7 @@ export async function POST(req: NextRequest): Promise<Response> {
   const sentIds = top.map((o) => o.id);
   await sb.from("ofertas").update({ estado: "enviada_cliente" }).in("id", sentIds);
   await sb.from("ofertas").update({ estado: "perdida" }).eq("lead_id", body.leadId).eq("estado", "evaluada");
-  await sb.from("leads").update({ cerrada_at: new Date().toISOString() }).eq("id", body.leadId);
+  // cerrada_at ya quedó seteado por el claim atómico de arriba.
 
   // Perdedores del cierre = los que NO se le muestran al cliente (más allá del top).
   // (Los del top que el cliente no elija se marcan perdida al aceptar.)
