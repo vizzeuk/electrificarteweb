@@ -173,7 +173,7 @@ export default function ColeccionPageContent({ col, cars }: Props) {
               </div>
               <div className="flex items-center gap-2 text-white/40 text-sm">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
-                Respuesta en 48-96 h
+                Sin costo ni compromiso
               </div>
             </div>
 

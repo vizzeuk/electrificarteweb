@@ -233,7 +233,7 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
                 </div>
                 <div className="flex items-center gap-2 text-white/40 text-sm">
                   <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: meta.color }} />
-                  Respuesta en 48-96 h
+                  Sin costo ni compromiso
                 </div>
               </div>
 

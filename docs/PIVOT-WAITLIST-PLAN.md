@@ -102,13 +102,40 @@ sin errores de provider.
 `not-found.tsx:59` / `(public)/not-found.tsx:45`
 **Legal (solo texto):** `terminos/page.tsx:93-94` · `privacidad/page.tsx:83-84,106-107`
 
-## Fase 3 — Copy y secciones que venden la oferta ⬜
-- [ ] `HowItWorks.tsx` — track "Oferta · $19.990" (L90), `OFERTA_STEPS` (L24-50), step 02 (L36), puente (L224-227)
-- [ ] `StickyCTA.tsx` — L60, L63 ("$19.990 único · Si no ahorras, te devolvemos todo")
-- [ ] `PromoPopup.tsx` (L146,184-188) · `HotDeal.tsx` (L124,172)
-- [ ] `FAQ.tsx` — answer L22, botón L171 ("Quiero mi oferta · $19.990")
-- [ ] `Testimonials.tsx` — quotes L22,L23 (mencionan "oferta en 48h")
-- [ ] `nosotros/page.tsx:62` ("Oferta Exclusiva · $19.990")
+## Fase 3 — Copy y secciones que venden la oferta ✅ HECHA
+
+**Regla de wording aplicada:** la waitlist **solo registra interesados**. Prohibido decir o
+insinuar que el servicio de la Oferta será **gratis**, prometer **una oferta**, dar **plazos**
+(48-96 h) o mantener la **garantía de devolución**. "Sin costo" solo puede referirse al acto de
+registrarse, nunca al servicio.
+
+- [x] `Hero.tsx` — subtítulo, sub-label del CTA y microcopy (ver commit de corrección de wording)
+- [x] `HowItWorks.tsx` — `OFERTA_STEPS` reescritos al camino de waitlist (paso 02 ya no cobra,
+      paso 03 ya no promete 48-96 h), label del track "Oferta · $19.990" → "Oferta", puente
+      "conseguir tu precio" → "súmate a la waitlist"
+- [x] `StickyCTA.tsx` — "$19.990 único · Si no ahorras, te devolvemos todo" → "Súmate a la
+      waitlist y te avisamos cuando abramos el acceso"
+- [x] `FAQ.tsx` — pregunta de costo reescrita (waitlist sin costo / asesoría $4.990); la de
+      "¿qué pasa si no consiguen buen precio?" → "¿qué pasa después de sumarme a la waitlist?";
+      card CTA sin "48-96 h" y sin la garantía
+- [x] `TrustBadges.tsx` — "Garantía de devolución" → "Sin compromiso"
+- [x] `negociacion/page.tsx` — se elimina la dependencia del precio (`getOfferPrice`), metadata,
+      OG, steps, stats (48-96h y garantía), hero, microcopy y CTA final reescritos
+- [x] `nosotros/page.tsx` — razón "Sin riesgo" → "Sin compromiso"; card "Oferta Exclusiva ·
+      $19.990" → "Waitlist de ofertas"; stats de 48-96h y garantía reemplazadas
+- [x] PLP (`coleccion`, `tipo`, `electrico`) — "Respuesta en 48-96 h" → "Sin costo ni compromiso"
+
+**Pendiente de decisión (no tocado a propósito):**
+- `Testimonials.tsx` — las citas mencionan "oferta en 48 horas" y "me trajeron una oferta". Son
+  **testimonios atribuidos a personas**; reescribir palabras de un cliente no corresponde
+  hacerlo sin Francisco. Son en pasado, así que no prometen nada — pero conviene revisarlos.
+- `ParaVendedores.tsx` ("48-96h · entrega del lead") — es del producto de vendedores
+  ($12.990/mes, otra plataforma), fuera del alcance de este giro.
+- `terminos` / `privacidad` — texto legal que menciona el $19.990 y `/solicitar`. No tocar
+  sin Francisco.
+
+**Verificado:** `tsc` limpio · `next build` OK (293 páginas) · sin "$19.990", plazos ni garantías
+en UI fuera de los archivos de Fases 4-6 y los legales.
 
 ## Fase 4 — Chatbots ⬜
 - [ ] **WhatsApp** `lib/whatsapp/advisor.ts` `BASE_SYSTEM`: sacar sección $19.990 (L25-31),

@@ -2,53 +2,46 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
 import { OfferCta } from "@/components/waitlist/OfferCta";
-import { client } from "@/lib/sanity/client";
-import { productPricesQuery } from "@/lib/queries/pages";
-import { OFERTA_PRICE } from "@/lib/products";
 
 export const revalidate = 60;
 
-// Precio de display editable desde Sanity (Configuración del Sitio → Precios).
-// Fallback a la constante de lib/products.ts si Sanity no lo trae.
-async function getOfferPrice(): Promise<string> {
-  const prices = await client
-    .fetch(productPricesQuery, {}, { next: { tags: ["siteSettings"] } })
-    .catch(() => null);
-  return prices?.offerPrice ?? OFERTA_PRICE;
-}
+// El precio de la Oferta ($19.990) ya no se muestra en esta página: el flujo pagado
+// está en standby (ver docs/PIVOT-WAITLIST-PLAN.md). Al reactivarlo, volver a leer
+// `offerPrice` desde Sanity (productPricesQuery) como hacía antes.
 
 export async function generateMetadata(): Promise<Metadata> {
-  const price = await getOfferPrice();
   return {
     title: "Negociación de ofertas — Conseguimos tu mejor precio",
     description:
-      `Ya sabes qué auto quieres. Por ${price} negociamos con nuestra red de vendedores oficiales y te traemos la mejor oferta del mercado en 48-96 horas. Si no ahorras, te devolvemos el dinero.`,
+      "Ya sabes qué auto quieres. Negociamos con nuestra red de vendedores oficiales para conseguirte la mejor oferta. Súmate a la waitlist y te avisamos cuando abramos el acceso.",
     alternates: { canonical: "/negociacion" },
     openGraph: {
       title: "Negociación de ofertas | Electrificarte",
       description:
-        "Negociamos con nuestra red de vendedores oficiales y te conseguimos el mejor precio de tu auto eléctrico. Garantía de devolución.",
+        "Negociamos con nuestra red de vendedores oficiales para conseguirte el mejor precio de tu auto electrificado. Súmate a la waitlist.",
       url: "/negociacion",
       type: "website",
     },
   };
 }
 
-const buildSteps = (price: string) => [
+// Giro sep-2026: la Oferta ($19.990) está en standby. Los pasos describen el camino
+// de la WAITLIST — sin precio, sin plazos prometidos y sin garantía de devolución.
+const STEPS = [
   {
     icon: "search",
     title: "Elige tu modelo",
     description: "Ya sabes qué auto quieres. Dinos el modelo desde el catálogo o el buscador.",
   },
   {
-    icon: "payments",
-    title: "Activamos tu búsqueda",
-    description: `Con un pago único de ${price} negociamos en tu nombre con nuestra red exclusiva de vendedores oficiales.`,
+    icon: "person",
+    title: "Súmate a la waitlist",
+    description: "Déjanos tus datos y quedas registrado como interesado en ese modelo.",
   },
   {
     icon: "handshake",
-    title: "Recibe la mejor oferta",
-    description: "Comparamos precios, bonos y financiamiento en 48-96 h. Tú decides si la tomas.",
+    title: "Te avisamos",
+    description: "Te contactamos cuando abramos el acceso y tengamos novedades para tu modelo.",
   },
   {
     icon: "celebration",
@@ -77,9 +70,9 @@ const RAZONES = [
 
 const STATS = [
   { value: "$800K–$6M", label: "rango de ahorro de clientes" },
-  { value: "48-96h",    label: "para recibir tu oferta" },
+  { value: "+15",       label: "vendedores oficiales en la red" },
   { value: "+500",      label: "personas ya confiaron" },
-  { value: "100%",      label: "garantía de devolución" },
+  { value: "100%",      label: "vendedores verificados" },
 ];
 
 const INCLUYE = [
@@ -88,12 +81,10 @@ const INCLUYE = [
   "Opciones de financiamiento pre-aprobadas",
   "Comparativa de precios reales del mercado",
   "Acompañamiento hasta la entrega del vehículo",
-  "Garantía de devolución si no conseguimos ahorro",
+  "Acceso prioritario cuando abramos el servicio",
 ];
 
 export default async function NegociacionPage() {
-  const price = await getOfferPrice();
-  const STEPS = buildSteps(price);
   return (
     <>
       {/* ── Hero ── */}
@@ -113,8 +104,8 @@ export default async function NegociacionPage() {
           </h1>
           <p className="text-lg text-white/60 leading-relaxed mb-8 max-w-2xl">
             Ya sabes qué auto quieres. Negociamos con nuestra red de vendedores
-            oficiales y te traemos la mejor oferta del mercado en 48-96 horas.
-            Si no ahorras, te devolvemos el dinero.
+            oficiales para conseguirte la mejor oferta del mercado. Súmate a la
+            waitlist y te avisamos cuando abramos el acceso.
           </p>
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <OfferCta
@@ -123,7 +114,7 @@ export default async function NegociacionPage() {
             >
               Quiero mi oferta
             </OfferCta>
-            <span className="text-white/40 text-sm">Pago único · respuesta en 48-96 h</span>
+            <span className="text-white/40 text-sm">Sin costo ni compromiso al registrarte</span>
           </div>
         </div>
       </section>
@@ -225,7 +216,7 @@ export default async function NegociacionPage() {
             Consigue tu mejor precio
           </h2>
           <p className="text-white/50 mb-8">
-            Un solo pago de {price} y activamos la búsqueda con nuestra red de vendedores. Si no ahorras, te devolvemos el dinero.
+            Déjanos tus datos y quedas registrado como interesado. Te avisamos cuando abramos el acceso.
           </p>
           <OfferCta
             source="negociacion"

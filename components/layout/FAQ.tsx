@@ -20,9 +20,9 @@ interface FAQProps {
 const DEFAULT_FAQS: FAQItem[] = [
   { icon: "savings",       question: "¿Cuánto ahorro realmente usando Electrificarte?",  answer: "El ahorro depende del modelo y del momento de compra. Negociamos con nuestra red de vendedores oficiales para conseguirte la mejor oferta disponible, incluyendo bonos y descuentos que no están al alcance del público general. Nuestros clientes han ahorrado desde $800.000 hasta más de $6.000.000." },
   { icon: "groups",        question: "¿Cómo logran esos descuentos?",                    answer: "Trabajamos con una amplia red de vendedores oficiales y distribuidores en Chile. Al agrupar múltiples solicitudes de compra, podemos negociar descuentos por volumen, acceder a bonos exclusivos y encontrar ofertas de inventario que no están disponibles al público general." },
-  { icon: "payments",      question: "¿Tiene algún costo para mí?",                      answer: "Solo pagas una tarifa única de $19.990 para activar el servicio. No hay costos ocultos, suscripciones ni comisiones adicionales. Si no logramos un descuento significativo, te devolvemos el dinero." },
+  { icon: "payments",      question: "¿Tiene algún costo para mí?",                      answer: "Sumarte a la waitlist no tiene costo: solo dejas tus datos y quedas registrado como interesado. Si además quieres ayuda para decidir qué auto comprar, la Asesoría IA por WhatsApp tiene un valor de $4.990." },
   { icon: "directions_car",question: "¿Tengo que comprar sin ver el auto?",              answer: "Para nada. Nosotros te conseguimos la mejor oferta y te conectamos con el vendedor oficial que la ofrece. Puedes visitarlo, hacer test drive y revisar el vehículo antes de tomar cualquier decisión. La oferta final siempre es tuya para aceptar o rechazar." },
-  { icon: "shield",        question: "¿Qué pasa si no consiguen un buen precio?",        answer: "Si no logramos una oferta que supere lo que encontrarías solo, te devolvemos el 100% del costo del servicio. Sin preguntas, sin burocracia. Nuestra garantía no es solo una promesa de marketing: es la razón por la que más de 500 personas han confiado en nosotros. Si no ganamos juntos, no cobramos." },
+  { icon: "shield",        question: "¿Qué pasa después de sumarme a la waitlist?",      answer: "Quedas registrado como interesado en el modelo que nos indicaste. Te contactamos cuando abramos el acceso y tengamos novedades para ti. No adquieres ningún compromiso al registrarte." },
 ];
 
 export function FAQ({ title = "Preguntas frecuentes", faqs }: FAQProps) {
@@ -163,7 +163,7 @@ export function FAQ({ title = "Preguntas frecuentes", faqs }: FAQProps) {
                 {/* Camino 2 — Oferta: para quien ya eligió su auto */}
                 <div className="space-y-2">
                   <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.65)" }}>
-                    <span className="text-white font-semibold">¿Ya sabes cuál quieres?</span> Negociamos con nuestra red de vendedores oficiales y te conseguimos el mejor precio en 48-96 h.
+                    <span className="text-white font-semibold">¿Ya sabes cuál quieres?</span> Súmate a la waitlist y te avisamos cuando abramos el acceso.
                   </p>
                   <OfferCta
                     source="faq"
@@ -174,7 +174,7 @@ export function FAQ({ title = "Preguntas frecuentes", faqs }: FAQProps) {
                 </div>
 
                 <p className="text-[11px] text-center pt-1" style={{ color: "rgba(255,255,255,0.45)" }}>
-                  Garantía: si no conseguimos un precio mejor, te devolvemos el 100%.
+                  Sumarte a la waitlist no tiene costo ni compromiso.
                 </p>
               </div>
             </m.div>

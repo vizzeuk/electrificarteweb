@@ -22,7 +22,9 @@ interface HowItWorksProps {
   videoMobileUrl?: string;
 }
 
-// ─── Track OFERTA ($19.990) — fallback si Sanity no trae pasos ───
+// ─── Track OFERTA — fallback si Sanity no trae pasos ───
+// Giro sep-2026: la Oferta ($19.990) está en standby. Estos pasos describen el
+// camino de la WAITLIST — no mencionan precio ni prometen una oferta.
 const OFERTA_STEPS: HowItWorksStep[] = [
   {
     number: "01",
@@ -32,15 +34,17 @@ const OFERTA_STEPS: HowItWorksStep[] = [
   },
   {
     number: "02",
-    icon: "payments",
-    title: "Activamos tu búsqueda",
-    description: "Con un pago único de $19.990 negociamos en tu nombre con nuestra red exclusiva de vendedores oficiales.",
+    // `person` ya está en el subset de la fuente de íconos. Al cambiarlo por uno
+    // nuevo hay que regenerar: scripts/subset-icon-font.ts (ver CLAUDE.md).
+    icon: "person",
+    title: "Súmate a la waitlist",
+    description: "Déjanos tus datos y quedas registrado como interesado en ese modelo.",
   },
   {
     number: "03",
     icon: "handshake",
-    title: "Recibe la mejor oferta",
-    description: "Comparamos precios, bonos y financiamiento en 48-96h. Tú decides si la tomas.",
+    title: "Te avisamos",
+    description: "Te contactamos cuando abramos el acceso y tengamos novedades para tu modelo.",
   },
   {
     number: "04",
@@ -88,7 +92,7 @@ const ACCENT: Record<Accent, {
     btn: "bg-amber hover:bg-amber-dark",
   },
   teal: {
-    label: "Oferta · $19.990",
+    label: "Oferta",
     text: "text-primary-deep",
     chipBg: "bg-primary/10 text-primary-deep",
     card: "hover:border-primary/40 hover:shadow-primary/5",
@@ -230,8 +234,8 @@ export function HowItWorks({ title = "Cómo funciona Electrificarte", subtitle, 
 
           {/* Optional bridge — parallel, not a ladder */}
           <p className="text-center text-sm text-text-muted mt-10">
-            ¿Hiciste la asesoría y ya decidiste? Pasa directo a{" "}
-            <OfferCta source="howitworks" className="text-primary-deep font-semibold hover:underline">conseguir tu precio</OfferCta>.
+            ¿Hiciste la asesoría y ya decidiste? Súmate a la{" "}
+            <OfferCta source="howitworks" className="text-primary-deep font-semibold hover:underline">waitlist</OfferCta>.
           </p>
 
           <div className="text-center mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">

@@ -60,7 +60,7 @@ export function StickyCTA() {
                 Conseguimos el mejor precio del mercado
               </p>
               <p className="text-white/40 text-xs">
-                $19.990 único · Si no ahorras, te devolvemos todo
+                Súmate a la waitlist y te avisamos cuando abramos el acceso
               </p>
             </div>
             <div className="flex gap-3 w-full sm:w-auto">

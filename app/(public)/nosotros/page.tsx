@@ -34,17 +34,17 @@ const VALORES = [
   },
   {
     icon: "shield",
-    title: "Sin riesgo",
+    title: "Sin compromiso",
     description:
-      "Si no logramos un descuento significativo sobre lo que encuentras por tu cuenta, te devolvemos el 100% de lo que pagaste. Así de simple.",
+      "Sumarte a la waitlist no tiene costo: solo dejas tus datos y quedas registrado como interesado. Tú decides si avanzas cuando te contactemos.",
   },
 ];
 
 const STATS = [
   { value: "+500", label: "compras ya negociadas en Chile" },
   { value: "53+", label: "marcas en el catálogo" },
-  { value: "48-96h", label: "para recibir tu oferta" },
-  { value: "100%", label: "garantía de devolución" },
+  { value: "+15", label: "vendedores oficiales en la red" },
+  { value: "100%", label: "vendedores verificados" },
 ];
 
 const CAMINOS = [
@@ -60,9 +60,9 @@ const CAMINOS = [
   {
     tag: "Ya sé qué auto quiero",
     tagClass: "text-primary",
-    title: "Oferta Exclusiva · $19.990",
+    title: "Waitlist de ofertas",
     description:
-      "Elige tu modelo y activamos la búsqueda con nuestra red de vendedores oficiales. Comparamos precios, bonos y financiamiento, y te traemos la mejor oferta del mercado.",
+      "Elige tu modelo y déjanos tus datos. Negociamos con nuestra red de vendedores oficiales para conseguir la mejor oferta, y te avisamos cuando abramos el acceso.",
     href: "/negociacion",
     cta: "Cómo conseguimos el precio",
   },
