@@ -3,15 +3,19 @@ import { z } from "zod";
 import { checkRateLimit } from "@/lib/rate-limit";
 
 /**
- * Alta en la WAITLIST (gratis) — flujo principal de captación tras el giro de sep-2026.
- * Ver `docs/PIVOT-WAITLIST-PLAN.md`.
+ * Alta en la WAITLIST — registro de personas interesadas. Flujo principal de captación
+ * tras el giro de sep-2026. Ver `docs/PIVOT-WAITLIST-PLAN.md`.
+ *
+ * OJO con el wording de cara al usuario: la waitlist SOLO guarda al interesado. No
+ * promete una oferta ni implica que el servicio de la Oferta ($19.990) vaya a ser gratis.
  *
  * No cobra ni toca Reveniu: valida, limita y reenvía a n8n, que escribe la fila en la
  * tabla `waitlist` de Supabase. Mismo patrón fino que `app/api/newsletter/route.ts`.
  */
 
 const schema = z.object({
-  fullName: z.string().min(2, "Nombre inválido").max(120),
+  firstName: z.string().min(2, "Nombre inválido").max(80),
+  lastName: z.string().min(2, "Apellido inválido").max(80),
   email: z.string().email("Email inválido"),
   // 9 dígitos chilenos, sin el +56 (el cliente lo antepone al enviar).
   phone: z.string().regex(/^\+56 9\d{8}$/, "Teléfono inválido"),

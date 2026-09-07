@@ -15,7 +15,8 @@ import type { WaitlistPrefill } from "./WaitlistProvider";
  */
 
 const schema = z.object({
-  fullName: z.string().min(2, "Ingresa tu nombre completo"),
+  firstName: z.string().min(2, "Ingresa tu nombre"),
+  lastName: z.string().min(2, "Ingresa tu apellido"),
   email: z.string().email("Ingresa un email válido"),
   phone: z.string().regex(/^9\d{8}$/, "Ingresa los 9 dígitos (ej: 995760998)"),
   model: z.string().optional(),
@@ -58,7 +59,7 @@ export function WaitlistModal({ isOpen, onClose, prefill }: WaitlistModalProps) 
     if (!isOpen) return;
     setStatus("idle");
     submitting.current = false;
-    reset({ fullName: "", email: "", phone: "", model: prefill.model ?? "" });
+    reset({ firstName: "", lastName: "", email: "", phone: "", model: prefill.model ?? "" });
   }, [isOpen, prefill.model, reset]);
 
   // Cerrar con Escape + bloquear el scroll del fondo mientras está abierto.
@@ -83,7 +84,8 @@ export function WaitlistModal({ isOpen, onClose, prefill }: WaitlistModalProps) 
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          fullName: data.fullName,
+          firstName: data.firstName,
+          lastName: data.lastName,
           email: data.email,
           phone: `+56 ${data.phone}`,
           model: data.model?.trim() || undefined,
@@ -142,8 +144,8 @@ export function WaitlistModal({ isOpen, onClose, prefill }: WaitlistModalProps) 
                   </div>
                   <h2 className="mb-2 font-headline text-2xl font-bold text-white">Ya estás en la lista</h2>
                   <p className="text-sm leading-relaxed text-white/60">
-                    Te avisaremos apenas tengamos la mejor oferta para tu auto. Mientras tanto, puedes
-                    seguir explorando el catálogo.
+                    Registramos tus datos. Te contactaremos cuando tengamos novedades. Mientras tanto,
+                    puedes seguir explorando el catálogo.
                   </p>
                   <button
                     type="button"
@@ -162,14 +164,22 @@ export function WaitlistModal({ isOpen, onClose, prefill }: WaitlistModalProps) 
                     Únete a la waitlist de electrificarte.com
                   </h2>
                   <p className="mb-6 text-sm leading-relaxed text-white/60">
-                    Y consigue la mejor oferta en autos electrificados. Te avisamos apenas la tengamos.
+                    Y consigue la mejor oferta en autos electrificados. Déjanos tus datos y te
+                    contactamos cuando tengamos novedades.
                   </p>
 
                   <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
-                    <div>
-                      <FieldLabel required>Nombre completo</FieldLabel>
-                      <input {...register("fullName")} type="text" autoComplete="name" placeholder="Juan Pérez" className={INPUT_CLS} />
-                      {errors.fullName && <p className="mt-1 px-1 text-xs text-red-400">{errors.fullName.message}</p>}
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <div>
+                        <FieldLabel required>Nombre</FieldLabel>
+                        <input {...register("firstName")} type="text" autoComplete="given-name" placeholder="Juan" className={INPUT_CLS} />
+                        {errors.firstName && <p className="mt-1 px-1 text-xs text-red-400">{errors.firstName.message}</p>}
+                      </div>
+                      <div>
+                        <FieldLabel required>Apellido</FieldLabel>
+                        <input {...register("lastName")} type="text" autoComplete="family-name" placeholder="Pérez" className={INPUT_CLS} />
+                        {errors.lastName && <p className="mt-1 px-1 text-xs text-red-400">{errors.lastName.message}</p>}
+                      </div>
                     </div>
 
                     <div>

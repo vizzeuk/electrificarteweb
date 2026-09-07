@@ -13,7 +13,8 @@ create table if not exists public.waitlist (
   id          uuid primary key default gen_random_uuid(),
   created_at  timestamptz not null default now(),
 
-  full_name   text not null,
+  first_name  text not null,
+  last_name   text not null,
   email       text not null,
   phone       text not null,          -- formato "+56 9XXXXXXXX"
   model       text,                   -- auto de interés (opcional)
@@ -44,7 +45,7 @@ alter table public.waitlist enable row level security;
 -- ============================================================================
 create or replace view public.waitlist_unicos as
 select distinct on (lower(email))
-  id, created_at, full_name, email, phone, model, source, contacted, notes
+  id, created_at, first_name, last_name, email, phone, model, source, contacted, notes
 from public.waitlist
 order by lower(email), created_at desc;
 

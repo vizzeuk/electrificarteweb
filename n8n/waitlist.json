@@ -23,7 +23,8 @@
         "dataToSend": "defineBelow",
         "fieldsUi": {
           "fieldValues": [
-            { "fieldId": "full_name", "fieldValue": "={{ $json.body.fullName }}" },
+            { "fieldId": "first_name", "fieldValue": "={{ $json.body.firstName }}" },
+            { "fieldId": "last_name", "fieldValue": "={{ $json.body.lastName }}" },
             { "fieldId": "email", "fieldValue": "={{ $json.body.email }}" },
             { "fieldId": "phone", "fieldValue": "={{ $json.body.phone }}" },
             { "fieldId": "model", "fieldValue": "={{ $json.body.model }}" },

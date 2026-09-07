@@ -43,7 +43,10 @@ export function Hero({ data }: HeroProps) {
   // ($19.990, en standby). La acción principal es la **Asesoría $4.990** y la
   // secundaria abre el popup de **waitlist**. Por eso el subtítulo de Sanity —que
   // describe el flujo pagado— se ignora mientras dure el standby.
-  const heroSubtitle = "¿No sabes cuál te conviene? Te asesoramos para elegir el auto electrificado ideal para ti. Y si ya lo tienes claro, súmate a la waitlist para conseguir la mejor oferta.";
+  // OJO con el wording: la waitlist NO promete una oferta ni implica que el servicio
+  // sea gratis — solo registra a los interesados. No usar "gratis" / "sin costo" ni
+  // "te conseguimos la mejor oferta" acá.
+  const heroSubtitle = "¿No sabes cuál te conviene? Te asesoramos para elegir el auto electrificado ideal para ti. Y si ya lo tienes claro, déjanos tus datos y te avisamos cuando haya novedades.";
 
   // Flujo principal — Asesoría ($4.990)
   const advCtaHref  = data?.advisoryCtaHref  ?? "/asesoria";
@@ -123,7 +126,7 @@ export function Hero({ data }: HeroProps) {
               </span>
               <span className="text-left leading-tight">
                 <span className="block text-base md:text-lg font-extrabold text-white">Consigue la mejor oferta</span>
-                <span className="block text-xs font-semibold text-white/55">Únete a la waitlist · gratis</span>
+                <span className="block text-xs font-semibold text-white/55">Únete a la waitlist</span>
               </span>
               <Icon name="chevron_right" className="text-[20px] text-white/40 transition-transform group-hover:translate-x-0.5" />
             </OfferCta>
@@ -131,7 +134,7 @@ export function Hero({ data }: HeroProps) {
 
           {/* Microcopy */}
           <p className="text-xs text-white/45 mt-5">
-            Sin costo y sin compromiso: te avisamos apenas tengamos la mejor oferta para tu auto.
+            Súmate a la waitlist y sé de los primeros en enterarte cuando abramos el acceso.
           </p>
         </div>
 
