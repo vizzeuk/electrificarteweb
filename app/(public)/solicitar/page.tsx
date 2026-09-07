@@ -4,16 +4,14 @@ import { client } from "@/lib/sanity/client";
 import { carNamesForFormQuery } from "@/lib/queries/car";
 import { SolicitarContent } from "./SolicitarContent";
 
+// 🟡 STANDBY (giro sep-2026): esta página existe pero está OCULTA — ningún CTA del
+// sitio lleva acá, no está en el sitemap y se marca noindex. El formulario y todo el
+// flujo pagado quedan intactos para reactivarlos apagando OFERTA_STANDBY.
+// Ver docs/PIVOT-WAITLIST-PLAN.md.
 export const metadata: Metadata = {
-  alternates: { canonical: "/solicitar" },
-  title: "Solicitar oferta | Consigue tu mejor precio",
-  description:
-    "Completa tu solicitud y recibe en 48 a 96 horas la mejor oferta del mercado para tu auto electrificado en Chile. Pago único de $19.990. Garantía de devolución.",
-  openGraph: {
-    title: "Solicitar oferta | Electrificarte",
-    description:
-      "Recibe la mejor oferta para tu auto electrificado en 48 a 96 horas. Pago único $19.990.",
-  },
+  robots: { index: false, follow: false },
+  title: "Solicitar oferta | Electrificarte",
+  description: "Formulario de solicitud de oferta.",
 };
 
 export const revalidate = 3600;

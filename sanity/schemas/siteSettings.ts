@@ -54,7 +54,7 @@ export const siteSettings = defineType({
       group: "pricing",
       initialValue: "$19.990",
       description:
-        'Precio de display del servicio de Negociación ($19.990). Se muestra en la página /negociacion y en el hero. ' +
+        '🟡 STANDBY (giro sep-2026): la Oferta no se vende hoy y este precio NO se muestra en el sitio. Precio de display del servicio de Negociación ($19.990). Se muestra en la página /negociacion y en el hero. ' +
         'Incluye el símbolo tal cual quieres verlo (ej. "$19.990").',
     }),
 

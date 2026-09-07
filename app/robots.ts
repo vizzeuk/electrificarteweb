@@ -9,6 +9,9 @@ import { SITE_URL } from "@/lib/seo";
 const DISALLOW = [
   "/studio",
   "/api/",
+  // Oculta por el giro a waitlist: el flujo pagado está en standby y no debe
+  // aparecer en buscadores (ver docs/PIVOT-WAITLIST-PLAN.md).
+  "/solicitar",
   "/solicitar/gracias",
   "/solicitar/asesoria-gracias",
   "/solicitar/pago-rechazado",

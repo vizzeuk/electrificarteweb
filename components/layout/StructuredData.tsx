@@ -45,11 +45,11 @@ export function HomeStructuredData() {
           "@type": "Offer",
           itemOffered: {
             "@type": "Service",
-            name: "Asesoria de compra de auto electrico",
+            name: "Asesoria IA de compra de auto electrificado",
             description:
-              "Servicio de negociacion exclusiva con vendedores oficiales para obtener el mejor precio en autos electrificados en Chile",
+              "Asesoria personalizada por WhatsApp para decidir que auto electrificado comprar segun uso, presupuesto y perfil",
           },
-          price: "19990",
+          price: "4990",
           priceCurrency: "CLP",
           availability: "https://schema.org/InStock",
         },
@@ -82,7 +82,7 @@ export function HomeStructuredData() {
         name: "Como puedo obtener un descuento en un auto electrico en Chile?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Al registrarte en Electrificarte y pagar $19.990 CLP, activamos nuestro servicio de busqueda exclusiva. Nuestro equipo negocia directamente con vendedores oficiales para conseguirte el mejor precio posible, con los mejores descuentos disponibles del mercado.",
+          text: "Electrificarte negocia directamente con vendedores oficiales para conseguir el mejor precio posible. El servicio aun no esta abierto al publico: puedes sumarte a la lista de espera sin costo y te avisamos cuando abramos el acceso.",
         },
       },
       {
@@ -98,7 +98,7 @@ export function HomeStructuredData() {
         name: "Cuanto cuesta el servicio de Electrificarte?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Solo $19.990 CLP como pago unico. Sin costos ocultos ni comisiones. Si no logramos un descuento significativo, devolvemos el 100% del pago.",
+          text: "Sumarte a la lista de espera no tiene costo: solo dejas tus datos y quedas registrado como interesado. La Asesoria IA por WhatsApp, que te ayuda a decidir que auto comprar, tiene un valor de $4.990 CLP.",
         },
       },
       {
@@ -118,11 +118,10 @@ export function HomeStructuredData() {
     name: "Como comprar un auto electrico al mejor precio en Chile con Electrificarte",
     description:
       "Guia paso a paso para obtener el mejor precio en un vehiculo electrico en Chile.",
-    totalTime: "PT96H",
     estimatedCost: {
       "@type": "MonetaryAmount",
       currency: "CLP",
-      value: "19990",
+      value: "4990",
     },
     step: [
       {
@@ -134,14 +133,14 @@ export function HomeStructuredData() {
       {
         "@type": "HowToStep",
         position: 2,
-        name: "Paga tu asesoria",
-        text: "Pago unico de $19.990 CLP para activar la busqueda exclusiva.",
+        name: "Sumate a la lista de espera",
+        text: "Deja tus datos sin costo y quedas registrado como interesado en ese modelo.",
       },
       {
         "@type": "HowToStep",
         position: 3,
-        name: "Recibe tu oferta en 48-96 horas",
-        text: "Te presentamos la mejor oferta con bonos y financiamiento incluido.",
+        name: "Te avisamos",
+        text: "Te contactamos cuando abramos el acceso y tengamos novedades para tu modelo.",
       },
       {
         "@type": "HowToStep",
@@ -171,7 +170,7 @@ export function HomeStructuredData() {
       latitude: -33.4489,
       longitude: -70.6693,
     },
-    priceRange: "$19.990 CLP",
+    priceRange: "$4.990 CLP",
     openingHoursSpecification: {
       "@type": "OpeningHoursSpecification",
       dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],

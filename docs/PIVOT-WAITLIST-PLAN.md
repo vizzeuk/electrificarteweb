@@ -161,17 +161,26 @@ el sitio en un `<Suspense>`.
 
 **Verificado:** `tsc` limpio · `next build` OK (293 páginas) · `/?waitlist=1` responde 200.
 
-## Fase 5 — SEO / structured data / CMS ⬜
-- [ ] `components/layout/StructuredData.tsx` — L52, L85, L101, L125, L138, L144, L174
-- [ ] `app/llms.txt/route.ts` — L74-82, L98, L109
-- [ ] Sanity: `sanity/schemas/homePage.ts` (L36,74,81) · `siteSettings.ts` (L52-58) ·
-      `blogPost.ts` (L137,145) · seed `scripts/setup-home.ts` (L206,215)
-- [ ] `app/sitemap.ts:17` y `app/robots.ts:12-14` (sacar `/solicitar`)
+## Fase 5 — SEO / structured data / CMS ✅ HECHA
+- [x] `StructuredData.tsx` — el `Offer`/`Service` del OfferCatalog pasa a la **Asesoría $4.990**
+      (antes $19.990); FAQ de descuento y de costo reescritas; `HowTo` sin `totalTime: PT96H`,
+      paso "Paga tu asesoría" → "Súmate a la lista de espera", paso "Recibe tu oferta en 48-96
+      horas" → "Te avisamos"; `priceRange` → `$4.990 CLP`
+- [x] `app/llms.txt/route.ts` — "Oferta Exclusiva $19.990" → "Waitlist de ofertas (registro sin
+      costo)", link a `/?waitlist=1`, y regla explícita para las IA: **no atribuirle precio al
+      servicio de negociación y no confundir "registro sin costo" con "servicio gratis"**
+- [x] Sanity: `homePage.ts` (subtítulo y `cta1Href` → `/?waitlist=1`), `blogPost.ts` (CTA por
+      defecto → "Súmate a la waitlist" → `/?waitlist=1`), y nota 🟡 STANDBY en los campos de
+      precio de `siteSettings.ts` y `homePage.ts` para que ningún editor lo reintroduzca
 
-## Fase 6 — Standby seguro del flujo pagado ⬜
-- [ ] Ocultar `/solicitar` (sin CTAs; decidir noindex/redirect)
-- [ ] Verificar que `npm test` (subasta) siga verde — el código no se toca, solo se deja sin uso
-- [ ] `metadata` de `solicitar/page.tsx` (L11,15) fuera de indexación
+## Fase 6 — Standby seguro del flujo pagado ✅ HECHA
+- [x] `/solicitar` **oculta**: `robots: { index: false, follow: false }` en su metadata, sacada
+      del `sitemap.ts` y agregada al `DISALLOW` de `robots.ts`. La página, `LeadForm`,
+      `/api/checkout` (rama lead) y `app/api/auction/*` **siguen intactos** en el repo.
+- [x] Su metadata ya no anuncia "$19.990" ni "48 a 96 horas" ni la garantía.
+- [x] `npm test` (subasta) sigue verde: no se tocó esa lógica.
+
+**Verificado en Fases 5-6:** `tsc` limpio · `next build` OK (293 páginas).
 
 ---
 

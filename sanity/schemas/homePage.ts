@@ -33,7 +33,7 @@ export const homePage = defineType({
     defineField({
       name: "heroSubtitle", title: "Subtítulo", type: "text", rows: 2,
       group: "hero",
-      initialValue: "Por solo $19.990 negociamos con nuestra red de vendedores oficiales y te traemos la mejor oferta del mercado en 48-96 horas. Si no ahorras, te devolvemos el dinero.",
+      initialValue: "Negociamos con nuestra red de vendedores oficiales para conseguirte la mejor oferta. Súmate a la waitlist y te avisamos cuando abramos el acceso.",
     }),
     defineField({
       name: "heroCta1Text", title: "Botón principal – texto", type: "string",
@@ -41,7 +41,7 @@ export const homePage = defineType({
     }),
     defineField({
       name: "heroCta1Href", title: "Botón principal – enlace", type: "string",
-      group: "hero", initialValue: "/solicitar",
+      group: "hero", initialValue: "/?waitlist=1",
     }),
     defineField({
       name: "heroCta2Text", title: "Botón secundario – texto", type: "string",
@@ -79,7 +79,7 @@ export const homePage = defineType({
       type: "string",
       group: "hero",
       initialValue: "$19.990",
-      description: "Monto que aparece en el formulario de solicitud (/solicitar). Solo visual — para cambiar el precio real edita el plan en Reveniu.",
+      description: "🟡 STANDBY (giro sep-2026): la Oferta no se vende hoy y este precio NO se muestra en el sitio. Monto que aparece en el formulario de solicitud (/solicitar). Solo visual — para cambiar el precio real edita el plan en Reveniu.",
     }),
     defineField({
       name: "heroOfferBadge", title: "Oferta activa – badge (texto)", type: "string",

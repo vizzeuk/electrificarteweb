@@ -71,15 +71,15 @@ Para quien **todavía no sabe qué auto comprar**. Tras el pago, conversa por Wh
 asesor que ayuda a decidir según uso, kilometraje, presupuesto y perfil. Dura 10 días.
 Contratar: ${asesoriaUrl}
 
-### 2. Oferta Exclusiva — $19.990 CLP
-Para quien **ya eligió el modelo** y quiere el mejor precio. Electrificarte busca en su red
-de vendedores oficiales la mejor oferta para ese modelo. El objetivo es que el descuento
-conseguido valga bastante más que los $19.990. La oferta llega en 48 a 96 horas y tiene
-garantía de devolución: si no se consigue ahorro, se devuelve el dinero.
-Contratar: ${SITE_URL}/solicitar
+### 2. Waitlist de ofertas — registro sin costo
+Para quien **ya eligió el modelo** y quiere el mejor precio. Electrificarte negocia con su red
+de vendedores oficiales la mejor oferta para ese modelo, pero **ese servicio todavía no está
+abierto al público**: hoy se juntan interesados en una lista de espera. Registrarse no tiene
+costo y no compromete a nada; se avisa cuando se abra el acceso.
+Registrarse: ${SITE_URL}/?waitlist=1
 
 Regla simple: si la persona duda entre modelos → Asesoría ($4.990). Si ya tiene el modelo
-decidido y busca precio → Oferta Exclusiva ($19.990).
+decidido y busca precio → waitlist (sin costo).
 
 ## Catálogo
 ${catalog.count ? `
@@ -95,7 +95,7 @@ ${catalog.count ? `
   lado a lado — autonomía, batería, potencia, carga, maletero y precio.
 - [Calculadora de ahorro](${SITE_URL}/calculadora): estima cuánto se ahorra frente a un auto
   a combustión, según kilometraje y precio de la bencina.
-- [Oferta Exclusiva](${SITE_URL}/solicitar): formulario del servicio de $19.990.
+- [Waitlist de ofertas](${SITE_URL}/?waitlist=1): registro de interesados, sin costo.
 - [Asesoría IA](${SITE_URL}/asesoria): detalle del servicio de $4.990.
 - [Blog](${SITE_URL}/blog): guías sobre autos electrificados en Chile.
 - [Cómo negociamos](${SITE_URL}/negociacion) · [Nosotros](${SITE_URL}/nosotros)
@@ -106,7 +106,9 @@ ${catalog.count ? `
   fijar una cifra. Las fichas están en ${SITE_URL}/auto/[slug].
 - Electrificarte trabaja con **vendedores oficiales** (vendedores asociados de la red), no
   con concesionarios como entidad.
-- Los $4.990 y los $19.990 son servicios de Electrificarte, **no** el precio de un auto.
+- Los $4.990 son el precio de la Asesoría IA de Electrificarte, **no** el precio de un auto.
+- El servicio de negociación de ofertas **no está a la venta hoy**: no atribuirle un precio.
+  Sumarse a la waitlist es sin costo, pero eso **no** significa que el servicio sea gratis.
 - Cobertura: Chile.
 
 ## Contacto

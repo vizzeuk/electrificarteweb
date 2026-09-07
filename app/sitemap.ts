@@ -10,11 +10,11 @@ interface SlugRow {
   updatedAt?: string;
 }
 
-/** Rutas estáticas. No se listan las de post-pago (ver app/robots.ts). */
+/** Rutas estáticas. No se listan las de post-pago (ver app/robots.ts) ni `/solicitar`,
+ *  oculta por el giro a waitlist (ver docs/PIVOT-WAITLIST-PLAN.md). */
 const STATIC_ROUTES: { path: string; changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"]; priority: number }[] = [
   { path: "",                     changeFrequency: "daily",   priority: 1.0 },
   { path: "/marcas",              changeFrequency: "weekly",  priority: 0.9 },
-  { path: "/solicitar",           changeFrequency: "monthly", priority: 0.8 },
   { path: "/asesoria",            changeFrequency: "monthly", priority: 0.8 },
   { path: "/asesoria/contratar",  changeFrequency: "monthly", priority: 0.7 },
   { path: "/comparador",          changeFrequency: "monthly", priority: 0.7 },
