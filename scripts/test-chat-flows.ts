@@ -16,7 +16,7 @@
  *   - ✅ No contiene texto markdown de links ([texto](url)) — WhatsApp no lo renderiza
  *   - ✅ No menciona modelos/precios inventados (validado por output-validator)
  *   - ✅ Cumple la regla de longitud (≤ ~800 chars para WhatsApp)
- *   - ✅ No pide $19.990 en flujos "oferta" (donde ya se pagó)
+ *   - ✅ Nunca nombra $19.990 (servicio en standby); invita a la waitlist
  *   - ✅ Bloquea a vendedores
  *   - ✅ Bloquea sin suscripción
  *   - Tier-specific checks según cada caso
@@ -184,7 +184,7 @@ const FLOWS: TestFlow[] = [
   },
   {
     id: 11, name: "Asesoría — ya visitó concesionarios", tier: "asesoria",
-    // El bot puede hacer diagnóstico primero o presentar $19.990 directo.
+    // El bot puede hacer diagnóstico primero o invitar a la waitlist directo.
     // Ambos son válidos; solo verificamos que no meta markdown y esté suscrito.
     messages: [
       { role: "user", content: "Fui a 3 concesionarios, los precios me parecieron muy altos. ¿Pueden conseguir algo mejor?" },
@@ -193,12 +193,14 @@ const FLOWS: TestFlow[] = [
     shouldNotContain: ["[", "]("],
   },
   {
-    id: 12, name: "Asesoría — modelo ya decidido", tier: "asesoria",
+    id: 12, name: "Asesoría — modelo ya decidido → invita a la waitlist", tier: "asesoria",
     messages: [
       { role: "user", content: "Ya decidí que quiero el BYD Seal. Solo necesito el mejor precio" },
     ],
     expectSubscribed: true,
-    shouldContain: ["$19.990"],
+    shouldContainAny: ["waitlist", "lista de espera"],
+    // Giro sep-2026: nunca debe nombrar un precio para el servicio de negociación.
+    shouldNotContain: ["$19.990"],
   },
   {
     id: 13, name: "Asesoría — pregunta técnica autonomía", tier: "asesoria",
@@ -245,7 +247,7 @@ const FLOWS: TestFlow[] = [
     shouldNotContain: ["harina", "receta", "ingredientes"],
   },
   {
-    id: 18, name: "Asesoría — rechaza $19.990, no insiste", tier: "asesoria",
+    id: 18, name: "Asesoría — rechaza la oferta, no insiste", tier: "asesoria",
     messages: [
       { role: "user", content: "¿Pueden conseguirme la oferta?" },
       { role: "assistant", content: "Sí, el servicio de *$19.990* te consigue la cotización real de los vendedores." },

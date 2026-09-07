@@ -137,16 +137,29 @@ registrarse, nunca al servicio.
 **Verificado:** `tsc` limpio · `next build` OK (293 páginas) · sin "$19.990", plazos ni garantías
 en UI fuera de los archivos de Fases 4-6 y los legales.
 
-## Fase 4 — Chatbots ⬜
-- [ ] **WhatsApp** `lib/whatsapp/advisor.ts` `BASE_SYSTEM`: sacar sección $19.990 (L25-31),
-      mandato de compartir `/solicitar` (L33), L61, L65, L68 y los CASOS 1-10 (L79-117).
-      Reemplazar por: promover **waitlist** + reforzar **Asesoría $4.990**.
-- [ ] `OFERTA_SYSTEM` (L125-149): dejar para clientes que ya pagaron (no entran nuevos).
-- [ ] **Web** `app/api/chat/route.ts`: "DOS PRODUCTOS" (L331-334), rutas (L341),
-      `handleRecommendation` (L224-228), `fallbackMessage` (L439).
-- [ ] `public/ev-chat-widget.js`: `CONTACT_MENU` (L627); mantener upsell asesoría (L594,876).
-- [ ] `lib/whatsapp/bot.ts` `subscribeMessage` (L41-48, tier `null`) → waitlist + asesoría.
-- [ ] Actualizar `scripts/test-chat-flows.ts` y `scripts/test-site-chat-flows.ts` (asertan "$19.990").
+## Fase 4 — Chatbots ✅ HECHA
+
+**Deep-link nuevo:** los bots y correos no pueden abrir un popup, así que el
+`WaitlistProvider` acepta **`/?waitlist=1`** (opcional `&auto=Modelo&source=...`) y abre el
+popup al cargar. Se lee de `window.location` (no `useSearchParams`) para no tener que envolver
+el sitio en un `<Suspense>`.
+
+- [x] **WhatsApp** `advisor.ts` `BASE_SYSTEM`: la sección "Producto principal — Oferta
+      Exclusiva $19.990" pasó a "Paso siguiente — Waitlist", con **reglas duras**: no nombrar
+      precio, no prometer una oferta, no dar plazos, no decir que el servicio es/será gratis
+      (lo único sin costo es registrarse). Los **10 CASOS** reescritos para invitar a la
+      waitlist. Link permitido cambiado a `/?waitlist=1`.
+- [x] `OFERTA_SYSTEM`: se mantiene para quienes **ya pagaron** antes del standby (no entran
+      nuevos). Ya prohibía nombrar cifras; se documentó el standby.
+- [x] **Web** `app/api/chat/route.ts`: "DOS PRODUCTOS" → asesoría + **waitlist** (con las
+      mismas reglas duras), rutas útiles, menú de `handleRecommendation` y `fallbackMessage`.
+- [x] `public/ev-chat-widget.js`: `CONTACT_MENU` → waitlist; se mantiene el upsell de asesoría.
+- [x] `lib/whatsapp/bot.ts` `subscribeMessage` (tier `null`) → ofrece asesoría **y** waitlist.
+- [x] `scripts/test-chat-flows.ts` y `test-site-chat-flows.ts` actualizados: donde antes se
+      esperaba "$19.990" o `/solicitar`, ahora se espera waitlist; se agregó un
+      `shouldNotContain: ["$19.990"]` al caso de modelo ya decidido.
+
+**Verificado:** `tsc` limpio · `next build` OK (293 páginas) · `/?waitlist=1` responde 200.
 
 ## Fase 5 — SEO / structured data / CMS ⬜
 - [ ] `components/layout/StructuredData.tsx` — L52, L85, L101, L125, L138, L144, L174

@@ -38,13 +38,21 @@ export const bot = new Chat({
 
 // ─── Response messages ────────────────────────────────────────────────────────
 
+// Giro sep-2026: además de ofrecer la asesoría, invita a la waitlist (el servicio de
+// oferta está en standby). No mencionar precios de la oferta ni prometer una oferta.
+const WAITLIST_URL = "https://www.electrificarte.com/?waitlist=1";
+
 function subscribeMessage(): string {
   const url = process.env.ADVISOR_SUBSCRIBE_URL;
   const base =
     "¡Hola! 👋 Soy *Francisco IA*, el asesor IA de electrificarte.com. La asesoría 1:1 por WhatsApp es un servicio para suscriptores.";
-  return url
-    ? `${base}\n\nActiva tu asesoría acá y te ayudo a encontrar tu auto ideal:\n${url}`
-    : `${base}\n\nEscríbenos a contacto@electrificarte.com para activar tu asesoría.`;
+  const asesoria = url
+    ? `\n\nActiva tu asesoría acá y te ayudo a encontrar tu auto ideal:\n${url}`
+    : "\n\nEscríbenos a contacto@electrificarte.com para activar tu asesoría.";
+  return (
+    `${base}${asesoria}` +
+    `\n\n¿Ya sabes qué auto quieres? Déjanos tus datos en la lista de espera y te avisamos cuando abramos el acceso a las ofertas de nuestra red:\n${WAITLIST_URL}`
+  );
 }
 
 const VENDOR_MESSAGE =

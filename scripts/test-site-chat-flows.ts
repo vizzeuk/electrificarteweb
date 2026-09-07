@@ -4,8 +4,8 @@
  *
  * Objetivo principal: verificar que el bot distingue correctamente los DOS productos
  *   1. Asesoría personalizada ($4.990, por WhatsApp) → link de pago Reveniu
- *   2. Negociación del mejor precio ($19.990)        → /solicitar
- * y que nunca los confunde (asesoría NUNCA a /solicitar; negociación NUNCA a Reveniu).
+ *   2. Waitlist de ofertas (gratis registrarse)      → /?waitlist=1
+ * y que nunca los confunde (asesoría NUNCA a la waitlist; waitlist NUNCA a Reveniu).
  *
  * Uso:
  *   # 1) Levanta el server en otra terminal:
@@ -22,7 +22,7 @@
  *   - ✅ shouldContain / shouldNotContain (substrings, case-insensitive)
  *   - ✅ Injection → INJECTION_RESPONSE
  *   - ✅ Off-topic → OFFTOPIC_RESPONSE
- *   - ✅ Distinción de productos (asesoría vs. /solicitar)
+ *   - ✅ Distinción de productos (asesoría vs. waitlist)
  */
 
 const BASE_URL = process.env.TEST_BASE_URL ?? "http://localhost:3000";
@@ -159,22 +159,22 @@ const FLOWS: Flow[] = [
   {
     id: 5, name: "Recommend — Sin filtros (any/any/any)", kind: "recommend",
     body: { budget: "any", vehicleType: "any", electricType: "any" },
-    shouldContain: ["[MENU]", "/solicitar"],
+    shouldContain: ["[MENU]", "waitlist"],
     shouldNotContain: [REVENIU],
   },
   {
-    id: 6, name: "Recommend — El menú de negociar apunta a /solicitar", kind: "recommend",
+    id: 6, name: "Recommend — El menú de ofertas apunta a la waitlist", kind: "recommend",
     body: { budget: "30-50", vehicleType: "suv", electricType: "electric" },
-    shouldContain: ["/solicitar"],
+    shouldContain: ["waitlist"],
     shouldNotContain: ["cotizar uno de estos"], // etiqueta antigua eliminada
   },
 
   // ── Distinción de productos (lo central del cambio) ──────────────────────────
   {
-    id: 7, name: "Asesoría personalizada → Reveniu, NO /solicitar", kind: "chat",
+    id: 7, name: "Asesoría personalizada → Reveniu, NO waitlist", kind: "chat",
     messages: [{ role: "user", content: "No sé qué auto elegir, quiero asesoría personalizada de un experto" }],
     shouldContainAny: [REVENIU, "whatsapp", "asesor"],
-    shouldNotContain: ["/solicitar"],
+    shouldNotContain: ["waitlist"],
   },
   {
     id: 8, name: "Necesito ayuda para decidir → asesoría", kind: "chat",
@@ -182,15 +182,15 @@ const FLOWS: Flow[] = [
     shouldContainAny: [REVENIU, "asesor", "whatsapp"],
   },
   {
-    id: 9, name: "Ya elegí modelo, quiero el mejor precio → /solicitar", kind: "chat",
+    id: 9, name: "Ya elegí modelo, quiero el mejor precio → waitlist", kind: "chat",
     messages: [{ role: "user", content: "Ya decidí, quiero el BYD Dolphin. ¿Cómo consigo el mejor precio?" }],
-    shouldContainAny: ["/solicitar", "solicitar"],
+    shouldContainAny: ["waitlist", "lista de espera"],
     shouldNotContain: [REVENIU],
   },
   {
-    id: 10, name: "Quiero cotizar/negociar un modelo → /solicitar", kind: "chat",
+    id: 10, name: "Quiero cotizar/negociar un modelo → waitlist", kind: "chat",
     messages: [{ role: "user", content: "Quiero negociar el precio del Dolphin, ya lo tengo claro" }],
-    shouldContainAny: ["/solicitar", "solicitar"],
+    shouldContainAny: ["waitlist", "lista de espera"],
     shouldNotContain: [REVENIU],
   },
 
@@ -223,7 +223,7 @@ const FLOWS: Flow[] = [
   {
     id: 16, name: "Financiamiento", kind: "chat",
     messages: [{ role: "user", content: "¿Ofrecen financiamiento o crédito para comprar?" }],
-    shouldContainAny: ["financ", "/contacto", "/solicitar", "crédit"],
+    shouldContainAny: ["financ", "/contacto", "waitlist", "crédit"],
   },
   {
     id: 17, name: "Pregunta por SUV eléctrico", kind: "chat",
@@ -243,7 +243,7 @@ const FLOWS: Flow[] = [
   {
     id: 20, name: "Presupuesto acotado", kind: "chat",
     messages: [{ role: "user", content: "Tengo 20 millones de pesos, ¿qué me recomiendas?" }],
-    shouldContainAny: ["$", "millones", "/auto/", "/marcas", "solicitar"],
+    shouldContainAny: ["$", "millones", "/auto/", "/marcas", "waitlist"],
   },
 
   // ── Off-topic (deben devolver OFFTOPIC_RESPONSE) ─────────────────────────────
@@ -305,13 +305,13 @@ const FLOWS: Flow[] = [
     shouldContainAny: ["suv", "/auto/", "/marcas", "$"],
   },
   {
-    id: 30, name: "Decisión tomada tras conversar → /solicitar (no Reveniu)", kind: "chat",
+    id: 30, name: "Decisión tomada tras conversar → waitlist (no Reveniu)", kind: "chat",
     messages: [
       { role: "user", content: "Quiero un SUV eléctrico" },
       { role: "assistant", content: "Tenemos varias opciones de SUV eléctrico. ¿Te muestro algunas?" },
       { role: "user", content: "Ya lo decidí: quiero el BYD Atto 3. ¿Cómo consigo el mejor precio negociado para ese modelo?" },
     ],
-    shouldContainAny: ["/solicitar", "solicitar", "negoci"],
+    shouldContainAny: ["waitlist", "lista de espera", "negoci"],
     shouldNotContain: [REVENIU],
   },
 

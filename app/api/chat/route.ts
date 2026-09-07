@@ -33,7 +33,8 @@ const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 // ─── Productos ────────────────────────────────────────────────────────────────
 // Asesoría personalizada ($4.990, por WhatsApp) → formulario /asesoria/contratar.
-// Negociación del mejor precio ($19.990) → formulario /solicitar.
+// Waitlist de ofertas (giro sep-2026) → popup vía /?waitlist=1. El flujo pagado
+// de negociación ($19.990 → /solicitar) está en STANDBY, no se ofrece.
 // La URL vive en lib/products.ts para compartirse con la página /asesoria.
 const ASESORIA_URL = ASESORIA_CHECKOUT_URL;
 
@@ -223,7 +224,7 @@ async function handleRecommendation(body: {
 
 [MENU]
 1. Ver catálogo completo → /marcas
-2. Negociar el mejor precio de uno → /solicitar
+2. Súmate a la waitlist de ofertas → /?waitlist=1
 3. Volver al inicio
 [/MENU]`;
 }
@@ -330,15 +331,16 @@ ${matchedBrand ? `MODELOS ${matchedBrand.name.toUpperCase()}:\n${brandCars.lengt
 
 DOS PRODUCTOS (no los confundas):
 1. **Asesoría personalizada** — $4.990, atención directa por WhatsApp con un experto que ayuda a DECIDIR qué auto comprar. Enlace de pago: ${ASESORIA_URL}. Úsalo cuando la persona pide ayuda para decidir, orientación, o quiere hablar con un experto y aún no tiene claro el modelo.
-2. **Negociación del mejor precio** — $19.990, nuestro equipo negocia con vendedores oficiales el mejor precio de un modelo ya elegido. Enlace: /solicitar. Úsalo SOLO cuando la persona ya sabe qué modelo quiere y busca cotizar/conseguir el mejor precio.
-- NUNCA envíes la asesoría personalizada a /solicitar, ni la negociación de precio a ${ASESORIA_URL}.
+2. **Waitlist de ofertas** — GRATIS registrarse. Negociamos con vendedores oficiales el mejor precio de un modelo ya elegido, pero ese servicio AÚN NO está abierto: hoy juntamos interesados en una lista de espera. Enlace: /?waitlist=1. Úsalo SOLO cuando la persona ya sabe qué modelo quiere y busca conseguir el mejor precio.
+- NUNCA envíes la asesoría personalizada a la waitlist, ni la waitlist a ${ASESORIA_URL}.
+- ⚠️ Sobre la waitlist NUNCA: menciones un precio para el servicio de negociación, prometas una oferta, des plazos, ni digas que ese servicio es o será gratis. Lo único sin costo es REGISTRARSE en la lista.
 
 REGLAS:
 - Responde siempre en español chileno, tono cercano
 - Máximo 3-4 párrafos, sé directo
 - Usa markdown: **negrita**, listas con guiones
 - Incluye links clickeables: [Nombre del auto](/auto/slug) o [Ver catálogo](/marcas)
-- Rutas útiles: /marcas (catálogo) · /solicitar (negociar precio de un modelo elegido) · /contacto · /auto/[slug]. Para la asesoría personalizada por WhatsApp usa ${ASESORIA_URL} (el enlace de arriba).
+- Rutas útiles: /marcas (catálogo) · /?waitlist=1 (waitlist de ofertas) · /contacto · /auto/[slug]. Para la asesoría personalizada por WhatsApp usa ${ASESORIA_URL} (el enlace de arriba).
 - Al final sugiere 2-3 acciones con links
 - NUNCA inventes precios ni especificaciones fuera de los datos aquí indicados
 - Si no tienes info suficiente, di "no tengo esa información en este momento" y sugiere /contacto
@@ -436,5 +438,5 @@ function fallbackMessage(err: unknown): string {
     ? "Estoy recibiendo muchas consultas en este momento y no pude procesar la tuya 🙏."
     : "Tuve un problema procesando tu consulta.";
 
-  return `${base}\n\nMientras tanto puedes:\n\n[MENU]\n1. Ver el catálogo completo → /marcas\n2. Negociar el mejor precio de un modelo → /solicitar\n3. Escribirnos directamente → /contacto\n[/MENU]`;
+  return `${base}\n\nMientras tanto puedes:\n\n[MENU]\n1. Ver el catálogo completo → /marcas\n2. Súmate a la waitlist de ofertas → /?waitlist=1\n3. Escribirnos directamente → /contacto\n[/MENU]`;
 }

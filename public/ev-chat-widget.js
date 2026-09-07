@@ -624,7 +624,7 @@ ${MENU_BLOCK}`;
   const CONTACT_MENU = `Te conectamos con nuestro equipo. ¿Qué prefieres?
 
 [MENU]
-1. Negociar el mejor precio de un modelo → /solicitar
+1. Súmate a la waitlist de ofertas → /?waitlist=1
 2. Asesoría personalizada por WhatsApp → ${UPSELL_URL}
 3. Enviar mensaje al equipo → /contacto
 4. Volver al menú principal #menu
