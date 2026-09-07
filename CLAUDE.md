@@ -215,6 +215,14 @@ Cosas que costaron horas y no son obvias leyendo el código.
 
 - **Vercel Hobby corta las funciones a 60 s**, ignorando el `maxDuration` del código. Los
   `maxDuration = 120` (webhook WhatsApp) y `= 300` (pdp-research) **no aplican en Hobby**.
+  > ⚠️ **POR VERIFICAR (sep-2026):** esto vale para proyectos **sin Fluid compute**. Con Fluid
+  > compute (default en proyectos nuevos desde abr-2025) Hobby pasó a **300 s** de default y
+  > máximo. Si este proyecto tiene Fluid activo, `maxDuration = 300` sí aplica y **"Vercel Pro"
+  > dejaría de ser bloqueante** por este motivo. Revisar el setting en Vercel antes de gastar
+  > en Pro. Fuente: https://vercel.com/docs/functions/limitations
+- **El body de cualquier función Vercel está limitado a 4,5 MB** (`FUNCTION_PAYLOAD_TOO_LARGE`),
+  en todos los planes y no configurable. Cualquier subida de archivos tiene que ir **directa al
+  storage con URL prefirmada**, nunca a través de `/api/*`.
 - **GROQ: `campo != "valor"` también matchea `null`/`undefined`.** Para filtro positivo
   exclusivo usar `campo in ["a","b"]`.
 - **`math::min()` no acepta `coalesce()` en proyección directa** — proyectar primero:
@@ -255,6 +263,9 @@ Más n8n (VPS de Matías) y Supabase. Un cambio en el modelo de leads toca a los
 
 - **`docs/PIVOT-WAITLIST-PLAN.md` — 🔴 EL PLAN VIGENTE.** El giro a waitlist + asesoría-first:
   fases, inventario de qué cambia, estado y tareas manuales. **Empezar por acá.**
+- `docs/REVIEWS-UGC-PLAN.md` — sistema de reseñas UGC con fotos y moderación: investigación de
+  costos (storage, moderación, video), arquitectura recomendada y decisiones pendientes.
+  **Plan, aún no implementado.**
 - `docs/QA-FLUJOS-MANUAL.md` — cómo testear los flujos (`npm test`, simulador n8n, webhooks de
   ventas) y los hallazgos de idempotencia.
 - `docs/HANDOFF-CONDUCTOR.md` — 🟡 **STANDBY** — estado y fase del marketplace de ofertas de
