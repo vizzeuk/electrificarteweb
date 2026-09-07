@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
+import { OfferCta } from "@/components/waitlist/OfferCta";
 import { client } from "@/lib/sanity/client";
 import { productPricesQuery } from "@/lib/queries/pages";
 import { ASESORIA_PRICE } from "@/lib/products";
@@ -168,7 +169,7 @@ export default async function AsesoriaPage() {
           </Link>
           <p className="text-white/40 text-sm mt-6">
             ¿Ya sabes qué auto quieres?{" "}
-            <Link href="/solicitar" className="text-primary hover:underline">Consigue tu mejor precio →</Link>
+            <OfferCta source="asesoria" className="text-primary hover:underline">Consigue tu mejor precio →</OfferCta>
           </p>
         </div>
       </section>

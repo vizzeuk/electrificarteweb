@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
+import { OfferCta } from "@/components/waitlist/OfferCta";
 
 export const revalidate = 60;
 
@@ -93,12 +94,12 @@ export default function NosotrosPage() {
             vendedores oficiales para que consigas el mejor precio del mercado.
           </p>
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            <Link
-              href="/solicitar"
+            <OfferCta
+              source="nosotros"
               className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-8 py-4 rounded-xl transition-all text-lg shadow-[0_6px_32px_rgba(0,229,229,0.30)] hover:shadow-[0_8px_40px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]"
             >
               Conseguir mi oferta
-            </Link>
+            </OfferCta>
             <Link href="/marcas" className="text-white/50 hover:text-white transition-colors text-sm">
               Explorar el catálogo →
             </Link>
@@ -196,12 +197,12 @@ export default function NosotrosPage() {
             estamos para conseguirte el mejor precio de Chile.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link
-              href="/solicitar"
+            <OfferCta
+              source="nosotros"
               className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-8 py-4 rounded-xl transition-all text-lg shadow-[0_6px_32px_rgba(0,229,229,0.30)] hover:shadow-[0_8px_40px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]"
             >
               Conseguir mi oferta
-            </Link>
+            </OfferCta>
             <Link href="/contacto" className="text-white/50 hover:text-white transition-colors text-sm">
               Hablar con el equipo →
             </Link>

@@ -12,7 +12,9 @@ interface TrustBadgesProps {
 
 const DEFAULT_BADGES: TrustBadgeData[] = [
   { icon: "verified_user",     title: "Pago seguro",              description: "Tu pago está protegido. Usamos WebPay y encriptación bancaria." },
-  { icon: "shield",            title: "Garantía de devolución",   description: "Si no logramos un descuento significativo, te devolvemos el 100%." },
+  // Giro sep-2026: la garantía de devolución era del flujo pagado ($19.990, en
+  // standby). La waitlist es gratis, así que el argumento de confianza es otro.
+  { icon: "shield",            title: "Sin compromiso",           description: "Únete a la waitlist gratis. Te avisamos cuando tengamos tu mejor oferta." },
   { icon: "lock",              title: "Datos protegidos",         description: "Tu información personal está protegida bajo la Ley 19.628 de Chile." },
   { icon: "workspace_premium", title: "Vendedores oficiales", description: "Solo trabajamos con vendedores autorizados y verificados en Chile." },
 ];

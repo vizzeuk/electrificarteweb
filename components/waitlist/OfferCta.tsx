@@ -28,6 +28,8 @@ interface OfferCtaProps {
   carSlug?: string;
   /** De dónde se hizo clic (hero, pdp, comparador…), para medir qué convierte. */
   source?: string;
+  /** Efecto extra al hacer clic (ej. cerrar el promo modal que contiene el CTA). */
+  onClick?: () => void;
   "aria-label"?: string;
 }
 
@@ -37,6 +39,7 @@ export function OfferCta({
   model,
   carSlug,
   source = "web",
+  onClick,
   "aria-label": ariaLabel,
 }: OfferCtaProps) {
   const { open } = useWaitlist();
@@ -47,14 +50,22 @@ export function OfferCta({
     if (model) params.set("nombre", model);
     const qs = params.toString();
     return (
-      <Link href={`/solicitar${qs ? `?${qs}` : ""}`} className={className} aria-label={ariaLabel}>
+      <Link href={`/solicitar${qs ? `?${qs}` : ""}`} className={className} onClick={onClick} aria-label={ariaLabel}>
         {children}
       </Link>
     );
   }
 
   return (
-    <button type="button" onClick={() => open({ model, source })} className={className} aria-label={ariaLabel}>
+    <button
+      type="button"
+      onClick={() => {
+        onClick?.();
+        open({ model, source });
+      }}
+      className={className}
+      aria-label={ariaLabel}
+    >
       {children}
     </button>
   );

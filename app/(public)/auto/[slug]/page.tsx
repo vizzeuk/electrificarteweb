@@ -1,13 +1,13 @@
 import React from "react";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { client } from "@/lib/sanity/client";
 import { carBySlugQuery, similarCarsQuery } from "@/lib/queries/car";
 import { stripBrandSuffix } from "@/lib/utils";
 import AutoPageClient, { type CarData, type SimilarCarData } from "./AutoPageClient";
 import { CarStructuredData } from "@/components/car/CarStructuredData";
 import { Icon } from "@/components/ui/Icon";
+import { OfferCta } from "@/components/waitlist/OfferCta";
 
 export const revalidate = 60;
 
@@ -57,9 +57,9 @@ export default async function CarDetailPage({ params }: PageProps) {
         <Icon name="electric_car" className="text-[64px] text-gray-200" />
         <h1 className="font-headline font-black text-3xl">{slug.replace(/-/g, " ")}</h1>
         <p className="text-text-muted max-w-sm">Este modelo aún no está disponible en nuestro catálogo digital. Puedes solicitar una oferta de todos modos.</p>
-        <Link href="/solicitar" className="bg-primary hover:bg-primary-dark text-black font-bold px-8 py-3 rounded-xl transition-colors">
+        <OfferCta carSlug={slug} model={slug.replace(/-/g, " ")} source="pdp" className="bg-primary hover:bg-primary-dark text-black font-bold px-8 py-3 rounded-xl transition-colors">
           Negociar de todos modos
-        </Link>
+        </OfferCta>
       </div>
     );
   }

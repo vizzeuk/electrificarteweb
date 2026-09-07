@@ -7,6 +7,7 @@ import { Icon } from "@/components/ui/Icon";
 import { formatCLP, DEFAULT_HOT_DEAL_LABEL } from "@/lib/utils";
 import { sanityImg } from "@/lib/sanityImage";
 import { useInViewport } from "@/lib/useInViewport";
+import { OfferCta } from "@/components/waitlist/OfferCta";
 
 export interface HotDealCarData {
   slug: string;
@@ -117,12 +118,14 @@ function HotDealMobile({ c, brandDisplay, modelDisplay, bonusAmt, savingsPct, ur
           </div>
 
           {/* CTA */}
-          <Link
-            href={`/solicitar?auto=${c.slug}`}
+          <OfferCta
+            carSlug={c.slug}
+            model={`${brandDisplay} ${modelDisplay}`}
+            source="hotdeal"
             className="flex items-center justify-center gap-2 w-full bg-primary hover:bg-primary-dark text-black font-bold py-3 rounded-xl text-sm transition-colors"
           >
             Quiero esta oferta
-          </Link>
+          </OfferCta>
         </div>
       </div>
     </div>
@@ -165,12 +168,14 @@ function HotDealDesktop({ c, brandDisplay, modelDisplay, bonusAmt, savingsPct, u
             </p>
           </div>
           <div className="flex gap-3">
-            <Link
-              href={`/solicitar?auto=${c.slug}`}
+            <OfferCta
+              carSlug={c.slug}
+              model={`${brandDisplay} ${modelDisplay}`}
+              source="hotdeal"
               className="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-6 py-3 rounded-xl transition-all text-sm shadow-[0_4px_20px_rgba(0,229,229,0.25)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.38)] hover:scale-[1.02] active:scale-[0.99]"
             >
               Quiero esta oferta
-            </Link>
+            </OfferCta>
             <Link
               href={`/auto/${c.slug}`}
               className="inline-flex items-center gap-2 border border-white/20 hover:border-white/40 text-white font-medium px-6 py-3 rounded-xl transition-all text-sm"

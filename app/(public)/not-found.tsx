@@ -2,6 +2,7 @@ import React from "react";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { Icon } from "@/components/ui/Icon";
+import { OfferCta } from "@/components/waitlist/OfferCta";
 
 export const metadata: Metadata = {
   title: "Página no encontrada",
@@ -41,12 +42,12 @@ export default function NotFound() {
         >
           Ver marcas
         </Link>
-        <Link
-          href="/solicitar"
+        <OfferCta
+          source="404"
           className="inline-flex items-center justify-center gap-2 border border-gray-200 hover:border-primary/50 text-text-main font-semibold px-8 py-3.5 rounded-xl transition-colors text-sm"
         >
           Quiero mi oferta
-        </Link>
+        </OfferCta>
       </div>
     </main>
   );

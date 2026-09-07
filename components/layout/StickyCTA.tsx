@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import { m, AnimatePresence } from "framer-motion";
+import { OfferCta } from "@/components/waitlist/OfferCta";
 
 export function StickyCTA() {
   const [visible, setVisible] = useState(false);
@@ -64,12 +64,12 @@ export function StickyCTA() {
               </p>
             </div>
             <div className="flex gap-3 w-full sm:w-auto">
-              <Link
-                href="/solicitar"
+              <OfferCta
+                source="sticky"
                 className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-8 py-3 rounded-xl transition-all text-sm shadow-[0_4px_20px_rgba(0,229,229,0.25)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.38)] hover:scale-[1.02] active:scale-[0.99]"
               >
                 Quiero mi oferta
-              </Link>
+              </OfferCta>
             </div>
           </div>
         </m.div>

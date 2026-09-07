@@ -6,6 +6,7 @@ import { m } from "framer-motion";
 import { formatCLP } from "@/lib/utils";
 import { CarCard } from "@/components/car/CarCard";
 import { Icon } from "@/components/ui/Icon";
+import { OfferCta } from "@/components/waitlist/OfferCta";
 
 const PAGE_SIZE = 9;
 
@@ -177,12 +178,12 @@ export default function ColeccionPageContent({ col, cars }: Props) {
             </div>
 
             <div className="flex flex-wrap gap-3">
-              <Link
-                href="/solicitar"
+              <OfferCta
+                source="plp"
                 className="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-6 py-3 rounded-xl transition-all text-sm shadow-[0_4px_20px_rgba(0,229,229,0.30)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]"
               >
                 Quiero mi oferta
-              </Link>
+              </OfferCta>
               <a
                 href={`#catalogo-${col.slug}`}
                 className="inline-flex items-center gap-2 text-white font-medium px-6 py-3 rounded-xl transition-all text-sm"
@@ -345,12 +346,12 @@ export default function ColeccionPageContent({ col, cars }: Props) {
                 Negociamos por ti con nuestra red exclusiva de vendedores oficiales en Chile.
               </p>
             </div>
-            <Link
-              href="/solicitar"
+            <OfferCta
+              source="plp"
               className="flex-shrink-0 inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-black px-8 py-4 rounded-xl transition-all text-sm whitespace-nowrap shadow-[0_4px_20px_rgba(0,229,229,0.30)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]"
             >
               Quiero mi oferta
-            </Link>
+            </OfferCta>
           </div>
         </div>
       </section>

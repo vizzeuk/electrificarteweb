@@ -59,14 +59,34 @@ const { open } = useWaitlist();
 <button onClick={() => open({ model: "BYD Dolphin", source: "pdp" })}>Quiero mi oferta</button>
 ```
 
-## Fase 1 — Hero ⬜
-`components/layout/Hero.tsx` (CTAs en L102-130):
-- [ ] Invertir: primario = Asesoría $4.990 (hoy L117-129, `advCtaHref`); secundario = waitlist.
-- [ ] Sacar `offerPrice` "$19.990" (L47) y el subtítulo "Pagas $19.990 y negociamos por ti" (L112)
-- [ ] Sacar microcopy de garantía/devolución (L134) y reescribir `offerSubtitle` (L42)
+## Fase 1 — Hero ✅ HECHA
+- [x] Invertido: primario (relleno cyan) = **Asesoría $4.990** ("Te ayudamos a elegir");
+      secundario = **"Consigue la mejor oferta · Únete a la waitlist · gratis"** → popup
+- [x] Fuera "$19.990", "Pagas … y negociamos por ti" y la garantía de devolución del 100%
+- [x] Subtítulo reescrito hacia asesoría + waitlist (se ignora el de Sanity mientras dure el standby)
 
-## Fase 2 — Retargetear los ~40 CTAs ⬜
-Todos → popup de waitlist (con prefill del auto donde aplique).
+## Fase 2 — Retargetear los CTAs ✅ HECHA (37 CTAs en 20 archivos)
+Todos usan `<OfferCta>` → popup de waitlist, con `source` por área y prefill del auto donde
+aplica. **Diseño intacto** (se conservó cada `className` y el markup interno).
+
+- **Home (7):** `HowItWorks` ×2 · `StickyCTA` · `HotDeal` ×2 · `PromoPopup` · `FAQ`
+- **PDP (5):** `AutoPageClient` ×4 (sticky, hero desktop/mobile, banda) · `auto/[slug]/page.tsx`
+- **PLP (13):** `marcas/page` · `BrandPageContent` ×3 · `TipoPageContent` ×3 ·
+  `ElectricoPageContent` ×4 · `ColeccionPageContent` ×2
+- **Comparador + páginas (12):** `ComparadorClient` ×3 · `nosotros` ×2 · `negociacion` ×2 ·
+  `asesoria` · `blog` ×3 · `(public)/not-found`
+
+**Excepciones y decisiones:**
+- `app/not-found.tsx` (404 raíz) vive **fuera** del grupo `(public)`, o sea fuera del
+  `WaitlistProvider` → `useWaitlist()` reventaría. Se apuntó a **`/asesoria`** en vez del popup.
+- `terminos` y `privacidad` conservan el texto legal que menciona `/solicitar` — es prosa legal
+  que describe el servicio; **no tocar sin Francisco**.
+- `OfferCta` recibió un prop `onClick` opcional para que `PromoPopup` cierre su modal antes de
+  abrir la waitlist.
+
+**Verificado:** `tsc --noEmit` limpio · `next build` OK (293 páginas estáticas) · smoke test 200
+en `/`, `/marcas`, `/comparador`, `/nosotros`, `/negociacion`, `/asesoria`, `/blog` y una PDP,
+sin errores de provider.
 
 **Home:** `HowItWorks.tsx:219,226` · `StickyCTA.tsx:68` · `HotDeal.tsx:121,169` ·
 `PromoPopup.tsx:184` · `FAQ.tsx:168`

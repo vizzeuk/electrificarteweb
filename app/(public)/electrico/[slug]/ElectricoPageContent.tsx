@@ -9,6 +9,7 @@ import { useCarFilters } from "@/hooks/useCarFilters";
 import type { FacetCar } from "@/lib/filters/types";
 import { ElectricTypeBadge } from "@/components/car/ElectricTypeBadge";
 import { Icon } from "@/components/ui/Icon";
+import { OfferCta } from "@/components/waitlist/OfferCta";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -455,9 +456,9 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
                             <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.40)" }}>Tipo</p>
                           </div>
                         </div>
-                        <Link href={`/solicitar?auto=${car.slug}`} className="flex items-center justify-center gap-2 w-full bg-primary hover:bg-primary-dark text-black font-bold py-3 rounded-xl text-sm transition-colors">
+                        <OfferCta carSlug={car.slug} model={`${car.brand} ${car.name}`} source="plp" className="flex items-center justify-center gap-2 w-full bg-primary hover:bg-primary-dark text-black font-bold py-3 rounded-xl text-sm transition-colors">
                           Quiero esta oferta
-                        </Link>
+                        </OfferCta>
                       </div>
                     </div>
                   </div>
@@ -488,9 +489,9 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
                           <p className="text-xs pt-2" style={{ color: "rgba(255,255,255,0.30)", borderTop: "1px solid rgba(255,255,255,0.10)" }}>Ahorra {discountPct}% · Incluye bono vendedor + Electrificarte</p>
                         </div>
                         <div className="flex gap-3">
-                          <Link href={`/solicitar?auto=${car.slug}`} className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-6 py-3 rounded-xl transition-all text-sm shadow-[0_4px_20px_rgba(0,229,229,0.30)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]">
+                          <OfferCta carSlug={car.slug} model={`${car.brand} ${car.name}`} source="plp" className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-6 py-3 rounded-xl transition-all text-sm shadow-[0_4px_20px_rgba(0,229,229,0.30)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]">
                             Quiero esta oferta
-                          </Link>
+                          </OfferCta>
                           <Link href={`/auto/${car.slug}`} className="inline-flex items-center justify-center gap-2 text-white font-medium px-6 py-3 rounded-xl transition-all text-sm" style={{ border: "1px solid rgba(255,255,255,0.20)" }}>
                             Ver especificaciones
                           </Link>
@@ -734,12 +735,12 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
           <p className="text-text-muted font-medium mb-6">
             Estamos cargando el catálogo {meta.tag}. Vuelve pronto.
           </p>
-          <Link
-            href="/solicitar"
+          <OfferCta
+            source="plp"
             className="bg-primary hover:bg-primary-dark text-black font-bold px-8 py-3 rounded-xl transition-colors"
           >
             Negociar de todos modos
-          </Link>
+          </OfferCta>
         </section>
       )}
 
@@ -782,12 +783,12 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
                 Negociamos por ti con nuestra red exclusiva de vendedores oficiales en Chile.
               </p>
             </div>
-            <Link
-              href="/solicitar"
+            <OfferCta
+              source="plp"
               className="flex-shrink-0 inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-black px-8 py-4 rounded-xl transition-all text-sm whitespace-nowrap shadow-[0_4px_20px_rgba(0,229,229,0.30)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]"
             >
               Quiero mi oferta
-            </Link>
+            </OfferCta>
           </div>
         </div>
       </section>

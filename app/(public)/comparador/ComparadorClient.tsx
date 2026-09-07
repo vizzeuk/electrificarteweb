@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { formatCLP } from "@/lib/utils";
 import { Icon } from "@/components/ui/Icon";
+import { OfferCta } from "@/components/waitlist/OfferCta";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 export interface Car {
@@ -480,12 +481,14 @@ export default function ComparadorClient({ allCars, initialId }: ComparadorClien
                 Negociamos por ti con nuestra red exclusiva de vendedores oficiales en Chile.
               </p>
             </div>
-            <Link
-              href={selected.length > 0 ? `/solicitar?auto=${selected[0].slug}` : "/solicitar"}
+            <OfferCta
+              carSlug={selected.length > 0 ? selected[0].slug : undefined}
+              model={selected.length > 0 ? `${selected[0].brand} ${carDisplayName(selected[0])}` : undefined}
+              source="comparador"
               className="flex-shrink-0 inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-black px-8 py-4 rounded-xl transition-all text-sm whitespace-nowrap shadow-[0_4px_20px_rgba(0,229,229,0.30)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]"
             >
               Quiero mi oferta
-            </Link>
+            </OfferCta>
           </div>
         </div>
       </section>
@@ -541,12 +544,14 @@ function DesktopCarSlot({ car, onRemove, onAdd }: { car: Car | undefined; onRemo
         <div className="text-lg font-headline font-black text-primary-deep">{formatCLP(car.discountPrice)}</div>
         {pct > 0 && <span className="text-[10px] text-green-600 font-bold">-{pct}% con Electrificarte</span>}
 
-        <Link
-          href={`/solicitar?auto=${car.slug}`}
+        <OfferCta
+          carSlug={car.slug}
+          model={`${car.brand} ${carDisplayName(car)}`}
+          source="comparador"
           className="mt-4 block w-full bg-primary hover:bg-primary-dark text-black font-bold text-xs py-2 rounded-xl transition-colors shadow-[0_2px_10px_rgba(0,229,229,0.20)] hover:shadow-[0_4px_16px_rgba(0,229,229,0.35)]"
         >
           Quiero mi oferta
-        </Link>
+        </OfferCta>
       </m.div>
     );
   }
@@ -600,12 +605,14 @@ function MobileCarSlot({ car, onRemove, onAdd }: { car: Car | undefined; onRemov
         <p className="font-headline font-black text-xs leading-tight mb-1">{carDisplayName(car)}</p>
         <p className="font-headline font-black text-sm text-primary-deep">{formatCLP(car.discountPrice)}</p>
         {pct > 0 && <p className="text-[9px] text-green-600 font-bold">-{pct}%</p>}
-        <Link
-          href={`/solicitar?auto=${car.slug}`}
+        <OfferCta
+          carSlug={car.slug}
+          model={`${car.brand} ${carDisplayName(car)}`}
+          source="comparador"
           className="mt-2.5 block w-full bg-primary text-black font-bold text-[10px] py-1.5 rounded-lg transition-colors"
         >
           Solicitar
-        </Link>
+        </OfferCta>
       </m.div>
     );
   }

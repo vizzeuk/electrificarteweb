@@ -6,6 +6,7 @@ import { PortableText, type PortableTextComponents } from "@portabletext/react";
 import { formatCLP, formatFecha } from "@/lib/utils";
 import { safeJsonLd } from "@/lib/seo";
 import { Icon } from "@/components/ui/Icon";
+import { OfferCta } from "@/components/waitlist/OfferCta";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -422,12 +423,12 @@ export function BlogPostContent({ post }: { post: BlogPost }) {
                   <p className="text-white/50 text-xs mb-5">
                     Negociamos con toda la red de vendedores oficiales para darte el mejor precio disponible.
                   </p>
-                  <Link
-                    href="/solicitar"
+                  <OfferCta
+                    source="blog"
                     className="block text-center bg-primary hover:bg-primary-dark text-black font-bold py-3 rounded-xl text-sm transition-colors"
                   >
                     Quiero mi oferta
-                  </Link>
+                  </OfferCta>
                 </div>
 
                 {/* Related posts */}
@@ -485,12 +486,12 @@ export function BlogPostContent({ post }: { post: BlogPost }) {
 
       {/* ─── Mobile CTA ──────────────────────────────────────────────── */}
       <div className="lg:hidden sticky bottom-0 z-40 p-4 bg-white/95 backdrop-blur border-t border-gray-100">
-        <Link
-          href="/solicitar"
+        <OfferCta
+          source="blog"
           className="block w-full text-center bg-primary hover:bg-primary-dark text-black font-bold py-3.5 rounded-xl text-sm transition-colors"
         >
           Quiero mi oferta
-        </Link>
+        </OfferCta>
       </div>
     </>
   );

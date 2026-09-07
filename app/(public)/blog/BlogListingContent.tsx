@@ -6,6 +6,7 @@ import { m } from "framer-motion";
 import type { BlogPreviewPost } from "@/components/layout/BlogPreview";
 import { formatFecha } from "@/lib/utils";
 import { Icon } from "@/components/ui/Icon";
+import { OfferCta } from "@/components/waitlist/OfferCta";
 
 // ─── Static fallback posts ────────────────────────────────────────────────────
 const FALLBACK_POSTS: BlogPreviewPost[] = [
@@ -305,12 +306,12 @@ export function BlogListingContent({ posts }: { posts: BlogPreviewPost[] }) {
               </h2>
               <p className="text-white/50 text-sm mt-1">Negociamos con toda la red de vendedores oficiales para darte el mejor precio disponible.</p>
             </div>
-            <Link
-              href="/solicitar"
+            <OfferCta
+              source="blog"
               className="flex-shrink-0 inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-black px-8 py-4 rounded-xl transition-colors text-sm whitespace-nowrap"
             >
               Quiero mi oferta
-            </Link>
+            </OfferCta>
           </div>
         </div>
       </section>

@@ -7,6 +7,7 @@ import { getBrandCountry } from "@/lib/utils/brand-country";
 import { MarcasGrid } from "./MarcasGrid";
 import type { Brand } from "./MarcasGrid";
 import { Icon } from "@/components/ui/Icon";
+import { OfferCta } from "@/components/waitlist/OfferCta";
 
 export const revalidate = 3600;
 
@@ -88,12 +89,12 @@ export default async function MarcasPage() {
               <p className="text-white/40 text-sm">Cuéntanos qué auto buscas y negociamos el mejor precio por ti.</p>
             </div>
             <div className="flex flex-col sm:flex-row gap-3 flex-shrink-0">
-              <Link
-                href="/solicitar"
+              <OfferCta
+                source="plp"
                 className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-8 py-4 rounded-xl transition-colors text-sm whitespace-nowrap"
               >
                 Quiero mi oferta
-              </Link>
+              </OfferCta>
               <Link
                 href="/comparador"
                 className="inline-flex items-center justify-center gap-2 border border-white/20 hover:border-white/40 text-white font-medium px-8 py-4 rounded-xl transition-colors text-sm whitespace-nowrap"

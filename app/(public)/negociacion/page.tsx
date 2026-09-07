@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
+import { OfferCta } from "@/components/waitlist/OfferCta";
 import { client } from "@/lib/sanity/client";
 import { productPricesQuery } from "@/lib/queries/pages";
 import { OFERTA_PRICE } from "@/lib/products";
@@ -116,12 +117,12 @@ export default async function NegociacionPage() {
             Si no ahorras, te devolvemos el dinero.
           </p>
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            <Link
-              href="/solicitar"
+            <OfferCta
+              source="negociacion"
               className="inline-flex items-center justify-center bg-primary hover:bg-primary-dark text-black font-bold px-6 py-3 rounded-xl transition-all text-base shadow-[0_6px_32px_rgba(0,229,229,0.30)] hover:shadow-[0_8px_40px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]"
             >
-              Quiero mi oferta · {price}
-            </Link>
+              Quiero mi oferta
+            </OfferCta>
             <span className="text-white/40 text-sm">Pago único · respuesta en 48-96 h</span>
           </div>
         </div>
@@ -226,12 +227,12 @@ export default async function NegociacionPage() {
           <p className="text-white/50 mb-8">
             Un solo pago de {price} y activamos la búsqueda con nuestra red de vendedores. Si no ahorras, te devolvemos el dinero.
           </p>
-          <Link
-            href="/solicitar"
+          <OfferCta
+            source="negociacion"
             className="inline-flex items-center justify-center bg-primary hover:bg-primary-dark text-black font-bold px-6 py-3 rounded-xl transition-all text-base shadow-[0_6px_32px_rgba(0,229,229,0.30)] hover:shadow-[0_8px_40px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]"
           >
-            Quiero mi oferta · {price}
-          </Link>
+            Quiero mi oferta
+          </OfferCta>
           <p className="text-white/40 text-sm mt-6">
             ¿Aún no sabes qué auto elegir?{" "}
             <Link href="/asesoria" className="text-primary hover:underline">Empieza con la asesoría →</Link>

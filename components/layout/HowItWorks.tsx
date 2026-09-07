@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
+import { OfferCta } from "@/components/waitlist/OfferCta";
 
 export interface HowItWorksStep {
   number?: string;
@@ -98,16 +99,20 @@ const ACCENT: Record<Accent, {
 };
 
 function Track({
-  accent, heading, description, steps, ctaText, ctaHref,
+  accent, heading, description, steps, ctaText, ctaHref, offer,
 }: {
   accent: Accent;
   heading: string;
   description: string;
   steps: HowItWorksStep[];
   ctaText: string;
-  ctaHref: string;
+  /** Destino del CTA. Se ignora cuando `offer` es true (lo decide `OfferCta`). */
+  ctaHref?: string;
+  /** Track de la Oferta: el CTA pasa por `OfferCta` (waitlist o `/solicitar`). */
+  offer?: boolean;
 }) {
   const a = ACCENT[accent];
+  const ctaClass = `mt-7 inline-flex items-center justify-center ${a.btn} text-black font-bold px-6 py-3 rounded-xl transition-all text-base`;
   return (
     <div className="flex flex-col">
       <div className="mb-6">
@@ -136,12 +141,15 @@ function Track({
         ))}
       </div>
 
-      <Link
-        href={ctaHref}
-        className={`mt-7 inline-flex items-center justify-center ${a.btn} text-black font-bold px-6 py-3 rounded-xl transition-all text-base`}
-      >
-        {ctaText}
-      </Link>
+      {offer ? (
+        <OfferCta source="howitworks" className={ctaClass}>
+          {ctaText}
+        </OfferCta>
+      ) : ctaHref ? (
+        <Link href={ctaHref} className={ctaClass}>
+          {ctaText}
+        </Link>
+      ) : null}
     </div>
   );
 }
@@ -216,14 +224,14 @@ export function HowItWorks({ title = "Cómo funciona Electrificarte", subtitle, 
               description={ofertaDescription}
               steps={ofertaSteps}
               ctaText="Quiero mi oferta"
-              ctaHref="/solicitar"
+              offer
             />
           </div>
 
           {/* Optional bridge — parallel, not a ladder */}
           <p className="text-center text-sm text-text-muted mt-10">
             ¿Hiciste la asesoría y ya decidiste? Pasa directo a{" "}
-            <Link href="/solicitar" className="text-primary-deep font-semibold hover:underline">conseguir tu precio</Link>.
+            <OfferCta source="howitworks" className="text-primary-deep font-semibold hover:underline">conseguir tu precio</OfferCta>.
           </p>
 
           <div className="text-center mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">

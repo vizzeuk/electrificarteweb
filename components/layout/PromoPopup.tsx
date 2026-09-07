@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { AnimatePresence, m } from "framer-motion";
 import { formatCLP, DEFAULT_HOT_DEAL_LABEL } from "@/lib/utils";
 import { Icon } from "@/components/ui/Icon";
 import type { HotDealCarData } from "@/components/layout/HotDeal";
+import { OfferCta } from "@/components/waitlist/OfferCta";
 
 const STORAGE_KEY = "electrificarte_promo_seen";
 
@@ -179,14 +179,16 @@ export function PromoPopup({ car, urgencyLabel }: PromoPopupProps) {
                 </div>
               )}
 
-              {/* CTA */}
-              <Link
-                href={`/solicitar?auto=${c.slug}`}
+              {/* CTA — `onClick` cierra este promo antes de abrir el popup de waitlist. */}
+              <OfferCta
+                carSlug={c.slug}
+                model={`${brandName} ${modelName}`}
+                source="promopopup"
                 onClick={close}
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3.5 text-sm font-bold text-black shadow-[0_4px_20px_rgba(0,229,229,0.22)] transition-all hover:bg-primary-dark hover:scale-[1.02] active:scale-[0.99]"
               >
                 Quiero esta oferta
-              </Link>
+              </OfferCta>
 
               <button
                 type="button"

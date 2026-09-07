@@ -6,6 +6,7 @@ import { m, AnimatePresence } from "framer-motion";
 import { formatCLP, heroStats, classifyElectric } from "@/lib/utils";
 import { ComparePromo } from "@/components/car/ComparePromo";
 import { Icon } from "@/components/ui/Icon";
+import { OfferCta } from "@/components/waitlist/OfferCta";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export interface VersionData {
@@ -293,12 +294,14 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
                     {formatCLP(car.isHotDeal && savingsPct > 0 ? ver.discountPrice : ver.price)}
                   </p>
                 </div>
-                <Link
-                  href={`/solicitar?auto=${car.slug}&nombre=${encodeURIComponent(car.brand + " " + car.name)}`}
+                <OfferCta
+                  carSlug={car.slug}
+                  model={`${car.brand} ${car.name}`}
+                  source="pdp"
                   className="bg-primary hover:bg-primary-dark text-black font-bold px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm transition-colors whitespace-nowrap"
                 >
                   Quiero mi oferta
-                </Link>
+                </OfferCta>
               </div>
             </div>
           </m.div>
@@ -373,12 +376,14 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
 
               {/* CTAs — desktop only (lg+). On mobile they appear below the stats block. */}
               <div className="hidden lg:flex flex-col sm:flex-row gap-3">
-                <Link
-                  href={`/solicitar?auto=${car.slug}&nombre=${encodeURIComponent(car.brand + " " + car.name)}`}
+                <OfferCta
+                  carSlug={car.slug}
+                  model={`${car.brand} ${car.name}`}
+                  source="pdp"
                   className="flex-1 inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-black font-black px-7 py-4 rounded-xl transition-colors"
                 >
                   Obtén la mejor oferta
-                </Link>
+                </OfferCta>
                 <Link
                   href={`/comparador?add=${car.slug}`}
                   className="inline-flex items-center justify-center gap-2 border border-white/20 hover:border-white/40 text-white font-medium px-5 py-4 rounded-xl transition-colors"
@@ -445,12 +450,14 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
 
             {/* CTAs — mobile only (below stats). Hidden on lg+ where they appear in the left column. */}
             <div className="flex lg:hidden flex-col sm:flex-row gap-3">
-              <Link
-                href={`/solicitar?auto=${car.slug}&nombre=${encodeURIComponent(car.brand + " " + car.name)}`}
+              <OfferCta
+                carSlug={car.slug}
+                model={`${car.brand} ${car.name}`}
+                source="pdp"
                 className="flex-1 inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-black font-black px-7 py-4 rounded-xl transition-colors"
               >
                 Obtén la mejor oferta
-              </Link>
+              </OfferCta>
               <Link
                 href={`/comparador?add=${car.slug}`}
                 className="inline-flex items-center justify-center gap-2 border border-white/20 hover:border-white/40 text-white font-medium px-5 py-4 rounded-xl transition-colors"
@@ -986,9 +993,9 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
                   : "Consulta disponibilidad, financiamiento y los mejores precios del mercado."}
               </p>
             </div>
-            <Link href={`/solicitar?auto=${car.slug}&nombre=${encodeURIComponent(car.brand + " " + car.name)}`} className="flex-shrink-0 inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-black px-8 py-4 rounded-xl transition-colors text-sm whitespace-nowrap">
+            <OfferCta carSlug={car.slug} model={`${car.brand} ${car.name}`} source="pdp" className="flex-shrink-0 inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-black px-8 py-4 rounded-xl transition-colors text-sm whitespace-nowrap">
               Quiero mi oferta
-            </Link>
+            </OfferCta>
           </div>
         </div>
       </section>

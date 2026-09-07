@@ -55,11 +55,14 @@ export default function RootNotFound() {
           >
             Ver marcas
           </Link>
+          {/* Este 404 vive FUERA del grupo (public), así que no está envuelto por
+              WaitlistProvider — no puede usar OfferCta. Apunta a la Asesoría, que es
+              el producto principal tras el giro (ver docs/PIVOT-WAITLIST-PLAN.md). */}
           <Link
-            href="/solicitar"
+            href="/asesoria"
             className="inline-flex items-center justify-center gap-2 border border-gray-200 hover:border-primary/50 text-text-main font-semibold px-8 py-3.5 rounded-xl transition-colors text-sm"
           >
-            Quiero mi oferta
+            Quiero asesoría
           </Link>
         </div>
       </div>

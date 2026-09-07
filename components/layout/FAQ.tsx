@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { m, AnimatePresence } from "framer-motion";
 import { Icon } from "@/components/ui/Icon";
+import { OfferCta } from "@/components/waitlist/OfferCta";
 
 export interface FAQItem {
   question: string;
@@ -164,12 +165,12 @@ export function FAQ({ title = "Preguntas frecuentes", faqs }: FAQProps) {
                   <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.65)" }}>
                     <span className="text-white font-semibold">¿Ya sabes cuál quieres?</span> Negociamos con nuestra red de vendedores oficiales y te conseguimos el mejor precio en 48-96 h.
                   </p>
-                  <Link
-                    href="/solicitar"
+                  <OfferCta
+                    source="faq"
                     className="flex items-center justify-center w-full bg-primary hover:bg-primary-dark text-black font-bold py-3 rounded-xl transition-all text-sm shadow-[0_4px_20px_rgba(0,229,229,0.25)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.40)] hover:scale-[1.02] active:scale-[0.99]"
                   >
-                    Quiero mi oferta · $19.990
-                  </Link>
+                    Quiero mi oferta
+                  </OfferCta>
                 </div>
 
                 <p className="text-[11px] text-center pt-1" style={{ color: "rgba(255,255,255,0.45)" }}>
