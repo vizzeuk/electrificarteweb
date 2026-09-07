@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { Icon } from "@/components/ui/Icon";
 import { HeroBgVideo } from "@/components/layout/HeroBgVideo";
+import { OfferCta } from "@/components/waitlist/OfferCta";
 
 export interface HeroData {
   badge?: string;
@@ -38,15 +39,13 @@ export function Hero({ data }: HeroProps) {
   const title     = data?.title          ?? "Ahorra millones en tu próximo";
   const highlight = data?.titleHighlight ?? "auto electrificado";
 
-  // Flujo principal — Oferta ($19.990)
-  const offerSubtitle = data?.subtitle  ?? "Ya sabes qué auto quieres. Por un pago único negociamos con nuestra red de vendedores oficiales y te traemos la mejor oferta del mercado en 48-96 h.";
-  // El hero vende el flujo pago: la acción principal lleva al formulario de la
-  // Oferta ($19.990), no al catálogo. Por eso no usamos el cta1 de Sanity
-  // (que hoy es "Ver autos disponibles" → /marcas).
-  const offerCtaHref  = "/solicitar";
-  const offerPrice    = data?.offerPrice ?? data?.offerNewPrice ?? "$19.990";
+  // Giro sep-2026 (ver docs/PIVOT-WAITLIST-PLAN.md): el hero ya NO vende la Oferta
+  // ($19.990, en standby). La acción principal es la **Asesoría $4.990** y la
+  // secundaria abre el popup de **waitlist**. Por eso el subtítulo de Sanity —que
+  // describe el flujo pagado— se ignora mientras dure el standby.
+  const heroSubtitle = "¿No sabes cuál te conviene? Te asesoramos para elegir el auto electrificado ideal para ti. Y si ya lo tienes claro, súmate a la waitlist para conseguir la mejor oferta.";
 
-  // Flujo secundario — Asesoría ($4.990)
+  // Flujo principal — Asesoría ($4.990)
   const advCtaHref  = data?.advisoryCtaHref  ?? "/asesoria";
   const advPrice    = data?.advisoryPrice    ?? "$4.990";
 
@@ -93,45 +92,46 @@ export function Hero({ data }: HeroProps) {
             <span className="text-primary">{highlight}</span>
           </h1>
           <p className="text-base md:text-lg text-white/70 leading-relaxed max-w-xl mb-8">
-            {offerSubtitle}
+            {heroSubtitle}
           </p>
 
-          {/* CTA principal (Oferta paga) + camino secundario (Asesoría).
+          {/* CTA principal (Asesoría $4.990) + camino secundario (waitlist).
               Ambos comparten estructura ícono + dos líneas; el principal va
-              relleno (teal) para marcar jerarquía y vender el flujo de $19.990. */}
+              relleno (teal) para marcar jerarquía. El orden se invirtió con el
+              giro: antes el relleno era la Oferta $19.990, hoy en standby. */}
           <div className="flex flex-col sm:flex-row sm:items-stretch gap-3 sm:gap-4">
             <Link
-              href={offerCtaHref}
+              href={advCtaHref}
               className="group inline-flex items-center gap-3 rounded-xl bg-primary hover:bg-primary-dark text-black px-5 py-4 transition-all shadow-[0_6px_32px_rgba(0,229,229,0.30)] hover:shadow-[0_10px_44px_rgba(0,229,229,0.50)] hover:scale-[1.02] active:scale-[0.99]"
             >
               <span className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-black/15 shrink-0">
-                <Icon name="sell" className="text-[20px]" />
+                <Icon name="forum" className="text-[20px]" />
               </span>
               <span className="text-left leading-tight">
-                <span className="block text-base md:text-lg font-extrabold">Consigue tu mejor precio</span>
-                <span className="block text-xs font-semibold text-black/70">Pagas {offerPrice} y negociamos por ti</span>
+                <span className="block text-base md:text-lg font-extrabold">Te ayudamos a elegir</span>
+                <span className="block text-xs font-semibold text-black/70">Asesoría personalizada por {advPrice}</span>
               </span>
               <Icon name="chevron_right" className="text-[20px] transition-transform group-hover:translate-x-0.5" />
             </Link>
 
-            <Link
-              href={advCtaHref}
-              className="group inline-flex items-center gap-3 rounded-xl border border-white/15 hover:border-amber/50 bg-white/[0.02] hover:bg-white/[0.05] px-5 py-4 transition-all"
+            <OfferCta
+              source="hero"
+              className="group inline-flex items-center gap-3 rounded-xl border border-white/15 hover:border-primary/50 bg-white/[0.02] hover:bg-white/[0.05] px-5 py-4 transition-all"
             >
-              <span className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-amber/15 text-amber shrink-0">
-                <Icon name="forum" className="text-[20px]" />
+              <span className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-primary/15 text-primary shrink-0">
+                <Icon name="sell" className="text-[20px]" />
               </span>
               <span className="text-left leading-tight">
-                <span className="block text-base md:text-lg font-extrabold text-white">Aún no sé cuál elegir</span>
-                <span className="block text-xs font-semibold text-white/55">Te ayudamos a decidir por {advPrice}</span>
+                <span className="block text-base md:text-lg font-extrabold text-white">Consigue la mejor oferta</span>
+                <span className="block text-xs font-semibold text-white/55">Únete a la waitlist · gratis</span>
               </span>
               <Icon name="chevron_right" className="text-[20px] text-white/40 transition-transform group-hover:translate-x-0.5" />
-            </Link>
+            </OfferCta>
           </div>
 
-          {/* Microcopy de garantía */}
+          {/* Microcopy */}
           <p className="text-xs text-white/45 mt-5">
-            Garantía real: si no conseguimos un precio mejor que el de lista, te devolvemos el 100%.
+            Sin costo y sin compromiso: te avisamos apenas tengamos la mejor oferta para tu auto.
           </p>
         </div>
 
