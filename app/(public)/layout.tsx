@@ -4,6 +4,7 @@ import { Footer } from "@/components/layout/Footer";
 import { ChatWidget } from "@/components/layout/ChatWidget";
 import { FeedbackWidget } from "@/components/layout/FeedbackWidget";
 import { MotionProvider } from "@/components/providers/MotionProvider";
+import { WaitlistProvider } from "@/components/waitlist/WaitlistProvider";
 import { client } from "@/lib/sanity/client";
 import { featuredBrandsQuery, allVehicleTypesQuery, allElectricTypesQuery } from "@/lib/queries/car";
 
@@ -20,11 +21,13 @@ export default async function PublicLayout({
 
   return (
     <MotionProvider>
-      <Navbar brands={brands ?? []} vehicleTypes={vehicleTypes ?? []} electricTypes={electricTypes ?? []} />
-      <main>{children}</main>
-      <Footer />
-      <FeedbackWidget />
-      <ChatWidget />
+      <WaitlistProvider>
+        <Navbar brands={brands ?? []} vehicleTypes={vehicleTypes ?? []} electricTypes={electricTypes ?? []} />
+        <main>{children}</main>
+        <Footer />
+        <FeedbackWidget />
+        <ChatWidget />
+      </WaitlistProvider>
     </MotionProvider>
   );
 }

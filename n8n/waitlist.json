@@ -1,0 +1,53 @@
+{
+  "name": "Waitlist (captación gratis)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "waitlist",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "wl-webhook",
+      "name": "Webhook waitlist",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 300],
+      "webhookId": "waitlist",
+      "notes": "La Production URL de este nodo es la que va en Vercel como N8N_WAITLIST_URL."
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "tableId": "waitlist",
+        "dataToSend": "defineBelow",
+        "fieldsUi": {
+          "fieldValues": [
+            { "fieldId": "full_name", "fieldValue": "={{ $json.body.fullName }}" },
+            { "fieldId": "email", "fieldValue": "={{ $json.body.email }}" },
+            { "fieldId": "phone", "fieldValue": "={{ $json.body.phone }}" },
+            { "fieldId": "model", "fieldValue": "={{ $json.body.model }}" },
+            { "fieldId": "source", "fieldValue": "={{ $json.body.source }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "wl-supabase",
+      "name": "Guardar en Supabase",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [280, 300],
+      "credentials": {
+        "supabaseApi": { "id": "REEMPLAZAR", "name": "Supabase (service_role)" }
+      },
+      "notes": "Asigná tu credencial de Supabase. Si el webhook no envuelve el body en 'body', quitá '.body' de las expresiones."
+    }
+  ],
+  "connections": {
+    "Webhook waitlist": {
+      "main": [[{ "node": "Guardar en Supabase", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {},
+  "pinData": {}
+}

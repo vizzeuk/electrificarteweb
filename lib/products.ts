@@ -15,3 +15,17 @@ export const ASESORIA_CHECKOUT_URL =
 /** Precios de display (el precio real vive en el plan de Reveniu). */
 export const ASESORIA_PRICE = "$4.990";
 export const OFERTA_PRICE = "$19.990";
+
+/**
+ * 🔴 INTERRUPTOR DEL GIRO (septiembre 2026) — ver `docs/PIVOT-WAITLIST-PLAN.md`.
+ *
+ * `true`  = la Oferta Exclusiva ($19.990) está en STANDBY: no se vende. Todos los CTAs que
+ *           antes iban a `/solicitar` abren el **popup de waitlist**, y `/solicitar` queda
+ *           oculta (sin links que lleguen ahí).
+ * `false` = se reactiva el flujo pagado y los CTAs vuelven a `/solicitar`.
+ *
+ * El código del flujo pagado (`/solicitar`, `LeadForm`, `/api/checkout` rama lead,
+ * `app/api/auction/*`) NO se borró: sigue completo y testeado (`npm test`). Reactivar es
+ * cambiar esta línea, no re-editar los ~40 CTAs.
+ */
+export const OFERTA_STANDBY = true;

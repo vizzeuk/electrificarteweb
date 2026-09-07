@@ -40,18 +40,24 @@ flag vuelven a `/solicitar` **sin re-tocar archivos**. Todo el flujo pagado (`/s
 
 # Fases
 
-## Fase 0 — Infra de waitlist ⬜
-Base de todo lo demás.
-- [ ] `OFERTA_STANDBY` en `lib/products.ts`
-- [ ] `WaitlistProvider` + `WaitlistModal` global (montar en el layout). Cáscara reusada de
-      `components/layout/PromoPopup.tsx` (overlay, `AnimatePresence`, cerrar, click-outside).
-- [ ] Formulario dentro del popup: base `components/forms/AsesoriaCheckoutForm.tsx`
-      (nombre/email/teléfono) + `CarCombobox` de `LeadForm.tsx` para modelo (opcional).
-      Copy: *"Únete a la waitlist de electrificarte.com y consigue la mejor oferta en autos
-      electrificados"* · botón *"Unirme a la waitlist"*.
-- [ ] Hook `useWaitlist().open(prefill?)` — `prefill` con auto (slug/nombre) desde PDP/cards.
-- [ ] `app/api/waitlist/route.ts` — calcado de `app/api/newsletter/route.ts` (zod + rate limit)
-      → `N8N_WAITLIST_URL`, con `source` para saber de dónde vino el lead.
+## Fase 0 — Infra de waitlist ✅ HECHA
+- [x] `OFERTA_STANDBY = true` en `lib/products.ts`
+- [x] `components/waitlist/WaitlistProvider.tsx` — context + hook `useWaitlist()`, montado en
+      `app/(public)/layout.tsx` (envuelve todo el sitio público)
+- [x] `components/waitlist/WaitlistModal.tsx` — cáscara de `PromoPopup` (overlay oscuro, glow
+      cyan, borde white/10) + Escape para cerrar + bloqueo de scroll + estado de éxito
+- [x] Formulario: nombre, email, teléfono (+56, 9 dígitos), **modelo opcional** (se prellena
+      con el `prefill` cuando se abre desde una PDP/card)
+- [x] `app/api/waitlist/route.ts` — zod + rate limit (`bucket: "waitlist"`) → `N8N_WAITLIST_URL`,
+      guarda `source` para medir qué CTA convierte
+- [x] `scripts/sql/2026-09-07_waitlist.sql` — tabla + índices + RLS + vista `waitlist_unicos`
+- [x] `n8n/waitlist.json` — workflow importable (Webhook → Supabase)
+
+**Cómo se usa desde cualquier CTA (Fase 2):**
+```tsx
+const { open } = useWaitlist();
+<button onClick={() => open({ model: "BYD Dolphin", source: "pdp" })}>Quiero mi oferta</button>
+```
 
 ## Fase 1 — Hero ⬜
 `components/layout/Hero.tsx` (CTAs en L102-130):
