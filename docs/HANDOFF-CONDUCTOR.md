@@ -1,5 +1,14 @@
 # Traspaso de contexto — Electrificarte
 
+> ## 🟡 STANDBY desde septiembre 2026
+> Francisco reestructuró el negocio: la **Oferta Exclusiva $19.990** y todo el **marketplace de
+> subasta inversa** que describe este documento quedaron **congelados**. El código sigue completo
+> y testeado (`npm test` → 10/10) — **no borrar nada** — pero no se le ofrece al usuario.
+>
+> **El plan vigente es `docs/PIVOT-WAITLIST-PLAN.md`** (waitlist gratis + Asesoría $4.990 como
+> producto principal). Este documento sigue siendo la referencia para **retomar la subasta**
+> cuando se reactive.
+
 Documento para retomar el proyecto en un entorno nuevo (Conductor ADE u otro orquestador de
 agentes) sin haber estado en las conversaciones anteriores. Escrito el 2026-08-13.
 

@@ -4,6 +4,45 @@
 
 Plataforma B2B2C chilena de autos eléctricos e híbridos. Intermediario entre comprador y vendedores: negocia precios en volumen 
 
+---
+
+## 🔴 GIRO ACTUAL (septiembre 2026) — LEER ANTES DE TODO
+
+Francisco decidió una **reestructuración del negocio** tras recibir feedback externo. Esto
+cambia qué se construye hoy y **deja gran parte de lo documentado más abajo en STANDBY**.
+Todo lo marcado con 🟡 **STANDBY** sigue en el repo, funcionando y testeado, pero **no se le
+ofrece al usuario** — se retomará cuando Francisco lo reactive. **No borrar nada de eso.**
+
+### Qué cambia
+
+1. **La Oferta Exclusiva $19.990 pasa a STANDBY.** Ya no se vende. Con ella se congela todo
+   el marketplace de subasta inversa (pujas, scoring, ranking, cierre, recuperación, OOS),
+   sus flujos de n8n y el dashboard de vendedores.
+2. **Entra una WAITLIST (gratis).** En vez de cobrar $19.990 por buscar la oferta, ahora se
+   junta una **base grande de gente interesada** en recibir ofertas de autos. Cuando esa base
+   sea grande, Francisco se la vende/ofrece a los vendedores — ese es el nuevo refuerzo del
+   negocio. Todo CTA que antes mandaba a `/solicitar` ahora **abre un popup de waitlist**.
+3. **La Asesoría $4.990 pasa a ser el producto principal.** Full foco: es el CTA primario del
+   hero y lo que los chatbots deben empujar.
+
+### Por qué
+Francisco necesita **primero** una masa crítica de demanda comprobada (la waitlist) antes de
+poder venderle valor a la red de vendedores. Cobrar $19.990 por oferta frenaba la captación;
+una waitlist gratis maximiza el volumen de leads interesados.
+
+### Reglas de trabajo mientras dure el giro
+- **Nada de "$19.990", "pago único", "negociamos por ti" ni garantía de devolución** en copy
+  de cara al usuario, prompts de bots, structured data o Sanity.
+- El interruptor es `OFERTA_STANDBY` en `lib/products.ts`. Los CTAs de oferta preguntan por
+  él: en standby abren la waitlist; al apagarlo vuelven a `/solicitar` sin re-editar archivos.
+- `/solicitar` queda **oculta** (sin CTAs que apunten ahí) para no confundir al usuario.
+- Los chatbots (WhatsApp y web) **no promocionan el $19.990**: promocionan **waitlist** +
+  **Asesoría $4.990**.
+
+**Plan completo, fases y estado:** `docs/PIVOT-WAITLIST-PLAN.md`.
+
+---
+
 ## Modelo de negocio
 
 Electrificarte es un marketplace de vehículos **electrificados**: 100% eléctricos e híbridos en
@@ -14,7 +53,17 @@ ese alcance.
 
 Tres flujos de negocio, dos de ellos viven en esta web:
 
-### 1. Oferta Exclusiva — $19.990 (flujo principal de electrificarteweb)
+### 0. Waitlist — gratis (🟢 FLUJO ACTIVO NUEVO, ver el giro arriba)
+Captación gratuita: un **popup** (disparado por todos los CTAs que antes iban a `/solicitar`)
+donde la persona deja **nombre, email, teléfono y modelo de interés (opcional)**. Alimenta la
+base de demanda que Francisco le ofrecerá a la red de vendedores. Backend:
+`app/api/waitlist/route.ts` → `N8N_WAITLIST_URL` → tabla `waitlist` en Supabase.
+
+### 1. Oferta Exclusiva — $19.990 — 🟡 STANDBY (no se vende hoy)
+> **STANDBY desde septiembre 2026.** El código sigue completo y testeado, pero no hay ningún
+> CTA que lleve ahí y `/solicitar` está oculta. Se reactiva apagando `OFERTA_STANDBY`.
+> Todo lo de abajo describe cómo funciona **cuando esté activo**.
+
 El usuario busca su auto en el catálogo y llena el formulario principal (`/solicitar`), paga
 $19.990. Con eso, Electrificarte busca dentro de su red de **vendedores oficiales** (nunca
 "concesionarios" — ver Terminología abajo) la mejor oferta disponible para ese modelo específico:
@@ -22,11 +71,13 @@ un precio mejor que el de lista/nacional. El objetivo es que el descuento conseg
 claramente más que los $19.990 pagados. (Futuro, no implementado: códigos promocionales/de
 descuento — no confundir con el alcance actual.)
 
-### 2. Asesoría IA — $4.990 (chatbot de WhatsApp)
+### 2. Asesoría IA — $4.990 (chatbot de WhatsApp) — 🟢 PRODUCTO PRINCIPAL HOY
 Para el usuario indeciso que no sabe qué auto comprar. Tras pagar, conversa por WhatsApp con el
 asesor ("Francisco IA", ver `lib/whatsapp/advisor.ts`) que ayuda a decidir en base a uso,
-kilometraje, presupuesto y perfil. Puede recomendar el paso siguiente hacia la Oferta Exclusiva
-($19.990) una vez que el cliente tiene claro el modelo.
+kilometraje, presupuesto y perfil.
+
+> **Cambio por el giro:** antes recomendaba la Oferta Exclusiva ($19.990) como paso siguiente.
+> Ahora **no la menciona**: el paso siguiente que ofrece es **unirse a la waitlist**.
 
 ### 3. Suscripción de vendedores — $12.990/mes (plataforma separada, NO vive en este repo)
 Los vendedores oficiales pagan $12.990 para acceder a los leads generados por los flujos 1 y 2
@@ -35,7 +86,8 @@ pueden tomar un lead y ofrecerle un precio mejor que el oficial de lista. Esto c
 plataforma/sitio aparte — este repo (`electrificarteweb`) solo produce y expone los leads
 (tablas `leads` / `leads_vendors` en Supabase), no gestiona el flujo de vendedores.
 
-**Cómo se reparten y cierran los leads de Oferta Exclusiva ($19.990):** el pool de leads
+**Cómo se reparten y cierran los leads de Oferta Exclusiva ($19.990)** — 🟡 **STANDBY** (aplica
+cuando se reactive el flujo 1): el pool de leads
 disponibles (pagados, aún sin vendedor) es **visible para todos los vendedores activos por
 igual** — no hay asignación 1:1 automática. Cualquier vendedor puede "ofertar" sobre un lead
 disponible; al hacerlo, la oferta se envía al cliente **por WhatsApp**, y de ahí en adelante la
@@ -124,7 +176,10 @@ primario, fondos negro/blanco, `rounded-xl`/`rounded-2xl`, `py-24`).
 - Body: Inter
 
 ## Rutas públicas
-`/` · `/marcas` · `/marcas/[slug]` · `/auto/[slug]` · `/tipo/[slug]` · `/electrico/[slug]` · `/coleccion/[slug]` · `/comparador` · `/solicitar` · `/contacto` · `/blog` · `/blog/[slug]` · `/studio`
+`/` · `/marcas` · `/marcas/[slug]` · `/auto/[slug]` · `/tipo/[slug]` · `/electrico/[slug]` · `/coleccion/[slug]` · `/comparador` · `/contacto` · `/blog` · `/blog/[slug]` · `/studio`
+
+🟡 **`/solicitar` está OCULTA** por el giro (no hay CTAs que lleven ahí; los CTAs abren el popup
+de waitlist). La ruta y su formulario siguen en el repo para cuando se reactive.
 
 ## Patrones importantes
 - Scripts de datos: `npx tsx --env-file=.env.local scripts/[nombre].ts`
@@ -138,10 +193,10 @@ Tres tiers, cada uno con su propio comportamiento. La tabla Supabase determina e
 
 | Tier | Tabla Supabase | Servicio | Comportamiento del bot |
 |---|---|---|---|
-| `asesoria` | `advisory_payments` | Asesoría IA $4.990 | Ayuda a decidir qué auto comprar. Puede y debe recomendar el $19.990 como siguiente paso natural una vez que el cliente tiene claro el modelo. |
-| `oferta` | `leads` (status=`pagado`) | Oferta Exclusiva $19.990 | Esta persona ya decidió qué auto quiere y espera precio de la red de vendedores. El bot resuelve dudas técnicas del modelo elegido. ❌ No menciona $4.990 (ya pasó esa etapa) ni $19.990 (ya lo tiene). |
+| `asesoria` | `advisory_payments` | Asesoría IA $4.990 | Ayuda a decidir qué auto comprar. 🔴 **Con el giro:** ya **NO** recomienda el $19.990 — el paso siguiente que ofrece es **unirse a la waitlist**. |
+| `oferta` | `leads` (status=`pagado`) | Oferta Exclusiva $19.990 — 🟡 STANDBY | Solo aplica a clientes que **ya pagaron** antes del standby (no entran nuevos). El bot resuelve dudas técnicas del modelo elegido. ❌ No menciona $4.990 ni $19.990. |
 | `vendedor` | `leads_vendors` | Plataforma vendedores | Canal incorrecto. Responde con mensaje de redirección a vendedores@electrificarte.com. ❌ Ninguna oferta de compra. |
-| `null` | — | Sin suscripción | Muestra mensaje invitando a contratar la asesoría. |
+| `null` | — | Sin suscripción | 🔴 **Con el giro:** invita a la **waitlist** y a contratar la **Asesoría $4.990**. |
 
 **Prioridad de resolución**: `vendedor` > `oferta` > `asesoria` (si alguien tiene ambas, prevalece la etapa más avanzada).
 
@@ -198,12 +253,23 @@ Más n8n (VPS de Matías) y Supabase. Un cambio en el modelo de leads toca a los
 
 ## Documentación
 
-- `docs/HANDOFF-CONDUCTOR.md` — estado actual, historial de bugs corregidos y **la fase
-  siguiente** (marketplace de ofertas de vendedores) con las preguntas abiertas.
+- **`docs/PIVOT-WAITLIST-PLAN.md` — 🔴 EL PLAN VIGENTE.** El giro a waitlist + asesoría-first:
+  fases, inventario de qué cambia, estado y tareas manuales. **Empezar por acá.**
+- `docs/QA-FLUJOS-MANUAL.md` — cómo testear los flujos (`npm test`, simulador n8n, webhooks de
+  ventas) y los hallazgos de idempotencia.
+- `docs/HANDOFF-CONDUCTOR.md` — 🟡 **STANDBY** — estado y fase del marketplace de ofertas de
+  vendedores (congelado por el giro; sirve para retomar).
 - `docs/ADMIN_WHATSAPP_RESEARCH_SPEC.md` — spec completa del motor de investigación de PDP.
 - `docs/HANDOFF.md` — traspaso de julio 2026 (Fase 1.2, ya completada; histórico).
 
 ## Pendientes conocidos
+
+🔴 **Del giro actual** (detalle y estado en `docs/PIVOT-WAITLIST-PLAN.md`):
+- Infra de waitlist (popup + `/api/waitlist` + `N8N_WAITLIST_URL` + tabla `waitlist`)
+- Retargetear los ~40 CTAs de oferta al popup; hero asesoría-first
+- Limpiar copy/$19.990 del sitio, chatbots, structured data y Sanity
+- **Manual de Francisco/Vicente:** desactivar los nodos del $19.990 en n8n, crear el workflow
+  de waitlist, tabla en Supabase, `N8N_WAITLIST_URL` en Vercel, dashboard en standby
 
 Bloqueantes de lanzamiento (detalle en `docs/HANDOFF-CONDUCTOR.md` §8):
 - **Vercel Pro** — sin esto el asesor pagado puede cortarse a los 60 s
