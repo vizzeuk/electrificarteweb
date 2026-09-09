@@ -14,6 +14,82 @@ auto (marca/modelo/año/color/versión) · multimedia.
 
 ---
 
+# 0. "Solo quien compró" — cómo se resuelve
+
+## El problema de fondo
+
+**Electrificarte no cierra la venta.** El `CLAUDE.md` lo dice explícito: *"Electrificarte no
+media ni registra el cierre real del trato — solo entrega el contacto y la oportunidad"*. El
+trato se cierra por WhatsApp entre cliente y vendedor, fuera de la plataforma. Por lo tanto
+**no existe un registro automático y confiable de "esta persona compró"**.
+
+Hay **una sola excepción, y ya está construida**:
+
+> `ofertas.oos_resultado = 'si'` — el flujo 5 (OOS) le pregunta al cliente 48 h después de
+> aceptar una oferta *"¿se concretó la venta?"* y registra la respuesta.
+> Ver `lib/auction/oos.ts:80` y `scripts/sql/2026-08-31_oos_resultado.sql`.
+
+Es autodeclarado, pero es **la señal de compra que ya tenemos**. Problema: vive en el flujo de
+la subasta, que hoy está en 🟡 **STANDBY**. O sea que **hoy no entra ninguna señal nueva**.
+
+## La solución: reseñas SOLO por invitación
+
+En vez de un formulario público que después intenta verificar, se da vuelta el modelo:
+**nadie puede reseñar por su cuenta**. Se entra únicamente con un **link de invitación con token
+firmado**. La verificación deja de estar en el formulario y pasa al **momento de invitar**.
+
+**Reutiliza un patrón que ya existe en el repo:** `lib/order-token.ts` firma tokens con HMAC-SHA256
+(hoy protege `/solicitar/gracias`). El mismo mecanismo genera un `reviewToken` que codifica *quién*
+y *qué auto*, y que no se puede falsificar sin el secreto.
+
+```
+/resena?t=<inviteId>.<hmac>
+   → el formulario solo abre con token válido
+   → precarga el auto (no lo puede cambiar)
+   → la reseña nace marcada compra_verificada = true
+```
+
+**Por qué es la decisión correcta acá:**
+- Es la **única forma real** de garantizar "solo compradores" cuando la venta ocurre fuera de la plataforma.
+- **Mata el spam y el sabotaje de la competencia** casi por completo: no hay formulario abierto que abusar.
+- **Baja muchísimo la carga de moderación** — el invitado rara vez manda basura.
+- **Es donde se cuelga el incentivo** del video (§5): la promo viaja en la invitación.
+
+## De dónde salen las invitaciones (en orden de automatización)
+
+| Fuente | Cuándo sirve | Estado |
+|---|---|---|
+| **Francisco invita a mano** desde el dashboard | **HOY** — él sabe quién compró, los cierres pasan por WhatsApp con él en el loop | ✅ Viable ya, solo requiere el token |
+| **Automático desde OOS**: `oos_resultado='si'` → dispara la invitación por WhatsApp | Cuando se reactive la subasta | 🟡 El gancho ya existe (`lib/auction/oos.ts:80`) |
+| **El vendedor certifica** la compra en el dashboard | Señal más fuerte de todas | ⏸ Depende de la plataforma de vendedores (otro repo) |
+
+**Recomendación:** partir con **invitación manual de Francisco** (funciona hoy, cero infra nueva
+más allá del token) y dejar enganchado el automático de OOS para cuando la subasta vuelva.
+
+## Fallback para quien compró pero no está en el sistema
+
+Subir un comprobante (factura o permiso de circulación) que Francisco revisa.
+
+> ⚠️ **Ojo, esto tiene riesgo legal.** Una factura trae **RUT, domicilio y precio pagado**: es
+> dato personal sensible bajo Ley 19.628 / 21.719. Si se hace: el comprobante **se ve y se
+> borra**, nunca se guarda a largo plazo y **jamás se publica**. Mi sugerencia es **no incluirlo
+> en v1** — con la invitación manual alcanza.
+
+## ⚠️ Reseñas incentivadas: hay que declararlo
+
+Si se regala una promo/descuento por dejar una reseña (§5), eso es una **reseña incentivada** y
+las reglas de Google para datos estructurados de `Review`, además de la normativa de publicidad
+(SERNAC), exigen dos cosas:
+
+1. **El incentivo se da por dejar la reseña, NUNCA por dejarla positiva.** Condicionarlo a una
+   buena calificación es publicidad engañosa.
+2. **Se declara.** Basta una etiqueta visible del tipo *"Reseña con beneficio"*.
+
+No declararlo pone en riesgo justamente el premio SEO (las estrellas en Google) que es una de
+las razones para hacer todo esto.
+
+---
+
 # 1. Recomendación (lo importante primero)
 
 | Decisión | Recomendación | Por qué |
@@ -22,7 +98,8 @@ auto (marca/modelo/año/color/versión) · multimedia.
 | **Subida** | **Directa del browser al bucket** (URL firmada) | Vercel corta el body de las funciones en **4,5 MB** — la foto nunca debe pasar por `/api/*` |
 | **Pre-filtro automático** | **NSFWJS en el browser** (gratis) + **OpenAI `omni-moderation-latest`** en el servidor (**gratis**, acepta imágenes) | Filtra lo obvio antes de llegar a Francisco, a costo cero |
 | **Moderación humana** | Cola en el **dashboard** (rol admin) | Es donde Francisco ya trabaja |
-| **Video** | **NO en v1** | No por costo (sería ~$0 con Mux) sino por **riesgo legal y carga de moderación** — ver §5 |
+| **Quién puede reseñar** | **Solo por invitación** (link con token firmado) | Es la única forma real de garantizar "solo compradores" — ver §0 |
+| **Video** | **SÍ, pero en Mux — no en el bucket de Supabase** | Con invitación el volumen es bajo y moderable; Supabase no transcodifica y el video no se vería en Android — ver §5 |
 | **Datos** | Tabla `reviews` en Supabase (no Sanity) | Sanity no admite escritura pública sin exponer un write token |
 
 **Costo estimado: ~$0/mes** hasta ~1.000 reseñas/mes (ver §6). El gasto real aparece recién si
@@ -115,28 +192,63 @@ vistas de foto al mes, R2 (egress $0) pasa a ser la opción correcta desde el d�
 
 ---
 
-# 5. Video: recomendación de NO incluirlo en v1
+# 5. Video: SÍ — pero en Mux, no en el bucket de Supabase
 
-El costo **no** es el problema: con **Mux Pay-as-you-go** serían **~$0/mes** durante años
-(100.000 minutos de entrega gratis al mes). Las razones reales:
+> **Esto revisa la recomendación anterior.** Antes dije "no video en v1" asumiendo un formulario
+> abierto con ~150 videos/mes, imposibles de moderar. Con **reseñas por invitación + incentivo**
+> (§0) el volumen real es de **5-30 videos/mes**: Francisco puede ver 20 videos de 60 s en ~20
+> minutos al mes. Eso elimina la objeción principal. **El video pasa a ser viable.**
 
-1. **Riesgo legal.** Un video de un auto en la calle captura **patentes, caras de terceros y
-   domicilios**. Bajo la Ley 19.628 (y la Ley 21.719) eso es dato personal publicado sin
-   consentimiento. Con fotos el problema existe pero es 10× más manejable.
-2. **Carga de moderación.** Francisco puede revisar 450 fotos/mes de un vistazo; **no puede ver
-   150 videos**.
-3. **Superficie de producto.** Subida reanudable, re-encode en el cliente, poster, player, cola
-   de moderación con video… 1-2 semanas que compiten con el resto del roadmap.
-4. **Fricción.** Un clip 4K de 30 s pesa ~85 MB; en una conexión móvil chilena típica
-   (~13 Mbps de subida) son ~52 s, y en 4G débil **casi 4 minutos**. Mata la conversión del
-   formulario.
+## Por qué NO servirlo desde el bucket de Supabase
 
-**Costo de postergarlo: casi nulo** — agregar video después es una columna
-`video_playback_id` y un componente de player. Si algún día se hace: **Mux Pay-as-you-go**,
-Direct Uploads (evita el límite de 4,5 MB), calidad Basic (gratis), tope de 60 s y rechazo
-sobre 60 MB.
+El bucket sirve perfecto para **fotos** y es un desastre para **video**, por 4 razones — y la
+primera sola ya lo descarta:
 
----
+1. **Ruleta de códecs (el bloqueante real).** Los iPhone graban por defecto en **HEVC/H.265
+   dentro de un `.mov`**. Safari lo reproduce; **Chrome y Firefox en Android y escritorio no**,
+   de forma confiable. Sin transcodificación estarías publicando videos que para una parte de
+   tus visitantes son **un rectángulo negro** — y no te enterarías hasta que alguien reclame.
+2. **Sin bitrate adaptativo (ABR).** Un clip de 50 MB / 30 s es un flujo sostenido de ~13 Mbps.
+   En un 4G congestionado el visitante no puede sostenerlo y **no hay una calidad menor a la que
+   caer** → rebuffering permanente.
+3. **El egress de Supabase es UNIFICADO** — y esta es la que más me preocupa de tu
+   infraestructura. La misma cuota la comparten **Database, Auth y Storage**: 5 GB totales en
+   Free, 250 GB en Pro. Un video de 50 MB pesa **~800 veces** una foto optimizada.
+   > **Un solo video de 50 MB con 500 vistas = 25 GB.** En el plan Free eso se come **5 veces**
+   > la cuota mensual de **todo el proyecto**. No es solo un problema de costo: el video puede
+   > dejar sin cuota a las consultas de Postgres y degradar el sitio.
+4. **Sin poster/miniatura.** Habría que generarlo con ffmpeg del lado servidor — pesado para una
+   función de Vercel.
+
+*(La subida grande sí la resuelve Supabase: soporta **TUS resumable** en trozos de 6 MB. Ese no
+es el problema — el problema es reproducir y servir.)*
+
+## La opción recomendada: Mux
+
+| | Mux | Cloudflare Stream | Bucket crudo (Supabase) |
+|---|---|---|---|
+| Costo a tu volumen | **$0/mes** | ~$5-6/mes | "gratis" hasta que revienta la cuota |
+| Entrega gratis | **100.000 min/mes** | ninguna | — |
+| Transcodifica (arregla HEVC) | ✅ | ✅ | ❌ |
+| ABR | ✅ | ✅ | ❌ |
+| Poster automático | ✅ gratis | ✅ | ❌ |
+| Subida directa (evita los 4,5 MB) | ✅ Direct Uploads | ✅ | ✅ |
+
+**Mux Pay-as-you-go regala 100.000 minutos de entrega al mes.** A 30 videos/mes de 60 s, con
+1.000 vistas cada uno, son 30.000 minutos: **sigue siendo $0**. La calidad de entrada *Basic* es
+gratis y alcanza de sobra para un clip de celular.
+
+**Lo importante: esto NO parte tu arquitectura.** En la fila de `reviews` guardas solo un string
+`video_playback_id`. **El modelo de datos sigue 100% en Supabase**; a Mux solo se van los bytes
+del video. Y como el video no pasa por el bucket, **no contamina la cuota de egress** que usa
+Postgres.
+
+## Reglas a imponer igual (independiente del proveedor)
+- **Tope duro de 60 segundos** y rechazo sobre ~100 MB en el cliente.
+- **Consentimiento explícito** al subir (checkbox), porque un video en la calle capta
+  **patentes, caras de terceros y números de casa** → dato personal bajo Ley 19.628 / 21.719.
+- **Instrucción visible en el formulario:** "no grabes patentes de otros autos ni a personas".
+- **Francisco ve el 100% de los videos.** A este volumen es realista; a 150/mes no lo sería.
 
 # 6. Moderación automática — el pre-filtro sale gratis
 
@@ -230,25 +342,45 @@ build. Ya existe `app/api/revalidate/route.ts` para eso.
 
 # 9. Fases sugeridas
 
-- **Fase A — Captura.** Tabla + RLS, `/api/reviews`, formulario con estrellas y subida directa,
-  bucket. Sin mostrar nada aún.
-- **Fase B — Moderación.** Cola admin en el dashboard + pre-filtro automático + revalidación.
-- **Fase C — Display PDP.** Sección de reseñas + `AggregateRating` en structured data (el SEO).
-- **Fase D — PLP y home.** Rating en cards (los 4 sitios) + `Testimonials` alimentado por reseñas.
+- **Fase A — Invitaciones.** Tabla `reviews` + `review_invites` con RLS, firma del `reviewToken`
+  (reusa `lib/order-token.ts`), y la pantalla en el dashboard donde Francisco genera el link.
+  Sin formulario público: **acá se resuelve el "solo compradores"**.
+- **Fase B — Captura (fotos).** `/resena?t=…`, formulario con estrellas, `compressImage()` +
+  subida directa al bucket con URL firmada, `/api/reviews`.
+- **Fase C — Moderación.** Cola admin en el dashboard + pre-filtro gratis (NSFWJS + OpenAI) +
+  `revalidatePath` al aprobar.
+- **Fase D — Display PDP.** Sección de reseñas + `AggregateRating` en structured data (el SEO,
+  que es la mayor ganancia).
+- **Fase E — PLP y home.** Rating en las cards (⚠️ 4 implementaciones) + `Testimonials`
+  alimentado por reseñas aprobadas.
+- **Fase F — Video.** Cuenta Mux + Direct Uploads + `video_playback_id` en la fila + player.
+  Se puede hacer después sin tocar nada de lo anterior.
 
 ---
 
 # 10. Decisiones pendientes
 
-1. **¿Fotos obligatorias u opcionales?** Obligatorias dan mejor UGC pero bajan conversión.
-2. **¿Cuántas fotos por reseña?** Sugerido: máx. 3-5. (Hoy hay una incoherencia:
-   `LeadForm` permite 10 y `/api/leads` valida 5.)
-3. **¿Se exige haber comprado?** Sin verificación de compra el UGC es más fácil de falsear.
-4. **¿Se publica el nombre completo o "Vicente C."?** Recomiendo **nombre + inicial** por
-   privacidad.
-5. **¿Teléfono obligatorio?** Es PII sensible y no se muestra nunca; sirve solo para verificar.
-6. **¿La moderación vive en el dashboard o se hace un panel mínimo en esta web?** El dashboard
-   es lo correcto, pero **es otro repo** y hoy usa datos mock.
+**Resueltas en esta ronda:**
+- ✅ **Solo compradores** → reseñas **por invitación** con token firmado (§0). Empieza con
+  invitación manual de Francisco; el automático de OOS queda enganchado para cuando vuelva la subasta.
+- ✅ **Video** → **sí**, pero en **Mux**, no en el bucket (§5). No parte la arquitectura: solo
+  se guarda un `video_playback_id` en la fila de Supabase.
+
+**Abiertas:**
+1. **¿Cuál es el incentivo exacto del video?** ⚠️ **No existe sistema de códigos de descuento en
+   el repo** (el `CLAUDE.md` lo lista como "futuro, no implementado"). Y con el giro, el $19.990
+   está en standby — así que el premio tendría que ser la **Asesoría $4.990** gratis/con
+   descuento, o un beneficio futuro. **Para v1 lo más simple es que Francisco lo entregue a
+   mano por WhatsApp** (costo cero, cero código).
+2. **¿Fotos obligatorias u opcionales?** Obligatorias dan mejor UGC pero bajan conversión.
+3. **¿Cuántas fotos por reseña?** Sugerido: máx. 3-5. (Hoy hay incoherencia: `LeadForm` permite
+   10 y `/api/leads` valida 5.)
+4. **¿Se publica el nombre completo o "Vicente C."?** Recomiendo **nombre + inicial**.
+5. **¿Teléfono obligatorio?** Es PII, no se muestra nunca; sirve solo para identificar.
+6. **¿La moderación vive en el dashboard?** Es lo correcto, pero **es otro repo** y hoy usa datos
+   mock. Alternativa v1: una pantalla admin mínima en esta web.
+7. **¿Se aceptan reseñas de gente que compró fuera de Electrificarte?** Si sí, hay que definir el
+   fallback de comprobante (§0) con su riesgo legal.
 
 ---
 
