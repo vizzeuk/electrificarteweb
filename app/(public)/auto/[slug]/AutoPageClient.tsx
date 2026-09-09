@@ -7,6 +7,7 @@ import { formatCLP, heroStats, classifyElectric } from "@/lib/utils";
 import { ComparePromo } from "@/components/car/ComparePromo";
 import { Icon } from "@/components/ui/Icon";
 import { OfferCta } from "@/components/waitlist/OfferCta";
+import { PdpReviewPrompt } from "@/components/reviews/PdpReviewPrompt";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export interface VersionData {
@@ -946,6 +947,14 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
           </div>
         </div>
       </section>
+
+      {/* ─── Reseñas: invita a quien ya tiene este auto ───────────────── */}
+      <PdpReviewPrompt
+        carSlug={car.slug}
+        carBrand={car.brand}
+        carModel={car.name}
+        carName={`${car.brand} ${car.name}`}
+      />
 
       {/* ─── Vehículos similares ──────────────────────────────────────── */}
       {similarCars.length > 0 && (

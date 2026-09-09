@@ -1,0 +1,80 @@
+{
+  "name": "Reseñas UGC (captura)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "reviews",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "rv-webhook",
+      "name": "Webhook reseñas",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 300],
+      "webhookId": "reviews",
+      "notes": "La Production URL de este nodo va en Vercel como N8N_REVIEWS_URL."
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "tableId": "reviews",
+        "dataToSend": "defineBelow",
+        "fieldsUi": {
+          "fieldValues": [
+            { "fieldId": "first_name", "fieldValue": "={{ $json.body.firstName }}" },
+            { "fieldId": "last_name", "fieldValue": "={{ $json.body.lastName }}" },
+            { "fieldId": "email", "fieldValue": "={{ $json.body.email }}" },
+            { "fieldId": "phone", "fieldValue": "={{ $json.body.phone }}" },
+            { "fieldId": "rating", "fieldValue": "={{ $json.body.rating }}" },
+            { "fieldId": "body", "fieldValue": "={{ $json.body.body }}" },
+            { "fieldId": "car_slug", "fieldValue": "={{ $json.body.carSlug }}" },
+            { "fieldId": "car_sanity_id", "fieldValue": "={{ $json.body.carSanityId }}" },
+            { "fieldId": "car_brand", "fieldValue": "={{ $json.body.carBrand }}" },
+            { "fieldId": "car_model", "fieldValue": "={{ $json.body.carModel }}" },
+            { "fieldId": "car_year", "fieldValue": "={{ $json.body.carYear }}" },
+            { "fieldId": "car_color", "fieldValue": "={{ $json.body.carColor }}" },
+            { "fieldId": "car_version", "fieldValue": "={{ $json.body.carVersion }}" },
+            { "fieldId": "source", "fieldValue": "={{ $json.body.source }}" },
+            { "fieldId": "status", "fieldValue": "pendiente" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "rv-supabase",
+      "name": "Guardar reseña (pendiente)",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [280, 300],
+      "credentials": { "supabaseApi": { "id": "REEMPLAZAR", "name": "Supabase (service_role)" } },
+      "notes": "Si tu webhook no envuelve el body en 'body', quitá '.body' de las expresiones."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ from: 'Electrificarte <no-reply@electrificarte.com>', to: ['francisco@electrificarte.com'], subject: 'Nueva reseña por moderar — ' + ($('Webhook reseñas').item.json.body.carBrand || '') + ' ' + ($('Webhook reseñas').item.json.body.carModel || ''), html: '<p><strong>' + $('Webhook reseñas').item.json.body.firstName + ' ' + $('Webhook reseñas').item.json.body.lastName + '</strong> dejó una reseña de ' + $('Webhook reseñas').item.json.body.rating + '/5.</p><p>' + $('Webhook reseñas').item.json.body.body + '</p><p>Revísala en el dashboard antes de publicarla.</p>' }) }}",
+        "options": {}
+      },
+      "id": "rv-aviso",
+      "name": "Avisar a Francisco (Resend)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [560, 300],
+      "credentials": { "httpHeaderAuth": { "id": "REEMPLAZAR", "name": "Resend (Authorization Bearer)" } },
+      "notes": "Aviso para que Francisco sepa que hay algo en la cola de moderación."
+    }
+  ],
+  "connections": {
+    "Webhook reseñas": { "main": [[{ "node": "Guardar reseña (pendiente)", "type": "main", "index": 0 }]] },
+    "Guardar reseña (pendiente)": { "main": [[{ "node": "Avisar a Francisco (Resend)", "type": "main", "index": 0 }]] }
+  },
+  "settings": {},
+  "pinData": {}
+}

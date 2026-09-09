@@ -54,8 +54,13 @@ export function WaitlistProvider({ children }: { children: React.ReactNode }) {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
     if (params.get("waitlist") !== "1") return;
-    setPrefill({ model: params.get("auto") ?? undefined, source: params.get("source") ?? "link" });
-    setIsOpen(true);
+    // Se difiere un frame: setState síncrono dentro del efecto encadena renders
+    // (regla react-hooks/set-state-in-effect).
+    const id = requestAnimationFrame(() => {
+      setPrefill({ model: params.get("auto") ?? undefined, source: params.get("source") ?? "link" });
+      setIsOpen(true);
+    });
+    return () => cancelAnimationFrame(id);
   }, []);
 
   const value = useMemo(() => ({ open, close }), [open, close]);

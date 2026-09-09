@@ -225,6 +225,47 @@ export const homePage = defineType({
     }),
 
     // ════════════════════════════════════════════════════════════════════════
+    // GALERÍA UGC — fotos y videos de clientes con su auto
+    // ════════════════════════════════════════════════════════════════════════
+    defineField({
+      name: "ugcTitle", title: "Título de la galería de clientes", type: "string",
+      group: "social", initialValue: "Nuestros clientes y sus autos",
+      description: "Encabezado de la franja de fotos/videos reales de clientes.",
+    }),
+    defineField({
+      name: "ugcSubtitle", title: "Bajada de la galería", type: "string", group: "social",
+      initialValue: "Contenido real de personas que ya manejan su auto electrificado.",
+    }),
+    defineField({
+      name: "ugcMedia", title: "Fotos y videos de clientes", type: "array", group: "social",
+      description:
+        "Espacio para el contenido UGC. Cada item puede ser una foto O un video. " +
+        "Para video: cuando conectemos Mux, se pega el Playback ID; mientras tanto se puede " +
+        "usar una foto con el enlace al video. Recomendado: formato vertical 9:16 o cuadrado.",
+      of: [defineArrayMember({
+        type: "object", name: "ugcItem", title: "Foto o video",
+        fields: [
+          defineField({
+            name: "image", title: "Foto (o portada del video)", type: "image",
+            options: { hotspot: true },
+            description: "Si es un video, esta imagen se usa como portada.",
+          }),
+          defineField({
+            name: "videoPlaybackId", title: "Playback ID del video (Mux)", type: "string",
+            description:
+              "Opcional. Si se llena, el item se muestra como video reproducible. " +
+              "Se obtiene de Mux al subir el video. Dejar vacío para que sea solo foto.",
+          }),
+          defineField({ name: "personName", title: "Nombre del cliente", type: "string", description: 'Ej: "Vicente C."' }),
+          defineField({ name: "car",        title: "Auto",               type: "string", description: 'Ej: "BYD Dolphin 2025"' }),
+          defineField({ name: "carSlug",    title: "Slug del auto (opcional)", type: "string", description: "Para enlazar a la ficha. Ej: byd-dolphin" }),
+          defineField({ name: "caption",    title: "Texto corto (opcional)", type: "string" }),
+        ],
+        preview: { select: { title: "personName", subtitle: "car", media: "image" } },
+      })],
+    }),
+
+    // ════════════════════════════════════════════════════════════════════════
     // FAQ
     // ════════════════════════════════════════════════════════════════════════
     defineField({
