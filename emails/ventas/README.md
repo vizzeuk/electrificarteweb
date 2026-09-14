@@ -22,6 +22,24 @@ sobre fondo oscuro. Ambos PNG viven en `public/` y se sirven desde `www`.
 | `registro-vendedor.html` | Vendedor paga su suscripción | Vendedor | `nombre`, `nombre_concesionario`, `marcas` |
 | `nuevo-vendedor-francisco.html` | (mismo evento) | **Francisco** (interno) | `nombre`, `apellido`, `nombre_concesionario`, `telefono`, `marcas` |
 
+| Archivo | Cuándo se envía | A quién | Flujo n8n |
+|---|---|---|---|
+| `waitlist-confirmacion.html` | Alguien se registra en la waitlist | La persona | `n8n/waitlist.json` |
+| `waitlist-francisco.html` | (mismo evento) | **Francisco** (interno) | `n8n/waitlist.json` |
+| `nueva-resena-francisco.html` | Alguien envía una reseña | **Francisco** (interno) | `n8n/reviews.json` |
+| `resena-recibida.html` | (mismo evento) | Quien dejó la reseña | `n8n/reviews.json` |
+
+Estos 4 usan expresiones que **referencian al nodo Webhook por nombre**
+(`$('Webhook waitlist')` / `$('Webhook reseñas')`) en vez de `$json`. Así funcionan
+aunque el nodo de correo vaya después del de Supabase — que es justo el problema que
+tuvimos con los correos de ventas.
+
+Los workflows se generan con:
+```bash
+node scripts/gen-waitlist-reviews-workflows.mjs
+```
+Correlo cada vez que edites uno de esos HTML, o el cambio no llega al JSON de n8n.
+
 ## Probar los 4 correos directo en n8n (sin tu flujo real)
 
 Si importás `ventas-correos.json` y le das *Test* suelto, n8n tira

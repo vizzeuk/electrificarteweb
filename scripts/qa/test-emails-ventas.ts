@@ -30,6 +30,28 @@ const SAMPLES: Record<string, string> = {
   "$('Create a row1').item.json.nombre_concesionario": "Automotora del Sur",
   "$('Create a row1').item.json.marcas": "BYD, MG",
   "$('Create a row1').item.json.telefono": "56912345678",
+  // ── Waitlist ──
+  "$('Webhook waitlist').item.json.body.firstName": "Camila",
+  "$('Webhook waitlist').item.json.body.lastName": "Rojas",
+  "$('Webhook waitlist').item.json.body.email": to,
+  "$('Webhook waitlist').item.json.body.phone": "+56 912345678",
+  "$('Webhook waitlist').item.json.body.model || 'Aún no lo definiste'": "BYD Dolphin 2025",
+  "$('Webhook waitlist').item.json.body.model || '— no indicó'": "BYD Dolphin 2025",
+  "$('Webhook waitlist').item.json.body.source": "pdp",
+  "$('Webhook waitlist').item.json.body.phone.replace(/[^0-9]/g, '')": "56912345678",
+  // ── Reseñas ──
+  "$('Webhook reseñas').item.json.body.firstName": "Camila",
+  "$('Webhook reseñas').item.json.body.lastName": "Rojas",
+  "$('Webhook reseñas').item.json.body.email": to,
+  "$('Webhook reseñas').item.json.body.phone": "+56 912345678",
+  "$('Webhook reseñas').item.json.body.rating": "4",
+  "$('Webhook reseñas').item.json.body.body":
+    "Llevo 4 meses con el auto y la autonomía real ronda los 380 km en ciudad, bastante cerca de lo prometido. La carga en casa durante la noche resuelve todo. Lo único: el maletero se queda corto para viajes largos en familia.",
+  "$('Webhook reseñas').item.json.body.carBrand": "BYD",
+  "$('Webhook reseñas').item.json.body.carModel": "Dolphin",
+  "$('Webhook reseñas').item.json.body.carYear || ''": "2025",
+  "'★'.repeat($('Webhook reseñas').item.json.body.rating)": "★★★★",
+  "'★'.repeat(5 - $('Webhook reseñas').item.json.body.rating)": "★",
 };
 
 /** Reemplaza {{ <expr> }} por su valor de ejemplo; lo que sobre → "—". */
@@ -46,6 +68,10 @@ const EMAILS = [
   { file: "nuevo-lead-francisco.html", subject: "[PRUEBA] Nuevo lead de Oferta Exclusiva" },
   { file: "registro-vendedor.html", subject: "[PRUEBA] Registro confirmado — Electrificarte" },
   { file: "nuevo-vendedor-francisco.html", subject: "[PRUEBA] Nuevo vendedor registrado" },
+  { file: "waitlist-confirmacion.html", subject: "[PRUEBA] Ya estás en la waitlist" },
+  { file: "waitlist-francisco.html", subject: "[PRUEBA] Nueva persona en la waitlist" },
+  { file: "nueva-resena-francisco.html", subject: "[PRUEBA] Nueva reseña por moderar" },
+  { file: "resena-recibida.html", subject: "[PRUEBA] Recibimos tu reseña" },
 ];
 
 (async () => {

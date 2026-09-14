@@ -1,5 +1,5 @@
 {
-  "name": "Waitlist (captación gratis)",
+  "name": "Waitlist (captación + correos)",
   "nodes": [
     {
       "parameters": {
@@ -12,9 +12,12 @@
       "name": "Webhook waitlist",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [0, 300],
+      "position": [
+        0,
+        300
+      ],
       "webhookId": "waitlist",
-      "notes": "La Production URL de este nodo es la que va en Vercel como N8N_WAITLIST_URL."
+      "notes": "La Production URL de este nodo va en Vercel como N8N_WAITLIST_URL."
     },
     {
       "parameters": {
@@ -23,12 +26,30 @@
         "dataToSend": "defineBelow",
         "fieldsUi": {
           "fieldValues": [
-            { "fieldId": "first_name", "fieldValue": "={{ $json.body.firstName }}" },
-            { "fieldId": "last_name", "fieldValue": "={{ $json.body.lastName }}" },
-            { "fieldId": "email", "fieldValue": "={{ $json.body.email }}" },
-            { "fieldId": "phone", "fieldValue": "={{ $json.body.phone }}" },
-            { "fieldId": "model", "fieldValue": "={{ $json.body.model }}" },
-            { "fieldId": "source", "fieldValue": "={{ $json.body.source }}" }
+            {
+              "fieldId": "first_name",
+              "fieldValue": "={{ $json.body.firstName }}"
+            },
+            {
+              "fieldId": "last_name",
+              "fieldValue": "={{ $json.body.lastName }}"
+            },
+            {
+              "fieldId": "email",
+              "fieldValue": "={{ $json.body.email }}"
+            },
+            {
+              "fieldId": "phone",
+              "fieldValue": "={{ $json.body.phone }}"
+            },
+            {
+              "fieldId": "model",
+              "fieldValue": "={{ $json.body.model }}"
+            },
+            {
+              "fieldId": "source",
+              "fieldValue": "={{ $json.body.source }}"
+            }
           ]
         },
         "options": {}
@@ -37,16 +58,140 @@
       "name": "Guardar en Supabase",
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
-      "position": [280, 300],
+      "position": [
+        260,
+        300
+      ],
       "credentials": {
-        "supabaseApi": { "id": "REEMPLAZAR", "name": "Supabase (service_role)" }
+        "supabaseApi": {
+          "id": "REEMPLAZAR",
+          "name": "Supabase (service_role)"
+        }
       },
-      "notes": "Asigná tu credencial de Supabase. Si el webhook no envuelve el body en 'body', quitá '.body' de las expresiones."
+      "notes": "Si tu webhook no envuelve el body en 'body', quitá '.body' de las expresiones."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "keypair",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "from",
+              "value": "Electrificarte <no-reply@electrificarte.com>"
+            },
+            {
+              "name": "to",
+              "value": "={{ $('Webhook waitlist').item.json.body.email }}"
+            },
+            {
+              "name": "subject",
+              "value": "Ya estás en la waitlist — Electrificarte"
+            },
+            {
+              "name": "html",
+              "value": "=<!DOCTYPE html>\n<html lang=\"es\">\n<head>\n  <meta charset=\"utf-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n  <meta name=\"color-scheme\" content=\"light\">\n  <title>Ya estás en la waitlist — Electrificarte</title>\n</head>\n<!--\n  WAITLIST · Confirmación a la persona que se registró. Va DIRECTO al nodo Resend de n8n.\n  Expresiones n8n (referencian al nodo Webhook para funcionar en cualquier posición del flujo):\n    {{ $('Webhook waitlist').item.json.body.firstName }}  → nombre\n    {{ $('Webhook waitlist').item.json.body.model }}      → auto de interés (puede venir vacío)\n\n  ⚠️ OJO CON EL WORDING: la waitlist SOLO registra interesados. No prometer una oferta,\n  no dar plazos y no decir que el servicio de negociación es o será gratis.\n-->\n<body style=\"margin:0;padding:0;background:#F3F4F6;font-family:'Helvetica Neue',Arial,sans-serif;-webkit-font-smoothing:antialiased;\">\n  <div style=\"display:none;max-height:0;overflow:hidden;opacity:0;\">Quedaste registrado en la waitlist de Electrificarte.</div>\n\n  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#F3F4F6;\">\n    <tr><td align=\"center\" style=\"padding:24px 12px;\">\n      <table role=\"presentation\" width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:100%;max-width:600px;background:#FFFFFF;border:1px solid #E5E7EB;border-radius:16px;overflow:hidden;\">\n\n        <tr><td style=\"padding:26px 32px;border-bottom:1px solid #F3F4F6;\">\n          <picture><source srcset=\"https://www.electrificarte.com/logo-email-white.png\" media=\"(prefers-color-scheme: dark)\"><img src=\"https://www.electrificarte.com/logo-email.png\" alt=\"Electrificarte\" height=\"28\" style=\"display:block;border:0;height:28px;width:auto;\"></picture>\n        </td></tr>\n\n        <tr><td style=\"padding:36px 32px 8px;\">\n          <p style=\"margin:0 0 8px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#00A6A6;\">Waitlist</p>\n          <h1 style=\"margin:0 0 16px;font-size:24px;font-weight:800;line-height:1.2;color:#111827;letter-spacing:-0.01em;\">Ya estás en la lista</h1>\n          <p style=\"margin:0 0 16px;font-size:15px;line-height:1.65;color:#4B5563;\">Hola <strong style=\"color:#111827;\">{{ $('Webhook waitlist').item.json.body.firstName }}</strong>, registramos tus datos. Te contactaremos cuando abramos el acceso y tengamos novedades para ti.</p>\n\n          <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"border:1px solid #E5E7EB;border-radius:12px;margin:8px 0 20px;\">\n            <tr><td style=\"padding:16px 20px;\">\n              <div style=\"font-size:11px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;color:#9CA3AF;\">Auto que te interesa</div>\n              <div style=\"font-size:16px;font-weight:700;color:#006A61;margin-top:3px;\">{{ $('Webhook waitlist').item.json.body.model || 'Aún no lo definiste' }}</div>\n            </td></tr>\n          </table>\n\n          <p style=\"margin:0 0 24px;font-size:14px;line-height:1.6;color:#4B5563;\">Mientras tanto puedes seguir explorando el catálogo. Si todavía no tienes claro qué auto te conviene, nuestra <strong style=\"color:#111827;\">Asesoría</strong> te ayuda a decidir según tu uso, presupuesto y perfil.</p>\n        </td></tr>\n\n        <tr><td style=\"padding:0 32px 36px;\">\n          <table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n            <td style=\"border-radius:12px;background:#00E5E5;\">\n              <a href=\"https://www.electrificarte.com/marcas\" style=\"display:inline-block;padding:15px 34px;font-size:14px;font-weight:700;color:#000000;text-decoration:none;border-radius:12px;\">Ver vehículos</a>\n            </td>\n          </tr></table>\n        </td></tr>\n\n        <tr><td style=\"padding:28px 32px;background:#000000;\">\n          <p style=\"margin:0 0 6px;font-size:13px;font-weight:700;color:#FFFFFF;letter-spacing:-0.01em;\">ELECTRIFICARTE<span style=\"color:#00E5E5;\">.COM</span></p>\n          <p style=\"margin:0;font-size:12px;line-height:1.6;color:rgba(255,255,255,0.55);\">Marketplace de autos electrificados en Chile.<br>\n          <a href=\"https://www.electrificarte.com\" style=\"color:#00E5E5;text-decoration:none;\">www.electrificarte.com</a> · contacto@electrificarte.com</p>\n        </td></tr>\n\n      </table>\n    </td></tr>\n  </table>\n</body>\n</html>\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "wl-mail-cliente",
+      "name": "Correo confirmación (persona)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        540,
+        180
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Resend (Authorization Bearer)"
+        }
+      },
+      "notes": "Asigná la credencial Resend. El html va en modo expresión (empieza con '=')."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "keypair",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "from",
+              "value": "Electrificarte <no-reply@electrificarte.com>"
+            },
+            {
+              "name": "to",
+              "value": "francisco@electrificarte.com"
+            },
+            {
+              "name": "subject",
+              "value": "Nueva persona en la waitlist"
+            },
+            {
+              "name": "html",
+              "value": "=<!DOCTYPE html>\n<html lang=\"es\">\n<head>\n  <meta charset=\"utf-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n  <meta name=\"color-scheme\" content=\"light\">\n  <title>Nueva persona en la waitlist</title>\n</head>\n<!--\n  WAITLIST · USO INTERNO (Francisco). Se dispara cuando alguien se registra en la waitlist.\n  Expresiones n8n (referencian al nodo Webhook para funcionar en cualquier posición del flujo):\n    {{ $('Webhook waitlist').item.json.body.firstName }} {{ $('Webhook waitlist').item.json.body.lastName }}\n    {{ $('Webhook waitlist').item.json.body.email }} {{ $('Webhook waitlist').item.json.body.phone }}\n    {{ $('Webhook waitlist').item.json.body.model }}  → auto de interés (opcional)\n    {{ $('Webhook waitlist').item.json.body.source }} → de qué CTA vino (hero, pdp, plp, comparador...)\n-->\n<body style=\"margin:0;padding:0;background:#F3F4F6;font-family:'Helvetica Neue',Arial,sans-serif;-webkit-font-smoothing:antialiased;\">\n  <div style=\"display:none;max-height:0;overflow:hidden;opacity:0;\">Se registró una persona nueva en la waitlist.</div>\n\n  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#F3F4F6;\">\n    <tr><td align=\"center\" style=\"padding:24px 12px;\">\n      <table role=\"presentation\" width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:100%;max-width:600px;background:#FFFFFF;border:1px solid #E5E7EB;border-radius:16px;overflow:hidden;\">\n\n        <tr><td style=\"padding:26px 32px;border-bottom:1px solid #F3F4F6;\">\n          <table role=\"presentation\" width=\"100%\"><tr>\n            <td><picture><source srcset=\"https://www.electrificarte.com/logo-email-white.png\" media=\"(prefers-color-scheme: dark)\"><img src=\"https://www.electrificarte.com/logo-email.png\" alt=\"Electrificarte\" height=\"28\" style=\"display:block;border:0;height:28px;width:auto;\"></picture></td>\n            <td align=\"right\" style=\"font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:#9CA3AF;\">Uso interno</td>\n          </tr></table>\n        </td></tr>\n\n        <tr><td style=\"padding:36px 32px 8px;\">\n          <p style=\"margin:0 0 8px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#00A6A6;\">Nueva inscripción · Waitlist</p>\n          <h1 style=\"margin:0 0 16px;font-size:24px;font-weight:800;line-height:1.2;color:#111827;letter-spacing:-0.01em;\">Se sumó una persona a la lista</h1>\n          <p style=\"margin:0 0 20px;font-size:15px;line-height:1.65;color:#4B5563;\">Hola <strong style=\"color:#111827;\">Francisco</strong>, entró un registro nuevo en la waitlist. Acá van sus datos.</p>\n\n          <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"border:1px solid #E5E7EB;border-radius:12px;margin:0 0 20px;\">\n            <tr><td style=\"padding:14px 20px;border-bottom:1px solid #F3F4F6;\">\n              <div style=\"font-size:11px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;color:#9CA3AF;\">Persona</div>\n              <div style=\"font-size:15px;font-weight:700;color:#111827;margin-top:3px;\">{{ $('Webhook waitlist').item.json.body.firstName }} {{ $('Webhook waitlist').item.json.body.lastName }}</div>\n            </td></tr>\n            <tr><td style=\"padding:14px 20px;border-bottom:1px solid #F3F4F6;\">\n              <div style=\"font-size:11px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;color:#9CA3AF;\">Auto de interés</div>\n              <div style=\"font-size:15px;font-weight:700;color:#006A61;margin-top:3px;\">{{ $('Webhook waitlist').item.json.body.model || '— no indicó' }}</div>\n            </td></tr>\n            <tr><td style=\"padding:14px 20px;border-bottom:1px solid #F3F4F6;\">\n              <div style=\"font-size:11px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;color:#9CA3AF;\">Contacto</div>\n              <div style=\"font-size:15px;font-weight:700;color:#111827;margin-top:3px;\">{{ $('Webhook waitlist').item.json.body.phone }}</div>\n              <div style=\"font-size:13px;color:#4B5563;margin-top:2px;\">{{ $('Webhook waitlist').item.json.body.email }}</div>\n            </td></tr>\n            <tr><td style=\"padding:14px 20px;\">\n              <div style=\"font-size:11px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;color:#9CA3AF;\">Vino desde</div>\n              <div style=\"font-size:15px;font-weight:700;color:#111827;margin-top:3px;\">{{ $('Webhook waitlist').item.json.body.source }}</div>\n            </td></tr>\n          </table>\n        </td></tr>\n\n        <tr><td style=\"padding:0 32px 36px;\">\n          <table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n            <td style=\"border-radius:12px;background:#00E5E5;\">\n              <a href=\"https://wa.me/{{ $('Webhook waitlist').item.json.body.phone.replace(/[^0-9]/g, '') }}\" style=\"display:inline-block;padding:15px 34px;font-size:14px;font-weight:700;color:#000000;text-decoration:none;border-radius:12px;\">Escribir por WhatsApp</a>\n            </td>\n          </tr></table>\n        </td></tr>\n\n        <tr><td style=\"padding:28px 32px;background:#000000;\">\n          <p style=\"margin:0 0 6px;font-size:13px;font-weight:700;color:#FFFFFF;letter-spacing:-0.01em;\">ELECTRIFICARTE<span style=\"color:#00E5E5;\">.COM</span></p>\n          <p style=\"margin:0;font-size:12px;line-height:1.6;color:rgba(255,255,255,0.55);\">Alerta interna generada automáticamente.</p>\n        </td></tr>\n\n      </table>\n    </td></tr>\n  </table>\n</body>\n</html>\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "wl-mail-francisco",
+      "name": "Correo nueva inscripción (Francisco)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        540,
+        420
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Resend (Authorization Bearer)"
+        }
+      },
+      "notes": "Asigná la credencial Resend. El html va en modo expresión (empieza con '=')."
     }
   ],
   "connections": {
     "Webhook waitlist": {
-      "main": [[{ "node": "Guardar en Supabase", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Guardar en Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardar en Supabase": {
+      "main": [
+        [
+          {
+            "node": "Correo confirmación (persona)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Correo nueva inscripción (Francisco)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {},
