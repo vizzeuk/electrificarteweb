@@ -1,5 +1,6 @@
 import { Icon } from "@/components/ui/Icon";
 import { StarRating } from "./StarRating";
+import { storage } from "@/lib/storage";
 import type { PublicReview, ReviewSummary } from "@/lib/reviews/queries";
 
 /**
@@ -71,6 +72,26 @@ export function ReviewList({
               </div>
 
               <p className="text-text-main text-sm leading-relaxed whitespace-pre-line">{r.body}</p>
+
+              {/* Solo las miniaturas 'card' (~45 KB). Servir las 'full' en la grilla
+                  multiplicaría el egress ~5× — ver docs/REVIEWS-UGC-PLAN.md §4b. */}
+              {r.photos.filter((k) => k.endsWith("-card.jpg")).length > 0 && (
+                <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
+                  {r.photos
+                    .filter((k) => k.endsWith("-card.jpg"))
+                    .map((key) => (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        key={key}
+                        src={storage.publicUrl(key)}
+                        alt={`Foto de ${r.autor}`}
+                        className="h-24 w-24 flex-shrink-0 rounded-lg border border-gray-100 object-cover"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    ))}
+                </div>
+              )}
             </article>
           ))}
         </div>

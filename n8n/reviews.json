@@ -79,6 +79,10 @@
               "fieldValue": "={{ $json.body.carVersion }}"
             },
             {
+              "fieldId": "photos",
+              "fieldValue": "={{ $json.body.photos }}"
+            },
+            {
               "fieldId": "source",
               "fieldValue": "={{ $json.body.source }}"
             },

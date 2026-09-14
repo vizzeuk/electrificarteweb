@@ -33,6 +33,9 @@ const schema = z.object({
   carColor: z.string().max(60).optional(),
   carVersion: z.string().max(120).optional(),
 
+  /** Rutas dentro del bucket (NO urls). Las devuelve /api/reviews/upload-url. */
+  photos: z.array(z.string().max(200)).max(10).optional(),
+
   source: z.string().max(60).optional(),
 });
 

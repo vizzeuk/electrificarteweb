@@ -111,6 +111,7 @@ const rvNodes = [
     { fieldId: "car_year",      fieldValue: B("carYear") },
     { fieldId: "car_color",     fieldValue: B("carColor") },
     { fieldId: "car_version",   fieldValue: B("carVersion") },
+    { fieldId: "photos",        fieldValue: B("photos") },
     { fieldId: "source",        fieldValue: B("source") },
     { fieldId: "status",        fieldValue: "pendiente" },
   ], [260, 300],

@@ -80,6 +80,26 @@ Vienen de `docs/DASHBOARD_CONTEXT.md` §Seguridad:
 4. La web pública **nunca** lee esta tabla directo: lee la vista `reviews_publicas`, que solo
    devuelve aprobadas, sin PII y con el autor como `"Juan P."`.
 
+## Después de aprobar: PUBLICAR LAS FOTOS (importante)
+
+Las fotos que sube el usuario caen en un bucket **privado** (`review-media-pendiente`) y
+**no son visibles** hasta que se mueven al bucket público. Ese movimiento **no es automático**:
+lo dispara el dashboard llamando a esta web.
+
+```
+POST https://www.electrificarte.com/api/reviews/publish
+Header: x-admin-secret: <ADMIN_API_SECRET>
+Body:   { "reviewId": "<uuid de la reseña>" }
+```
+
+Hace tres cosas: mueve las fotos al bucket público, revalida `/auto/{slug}` y `/`, y responde
+`{ ok, movidas, fallidas }`. Es **idempotente** — volver a llamarlo no rompe nada.
+
+⚠️ **Llamarlo DESPUÉS de hacer el `update ... set status='aprobada'`.** Si se llama antes,
+responde `409` y no mueve nada: el bucket público nunca debe tener contenido sin moderar.
+
+> Si se aprueba sin llamar a este endpoint, la reseña aparece **sin sus fotos**.
+
 ## Después de aprobar: avisar a la web
 
 Las PDP son estáticas con ISR de 60 s. Para que la reseña aparezca **al toque**, el dashboard

@@ -8,6 +8,7 @@ import { AnimatePresence, m } from "framer-motion";
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
 import { StarRating } from "./StarRating";
+import { PhotoPicker, type PickedPhoto } from "./PhotoPicker";
 import { REVIEW_MAX_CHARS, REVIEW_MIN_CHARS } from "@/lib/reviews/config";
 import type { ReviewPrefill } from "./ReviewProvider";
 
@@ -44,6 +45,41 @@ function FieldLabel({ children, required }: { children: React.ReactNode; require
   );
 }
 
+/**
+ * Sube las fotos directo al bucket con URLs firmadas y devuelve las RUTAS (no URLs)
+ * para guardarlas en la BD. Nunca pasan por /api/* — Vercel corta el body en 4,5 MB.
+ * Si algo falla devuelve [] : preferimos publicar la reseña sin fotos antes que perderla.
+ */
+async function uploadPhotos(photos: PickedPhoto[]): Promise<string[]> {
+  if (photos.length === 0) return [];
+  try {
+    const res = await fetch("/api/reviews/upload-url", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ count: photos.length }),
+    });
+    if (!res.ok) return [];
+    const { slots } = (await res.json()) as {
+      slots: { cardKey: string; fullKey: string; card: { url: string }; full: { url: string } }[];
+    };
+
+    const keys: string[] = [];
+    await Promise.all(
+      photos.map(async (p, i) => {
+        const slot = slots[i];
+        if (!slot) return;
+        const put = (url: string, blob: Blob) =>
+          fetch(url, { method: "PUT", body: blob, headers: { "Content-Type": "image/jpeg" } });
+        const [a, b] = await Promise.all([put(slot.card.url, p.card), put(slot.full.url, p.full)]);
+        if (a.ok && b.ok) keys.push(slot.cardKey, slot.fullKey);
+      }),
+    );
+    return keys;
+  } catch {
+    return [];
+  }
+}
+
 interface ReviewModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -53,6 +89,7 @@ interface ReviewModalProps {
 export function ReviewModal({ isOpen, onClose, prefill }: ReviewModalProps) {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [rating, setRating] = useState(0);
+  const [photos, setPhotos] = useState<PickedPhoto[]>([]);
   const submitting = useRef(false);
 
   const {
@@ -71,6 +108,7 @@ export function ReviewModal({ isOpen, onClose, prefill }: ReviewModalProps) {
     setStatus("idle");
     const pre = prefill.rating && prefill.rating >= 1 && prefill.rating <= 5 ? prefill.rating : 0;
     setRating(pre);
+    setPhotos([]);
     submitting.current = false;
     reset({
       rating: pre, firstName: "", lastName: "", email: "", phone: "", body: "",
@@ -101,6 +139,10 @@ export function ReviewModal({ isOpen, onClose, prefill }: ReviewModalProps) {
     submitting.current = true;
     setStatus("loading");
     try {
+      // Las fotos se suben ACÁ (no al elegirlas): si la persona abandona el formulario
+      // no dejamos archivos huérfanos en el bucket.
+      const photoKeys = await uploadPhotos(photos);
+
       const year = data.carYear ? Number(data.carYear) : undefined;
       const res = await fetch("/api/reviews", {
         method: "POST",
@@ -119,6 +161,7 @@ export function ReviewModal({ isOpen, onClose, prefill }: ReviewModalProps) {
           carYear: Number.isFinite(year) ? year : undefined,
           carColor: data.carColor || undefined,
           carVersion: data.carVersion || undefined,
+          photos: photoKeys,
           source: prefill.source ?? "web",
         }),
       });
@@ -226,6 +269,12 @@ export function ReviewModal({ isOpen, onClose, prefill }: ReviewModalProps) {
                         ) : <span />}
                         <span className="text-[11px] text-white/30">{bodyValue.length}/{REVIEW_MAX_CHARS}</span>
                       </div>
+                    </div>
+
+                    {/* Fotos */}
+                    <div>
+                      <FieldLabel>Fotos de tu auto <span className="font-normal normal-case tracking-normal text-white/30">(opcional)</span></FieldLabel>
+                      <PhotoPicker photos={photos} onChange={setPhotos} disabled={status === "loading"} />
                     </div>
 
                     {/* Datos del auto — se precargan desde la PDP */}
