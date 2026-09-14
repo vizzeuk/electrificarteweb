@@ -171,6 +171,47 @@ que **solo se envía una vez**. Se construye una vez aplicado el fix 5.1.
 
 ---
 
+## 6. Reseñas UGC — verificación de punta a punta
+
+Dos comandos. El primero dice si falta algo; el segundo recorre el flujo completo.
+
+### Paso 1 — Preflight (no escribe nada)
+```bash
+npm run reviews:preflight
+```
+Verifica env vars, la tabla `reviews`, la vista `reviews_publicas`, **los dos buckets** (y que
+tengan el `public` correcto) y que el webhook de n8n responda. Te dice exactamente qué falta.
+
+### Paso 2 — End-to-end (con el server local corriendo)
+```bash
+npm run dev            # en otra terminal
+npm run reviews:e2e -- --base http://localhost:3000
+```
+
+Simula el recorrido real completo y **limpia lo que crea, aunque falle**:
+
+1. El servidor responde
+2. El cliente sube 2 fotos con URLs firmadas → bucket **privado**
+3. 🔒 **Verifica que esas fotos NO sean accesibles públicamente** (contenido sin moderar)
+4. El cliente envía la reseña → n8n → Supabase
+5. Confirma que nació con `status='pendiente'` y que se guardaron las rutas de las fotos
+6. 🔒 Confirma que **no aparece en el sitio** mientras está pendiente
+7. Francisco la aprueba (mismo `update` condicional que hace el dashboard)
+8. 🔒 **Verifica idempotencia**: un segundo `update` no afecta filas (doble clic / dos moderadores)
+9. El dashboard publica las fotos (`/api/reviews/publish`)
+10. Confirma que ahora **sí** son accesibles públicamente
+11. 🔒 Confirma que `/api/reviews/publish` responde **401 sin `x-admin-secret`**
+12. Confirma que aparece en el sitio como "QA A." y que **la vista no expone email, teléfono ni apellido**
+
+### Correos
+El e2e no manda correos (los manda n8n). Para verlos:
+```bash
+RESEND_API_KEY=re_xxx npx tsx scripts/qa/test-emails-ventas.ts tu@correo.com
+```
+Manda los 8 a tu inbox, incluidos `nueva-resena-francisco` y `resena-recibida`.
+
+---
+
 ## Resumen: qué corro y cuándo
 
 - **Antes de cada deploy:** `npm test` (10/10 debe pasar).

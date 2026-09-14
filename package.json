@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node scripts/qa/run-all.mjs"
+    "test": "node scripts/qa/run-all.mjs",
+    "reviews:preflight": "tsx --env-file=.env.local scripts/qa/reviews-preflight.ts",
+    "reviews:e2e": "tsx --env-file=.env.local scripts/qa/reviews-e2e.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.96.0",
