@@ -263,9 +263,10 @@ Más n8n (VPS de Matías) y Supabase. Un cambio en el modelo de leads toca a los
 
 - **`docs/PIVOT-WAITLIST-PLAN.md` — 🔴 EL PLAN VIGENTE.** El giro a waitlist + asesoría-first:
   fases, inventario de qué cambia, estado y tareas manuales. **Empezar por acá.**
-- `docs/REVIEWS-UGC-PLAN.md` — sistema de reseñas UGC con fotos y moderación: investigación de
-  costos (storage, moderación, video), arquitectura recomendada y decisiones pendientes.
-  **Plan, aún no implementado.**
+- `docs/REVIEWS-UGC-PLAN.md` — sistema de reseñas UGC: arquitectura, costos y estado por fase.
+- `docs/COSTOS-PARA-FRANCISCO.md` — **explicación de costos sin tecnicismos**, para Francisco.
+- `docs/DASHBOARD_REVIEWS_MODERACION.md` — contrato de la pantalla de moderación (otro repo).
+- `docs/PROMPT-DASHBOARD-RESENAS.md` — prompt autocontenido para arrancar esa pantalla.
 - `docs/QA-FLUJOS-MANUAL.md` — cómo testear los flujos (`npm test`, simulador n8n, webhooks de
   ventas) y los hallazgos de idempotencia.
 - `docs/HANDOFF-CONDUCTOR.md` — 🟡 **STANDBY** — estado y fase del marketplace de ofertas de

@@ -354,8 +354,19 @@ como ventaja cuando el sitio tenga tráfico serio.
 
 ## Recomendación
 
-**Quedarse en Supabase ahora, detrás del adaptador. Migrar a R2 cuando el egress pase
-~200 GB/mes** (o el storage ~80 GB).
+**Quedarse en Supabase. Punto.** El adaptador deja la puerta abierta a R2, pero lo más probable
+es que **nunca haga falta cruzarla**.
+
+Los 250 GB de egress que incluye Pro cubren **~900.000 visitas de PDP al mes**. Superarlo
+requiere un volumen de tráfico que Electrificarte no va a ver en años — y si lo ve, el
+sobrecosto es ~$2/mes a 1M de visitas. Migrar para ahorrar eso no tiene sentido.
+
+**Decisión de arquitectura: dos servicios (Vercel + Supabase), no tres.** Menos credenciales,
+menos consolas, menos cosas que fallan. A este tamaño eso vale más que optimizar $20/mes.
+El único servicio adicional justificado es **Mux**, y solo cuando entre el video — porque ahí
+sí hay un problema técnico real que Supabase no resuelve (transcodificación).
+
+*(Si algún día el egress pasa ~200 GB/mes o el storage ~80 GB, ahí sí revisar R2.)*
 
 Por qué, en orden de peso:
 1. **A la escala actual el ahorro es $0.** Sumar un proveedor, un dominio en Cloudflare y
