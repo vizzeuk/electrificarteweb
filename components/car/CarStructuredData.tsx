@@ -14,6 +14,10 @@ interface CarSchemaInput {
   power?: number | null;
   seats?: number | null;
   electricTypeTag?: string | null;
+  /** Promedio de reseñas aprobadas (1-5). Habilita las estrellas en Google. */
+  ratingValue?: number;
+  /** Cantidad de reseñas aprobadas. Google exige > 0 para mostrar AggregateRating. */
+  ratingCount?: number;
 }
 
 const fuelType = (tag?: string | null) => {
@@ -50,6 +54,20 @@ export function CarStructuredData(props: CarSchemaInput) {
     ...(fuelType(props.electricTypeTag) ? { fuelType: fuelType(props.electricTypeTag) } : {}),
     ...(props.seats ? { vehicleSeatingCapacity: props.seats } : {}),
     ...(specs.length ? { additionalProperty: specs } : {}),
+    // AggregateRating — es lo que habilita las ESTRELLAS en los resultados de Google.
+    // Google exige reviewCount > 0; si no hay reseñas aprobadas no se emite el nodo
+    // (emitirlo vacío o inventado es motivo de penalización).
+    ...(props.ratingValue && props.ratingCount
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: String(props.ratingValue),
+            reviewCount: String(props.ratingCount),
+            bestRating: "5",
+            worstRating: "1",
+          },
+        }
+      : {}),
     ...(price
       ? {
           offers: {

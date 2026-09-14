@@ -276,7 +276,7 @@ en el bucket.
 
 | Concepto | Costo |
 |---|---|
-| Supabase Pro | **$25/mes** (ya necesario por el egress, no solo por reseñas) |
+| Supabase Pro | **$25/mes** — lo dispara esta feature: hoy en Free alcanza porque no hay medios |
 | Almacenamiento de fotos | **$0** — no se acerca a los 100 GB incluidos |
 | Egress de fotos | **$0** hasta ~900k visitas de PDP/mes |
 | Transformaciones | **$0** — se evitan comprimiendo en browser + derivadas al aprobar |
@@ -539,21 +539,22 @@ build. Ya existe `app/api/revalidate/route.ts` para eso.
 4. **Límite de tamaño en el bucket**, además de la validación del cliente (el cliente se
    bypassea).
 
-# 9. Fases sugeridas
+# 9. Fases y estado
 
-- **Fase A — Invitaciones.** Tabla `reviews` + `review_invites` con RLS, firma del `reviewToken`
-  (reusa `lib/order-token.ts`), y la pantalla en el dashboard donde Francisco genera el link.
-  Sin formulario público: **acá se resuelve el "solo compradores"**.
-- **Fase B — Captura (fotos).** `/resena?t=…`, formulario con estrellas, `compressImage()` +
-  subida directa al bucket con URL firmada, `/api/reviews`.
-- **Fase C — Moderación.** Cola admin en el dashboard + pre-filtro gratis (NSFWJS + OpenAI) +
-  `revalidatePath` al aprobar.
-- **Fase D — Display PDP.** Sección de reseñas + `AggregateRating` en structured data (el SEO,
-  que es la mayor ganancia).
-- **Fase E — PLP y home.** Rating en las cards (⚠️ 4 implementaciones) + `Testimonials`
-  alimentado por reseñas aprobadas.
-- **Fase F — Video.** Cuenta Mux + Direct Uploads + `video_playback_id` en la fila + player.
-  Se puede hacer después sin tocar nada de lo anterior.
+- ✅ **Captura.** Tabla `reviews` + RLS + vista `reviews_publicas`; `/api/reviews`;
+  popup con estrellas; CTA en home y PDP; `n8n/reviews.json` con los correos.
+- ✅ **Display.** `lib/reviews/queries.ts` lee la vista (fail-soft: si Supabase falla la PDP
+  igual renderiza). `ReviewList` en la PDP + resumen agregado. **`AggregateRating` en el
+  structured data** → habilita las estrellas en Google (solo se emite si hay reseñas
+  aprobadas; inventarlo es motivo de penalización).
+- ✅ **Revalidación.** `/api/revalidate` acepta `_type: "review"` para que al aprobar
+  aparezca al toque en vez de esperar el ISR de 60 s.
+- ⬜ **Moderación en el dashboard** → contrato en `docs/DASHBOARD_REVIEWS_MODERACION.md`
+  (otro repo). **Sin esto nada se publica.**
+- ⬜ **Fotos.** Buckets + `StorageAdapter` + subida directa con URL firmada (§4b/§4c).
+- ⬜ **Home alimentada por reseñas reales** (`getTopReviews`) en vez de los testimonios de Sanity.
+- ⬜ **Rating en las cards de PLP** (⚠️ 4 implementaciones distintas de card).
+- ⬜ **Video** (Mux, §5).
 
 ---
 

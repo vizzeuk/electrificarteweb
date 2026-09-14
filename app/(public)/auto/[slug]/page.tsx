@@ -5,6 +5,8 @@ import { client } from "@/lib/sanity/client";
 import { carBySlugQuery, similarCarsQuery } from "@/lib/queries/car";
 import { stripBrandSuffix } from "@/lib/utils";
 import AutoPageClient, { type CarData, type SimilarCarData } from "./AutoPageClient";
+import { getReviewsForCar, getReviewSummary } from "@/lib/reviews/queries";
+import { ReviewList } from "@/components/reviews/ReviewList";
 import { CarStructuredData } from "@/components/car/CarStructuredData";
 import { Icon } from "@/components/ui/Icon";
 import { OfferCta } from "@/components/waitlist/OfferCta";
@@ -176,6 +178,13 @@ export default async function CarDetailPage({ params }: PageProps) {
     imageUrl:      s.imageUrl,
   }));
 
+  // Reseñas aprobadas de este auto. Fail-soft: si Supabase no responde devuelve []
+  // y la PDP se renderiza igual. Se refresca con el ISR de 60 s de la página.
+  const [reviews, reviewSummary] = await Promise.all([
+    getReviewsForCar(car.slug),
+    getReviewSummary(car.slug),
+  ]);
+
   return (
     <>
       <CarStructuredData
@@ -192,8 +201,16 @@ export default async function CarDetailPage({ params }: PageProps) {
         power={car.power}
         seats={car.seats}
         electricTypeTag={car.electricTypeTag}
+        ratingValue={reviewSummary?.promedio}
+        ratingCount={reviewSummary?.total}
       />
-      <AutoPageClient car={car} similarCars={similarCars} />
+      <AutoPageClient
+        car={car}
+        similarCars={similarCars}
+        reviewsSlot={
+          <ReviewList reviews={reviews} summary={reviewSummary} carName={`${car.brand} ${car.name}`} />
+        }
+      />
     </>
   );
 }

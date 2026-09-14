@@ -94,6 +94,9 @@ export interface SimilarCarData {
 interface AutoPageClientProps {
   car: CarData;
   similarCars: SimilarCarData[];
+  /** Lista de reseñas aprobadas. Llega ya renderizada desde el server component
+   *  (page.tsx), porque los datos viven en Supabase y esto es un client component. */
+  reviewsSlot?: React.ReactNode;
 }
 
 const galleryGradients = [
@@ -200,7 +203,7 @@ function buildFallbackHighlights(car: CarData) {
   ];
 }
 
-export default function AutoPageClient({ car, similarCars }: AutoPageClientProps) {
+export default function AutoPageClient({ car, similarCars, reviewsSlot }: AutoPageClientProps) {
   const [activeVersion, setActiveVersion] = useState(0);
   const [versionOpen,   setVersionOpen]   = useState(false);
   const [galleryIndex,  setGalleryIndex]  = useState(0);
@@ -947,6 +950,9 @@ export default function AutoPageClient({ car, similarCars }: AutoPageClientProps
           </div>
         </div>
       </section>
+
+      {/* ─── Reseñas aprobadas (viene del server) ─────────────────────── */}
+      {reviewsSlot}
 
       {/* ─── Reseñas: invita a quien ya tiene este auto ───────────────── */}
       <PdpReviewPrompt
