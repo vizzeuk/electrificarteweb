@@ -287,6 +287,110 @@ El video es aparte y tampoco cuesta: ver §5 (Mux regala 100.000 min de entrega 
 
 ---
 
+# 4c. ¿Supabase o Cloudflare R2? — decisión y costo de cambiar
+
+## ¿Qué tan difícil es migrar después?
+
+**Poco. Medio día de trabajo**, y por una razón concreta: en la BD guardamos **rutas**
+(`photos text[] -- rutas dentro del bucket`), **no URLs completas**. Eso significa que el
+proveedor no está "escrito" en los datos.
+
+Migrar sería exactamente esto:
+1. `rclone copy` de un bucket al otro — ambos hablan S3, es **un comando**.
+2. Cambiar **un archivo**: el adaptador de storage.
+3. Cambiar la URL base pública.
+
+Lo que **NO** hay que hacer: tocar la tabla, migrar filas, reescribir el formulario ni el
+dashboard. Por eso la decisión de hoy **no es una puerta de una sola dirección**.
+
+## La regla que mantiene esa puerta abierta: un adaptador
+
+Cuando construyamos la subida de fotos, **no** llamar a Supabase directo desde el endpoint.
+Meter todo detrás de una interfaz chica:
+
+```ts
+// lib/storage/index.ts — el ÚNICO archivo que sabe qué proveedor usamos
+export interface StorageAdapter {
+  signedUploadUrl(key: string): Promise<{ url: string; headers?: Record<string,string> }>;
+  publicUrl(key: string): string;
+  copy(from: string, to: string): Promise<void>;   // pendiente → público al aprobar
+  remove(keys: string[]): Promise<void>;
+}
+```
+
+Con `lib/storage/supabase.ts` y (el día que haga falta) `lib/storage/r2.ts`. El endpoint, el
+formulario y el dashboard **nunca** saben cuál está activo. Cambiar de proveedor = cambiar
+qué implementación exporta `index.ts`.
+
+Es el mismo patrón de `OFERTA_STANDBY`: la decisión reversible vive en un solo lugar.
+
+## Comparación con números
+
+| | Supabase Storage | Cloudflare R2 |
+|---|---|---|
+| Storage | $0,0213/GB (100 GB incl. en Pro) | **$0,015/GB** (10 GB gratis) |
+| **Egress** | $0,09/GB sin caché · $0,03 con caché (250 GB incl. en Pro) | **$0 — siempre gratis** |
+| Operaciones | incluidas | Class A $4,50/M · Class B $0,36/M |
+| Subida directa del browser | ✅ `createSignedUploadUrl` + TUS reanudable | ✅ presigned PUT |
+| **Tope de tamaño por archivo** | ✅ se configura en el bucket | ❌ **no soporta `content-length-range`** |
+| Servir público | ✅ inmediato | ⚠️ exige **dominio propio en Cloudflare** (`r2.dev` es solo para desarrollo) + CORS |
+| Transformaciones | $5 / 1.000 imágenes origen | vía Cloudflare Images ($0,50/1.000, **el contador se reinicia cada mes**) |
+| Proveedores nuevos | 0 | 1 (credenciales, dominio, CORS) |
+
+### Costo mensual a distintos tráficos (fotos de reseñas)
+
+Supuesto: miniatura de 45 KB, 6 por PDP → ~270 KB por visita.
+
+| Visitas PDP/mes | Egress | Supabase Pro | R2 |
+|---|---|---|---|
+| 50.000 | 13,5 GB | **$0** (dentro de los 250 GB) | **$0** |
+| 200.000 | 54 GB | **$0** | **$0** |
+| 500.000 | 135 GB | **$0** | **$0** |
+| 1.000.000 | 270 GB | ~$2 | **$0** |
+| 5.000.000 | 1,35 TB | ~$99 | **$0** |
+
+**Hasta ~900.000 visitas de PDP al mes, los dos cuestan lo mismo: $0.** R2 recién despega
+como ventaja cuando el sitio tenga tráfico serio.
+
+## Recomendación
+
+**Quedarse en Supabase ahora, detrás del adaptador. Migrar a R2 cuando el egress pase
+~200 GB/mes** (o el storage ~80 GB).
+
+Por qué, en orden de peso:
+1. **A la escala actual el ahorro es $0.** Sumar un proveedor, un dominio en Cloudflare y
+   configurar CORS para ahorrar cero no se justifica.
+2. **R2 no puede limitar el tamaño del archivo** en la URL prefirmada. Con Supabase el tope
+   está en el bucket. En R2 hay que emularlo (TTL corto + `HEAD` post-subida + borrar lo que
+   exceda) — es resoluble, pero es código y riesgo que hoy no necesitamos.
+3. **Menos superficie**: una sola consola, una sola credencial, RLS y moderación en el
+   mismo lugar.
+4. **La puerta queda abierta**: con el adaptador, migrar sigue siendo medio día.
+
+### ⚠️ La única condición que cambia esta recomendación
+
+**Si el proyecto sigue en el plan Free de Supabase, NO poner las fotos ahí.** Su egress de
+5 GB es **compartido con Postgres y Auth**, así que el tráfico de imágenes puede dejar sin
+cuota a las consultas de la base y **degradar el sitio entero**. En ese caso hay dos salidas:
+
+- **Subir a Pro ($25/mes)** — que además ya estaba en la lista de pendientes por otros
+  motivos, o
+- **Ir directo a R2** para las fotos, aislando el tráfico de medios del de la base.
+
+**Primer paso antes de construir la subida: confirmar en qué plan está Supabase hoy.**
+
+## Sobre el híbrido "Cloudflare para medios, Supabase para BD"
+
+Es una arquitectura válida y común, y tiene una virtud real acá: **aísla el tráfico de medios
+del de la base de datos**, que es justamente el riesgo del egress unificado. No es una mala
+idea — simplemente **hoy no compra nada** que Supabase Pro no dé ya.
+
+Nótese que esto **ya va a pasar parcialmente** de todos modos: el **video va a Mux**, no a
+Supabase (ver §5). Así que el modelo "la BD en Supabase, los medios pesados afuera" es la
+dirección natural del sistema. R2 sería simplemente extender eso a las fotos cuando convenga.
+
+---
+
 # 5. Video: SÍ — pero en Mux, no en el bucket de Supabase
 
 > **Esto revisa la recomendación anterior.** Antes dije "no video en v1" asumiendo un formulario
