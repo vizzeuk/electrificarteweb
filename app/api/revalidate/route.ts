@@ -56,6 +56,15 @@ export async function POST(req: NextRequest) {
     revalidatePath("/electrico/[slug]", "page");
   }
 
+  // Reseñas UGC: lo dispara el DASHBOARD al aprobar o rechazar una reseña, para
+  // que aparezca (o desaparezca) al toque en vez de esperar el ISR de 60 s.
+  // Body: { _type: "review", slug: { current: "<car_slug>" } }
+  if (type === "review") {
+    const slug: string | undefined = body.slug?.current ?? body.carSlug;
+    if (slug) revalidatePath(`/auto/${slug}`);
+    revalidatePath("/"); // la home muestra las mejores reseñas
+  }
+
   // Generic fallback: if called without a type, revalidate everything
   if (!type) {
     revalidateTag("blogPost", "default");

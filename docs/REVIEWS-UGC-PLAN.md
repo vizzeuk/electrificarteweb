@@ -192,6 +192,101 @@ vistas de foto al mes, R2 (egress $0) pasa a ser la opción correcta desde el d�
 
 ---
 
+# 4b. Estructura de buckets y costos reales
+
+## Estructura propuesta — DOS buckets, no uno
+
+Esta es la decisión más importante y no es por costo, es por **seguridad**:
+
+```
+review-media-pendiente   (PRIVADO)   ← acá sube el usuario
+   {review_id}/{uuid}.jpg            1280px, ~250 KB (ya comprimida en el browser)
+
+review-media             (PÚBLICO)   ← acá se copia SOLO al aprobar
+   {review_id}/{uuid}-card.jpg        480px, ~45 KB   → grillas (PDP, home)
+   {review_id}/{uuid}-full.jpg       1280px, ~250 KB  → lightbox
+```
+
+**Por qué dos y no uno:** si todo vive en un bucket público, alguien puede subir algo
+indebido y **compartir la URL directa antes de que Francisco lo vea**. Con esta separación,
+lo no moderado **no es alcanzable públicamente**: recién al aprobar se generan las derivadas
+y se copian al bucket público. Después se borra el original pendiente.
+
+**Público vs privado:** las fotos aprobadas **sí** deben ir en bucket público. Con URLs
+firmadas (que expiran) el CDN no puede cachear → cada vista es *cache miss* y el egress
+cuesta **$0,09/GB en vez de $0,03/GB**. Para contenido que igual es público, firmar sale 3× más caro.
+
+## Las 3 reglas que mantienen el costo en ~$0
+
+1. **Comprimir en el browser antes de subir** (`compressImage()` de `LeadForm.tsx:229` ya lo
+   hace: 1280px, JPEG 0.7). Una foto de 6 MB del celular queda en ~250 KB. Esto además
+   **evita por completo** el medidor de transformaciones de Supabase ($5 por cada 1.000
+   imágenes origen).
+2. **Generar las derivadas UNA vez al aprobar**, con `sharp`, y guardarlas como archivos.
+   Nunca transformar al vuelo: ese contador **se reinicia cada mes**.
+3. **En grillas servir siempre la `card` (45 KB), nunca la `full`.** Servir la grande en una
+   grilla multiplica el egress ~5×.
+
+## Cuánto cuesta de verdad
+
+**Almacenamiento** — ~0,9 MB por reseña aprobada (3 fotos: card + full):
+
+| Reseñas/mes | Acumulado al año | Costo en Pro (100 GB incluidos) |
+|---|---|---|
+| 100 | 1,1 GB | **$0** |
+| 500 | 5,4 GB | **$0** |
+| 1.000 | 10,8 GB | **$0** |
+
+El almacenamiento **no es el problema**. Ni de cerca.
+
+**Egress — acá está el costo real, y NO escala con las reseñas sino con el TRÁFICO.**
+Una PDP que muestra 6 miniaturas = ~270 KB por visita:
+
+| Visitas a PDP/mes | Egress/mes | Free (5 GB) | Pro (250 GB) |
+|---|---|---|---|
+| 10.000 | 2,7 GB | al límite | $0 |
+| 50.000 | 13,5 GB | ❌ se pasa | $0 |
+| 200.000 | 54 GB | ❌ | $0 |
+| 500.000 | 135 GB | ❌ | $0 |
+| 1.000.000 | 270 GB | ❌ | ~$2 |
+
+> ⚠️ **El plan Free NO sirve una vez que haya fotos en las PDP.** Sus 5 GB son
+> **compartidos con Postgres y Auth** (egress unificado), así que el tráfico de fotos puede
+> dejar sin cuota a las consultas de la base y degradar el sitio. Con ~18.000 visitas a PDP
+> ya se agota.
+>
+> **Supabase Pro ($25/mes) cubre hasta ~900.000 visitas/mes de PDP con fotos.** A la escala
+> de Electrificarte hoy, ese es el techo relevante y no se va a tocar en mucho tiempo.
+
+## Cuándo conviene migrar a Cloudflare R2
+
+R2 cobra **$0 de egress** y $0,015/GB de storage. Es objetivamente más barato a escala, pero
+exige dominio propio en Cloudflare y configurar CORS.
+
+**Gatillo para migrar:** almacenamiento sobre **~80 GB** o egress sobre **~200 GB/mes**.
+Migrar es cambiar el adaptador de subida — **el modelo de datos no se toca**, porque en la BD
+solo guardamos rutas.
+
+Un punto a favor de quedarse en Supabase mientras tanto: las URLs prefirmadas de **R2 no
+pueden limitar el tamaño del archivo** (no soporta `content-length-range`), así que alguien
+podría subir un archivo gigante por una URL que emitimos. En Supabase el tope se configura
+en el bucket.
+
+## Resumen para presupuestar
+
+| Concepto | Costo |
+|---|---|
+| Supabase Pro | **$25/mes** (ya necesario por el egress, no solo por reseñas) |
+| Almacenamiento de fotos | **$0** — no se acerca a los 100 GB incluidos |
+| Egress de fotos | **$0** hasta ~900k visitas de PDP/mes |
+| Transformaciones | **$0** — se evitan comprimiendo en browser + derivadas al aprobar |
+| Moderación automática | **$0** — Francisco revisa todo a mano (decisión suya) |
+| **Total marginal de las reseñas con fotos** | **~$0/mes** |
+
+El video es aparte y tampoco cuesta: ver §5 (Mux regala 100.000 min de entrega al mes).
+
+---
+
 # 5. Video: SÍ — pero en Mux, no en el bucket de Supabase
 
 > **Esto revisa la recomendación anterior.** Antes dije "no video en v1" asumiendo un formulario
