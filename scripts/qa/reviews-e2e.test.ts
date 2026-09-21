@@ -10,6 +10,10 @@
  *   npm run dev
  *   npx tsx --env-file=.env.local scripts/qa/reviews-e2e.test.ts [--base http://localhost:3001]
  *
+ * Con --sin-n8n salta el paso que pasa por n8n e inserta la fila directo en Supabase
+ * (lo mismo que haría n8n). Sirve para validar TODO el resto del circuito —subida,
+ * moderación, publicación, seguridad— sin tener N8N_REVIEWS_URL configurada.
+ *
  * Limpia SIEMPRE lo que crea, aunque falle.
  */
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
@@ -19,6 +23,7 @@ const BASE = (() => {
   return i > -1 ? process.argv[i + 1] : "http://localhost:3001";
 })();
 
+const SIN_N8N = process.argv.includes("--sin-n8n");
 const QA_EMAIL = `qa-e2e-${Date.now()}@qa.electrificarte.test`;
 const QA_SLUG = "qa-e2e-no-aprobar";
 
@@ -96,36 +101,55 @@ async function main() {
   if (leak?.ok) fail("¡Una foto sin moderar es accesible públicamente! Revisar los buckets.");
   ok(`el bucket público aún no la tiene (HTTP ${leak?.status ?? "sin respuesta"}) — correcto`);
 
-  // ── 4 ─────────────────────────────────────────────────────────────────────
-  step("El cliente envía la reseña (→ n8n → Supabase)");
-  const envio = await fetch(`${BASE}/api/reviews`, {
-    method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      firstName: "QA", lastName: "Automatico", email: QA_EMAIL, phone: "+56 912345678",
-      rating: 5, carSlug: QA_SLUG, carBrand: "BYD", carModel: "Dolphin", carYear: 2025,
-      carColor: "Blanco", carVersion: "GS", photos: keys, source: "e2e",
-      body: "PRUEBA AUTOMATICA E2E — se borra sola. La autonomia real ronda los 380 km en ciudad y la carga nocturna en casa resuelve todo el uso diario.",
-    }),
-  });
-  if (!envio.ok) {
-    const txt = await envio.text().catch(() => "");
-    if (envio.status === 500 && txt.includes("Webhook")) fail("N8N_REVIEWS_URL no está configurada en .env.local");
-    fail(`/api/reviews respondió ${envio.status} — ${txt.slice(0, 160)}`);
-  }
-  ok("la web aceptó la reseña y la mandó a n8n");
+  // ── 4 y 5 ─────────────────────────────────────────────────────────────────
+  const payload = {
+    firstName: "QA", lastName: "Automatico", email: QA_EMAIL, phone: "+56 912345678",
+    rating: 5, carSlug: QA_SLUG, carBrand: "BYD", carModel: "Dolphin", carYear: 2025,
+    carColor: "Blanco", carVersion: "GS", photos: keys, source: "e2e",
+    body: "PRUEBA AUTOMATICA E2E — se borra sola. La autonomia real ronda los 380 km en ciudad y la carga nocturna en casa resuelve todo el uso diario.",
+  };
 
-  // ── 5 ─────────────────────────────────────────────────────────────────────
-  step("n8n la guardó en Supabase como 'pendiente'");
   let review: { id: string; status: string; photos: string[] | null } | null = null;
-  for (let i = 0; i < 15 && !review; i++) {
-    await sleep(1000);
-    const { data } = await sb.from("reviews").select("id, status, photos").eq("email", QA_EMAIL).maybeSingle();
+
+  if (SIN_N8N) {
+    step("El cliente envía la reseña (MODO --sin-n8n: se inserta directo, simulando a n8n)");
+    const { data, error } = await sb.from("reviews").insert({
+      first_name: payload.firstName, last_name: payload.lastName, email: payload.email,
+      phone: payload.phone, rating: payload.rating, body: payload.body,
+      car_slug: payload.carSlug, car_brand: payload.carBrand, car_model: payload.carModel,
+      car_year: payload.carYear, car_color: payload.carColor, car_version: payload.carVersion,
+      photos: payload.photos, source: payload.source, status: "pendiente",
+    }).select("id, status, photos").single();
+    if (error || !data) fail("No se pudo insertar: " + error?.message);
     review = data as typeof review;
-    if (!review) info(`esperando a n8n... (${i + 1}/15)`);
+    ok("fila insertada (se saltó n8n)");
+    info("⚠ este modo NO valida n8n ni los correos — para eso hace falta N8N_REVIEWS_URL");
+  } else {
+    step("El cliente envía la reseña (→ n8n → Supabase)");
+    const envio = await fetch(`${BASE}/api/reviews`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!envio.ok) {
+      const txt = await envio.text().catch(() => "");
+      if (envio.status === 500 && txt.includes("Webhook"))
+        fail("N8N_REVIEWS_URL no está configurada — o corré con --sin-n8n para probar el resto");
+      fail(`/api/reviews respondió ${envio.status} — ${txt.slice(0, 160)}`);
+    }
+    ok("la web aceptó la reseña y la mandó a n8n");
+
+    step("n8n la guardó en Supabase como 'pendiente'");
+    for (let i = 0; i < 15 && !review; i++) {
+      await sleep(1000);
+      const { data } = await sb.from("reviews").select("id, status, photos").eq("email", QA_EMAIL).maybeSingle();
+      review = data as typeof review;
+      if (!review) info(`esperando a n8n... (${i + 1}/15)`);
+    }
+    if (!review) fail("La fila nunca apareció. ¿El workflow de n8n está ACTIVO? ¿El mapeo de campos es correcto?");
   }
-  if (!review) fail("La fila nunca apareció. Revisar: ¿el workflow de n8n está ACTIVO? ¿el mapeo de campos es correcto?");
+
   if (review.status !== "pendiente") fail(`Nació con status='${review.status}', debería ser 'pendiente'`);
-  ok(`fila creada, status='pendiente' (id ${review.id.slice(0, 8)}…)`);
+  ok(`status='pendiente' (id ${review.id.slice(0, 8)}…)`);
   const fotosGuardadas = review.photos ?? [];
   fotosGuardadas.length === keys.length
     ? ok(`las ${keys.length} rutas de fotos quedaron guardadas`)
