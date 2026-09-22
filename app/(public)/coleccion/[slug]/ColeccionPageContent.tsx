@@ -7,6 +7,7 @@ import { formatCLP } from "@/lib/utils";
 import { CarCard } from "@/components/car/CarCard";
 import { Icon } from "@/components/ui/Icon";
 import { OfferCta } from "@/components/waitlist/OfferCta";
+import { HOT_DEALS_ENABLED } from "@/lib/products";
 
 const PAGE_SIZE = 9;
 
@@ -65,8 +66,10 @@ const DEFAULT_HIGHLIGHTS: Highlight[] = [
 export default function ColeccionPageContent({ col, cars }: Props) {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
-  const hotDeals    = useMemo(() => cars.filter(c => c.isHotDeal), [cars]);
-  const rest        = useMemo(() => cars.filter(c => !c.isHotDeal), [cars]);
+  // Con HOT_DEALS_ENABLED=false no se muestra la franja promocional, pero esos autos
+  // NO desaparecen: pasan al listado normal.
+  const hotDeals    = useMemo(() => (HOT_DEALS_ENABLED ? cars.filter(c => c.isHotDeal) : []), [cars]);
+  const rest        = useMemo(() => (HOT_DEALS_ENABLED ? cars.filter(c => !c.isHotDeal) : cars), [cars]);
   const visibleRest = rest.slice(0, visibleCount);
   const hasMore     = visibleCount < rest.length;
   const minPrice    = cars.length > 0 ? Math.min(...cars.map(c => c.discountPrice ?? c.basePrice)) : 0;

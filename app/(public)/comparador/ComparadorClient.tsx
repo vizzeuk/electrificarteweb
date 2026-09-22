@@ -7,6 +7,7 @@ import Image from "next/image";
 import { formatCLP } from "@/lib/utils";
 import { Icon } from "@/components/ui/Icon";
 import { OfferCta } from "@/components/waitlist/OfferCta";
+import { HOT_DEALS_ENABLED } from "@/lib/products";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 export interface Car {
@@ -509,7 +510,7 @@ function DesktopCarSlot({ car, onRemove, onAdd }: { car: Car | undefined; onRemo
         animate={{ opacity: 1, y: 0 }}
         className="relative bg-white border border-gray-100 rounded-2xl p-5 text-center shadow-sm"
       >
-        {car.isHotDeal && (
+        {HOT_DEALS_ENABLED && car.isHotDeal && (
           <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-amber text-black text-[9px] font-black uppercase tracking-wide px-2.5 py-0.5 rounded-full whitespace-nowrap">
             HOT DEAL
           </span>
@@ -579,7 +580,7 @@ function MobileCarSlot({ car, onRemove, onAdd }: { car: Car | undefined; onRemov
         animate={{ opacity: 1, scale: 1 }}
         className="relative bg-white border border-gray-100 rounded-2xl p-4 flex-shrink-0 w-[160px] shadow-sm text-center"
       >
-        {car.isHotDeal && (
+        {HOT_DEALS_ENABLED && car.isHotDeal && (
           <span className="absolute -top-2 left-1/2 -translate-x-1/2 bg-amber text-black text-[8px] font-black uppercase tracking-wide px-2 py-0.5 rounded-full whitespace-nowrap">
             HOT DEAL
           </span>

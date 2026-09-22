@@ -17,6 +17,8 @@ import { BrandStrip }       from "@/components/layout/BrandStrip";
 import { LatestLaunches }   from "@/components/layout/LatestLaunches";
 import { VehicleTypeGrid }  from "@/components/layout/VehicleTypeGrid";
 import { HotDeal }          from "@/components/layout/HotDeal";
+import { HOT_DEALS_ENABLED } from "@/lib/products";
+import { getTopReviews } from "@/lib/reviews/queries";
 import { Opportunities }    from "@/components/layout/Opportunities";
 import { HomeStructuredData } from "@/components/layout/StructuredData";
 
@@ -30,13 +32,16 @@ import { ParaVendedores }   from "@/components/layout/ParaVendedores";
 export const revalidate = 60;
 
 export default async function HomePage() {
-  const [page, blogPosts, brands, collections, hotDeals, vehicleTypes, newCars, featuredCars, siteSettings] =
+  const [page, blogPosts, brands, collections, hotDeals, topReviews, vehicleTypes, newCars, featuredCars, siteSettings] =
     await Promise.all([
       client.fetch(homePageQuery, {}, { next: { tags: ["homePage"] } }).catch(() => null),
       client.fetch(latestBlogPostsQuery, { count: 3 }, { next: { tags: ["blogPost"] } }).catch(() => []),
       client.fetch(allBrandsStripQuery, {}, { next: { tags: ["brand"] } }).catch(() => []),
       client.fetch(collectionsForHomeQuery, {}, { next: { tags: ["collection"] } }).catch(() => []),
       client.fetch(allHotDealsQuery, {}, { next: { tags: ["car"] } }).catch(() => []),
+      // Reseñas aprobadas para la sección de testimonios. Fail-soft: si no hay
+      // ninguna todavía, se usan los testimonios de Sanity como antes.
+      getTopReviews(3),
       client.fetch(electricTypesForHomeQuery, {}, { next: { tags: ["electricType"] } }).catch(() => []),
       client.fetch(newCarsForHomeQuery, {}, { next: { tags: ["car"] } }).catch(() => []),
       client.fetch(featuredCarsForHomeQuery, {}, { next: { tags: ["car"] } }).catch(() => []),
@@ -134,10 +139,12 @@ export default async function HomePage() {
           intrinsic-size hint so the scrollbar is honest. */}
       <LatestLaunches title={page?.latestLaunchesTitle} cars={latestCars} />
       <VehicleTypeGrid types={vehicleTypes ?? []} />
-      <HotDeal
-        cars={hotDeals?.length ? hotDeals : (page?.hotDealCar ? [page.hotDealCar] : null)}
-        urgencyLabel={hotDealUrgencyLabel}
-      />
+      {HOT_DEALS_ENABLED && (
+        <HotDeal
+          cars={hotDeals?.length ? hotDeals : (page?.hotDealCar ? [page.hotDealCar] : null)}
+          urgencyLabel={hotDealUrgencyLabel}
+        />
+      )}
       <Opportunities
         title={page?.opportunitiesTitle ?? "Destacados Electrificarte"}
         cars={opportunityCars}
@@ -154,7 +161,22 @@ export default async function HomePage() {
           videoMobileUrl:  page?.howItWorksVideoMobile ?? undefined,
         }}
         trustBadges={page?.trustBadges}
-        testimonials={{ title: page?.testimonialsTitle, items: page?.testimonials }}
+        testimonials={{
+          title: page?.testimonialsTitle,
+          // Las reseñas REALES aprobadas mandan. Si todavía no hay ninguna, caen los
+          // testimonios de Sanity — así la sección nunca queda vacía.
+          items:
+            topReviews.length > 0
+              ? topReviews.map((r) => ({
+                  name: r.autor,
+                  car: [r.carBrand, r.carModel, r.carYear].filter(Boolean).join(" "),
+                  carSlug: r.carSlug ?? undefined,
+                  quote: r.body,
+                  rating: r.rating,
+                  verified: r.compraVerificada,
+                }))
+              : page?.testimonials,
+        }}
         blogPosts={blogPosts ?? []}
         faq={{ title: page?.faqTitle, faqs: page?.faqs }}
         hotDealCar={page?.hotDealCar ?? null}

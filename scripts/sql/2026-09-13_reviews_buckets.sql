@@ -17,7 +17,9 @@ values (
   'review-media-pendiente',
   'review-media-pendiente',
   false,                                  -- NO público
-  5242880,                                -- 5 MB por archivo (una foto ya comprimida pesa ~250 KB)
+  5242880,                                -- 5 MB por archivo. Tope DURO del servidor: una foto
+                                          -- ya comprimida pesa ~250 KB, asi que 5 MB es holgado.
+                                          -- El cliente ademas rechaza originales > 15 MB.
   array['image/jpeg', 'image/png', 'image/webp']
 )
 on conflict (id) do update

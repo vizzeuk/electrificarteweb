@@ -111,7 +111,9 @@ function NewsletterForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-2">
-      <div className="flex gap-2">
+      {/* min-w-0 en el input: sin eso su min-width:auto impide que se achique y
+          empuja el botón fuera del contenedor en pantallas angostas. */}
+      <div className="flex w-full gap-2">
         <input
           type="email"
           value={email}
@@ -119,12 +121,12 @@ function NewsletterForm() {
           placeholder="tu@email.com"
           required
           aria-label="Email para newsletter"
-          className="bg-white/10 border border-white/20 rounded-lg text-sm px-4 py-2.5 flex-1 focus:border-primary focus:outline-none text-white placeholder:text-white/40 transition-colors"
+          className="bg-white/10 border border-white/20 rounded-lg text-sm px-4 py-2.5 min-w-0 flex-1 focus:border-primary focus:outline-none text-white placeholder:text-white/40 transition-colors"
         />
         <button
           type="submit"
           disabled={status === "loading"}
-          className="bg-primary hover:bg-primary-dark text-black px-4 py-2.5 rounded-lg font-bold text-sm transition-colors disabled:opacity-60 whitespace-nowrap"
+          className="bg-primary hover:bg-primary-dark text-black shrink-0 px-4 py-2.5 rounded-lg font-bold text-sm transition-colors disabled:opacity-60 whitespace-nowrap"
         >
           {status === "loading" ? "..." : "Suscribir"}
         </button>

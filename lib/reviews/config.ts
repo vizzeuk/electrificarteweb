@@ -21,5 +21,16 @@ export const REVIEWS_REQUIRE_INVITE = false;
 export const REVIEW_MIN_CHARS = 30;
 export const REVIEW_MAX_CHARS = 1500;
 
-/** Tope de fotos por reseña (la subida se implementa en la fase siguiente). */
+/** Tope de fotos por reseña. */
 export const REVIEW_MAX_PHOTOS = 5;
+
+/**
+ * Tamaño máximo del archivo ORIGINAL que el usuario puede elegir, en MB.
+ * Se rechaza antes de procesarlo: una foto de 50 MB (o un archivo que no es foto)
+ * tarda mucho en decodificarse y puede colgar el navegador del celular.
+ * Ojo: lo que se SUBE ya va comprimido a ~250 KB, esto es solo el filtro de entrada.
+ */
+export const REVIEW_MAX_FILE_MB = 15;
+
+/** Tope duro del bucket, por si alguien intenta subir salteándose el cliente. */
+export const REVIEW_BUCKET_LIMIT_MB = 5;

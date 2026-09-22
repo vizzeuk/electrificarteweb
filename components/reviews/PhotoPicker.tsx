@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { Icon } from "@/components/ui/Icon";
 import { compressPhoto, type CompressedPhoto } from "@/lib/reviews/compress";
-import { REVIEW_MAX_PHOTOS } from "@/lib/reviews/config";
+import { REVIEW_MAX_FILE_MB, REVIEW_MAX_PHOTOS } from "@/lib/reviews/config";
 
 /**
  * Selector de fotos del formulario de reseña.
@@ -36,8 +36,23 @@ export function PhotoPicker({
     setProcessing(true);
     try {
       const libres = REVIEW_MAX_PHOTOS - photos.length;
+      const elegidos = Array.from(files).slice(0, libres);
+
+      // Se filtra ANTES de procesar: decodificar un archivo enorme (o uno que no es
+      // imagen) puede colgar el navegador del celular.
+      const pesados = elegidos.filter((f) => f.size > REVIEW_MAX_FILE_MB * 1024 * 1024);
+      const validos = elegidos.filter((f) => f.size <= REVIEW_MAX_FILE_MB * 1024 * 1024);
+      if (pesados.length) {
+        setError(
+          pesados.length === elegidos.length
+            ? `Esa foto pesa más de ${REVIEW_MAX_FILE_MB} MB. Prueba con una más liviana.`
+            : `${pesados.length} foto(s) superan los ${REVIEW_MAX_FILE_MB} MB y se omitieron.`,
+        );
+      }
+      if (validos.length === 0) return;
+
       const nuevos = await Promise.all(
-        Array.from(files).slice(0, libres).map(async (f) => ({
+        validos.map(async (f) => ({
           id: crypto.randomUUID(),
           ...(await compressPhoto(f)),
         })),
@@ -102,7 +117,7 @@ export function PhotoPicker({
       </button>
 
       <p className="mt-1.5 px-1 text-[11px] text-white/35">
-        Opcional, hasta {REVIEW_MAX_PHOTOS}. Se achican en tu dispositivo antes de subirlas.
+        Opcional, hasta {REVIEW_MAX_PHOTOS} · máx. {REVIEW_MAX_FILE_MB} MB c/u. Se achican en tu dispositivo antes de subirlas.
       </p>
       {error && <p className="mt-1 px-1 text-xs text-red-400">{error}</p>}
 

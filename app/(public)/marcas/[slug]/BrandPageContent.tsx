@@ -10,6 +10,7 @@ import type { FacetCar } from "@/lib/filters/types";
 import { ElectricTypeBadge } from "@/components/car/ElectricTypeBadge";
 import { Icon } from "@/components/ui/Icon";
 import { OfferCta } from "@/components/waitlist/OfferCta";
+import { HOT_DEALS_ENABLED } from "@/lib/products";
 
 // ─── Interfaces ───────────────────────────────────────────────────────────────
 
@@ -128,7 +129,8 @@ export default function BrandPageContent({ slug, brand, hotDealUrgencyLabel }: B
   const hasMore = visibleCount < filtered.length;
 
   // Hot deal carousel
-  const hotDeals = brand.hotDeals;
+  // Con HOT_DEALS_ENABLED=false no se arma la franja promocional de la marca.
+  const hotDeals = HOT_DEALS_ENABLED ? brand.hotDeals : [];
   const hotTrackRef  = useRef<HTMLDivElement>(null);
   const hotPausedRef = useRef(false);
   const [hotActiveIdx, setHotActiveIdx] = useState(0);
@@ -251,7 +253,7 @@ export default function BrandPageContent({ slug, brand, hotDealUrgencyLabel }: B
                   {/* Footer */}
                   <div className="p-5 flex items-center justify-between gap-4">
                     <div>
-                      {featuredCarForHero.isHotDeal && (
+                      {HOT_DEALS_ENABLED && featuredCarForHero.isHotDeal && (
                         <span className="inline-block bg-amber text-black text-[9px] font-black uppercase tracking-wide px-2 py-0.5 rounded-full mb-1.5">HOT DEAL</span>
                       )}
                       <p className="text-white font-headline font-bold text-base leading-tight">{brand.name} {featuredCarForHero.name}</p>
@@ -529,7 +531,7 @@ export default function BrandPageContent({ slug, brand, hotDealUrgencyLabel }: B
                 <m.article key={car.slug} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.1 }}
                   className="group relative flex flex-col border border-gray-100 bg-white rounded-2xl overflow-hidden hover:border-primary/40 hover:shadow-lg transition-all duration-300">
                   <div className="aspect-[16/9] bg-gradient-to-br from-gray-50 to-gray-100 relative flex flex-col items-center justify-center overflow-hidden">
-                    {car.isHotDeal && <span className="absolute top-3 left-3 bg-amber text-black text-[10px] font-black uppercase tracking-wide px-2.5 py-1 rounded-full z-10">HOT DEAL</span>}
+                    {HOT_DEALS_ENABLED && car.isHotDeal && <span className="absolute top-3 left-3 bg-amber text-black text-[10px] font-black uppercase tracking-wide px-2.5 py-1 rounded-full z-10">HOT DEAL</span>}
                     {pct > 0 && <span className="absolute top-3 right-3 text-[10px] font-black text-white px-2 py-1 rounded-full z-10" style={{ backgroundColor: brand.accentColor }}>-{pct}%</span>}
                     <ElectricTypeBadge tag={car.electricType} className="absolute bottom-3 left-3 z-10 shadow-sm" />
                     {car.imageUrl ? (

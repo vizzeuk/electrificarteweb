@@ -8,6 +8,7 @@ import { ComparePromo } from "@/components/car/ComparePromo";
 import { Icon } from "@/components/ui/Icon";
 import { OfferCta } from "@/components/waitlist/OfferCta";
 import { PdpReviewPrompt } from "@/components/reviews/PdpReviewPrompt";
+import { HOT_DEALS_ENABLED } from "@/lib/products";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export interface VersionData {
@@ -367,7 +368,7 @@ export default function AutoPageClient({ car, similarCars, reviewsSlot }: AutoPa
             {/* Left: brand / name / tagline. CTAs hidden on mobile (shown below stats). */}
             <m.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
               <div className="flex flex-wrap items-center gap-2 mb-4">
-                {car.isHotDeal && <span className="bg-amber text-black text-[10px] font-black uppercase tracking-wide px-2.5 py-1 rounded-full">HOT DEAL</span>}
+                {HOT_DEALS_ENABLED && car.isHotDeal && <span className="bg-amber text-black text-[10px] font-black uppercase tracking-wide px-2.5 py-1 rounded-full">HOT DEAL</span>}
                 {car.isNew && <span className="bg-primary text-black text-[10px] font-black uppercase tracking-wide px-2.5 py-1 rounded-full">NUEVO</span>}
                 {car.isTopSeller && <span className="bg-white text-black text-[10px] font-black uppercase tracking-wide px-2.5 py-1 rounded-full">MÁS VENDIDO</span>}
                 <span className="text-white/30 text-xs uppercase tracking-widest">{car.category}</span>
@@ -525,6 +526,14 @@ export default function AutoPageClient({ car, similarCars, reviewsSlot }: AutoPa
           </div>
         </div>
       </section>
+
+      {/* ─── Reseñas: franja delgada, apenas debajo del hero ──────────── */}
+      <PdpReviewPrompt
+        carSlug={car.slug}
+        carBrand={car.brand}
+        carModel={car.name}
+        carName={`${car.brand} ${car.name}`}
+      />
 
       {/* ─── Version selector ─────────────────────────────────────────── */}
       {car.versions.length > 1 && (
@@ -953,14 +962,6 @@ export default function AutoPageClient({ car, similarCars, reviewsSlot }: AutoPa
 
       {/* ─── Reseñas aprobadas (viene del server) ─────────────────────── */}
       {reviewsSlot}
-
-      {/* ─── Reseñas: invita a quien ya tiene este auto ───────────────── */}
-      <PdpReviewPrompt
-        carSlug={car.slug}
-        carBrand={car.brand}
-        carModel={car.name}
-        carName={`${car.brand} ${car.name}`}
-      />
 
       {/* ─── Vehículos similares ──────────────────────────────────────── */}
       {similarCars.length > 0 && (

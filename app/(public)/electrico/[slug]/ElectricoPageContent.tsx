@@ -10,6 +10,7 @@ import type { FacetCar } from "@/lib/filters/types";
 import { ElectricTypeBadge } from "@/components/car/ElectricTypeBadge";
 import { Icon } from "@/components/ui/Icon";
 import { OfferCta } from "@/components/waitlist/OfferCta";
+import { HOT_DEALS_ENABLED } from "@/lib/products";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -131,8 +132,10 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
   // Reinicia la paginación cuando cambian los filtros/orden.
   useEffect(() => setVisibleCount(PAGE_SIZE), [filtered]);
 
-  const hotDeals = filtered.filter((c) => c.isHotDeal);
-  const rest     = filtered.filter((c) => !c.isHotDeal);
+  // Con HOT_DEALS_ENABLED=false no se muestra la franja promocional, pero esos autos
+  // NO desaparecen: pasan al listado normal.
+  const hotDeals = HOT_DEALS_ENABLED ? filtered.filter((c) => c.isHotDeal) : [];
+  const rest     = HOT_DEALS_ENABLED ? filtered.filter((c) => !c.isHotDeal) : filtered;
 
   // Hot deal carousel
   const hotTrackRef  = useRef<HTMLDivElement>(null);

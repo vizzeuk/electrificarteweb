@@ -52,8 +52,8 @@ export function Hero({ data }: HeroProps) {
   const advCtaHref  = data?.advisoryCtaHref  ?? "/asesoria";
   const advPrice    = data?.advisoryPrice    ?? "$4.990";
 
-  // Prueba social + ancla de ahorro (venden el ROI de la oferta paga)
-  const avgSavings = data?.statSavings ?? "$4.200.000";
+  // Prueba social. `statSavings` de Sanity ya no se usa: vendía el ahorro de la
+  // Oferta ($19.990, en standby). Ver docs/PIVOT-WAITLIST-PLAN.md.
   const avatars = [
     "/images/testimonial-person-1.jpg",
     "/images/testimonial-person-2.jpg",
@@ -138,7 +138,7 @@ export function Hero({ data }: HeroProps) {
           </p>
         </div>
 
-        {/* Prueba social + ancla de ahorro — vende el ROI, no un tablero de stats */}
+        {/* Prueba social + propuesta de valor de la asesoría */}
         <div className="hero-fade-in mt-11 md:mt-14 flex flex-col sm:flex-row sm:items-center gap-6 sm:gap-8">
           {/* Red de vendedores — el mecanismo real que consigue el descuento */}
           <div className="flex items-center gap-3.5">
@@ -158,17 +158,18 @@ export function Hero({ data }: HeroProps) {
             </div>
             <div className="leading-tight">
               <p className="text-white text-sm font-bold">+15 vendedores oficiales</p>
-              <p className="text-xs text-white/55 mt-0.5">compiten por tu mejor precio</p>
+              <p className="text-xs text-white/55 mt-0.5">en nuestra red a lo largo de Chile</p>
             </div>
           </div>
 
           <div className="hidden sm:block w-px h-11 bg-white/15" />
 
-          {/* Ancla de ahorro — el argumento de venta del pago */}
+          {/* Contraste de valor de la asesoría: el costo de equivocarse vs. el de acertar.
+              Reemplaza al ancla de ahorro, que vendía la Oferta ($19.990, en standby). */}
           <div className="leading-tight">
-            <p className="text-xs text-white/55">Nuestros clientes ahorran en promedio</p>
+            <p className="text-xs text-white/55">Elegir el auto equivocado cuesta millones</p>
             <p className="font-headline font-extrabold text-white text-xl md:text-2xl mt-0.5">
-              <span className="text-primary">{avgSavings}</span> por auto
+              Acertar, <span className="text-primary">{advPrice}</span>
             </p>
           </div>
         </div>

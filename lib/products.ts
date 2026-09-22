@@ -29,3 +29,17 @@ export const OFERTA_PRICE = "$19.990";
  * cambiar esta línea, no re-editar los ~40 CTAs.
  */
 export const OFERTA_STANDBY = true;
+
+/**
+ * 🔴 INTERRUPTOR — superficies promocionales de "Hot Deal" (septiembre 2026).
+ *
+ * `false` (hoy) = se ocultan la sección Hot Deal de la home, el popup promocional,
+ *                 los bloques de "deal cards" de las PLP y los badges "HOT DEAL".
+ * `true`        = vuelven todas.
+ *
+ * ⚠️ Esto NO toca la lógica de PRECIOS. El campo `isHotDeal` de Sanity sigue
+ * controlando si una ficha muestra precio con descuento o precio de lista — eso se
+ * dejó intacto a propósito, porque apagarlo cambiaría el precio mostrado de todos
+ * los autos, que es una decisión de negocio, no de UI.
+ */
+export const HOT_DEALS_ENABLED = false;

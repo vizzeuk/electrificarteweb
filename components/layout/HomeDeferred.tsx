@@ -7,6 +7,7 @@ import { BlogPreview }          from "@/components/layout/BlogPreview";
 import { FAQ }                  from "@/components/layout/FAQ";
 import { StickyCTA }            from "@/components/layout/StickyCTA";
 import { PromoPopup }           from "@/components/layout/PromoPopup";
+import { HOT_DEALS_ENABLED } from "@/lib/products";
 
 interface HomeDeferredProps {
   collections:     unknown[];
@@ -38,7 +39,7 @@ export function HomeDeferred(p: HomeDeferredProps) {
       <BlogPreview posts={p.blogPosts as any} />
       <FAQ title={p.faq.title} faqs={p.faq.faqs as any} />
       <StickyCTA />
-      <PromoPopup car={p.hotDealCar as any} urgencyLabel={p.hotDealUrgencyLabel} />
+      {HOT_DEALS_ENABLED && <PromoPopup car={p.hotDealCar as any} urgencyLabel={p.hotDealUrgencyLabel} />}
       {/* eslint-enable @typescript-eslint/no-explicit-any */}
     </>
   );
