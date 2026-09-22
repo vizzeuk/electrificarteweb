@@ -13,6 +13,92 @@ Notación: `{{1}}`, `{{2}}`… son variables que n8n rellena.
 
 ---
 
+---
+
+# 🟢 ACTIVA HOY — `asesoria_ultimo_dia`
+
+> Las 8 plantillas de más abajo son de la **subasta inversa**, que está en 🟡 **STANDBY**.
+> Esta es la única que hace falta crear hoy.
+
+Recordatorio del **día 9** a quien contrató la Asesoría ($4.990): le queda 1 día.
+La manda el cron `/api/cron/asesoria-reminder`.
+
+## ⚠️ REGLA CRÍTICA: la plantilla NO puede tener variables
+
+El código llama a `sendTemplate(phone, name, lang)` **sin parámetros**
+(`lib/whatsapp/outbound.ts:100`), así que el payload va **sin `components`**.
+
+> Si la plantilla se crea con `{{1}}` (por ejemplo para el nombre), **Meta rechaza el
+> envío** por número de parámetros incorrecto. Tiene que ser **texto fijo, sin variables**.
+
+## Cómo crearla
+
+| Campo | Valor |
+|---|---|
+| **Nombre** | `asesoria_ultimo_dia` — solo minúsculas, números y guión bajo |
+| **Categoría** | **UTILITY** ← importante |
+| **Idioma** | **Español (`es`)** |
+| **Variables** | **ninguna** |
+| **Botones** | ninguno (ver abajo) |
+
+**Body** (copiar tal cual — coincide con `ASESORIA_REMINDER_TEXT`):
+
+```
+Hola 👋 Soy *Francisco IA*, tu asesor de electrificarte.com. A tu asesoría le queda *1 día*. ¿Te puedo ayudar en algo antes de que termine? 🔋
+```
+
+Los `*asteriscos*` dan **negrita** en WhatsApp. Los emoji están permitidos.
+
+### Por qué UTILITY y no MARKETING
+Es un aviso sobre un servicio que la persona **ya pagó** y está por vencer — eso es
+utilitario. Si se marca como MARKETING, Meta puede rechazarla o aplicarle los límites
+y costos de marketing.
+
+## Después de que Meta la apruebe
+
+Agregar en Vercel (Production + Preview):
+
+```
+ASESORIA_REMINDER_TEMPLATE=asesoria_ultimo_dia
+```
+
+⚠️ **Si al crearla eligieron un idioma distinto de `es`** (ej. `es_CL` o `es_ES`), hay que
+agregar también:
+
+```
+ASESORIA_REMINDER_TEMPLATE_LANG=es_CL
+```
+
+El código usa `es` por defecto. Si el código y Meta no coinciden en el idioma, **el envío
+falla en silencio** (queda solo un warning en los logs).
+
+## Mientras no esté aprobada
+
+No pasa nada grave: el código cae a **texto libre**. La limitación es que WhatsApp solo
+permite texto libre dentro de la **ventana de 24 h**, así que el recordatorio solo llega a
+quienes escribieron en las últimas 24 horas. Los demás no lo reciben.
+
+**Mejor dejar la variable sin configurar que ponerle un nombre equivocado**: con un nombre
+que no existe, el envío falla para *todos*; sin variable, al menos llega a una parte.
+
+## Idea para después (requiere un cambio chico de código)
+
+El objetivo real de la plantilla es **que la persona responda**, porque eso abre la ventana
+de 24 h y ahí el asesor puede conversar libre. Un **botón de respuesta rápida** ("Sí, ayúdame")
+convierte mucho mejor que pedirle que escriba.
+
+> Ojo: los botones de respuesta rápida necesitan que el envío incluya un componente
+> `button` con su payload. Hoy `sendTemplate` no lo manda. **Crearla sin botones primero**
+> (funciona seguro con el código actual); si después quieren el botón, es un ajuste chico
+> en `lib/whatsapp/outbound.ts`.
+
+---
+
+# 🟡 STANDBY — plantillas de la subasta inversa
+
+Las de abajo pertenecen al marketplace de ofertas, hoy congelado. **No hace falta crearlas
+todavía**; quedan documentadas para cuando se reactive.
+
 ### 1. `nuevo_lead_vendedor` — UTILITY
 Avisar al vendedor que le llegó un lead que calza.
 
