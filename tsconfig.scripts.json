@@ -15,6 +15,7 @@
     "scripts/auditar-catalogo.ts",
     "scripts/corregir-catalogo.ts",
     "scripts/recheck-corrida.ts",
+    "scripts/corregir-desde-fuente.ts",
     "scripts/qa/recheck-diff.test.ts",
     "scripts/qa/recheck-source.test.ts"
   ],

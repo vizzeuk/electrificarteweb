@@ -44,6 +44,7 @@ const FIXES: Record<string, { website?: string; name?: string; motivo: string }>
   Ora: { website: "https://www.gwm.cl", motivo: "ora.cl no sirve contenido; en Chile se vende bajo GWM" },
   Haval: { website: "https://www.gwm.cl", motivo: "haval.cl no resuelve; en Chile se vende bajo GWM" },
   Cupra: { website: "https://www.cupraofficial.cl", motivo: "cupra.cl no existe" },
+  MG: { website: "https://www.mgmotor.cl", motivo: "mg.cl redirige al home y no sirve fichas; el sitio chileno es mgmotor.cl" },
   JAC: { website: "https://www.jacautoschile.cl", motivo: "el sitio chileno es jacautoschile.cl" },
 };
 
