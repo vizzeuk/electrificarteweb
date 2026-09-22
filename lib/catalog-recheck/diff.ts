@@ -7,6 +7,7 @@
  */
 
 import type {
+  AutoApply,
   CarSnapshot,
   CheckDecision,
   Finding,
@@ -31,6 +32,14 @@ const UNDERCUT_RATIO = 0.95;
 
 /** Tras 2 corridas seguidas sin poder leer la fuente, se marca muerta (C11). */
 const DEAD_SOURCE_STREAK = 2;
+
+/**
+ * Techo para escribir un precio solo. Un salto mayor a esto es error de lectura
+ * mucho más seguido que cambio real de lista — y el error ya ocurrió en
+ * producción (un "precio oficial" de $151.900 sacado de un newsroom). Sobre el
+ * techo el hallazgo se registra igual, pero lo aplica una persona.
+ */
+export const MAX_AUTO_APPLY_DRIFT = 0.25;
 
 const SEVERITY: Record<PriceCheckFlag, number> = {
   discontinued: 5,
@@ -69,6 +78,55 @@ const clp = (n: number) => `$${n.toLocaleString("es-CL")}`;
 /** Un hallazgo es "el mismo" si coincide tipo + versión + valor propuesto (C12). */
 function fingerprint(f: Finding): string {
   return [f.kind, normalizeVersionName(f.versionName ?? ""), f.proposedPrice ?? ""].join("|");
+}
+
+/**
+ * Deja solo las versiones de la fuente que le corresponden a ESTA PDP, según el
+ * reparto que declaró el humano. Sin reparto declarado devuelve todo tal cual.
+ */
+export function filterVersionsForCar(
+  car: CarSnapshot,
+  versions: { nombre: string; precio: number | null }[],
+): { nombre: string; precio: number | null }[] {
+  const scope = (car.versionScope ?? []).map(normalizeVersionName).filter(Boolean);
+  const exclude = (car.versionExclude ?? []).map(normalizeVersionName).filter(Boolean);
+
+  return versions.filter((v) => {
+    if (!v?.nombre) return false;
+    const key = normalizeVersionName(v.nombre);
+    if (exclude.some((token) => key.includes(token))) return false;
+    if (scope.length && !scope.some((token) => key.includes(token))) return false;
+    return true;
+  });
+}
+
+/**
+ * ¿Se puede escribir este precio solo? Todas las guardas tienen que pasar.
+ *
+ * El modo de falla que esto evita no es hipotético: ya se leyó un "precio
+ * oficial" de $151.900 de un newsroom. Escribirlo habría salido al sitio en 60 s
+ * (ISR), al comparador, a la calculadora y al structured data.
+ */
+export function proposeAutoApply(
+  car: CarSnapshot,
+  ourBase: number,
+  officialBase: number,
+): AutoApply | undefined {
+  // El salto tiene que ser creíble. Sobre el techo, decide una persona.
+  const drift = Math.abs(officialBase - ourBase) / ourBase;
+  if (drift > MAX_AUTO_APPLY_DRIFT) return undefined;
+
+  // Nunca dejar el precio lista bajo el precio con descuento: la PDP mostraría
+  // un "descuento" más caro que la lista. Eso es decisión comercial, no lectura.
+  const ourDiscount = car.discountPrice ?? null;
+  if (ourDiscount && officialBase <= ourDiscount) return undefined;
+
+  return {
+    field: "basePrice",
+    from: ourBase,
+    to: officialBase,
+    reason: `delta ${(drift * 100).toFixed(1)}% (techo ${MAX_AUTO_APPLY_DRIFT * 100}%), con cita textual y sobre el piso de plausibilidad`,
+  };
 }
 
 export function decide(car: CarSnapshot, report: SourceReport): CheckDecision {
@@ -117,6 +175,13 @@ export function decide(car: CarSnapshot, report: SourceReport): CheckDecision {
   }
 
   const findings: Finding[] = [];
+  // Solo tiene sentido comparar el INVENTARIO de versiones cuando sabemos que la
+  // fuente habla de este auto y de ninguno más. Si la página cubre la familia
+  // entera y nadie declaró el reparto, comparar inventarios produce puros falsos
+  // positivos (la PDP del Taycan vería las 3 Cross Turismo como versiones nuevas
+  // todas las semanas, y la del Cross Turismo vería las 8 del Taycan).
+  const hasScope = Boolean(car.versionScope?.length || car.versionExclude?.length);
+  const inventoryComparable = !car.sharedSource || hasScope;
   let suggestedPrice: number | undefined;
   let flag: PriceCheckFlag = "none";
   const raise = (f: PriceCheckFlag) => {
@@ -128,6 +193,8 @@ export function decide(car: CarSnapshot, report: SourceReport): CheckDecision {
   // caso que más duele, porque un precio inventado se aplica y llega al sitio.
   const officialBase = report.evidencia ? plausible(report.precio_base) : null;
   const ourBase = car.basePrice ?? null;
+
+  let autoApply: AutoApply | undefined;
 
   if (officialBase && ourBase && !isNoise(ourBase, officialBase)) {
     findings.push({
@@ -144,6 +211,7 @@ export function decide(car: CarSnapshot, report: SourceReport): CheckDecision {
       suggestedPrice = suggested;
       raise("price_high");
     }
+    autoApply = proposeAutoApply(car, ourBase, officialBase);
   }
 
   // ── Versiones ─────────────────────────────────────────────────────────────
@@ -151,15 +219,18 @@ export function decide(car: CarSnapshot, report: SourceReport): CheckDecision {
     (car.versions ?? []).map((v) => [normalizeVersionName(v.name), v] as const)
   );
   const seen = new Set<string>();
+  const scoped = filterVersionsForCar(car, report.versiones ?? []);
 
-  for (const v of report.versiones ?? []) {
-    if (!v?.nombre) continue;
+  for (const v of scoped) {
     const key = normalizeVersionName(v.nombre);
     seen.add(key);
     const mine = ours.get(key);
     const price = plausible(v.precio);
 
     if (!mine) {
+      // Con la fuente compartida y sin reparto declarado, una versión que no
+      // reconocemos es casi siempre de la PDP hermana, no una versión nueva.
+      if (!inventoryComparable) continue;
       findings.push({
         kind: "version_nueva",
         detail: `La fuente lista "${v.nombre}"${price ? ` a ${clp(price)}` : " (sin precio legible)"}, que no tenemos publicada.`,
@@ -170,6 +241,8 @@ export function decide(car: CarSnapshot, report: SourceReport): CheckDecision {
       continue;
     }
 
+    // Comparar el precio de una versión que YA tenemos es seguro incluso con la
+    // fuente compartida: el nombre calza con el nuestro, no hay ambigüedad.
     const minePrice = mine.price ?? null;
     if (price && minePrice && !isNoise(minePrice, price)) {
       findings.push({
@@ -184,14 +257,24 @@ export function decide(car: CarSnapshot, report: SourceReport): CheckDecision {
 
   // Una versión que desapareció de la fuente se reporta, pero NO se borra: puede
   // ser que la marca partió su catálogo en dos páginas, no que dejó de venderla.
-  for (const [key, mine] of ours) {
-    if (seen.has(key)) continue;
+  if (inventoryComparable) {
+    for (const [key, mine] of ours) {
+      if (seen.has(key)) continue;
+      findings.push({
+        kind: "version_faltante",
+        detail: `Tenemos publicada "${mine.name}" y ya no aparece en la fuente. Revisar si se dejó de vender o si cambió de página.`,
+        versionName: mine.name,
+      });
+      raise("version_nueva");
+    }
+  } else if (report.versiones.length > 0) {
+    // Un solo aviso, una vez, en vez de ~11 hallazgos fantasma por semana.
     findings.push({
-      kind: "version_faltante",
-      detail: `Tenemos publicada "${mine.name}" y ya no aparece en la fuente. Revisar si se dejó de vender o si cambió de página.`,
-      versionName: mine.name,
+      kind: "fuente_compartida",
+      detail:
+        `${car.sourceUrl} cubre más de una PDP, así que no se comparan versiones nuevas ni faltantes. ` +
+        `Para activarlo, declarar el reparto en "Versiones de la fuente que son de esta PDP".`,
     });
-    raise("version_nueva");
   }
 
   // ── Año de modelo ─────────────────────────────────────────────────────────
@@ -221,6 +304,7 @@ export function decide(car: CarSnapshot, report: SourceReport): CheckDecision {
     flag,
     note,
     suggestedPrice,
+    autoApply,
     hide: false,
     sourceFailStreak: 0,
     needsReextract,

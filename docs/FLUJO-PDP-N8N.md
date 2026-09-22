@@ -74,6 +74,12 @@ límite de 300 s". Ese límite de 300 s **no aplica en Hobby sin Fluid compute**
 `CLAUDE.md` → Trampas operativas), y 90 s contra 60 s es una corrida perdida cada vez que la
 fuente está lenta.
 
+**n8n self-hosted no tiene límite de ejecución.** Medido en el contenedor:
+`EXECUTIONS_TIMEOUT = -1` (sin límite, y ninguna env var la sobreescribe),
+`EXECUTIONS_TIMEOUT_MAX = 3600` (solo el tope para el setting por workflow),
+`N8N_RUNNERS_TASK_TIMEOUT = 300` (solo aplica a los nodos `Code`, que acá corren en <1 ms).
+Una ejecución puede durar horas.
+
 > **Directriz 2 — el lote se itera en n8n, no en Vercel.** La web expone un endpoint
 > **por auto** (~10–20 s, holgado bajo 60 s) y n8n hace el `Loop Over Items` con concurrencia 3.
 > Gratis, además: reintento por auto, visibilidad por auto en el historial de n8n, y una fuente
@@ -139,17 +145,40 @@ arquitectura: el contrato de salida es el mismo.
 Cron `0 9,15,19,23 * * *` · TZ `America/Santiago` → 4 corridas/día × 7 días = **28 lotes**.
 Lote = `techo(176 / 28)` = **7 autos**. Cobertura 28 × 7 = 196 ≥ 176.
 
-La selección es **cola por antigüedad**, no partición fija (board, tarjeta "28 lotes"):
+Cada auto publicado lleva un **`checkSlot` 0–27** asignado al crearse, así que "¿cuándo se
+revisa este auto?" se contesta con *"martes a las 15:00"*. `0` = lunes 09:00 … `27` = domingo
+23:00. Asignado al **lote menos cargado** (no round-robin ciego: así se rebalancea solo al
+borrar u ocultar autos, sin script mensual).
+
+Estado real tras el backfill (22-09-2026): **176 autos en 28 lotes, 6–7 por lote, 0 sin asignar.**
+
+La selección de cada corrida es **lote primero, cola de relleno después**:
 
 ```groq
-*[_type == "car" && hidden != true && !(_id in path("drafts.**"))
-  && count(sourceUrls) > 0
-  && (!defined(lastPriceCheckAt) || lastPriceCheckAt < $hace5dias)]
-  | order(coalesce(lastPriceCheckAt, "1970-01-01") asc) [0...7]
+// 1. Los que le tocan a esta corrida
+*[ ...revisable && checkSlot == $slot ] | order(lastPriceCheckAt asc) [0...$limit]
+// 2. Si no llenan el lote, se completa con los más atrasados de todo el catálogo
+*[ ...revisable && checkSlot != $slot ] | order(lastPriceCheckAt asc) [0...$limit]
 ```
 
-El filtro de 5 días implementa C14 (un auto no se revisa dos veces en la semana). Los autos sin
-`sourceUrls` salen en una lista aparte, no bloquean el lote (C3).
+El relleno es lo que evita el problema del lote fijo puro: **si se cae la corrida del martes,
+esos autos entran en las siguientes** en vez de saltarse la semana entera. La respuesta trae
+`delSlot` y `relleno` — si el relleno es alto corrida tras corrida, algo se está cayendo.
+
+`revisable` = publicado + con `sourceUrls` + sin revisar en 5 días (C14: un auto no se revisa dos
+veces en la misma semana). Los autos sin `sourceUrls` salen en una lista aparte, no bloquean el
+lote (C3).
+
+**El lote de un auto nuevo se asigna solo**, por tres caminos:
+- `POST /api/admin/recheck/assign-slots` con `{carIds}` — lo llama el flujo de creación (v2) en
+  cuanto crea el borrador, así el auto queda con lote al instante.
+- `/api/admin/recheck/queue` barre los que quedaron sin lote al inicio de cada corrida (para los
+  creados a mano en Studio). Normalmente no escribe nada.
+- `npx tsx --env-file=.env.local scripts/recheck-backfill.ts --aplicar`, una vez.
+
+La mecánica de los slots vive en `lib/catalog-recheck/slots.ts`. Detalle que cuesta: **una corrida
+de las 23:00 que se atrasa a las 00:20 sigue resolviendo a su propio lote**, no al de las 09:00
+del día siguiente — si no, revisaría el lote equivocado dos veces.
 
 ### 2.2 Campos de auditoría en Sanity
 
@@ -166,10 +195,16 @@ escribe contenido** (C5).
 | `sourceFailStreak` | number | **nuevo** — corridas consecutivas con la fuente caída (C11: 2 → `fuente_muerta`) |
 | `hiddenByCheck` | boolean | **nuevo** — el auto se ocultó automático (C7), para que `restaurar` sepa qué revertir |
 | `needsReextract` | boolean | **nuevo** — año nuevo detectado: "conviene re-extraer", lo resuelve el v2 |
+| `checkSlot` | number 0–27 | **nuevo** — cuál de las 28 corridas revisa este auto |
+| `priceCheckPreviousBasePrice` | number | **nuevo** — precio lista previo a un ajuste automático; es lo que restaura `revertir <modelo>` |
+| `sourceVersionScope` / `sourceVersionExclude` | array&lt;string&gt; | **nuevos** — reparto de versiones cuando una página oficial cubre varias PDPs (§2.7) |
 
 `priceCheckFlag` pasa de 3 a 6 valores: `none`, `price_high`, `discontinued`, `fuente_muerta`,
 `version_nueva`, `anio_nuevo`. Los tres primeros conservan su significado, así que el digest y
 los comandos de WhatsApp que ya existen siguen funcionando sin cambios.
+
+`catalogFindings[].kind` agrega `precio_aplicado` (se escribió solo) y `fuente_compartida`
+(la página cubre varias PDPs, §2.7).
 
 ### 2.3 Endpoints nuevos en la web
 
@@ -180,6 +215,12 @@ Auth: header `x-admin-secret` (patrón de `app/api/auction/*`). Credencial n8n `
 | `POST /api/admin/recheck/queue` | `{limit}` | `{runId, cars[], sinFuente[], cobertura}` |
 | `POST /api/admin/recheck/car` | `{carId, runId}` | `{carId, nombre, resultado, hallazgos[], error?}` |
 | `POST /api/admin/recheck/close` | `{runId, resultados[]}` | graba la corrida en Supabase, devuelve el resumen del log |
+| `POST /api/admin/recheck/assign-slots` | `{carIds?}` | asigna `checkSlot` a los publicados que no tienen. Idempotente |
+| `POST /api/admin/notify` | `{text}` | manda el texto por WhatsApp a `ADMIN_PHONE_NUMBERS` |
+
+`/api/admin/notify` existe para que n8n **no** hable con Kapso directamente: si lo hiciera habría
+que duplicar allá la lista de números, la ventana de 24 h de Meta y el fallback a plantilla — tres
+cosas ya resueltas en `lib/whatsapp/outbound.ts`.
 
 `resultado` ∈ `sin_cambios` · `precio` · `version_nueva` · `version_faltante` · `anio_nuevo` ·
 `descontinuado` · `fuente_caida` · `error`.
@@ -215,7 +256,82 @@ un redirect), y **salida estructurada**:
 Regla en el prompt (R3/C4): **campo sin evidencia textual en la fuente = `null`**. Nunca
 inferido, nunca estimado. Sin `evidencia`, el precio se descarta en el diff.
 
-### 2.6 El workflow en n8n
+### 2.6 Aplicar precios solo — qué se escribe y qué no
+
+Decisión de Francisco (sep-2026), contra la regla C6 del board. Se implementa **con guardas**,
+porque el modo de falla no es hipotético: `MIN_PLAUSIBLE_PRICE` existe en el código desde el
+Flujo B porque una lectura devolvió un "precio oficial" de **$151.900** sacado de un newsroom.
+Sin guardas, eso se escribía en la PDP viva y salía al sitio en 60 s (ISR), al comparador, a la
+calculadora y al structured data.
+
+| | Se escribe solo |
+|---|---|
+| `basePrice` (precio lista) | ✅ con las 6 guardas de abajo |
+| `discountPrice` (precio negociado) | ❌ **nunca** — es el número de Francisco |
+| `versions[]` (precios, altas, bajas) | ❌ nunca — ver §2.7 |
+| `modelYear` | ❌ nunca |
+| `hidden` (descontinuado) | ✅ ya estaba (C7), reversible con `hiddenByCheck` |
+
+Las guardas, todas obligatorias:
+
+1. **Cita textual.** Sin `evidencia` el precio ni se propone (R3/C4).
+2. **Piso de plausibilidad** de $3.000.000 (C9).
+3. **No es ruido**: sobre el 1% del precio actual o sobre $200.000 (C8).
+4. **Techo de deriva del 25%** (`MAX_AUTO_APPLY_DRIFT`). Un salto mayor es error de lectura
+   mucho más seguido que cambio real de lista → queda como hallazgo, lo aplica una persona.
+5. **No deja el lista bajo el precio con descuento.** Si la marca baja su lista por debajo de
+   nuestro `discountPrice`, la PDP mostraría un "descuento" más caro que la lista. Eso es
+   decisión comercial, no lectura → flag.
+6. **Segunda lectura de confirmación** en la misma corrida. El modo de falla real no es que la
+   fuente mienta: es que la extracción salga distinta dos veces. Cuesta ~US$0,015 y solo corre
+   en los autos que cambiaron (pocos). Si las dos lecturas no coinciden, no se escribe.
+
+Y siempre queda **vuelta atrás**: `priceCheckPreviousBasePrice` guarda el valor anterior, y
+`revertir <modelo>` por WhatsApp lo restaura. Un precio aplicado solo **avisa al instante**
+(no espera al digest del lunes), porque ya cambió el sitio.
+
+Interruptor: `RECHECK_AUTOAPPLY=false` en Vercel lo apaga sin tocar código.
+
+### 2.7 Versiones: el problema de las familias
+
+**Medido en el catálogo real:** hay **9 familias** donde un modelo está partido en 2–3 PDPs que
+comparten una sola página oficial de la marca.
+
+| Marca | PDPs separadas | Versiones en cada una |
+|---|---|---|
+| Porsche | `Taycan` + `Taycan 4 Cross Turismo` | 8 + 3 — porsche.cl lista las 11 juntas |
+| Porsche | `Cayenne E-Hybrid` + `... Coupé` | 5 + 5 |
+| Volvo | `EX30` + `EX30 Cross Country` | 3 + 1 |
+| Geely | `EX5` + `EX5 E-DMi` + `EX5 EM-i` | 2 + 0 + 3 |
+| MG | `4` + `4 Urban EV` | 4 + 2 |
+| DS | `3` + `3 Opera E-tense` | 1 + 1 |
+| GWM | `Ora 03` + `Ora 03 GT` | **las mismas dos en ambas** |
+
+Más Deepal S05 y Subaru Forester Strong Hybrid.
+
+**Qué pasaría sin tratamiento:** la PDP del Taycan lee las 11 versiones de la página y reporta 3
+`version_nueva` (las Cross Turismo). La del Cross Turismo lee las mismas 11 y reporta 8. **11
+hallazgos fantasma por semana, de una sola familia**; por las 9, unos 30–40. El digest queda
+ilegible en la segunda semana — exactamente lo que el board le critica a la búsqueda web.
+
+**Tratamiento, en dos capas:**
+
+- **Por defecto, automático.** Si otra PDP publicada comparte `sourceUrls[0]`, el re-check
+  **deja de comparar el inventario de versiones** (ni nuevas ni faltantes) y emite **un** hallazgo
+  `fuente_compartida`. Sigue comparando el **precio de las versiones que ya tenemos**, que es
+  seguro: el nombre calza con el nuestro, no hay ambigüedad. Cero curación, cero falsos positivos.
+- **Opt-in, por familia.** `sourceVersionScope` / `sourceVersionExclude` (grupo 🤖 IA en Studio)
+  declaran el reparto y reactivan la detección. Taycan → excluir `Cross Turismo`; Cross Turismo
+  → scope `Cross Turismo`. El humano es dueño de las versiones (R4). Solo las 9 familias lo
+  necesitan; los otros 167 autos quedan vacíos.
+
+`scripts/recheck-backfill.ts` lista las familias con los tokens sugeridos listos para pegar.
+
+**Bug de datos aparte, a arreglar igual:** `Ora 03 GT` (publicada) contiene las versiones
+`ORA 03 SR` **y** `ORA 03 GT`, y `Ora 03` (oculta) tiene esas mismas dos. Y `Geely EX5 E-DMi`
+está publicada con **cero** versiones. Eso no lo arregla ningún flujo.
+
+### 2.8 El workflow en n8n
 
 `n8n/pdp-recheck.json` — generado por `scripts/gen-pdp-workflows.mjs` y versionado en el repo
 (mismo patrón que `n8n/waitlist.json`).
@@ -233,7 +349,7 @@ Cron 09/15/19/23  →  Config (Set)  →  Tomar lote
                                         IF urgentes → Kapso inmediato (C16)
 ```
 
-### 2.7 Los avisos
+### 2.9 Los avisos
 
 | Aviso | Cuándo | Dónde vive | Regla |
 |---|---|---|---|
@@ -248,7 +364,7 @@ Los dos últimos se quedan en Vercel cron: `/api/cron/price-check-digest` ya exi
 hace indistinguible "todo en orden" de "el cron lleva tres semanas caído". La cobertura se
 calcula leyendo `catalog_check_runs`.
 
-### 2.8 Reemplaza al Flujo B, no se suma
+### 2.10 Reemplaza al Flujo B, no se suma
 
 `app/api/cron/price-check-scan` (diario, 17 autos, búsqueda web, ~US$0,10–0,13/auto) se apaga:
 sale de `vercel.json`. `lib/price-check/check.ts` se conserva como referencia del patrón de
@@ -336,8 +452,8 @@ migrar después.
 
 | Fase | Entregable | Bloqueado por |
 |---|---|---|
-| **1** | Campos de auditoría en Sanity + `catalog_check_runs` en Supabase | — |
-| **2** | `/api/admin/recheck/{queue,car,close}` + tests con `npm test` | Fase 1 |
+| **1** | Campos de auditoría en Sanity + `catalog_check_runs` en Supabase + `checkSlot` asignado a los 176 | ✅ hecho |
+| **2** | `/api/admin/recheck/*` + auto-aplicar con guardas + `revertir` por WhatsApp + 45 tests | ✅ hecho, falta la prueba en vivo (key sin saldo) |
 | **3** | `n8n/pdp-recheck.json` + credenciales + prueba con lote de 1 auto real | Fase 2 · credencial Google |
 | **4** | Digest: cobertura real + "se manda siempre" · apagar el Flujo B | Fase 3 |
 | **5** | Fase 0: agente de descubrimiento + aprobación en bloque | Console · credencial Google |
@@ -359,3 +475,6 @@ tiene `sourceUrls` (Ora 03, `https://www.gwm.cl/vehiculo/ora/ora-03/`) más 2–
    `environment_id`).
 4. **`priceListUrl` por marca** — decidir en Fase 0 (§4). Baja el costo ~3×, pero acopla varios
    autos a una sola fuente: si esa página cambia de formato, caen 9 autos juntos en vez de 1.
+5. **El reparto de versiones de las 9 familias** (§2.10). Sin declararlo, el re-check compara
+   precios pero no versiones en esos 17 autos. Son ~15 min de Studio con los tokens que ya
+   imprime `scripts/recheck-backfill.ts`.

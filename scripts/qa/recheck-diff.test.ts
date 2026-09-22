@@ -10,7 +10,16 @@
  */
 
 import assert from "node:assert/strict";
-import { decide, isNoise, MIN_PLAUSIBLE_PRICE, normalizeVersionName } from "@/lib/catalog-recheck/diff";
+import {
+  decide,
+  filterVersionsForCar,
+  isNoise,
+  MAX_AUTO_APPLY_DRIFT,
+  MIN_PLAUSIBLE_PRICE,
+  normalizeVersionName,
+  proposeAutoApply,
+} from "@/lib/catalog-recheck/diff";
+import { assignSlots, describeSlot, leastLoadedSlot, slotFor, TOTAL_SLOTS } from "@/lib/catalog-recheck/slots";
 import type { CarSnapshot, SourceReport } from "@/lib/catalog-recheck/types";
 
 let passed = 0;
@@ -257,6 +266,195 @@ test("autos sin versions[] ni modelYear no rompen el diff", () => {
     ok({ versiones: [], anio_modelo: null })
   );
   assert.equal(d.outcome, "sin_cambios");
+});
+
+
+// ─── Auto-aplicar precio ──────────────────────────────────────────────────────
+// La IA no es dueña del precio: escribe solo cuando TODAS las guardas pasan.
+
+test("auto-aplicar: delta creíble con cita → propone escribir basePrice", () => {
+  const d = decide(car(), ok({ precio_base: 27_000_000 }));
+  assert.ok(d.autoApply, "delta 8% es creíble");
+  assert.equal(d.autoApply!.field, "basePrice");
+  assert.equal(d.autoApply!.from, 25_000_000);
+  assert.equal(d.autoApply!.to, 27_000_000);
+});
+
+test("auto-aplicar: salto sobre el techo del 25% NO se escribe, queda como hallazgo", () => {
+  // 25M → 40M es +60%: error de lectura mucho más seguido que cambio de lista.
+  const d = decide(car(), ok({ precio_base: 40_000_000 }));
+  assert.equal(d.autoApply, undefined);
+  assert.ok(d.findings.some((f) => f.kind === "precio_base"), "el hallazgo se registra igual");
+});
+
+test("auto-aplicar: nunca deja el precio lista bajo el precio con descuento", () => {
+  // Vendemos a 24M. Si la lista oficial baja a 23M, escribirlo mostraría un
+  // "descuento" más caro que la lista. Es decisión comercial, no lectura.
+  const d = decide(car({ discountPrice: 24_000_000 }), ok({ precio_base: 23_000_000 }));
+  assert.equal(d.autoApply, undefined);
+});
+
+test("auto-aplicar: sin cita textual no hay nada que aplicar", () => {
+  const d = decide(car(), ok({ precio_base: 27_000_000, evidencia: null }));
+  assert.equal(d.autoApply, undefined);
+});
+
+test("auto-aplicar: un precio implausible no llega ni a proponerse", () => {
+  const d = decide(car(), ok({ precio_base: 151_900 }));
+  assert.equal(d.autoApply, undefined);
+});
+
+test("auto-aplicar: un delta que es ruido no dispara escritura", () => {
+  const d = decide(car(), ok({ precio_base: 25_100_000 }));
+  assert.equal(d.autoApply, undefined);
+});
+
+test("proposeAutoApply: el techo es exactamente 25%", () => {
+  assert.ok(proposeAutoApply(car(), 20_000_000, 25_000_000), "+25% justo entra");
+  assert.equal(proposeAutoApply(car(), 20_000_000, 25_100_000), undefined, "+25,5% no");
+  assert.equal(MAX_AUTO_APPLY_DRIFT, 0.25);
+});
+
+test("auto-aplicar: versiones y año NUNCA se aplican solos", () => {
+  const d = decide(
+    car(),
+    ok({ anio_modelo: 2026, versiones: [...ok().versiones, { nombre: "GT", precio: 32_000_000 }] })
+  );
+  assert.equal(d.autoApply, undefined, "solo basePrice se puede escribir solo");
+});
+
+// ─── Fuente compartida por varias PDPs ────────────────────────────────────────
+// 9 familias del catálogo real: Porsche Taycan + Taycan 4 Cross Turismo, Volvo
+// EX30 + Cross Country, Geely EX5 + E-DMi + EM-i, GWM Ora 03 + Ora 03 GT, etc.
+
+const taycan = (over: Partial<CarSnapshot> = {}): CarSnapshot => ({
+  id: "taycan",
+  name: "Taycan",
+  brand: "Porsche",
+  slug: "porsche-taycan",
+  sourceUrl: "https://www.porsche.com/chile/models/taycan/",
+  basePrice: 90_000_000,
+  versions: [{ name: "Taycan", price: 90_000_000 }, { name: "Taycan 4S", price: 110_000_000 }],
+  sharedSource: true,
+  ...over,
+});
+
+const taycanPage = (): SourceReport => ({
+  fuente_ok: true,
+  modelo_vigente: true,
+  precio_base: 90_000_000,
+  anio_modelo: null,
+  versiones: [
+    { nombre: "Taycan", precio: 90_000_000 },
+    { nombre: "Taycan 4S", precio: 110_000_000 },
+    { nombre: "Taycan 4 Cross Turismo", precio: 120_000_000 },
+    { nombre: "Taycan Turbo Cross Turismo", precio: 160_000_000 },
+  ],
+  evidencia: "Desde $90.000.000",
+  nota: null,
+});
+
+test("fuente compartida sin reparto: NO reporta versiones nuevas, avisa una vez", () => {
+  const d = decide(taycan(), taycanPage());
+  assert.equal(d.findings.filter((f) => f.kind === "version_nueva").length, 0,
+    "las Cross Turismo son de la PDP hermana, no versiones nuevas");
+  assert.equal(d.findings.filter((f) => f.kind === "version_faltante").length, 0);
+  assert.equal(d.findings.filter((f) => f.kind === "fuente_compartida").length, 1,
+    "un solo aviso, no ~11 hallazgos fantasma por semana");
+});
+
+test("fuente compartida: los precios de las versiones que SÍ tenemos se comparan igual", () => {
+  const page = taycanPage();
+  page.versiones[1].precio = 118_000_000; // la 4S subió
+  const d = decide(taycan(), page);
+  const f = d.findings.find((x) => x.kind === "precio_version");
+  assert.ok(f, "el nombre calza con el nuestro: no hay ambigüedad");
+  assert.equal(f!.versionName, "Taycan 4S");
+});
+
+test("con reparto declarado (exclude), la detección de versiones vuelve a funcionar", () => {
+  const d = decide(taycan({ versionExclude: ["Cross Turismo"] }), taycanPage());
+  assert.equal(d.findings.filter((f) => f.kind === "fuente_compartida").length, 0);
+  assert.equal(d.findings.filter((f) => f.kind === "version_nueva").length, 0,
+    "las Cross Turismo quedaron fuera del alcance de esta PDP");
+});
+
+test("con reparto declarado (scope), la PDP hermana solo ve lo suyo", () => {
+  const cross = taycan({
+    id: "cross", name: "Taycan 4 Cross Turismo",
+    versions: [{ name: "Taycan 4 Cross Turismo", price: 120_000_000 }],
+    versionScope: ["Cross Turismo"],
+  });
+  const d = decide(cross, taycanPage());
+  const nuevas = d.findings.filter((f) => f.kind === "version_nueva");
+  assert.equal(nuevas.length, 1, "solo la Turbo Cross Turismo le falta");
+  assert.equal(nuevas[0].versionName, "Taycan Turbo Cross Turismo");
+  assert.equal(d.findings.filter((f) => f.kind === "version_faltante").length, 0,
+    "las 8 del Taycan base no son 'faltantes' suyas");
+});
+
+test("fuente NO compartida sigue detectando versiones como antes", () => {
+  const d = decide(car(), ok({ versiones: [...ok().versiones, { nombre: "GT", precio: 32_000_000 }] }));
+  assert.equal(d.findings.filter((f) => f.kind === "version_nueva").length, 1);
+  assert.equal(d.findings.filter((f) => f.kind === "fuente_compartida").length, 0);
+});
+
+test("filterVersionsForCar: exclude gana sobre scope", () => {
+  const vs = [{ nombre: "Taycan 4 Cross Turismo", precio: 1 }, { nombre: "Taycan 4S", precio: 2 }];
+  const only = filterVersionsForCar({ ...taycan(), versionScope: ["Taycan 4"], versionExclude: ["Cross Turismo"] }, vs);
+  assert.deepEqual(only.map((v) => v.nombre), ["Taycan 4S"]);
+});
+
+// ─── Los 28 lotes ─────────────────────────────────────────────────────────────
+
+test("slotFor: lunes 09:00 es el lote 0, domingo 23:00 el 27", () => {
+  // 2026-09-21 es lunes. Chile en septiembre está en UTC-3 (horario de verano).
+  assert.equal(slotFor(new Date("2026-09-21T12:00:00Z")), 0, "lunes 09:00 CLST");
+  // Chile en septiembre está en UTC-3, así que domingo 23:00 local es lunes 02:00 UTC.
+  assert.equal(slotFor(new Date("2026-09-28T02:00:00Z")), 27, "domingo 23:00 CLST");
+  assert.equal(TOTAL_SLOTS, 28);
+});
+
+test("slotFor: las 4 corridas del día caen en lotes consecutivos", () => {
+  const base = "2026-09-22"; // martes
+  const slots = ["12:00", "18:00", "22:00"].map((h) => slotFor(new Date(`${base}T${h}:00Z`)));
+  assert.deepEqual(slots, [4, 5, 6], "martes 09:00 / 15:00 / 19:00");
+  assert.equal(slotFor(new Date("2026-09-23T02:00:00Z")), 7, "martes 23:00");
+});
+
+test("slotFor: una corrida de las 23:00 que se atrasa a las 00:20 NO cambia de lote", () => {
+  // Sin el ajuste caería en el lote 0 del día nuevo y revisaría el lote equivocado.
+  const atrasada = slotFor(new Date("2026-09-22T03:20:00Z")); // martes 00:20 CLST
+  assert.equal(atrasada, 3, "sigue siendo el lote del lunes 23:00, no el del martes 09:00");
+});
+
+test("describeSlot: se puede explicar en palabras", () => {
+  assert.equal(describeSlot(0), "lunes a las 09:00");
+  assert.equal(describeSlot(5), "martes a las 15:00");
+  assert.equal(describeSlot(27), "domingo a las 23:00");
+  assert.equal(describeSlot(99), "sin lote asignado");
+});
+
+test("leastLoadedSlot: elige el menos cargado, no round-robin ciego", () => {
+  const counts: Record<number, number> = {};
+  for (let i = 0; i < TOTAL_SLOTS; i++) counts[i] = 7;
+  counts[13] = 2;
+  assert.equal(leastLoadedSlot(counts), 13, "así se rebalancea solo al borrar autos");
+});
+
+test("assignSlots: reparte una tanda sin apilar todo en el mismo lote", () => {
+  const counts: Record<number, number> = {};
+  const pairs = assignSlots(["a", "b", "c", "d"], counts);
+  assert.equal(new Set(pairs.map((p) => p.checkSlot)).size, 4, "4 autos → 4 lotes distintos");
+});
+
+test("assignSlots: respeta la carga previa", () => {
+  const counts: Record<number, number> = {};
+  for (let i = 0; i < TOTAL_SLOTS; i++) counts[i] = 6;
+  counts[20] = 0;
+  counts[21] = 0;
+  const pairs = assignSlots(["x", "y"], counts);
+  assert.deepEqual(pairs.map((p) => p.checkSlot), [20, 21]);
 });
 
 console.log(`\n${failed === 0 ? "✓" : "✗"} ${passed} pasaron, ${failed} fallaron\n`);

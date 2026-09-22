@@ -35,6 +35,18 @@ export interface CarSnapshot {
   sourceFailStreak?: number | null;
   /** Hallazgos ya registrados — para no re-avisar lo mismo (C12). */
   catalogFindings?: Finding[];
+
+  /**
+   * Otra PDP publicada usa la misma `sourceUrls[0]`. Pasa en 9 familias del
+   * catálogo (Porsche Taycan + Cross Turismo, Volvo EX30 + Cross Country, Geely
+   * EX5 + E-DMi + EM-i, GWM Ora 03 + GT, …): la marca publica una sola página
+   * para toda la familia y nosotros la partimos en varias PDPs.
+   */
+  sharedSource?: boolean;
+  /** El nombre de la versión en la fuente DEBE contener alguno de estos. */
+  versionScope?: string[];
+  /** ...y ninguno de estos. */
+  versionExclude?: string[];
 }
 
 export type FindingKind =
@@ -44,7 +56,9 @@ export type FindingKind =
   | "version_faltante"
   | "anio_nuevo"
   | "descontinuado"
-  | "fuente_caida";
+  | "fuente_caida"
+  | "precio_aplicado"
+  | "fuente_compartida";
 
 export interface Finding {
   kind: FindingKind;
@@ -66,6 +80,20 @@ export type PriceCheckFlag =
 
 export type CheckOutcome = "sin_cambios" | "cambios" | "descontinuado" | "fuente_caida";
 
+/**
+ * Un cambio que la revisión escribe sola en el documento publicado. Solo precio
+ * lista, solo con todas las guardas de diff.ts cumplidas, y siempre guardando el
+ * valor anterior para poder revertir. Nunca versiones, nunca año, nunca el
+ * precio con descuento (ese es el número negociado de Francisco).
+ */
+export interface AutoApply {
+  field: "basePrice";
+  from: number;
+  to: number;
+  /** Por qué se consideró seguro aplicarlo — va al hallazgo y al digest. */
+  reason: string;
+}
+
 export interface CheckDecision {
   outcome: CheckOutcome;
   findings: Finding[];
@@ -83,4 +111,9 @@ export interface CheckDecision {
   urgent: boolean;
   /** Hay algo que no estaba en los hallazgos anteriores (C12 — dedup). */
   hasNewFindings: boolean;
+  /**
+   * Cambio que se puede escribir solo, si una segunda lectura lo confirma.
+   * `undefined` = no hay nada que aplicar automáticamente.
+   */
+  autoApply?: AutoApply;
 }

@@ -4,7 +4,7 @@
   "nodes": [
     {
       "parameters": {
-        "content": "## Flujo C — Re-check semanal de precios de PDP\n\n4 corridas al día × 7 días = **28 lotes por semana**. Lote = techo(publicados / 28) → hoy 7 autos.\nCada auto se revisa 1 vez por semana contra **su** URL oficial. Sin búsqueda web, sin segunda fuente.\n\n### Antes de activar\n1. **Credenciales** (3): `Electrificarte Admin (x-admin-secret)` (Header Auth, name `x-admin-secret`),\n   y `Google Sheets — Electrificarte`. Los nodos que dicen REEMPLAZAR las necesitan.\n2. **Nodo Config**: pegá `siteBase` (sin barra final) y `sheetId`.\n3. **El Sheet** necesita dos pestañas: `corridas` y `faltan fuentes`.\n4. **Bloqueante**: hoy solo 1 de 176 autos publicados tiene `sourceUrls`. Hasta que la Fase 0\n   los complete, este cron corre en vacío y avisa 175 autos sin fuente. Probá primero a mano\n   con el botón de test y `lote = 1`.\n\n### Por qué el lote se itera acá y no en la web\nEl lote completo tarda 40–90 s y el límite duro de una función en Vercel Hobby es 60 s (ignora el\n`maxDuration` del código). Un auto por llamada son 10–20 s, con reintento propio, y una fuente\nlenta no arrastra a los otros 6.\n\n### Lo que este flujo NO hace\nNo aplica ningún precio, no crea versiones, no sube el año. Todo eso es acto humano desde\nWhatsApp o Studio. Acá solo se escriben campos de auditoría — más ocultar un auto que salió\ndel catálogo oficial, que es reversible.\n\nDetalle completo: `docs/FLUJO-PDP-N8N.md` §2",
+        "content": "## Flujo C — Re-check semanal de precios de PDP\n\n4 corridas al día × 7 días = **28 lotes por semana**. Lote = techo(publicados / 28) → hoy 7 autos.\nCada auto lleva un `checkSlot` 0–27 asignado al crearse, así que se revisa siempre el mismo día y hora.\nLa corrida toma primero los de su lote y, si no llenan, completa con la cola por antigüedad —\nasí una corrida caída no hace que esos autos se salten la semana.\n\n**Precios**: si el precio oficial cambió y una segunda lectura lo confirma, se actualiza solo en Sanity\n(solo `basePrice`, nunca el precio con descuento, nunca versiones ni año). Apagable con\n`RECHECK_AUTOAPPLY=false` en Vercel. El digest lo reporta y `revertir <modelo>` lo deshace.\n\n### Antes de activar\n1. **Credenciales** (3): `Electrificarte Admin (x-admin-secret)` (Header Auth, name `x-admin-secret`),\n   y `Google Sheets — Electrificarte`. Los nodos que dicen REEMPLAZAR las necesitan.\n2. **Nodo Config**: pegá `siteBase` (sin barra final) y `sheetId`.\n3. **El Sheet** necesita dos pestañas: `corridas` y `faltan fuentes`.\n4. **Bloqueante**: hoy solo 1 de 176 autos publicados tiene `sourceUrls`. Hasta que la Fase 0\n   los complete, este cron corre en vacío y avisa 175 autos sin fuente. Probá primero a mano\n   con el botón de test y `lote = 1`.\n\n### Por qué el lote se itera acá y no en la web\nEl lote completo tarda 40–90 s y el límite duro de una función en Vercel Hobby es 60 s (ignora el\n`maxDuration` del código). Un auto por llamada son 10–20 s, con reintento propio, y una fuente\nlenta no arrastra a los otros 6.\n\n### Lo que este flujo NO hace\nNo crea versiones, no borra versiones y no sube el año de modelo. Eso es acto humano desde\nWhatsApp o Studio: mientras 9 familias del catálogo compartan una sola página oficial, la\ndetección de versiones no es confiable como para escribir sola.\n\nDetalle completo: `docs/FLUJO-PDP-N8N.md` §2",
         "height": 760,
         "width": 520,
         "color": 5
@@ -58,7 +58,7 @@
             {
               "id": "c-lote",
               "name": "lote",
-              "value": 7,
+              "value": 0,
               "type": "number"
             }
           ]
@@ -73,7 +73,7 @@
         140,
         300
       ],
-      "notes": "Lo único que se edita a mano. `lote` en 0 deja que la web lo calcule sola (techo(publicados/28)). Para probar, ponelo en 1."
+      "notes": "Lo único que se edita a mano. `lote` en 0 = la web lo calcula sola (techo(publicados/28)). Para probar, ponelo en 1."
     },
     {
       "parameters": {
@@ -388,7 +388,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Todos los autos ya revisados llegan juntos por la salida 'done' del loop.\nconst items = $input.all().map((i) => i.json);\nconst urgentes = items.filter((r) => r.urgente);\nreturn [{ json: {\n  runId: $('Tomar el lote').first().json.runId,\n  resultados: items,\n  urgentesTotal: urgentes.length,\n  urgentesTexto: urgentes\n    .map((r) => '• ' + r.nombre + ' — ' + (r.nota ?? r.flag))\n    .join('\\n'),\n} }];"
+        "jsCode": "// Todos los autos ya revisados llegan juntos por la salida 'done' del loop.\nconst items = $input.all().map((i) => i.json);\nconst urgentes = items.filter((r) => r.urgente);\nconst aplicados = items.filter((r) => r.aplicado);\nconst clp = (n) => '$' + Number(n).toLocaleString('es-CL');\nreturn [{ json: {\n  runId: $('Tomar el lote').first().json.runId,\n  resultados: items,\n  aplicadosTotal: aplicados.length,\n  urgentesTotal: urgentes.length,\n  urgentesTexto: urgentes\n    .map((r) => r.aplicado\n      ? '• ' + r.nombre + ' — precio lista ' + clp(r.aplicado.from) + ' → ' + clp(r.aplicado.to) + ' (ya en el sitio)'\n      : '• ' + r.nombre + ' — ' + (r.nota ?? r.flag))\n    .join('\\n'),\n} }];"
       },
       "id": "armar",
       "name": "Armar el cierre",
@@ -398,7 +398,7 @@
         1100,
         380
       ],
-      "notes": "urgente = descontinuado (ya ocultó algo del sitio) o fuente muerta (la revisión de ese auto está detenida). Todo lo demás espera al digest del lunes."
+      "notes": "urgente = descontinuado, fuente muerta, o un precio que se aplicó solo. Los tres ya cambiaron el sitio o detuvieron la revisión de un auto. Todo lo demás espera al digest del lunes."
     },
     {
       "parameters": {
@@ -459,6 +459,9 @@
           "value": {
             "fecha": "={{ new Date().toLocaleString('es-CL', { timeZone: 'America/Santiago' }) }}",
             "runId": "={{ $json.runId }}",
+            "lote": "={{ $('Tomar el lote').first().json.slot }} ({{ $('Tomar el lote').first().json.slotDescrito }})",
+            "del_lote": "={{ $('Tomar el lote').first().json.delSlot }}",
+            "relleno": "={{ $('Tomar el lote').first().json.relleno }}",
             "revisados": "={{ $json.revisados }}",
             "sin_cambios": "={{ $json.sinCambios }}",
             "con_cambios": "={{ $json.conCambios }}",
@@ -480,6 +483,33 @@
             {
               "id": "runId",
               "displayName": "runId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "lote",
+              "displayName": "lote",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "del_lote",
+              "displayName": "del_lote",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "relleno",
+              "displayName": "relleno",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -608,7 +638,7 @@
           "parameters": [
             {
               "name": "text",
-              "value": "='🔴 Re-check de catálogo — atención\\n\\n' + $('Armar el cierre').first().json.urgentesTexto + '\\n\\nLos descontinuados ya están ocultos del sitio (reversible con \"restaurar <modelo>\").'"
+              "value": "='🔴 Re-check de catálogo — atención\\n\\n' + $('Armar el cierre').first().json.urgentesTexto + '\\n\\nPara deshacer: \"revertir <modelo>\" un precio aplicado solo, \"restaurar <modelo>\" un descontinuado que sigue a la venta.'"
             }
           ]
         },
@@ -630,7 +660,7 @@
           "name": "Electrificarte Admin (x-admin-secret)"
         }
       },
-      "notes": "Va al instante porque o ya cambió algo en el sitio, o la revisión de ese auto quedó detenida."
+      "notes": "Va al instante porque o ya cambió algo en el sitio (precio aplicado, auto oculto), o la revisión de ese auto quedó detenida."
     },
     {
       "parameters": {},

@@ -37,6 +37,7 @@ const ADMIN_SYSTEM = `Eres el asistente interno de Francisco, dueño de Electrif
    - "aplicar <modelo>" o "bájale el precio al X" → llama apply_suggested_price(query) con el nombre del modelo que mencionó.
    - "restaurar <modelo>" o "el X sigue a la venta" → llama restore_car(query) (revierte el ocultamiento automático).
    - "descartar <modelo>" o "déjalo así el X" → llama dismiss_price_flag(query) (limpia el aviso sin cambiar nada).
+   - "revertir <modelo>" o "devuélvele el precio al X" → llama revert_auto_price(query) (deja el precio lista como estaba antes del ajuste automático).
    Si el nombre que da Francisco es ambiguo o no calza con nada, dile qué encontraste (o que no encontraste nada) — nunca asumas cuál auto es si hay duda real.
 
 Si Francisco tiene una ficha en revisión (viste specs o fotos recientemente en la conversación), un "sí" o "listo" suyo se refiere a ESE paso — no lo confundas con otra cosa. Si el mensaje no calza con ninguna de estas tres funciones (saludo, pregunta general), responde breve y cordial, recordando que este canal es para gestionar el catálogo.
@@ -79,6 +80,16 @@ const RESTORE_CAR_TOOL: Anthropic.Tool = {
 const DISMISS_FLAG_TOOL: Anthropic.Tool = {
   name: "dismiss_price_flag",
   description: "Limpia el aviso de un auto (precio o vigencia) sin cambiar nada más — Francisco decide dejarlo tal como está.",
+  input_schema: {
+    type: "object",
+    properties: { query: { type: "string", description: "Nombre o marca+modelo del auto, tal como lo mencionó Francisco." } },
+    required: ["query"],
+  },
+};
+
+const REVERT_PRICE_TOOL: Anthropic.Tool = {
+  name: "revert_auto_price",
+  description: "Devuelve el precio lista de un auto al valor que tenía antes de que la revisión semanal lo actualizara sola. Solo funciona si la revisión efectivamente lo cambió.",
   input_schema: {
     type: "object",
     properties: { query: { type: "string", description: "Nombre o marca+modelo del auto, tal como lo mencionó Francisco." } },
@@ -157,9 +168,20 @@ interface FlaggedCarLookup {
   _id: string;
   name: string;
   brand: string;
-  priceCheckFlag: "none" | "price_high" | "discontinued";
+  priceCheckFlag:
+    | "none"
+    | "price_high"
+    | "discontinued"
+    | "fuente_muerta"
+    | "version_nueva"
+    | "anio_nuevo";
   priceCheckSuggestedPrice?: number;
+  /** Precio lista anterior, si la revisión lo cambió sola. Lo que restaura "revertir". */
+  priceCheckPreviousBasePrice?: number;
 }
+
+/** Los campos de auditoría que hay que limpiar al resolver un aviso. */
+const FLAG_FIELDS = ["priceCheckNote", "priceCheckSuggestedPrice", "catalogFindings"];
 
 async function findFlaggedCar(query: string): Promise<FlaggedCarLookup | null> {
   // El nombre del auto vive separado de la marca (ej. brand="DS", name="3" → "DS 3" para
@@ -167,9 +189,18 @@ async function findFlaggedCar(query: string): Promise<FlaggedCarLookup | null> {
   // se trae la lista (siempre chica: solo autos con aviso pendiente) y se compara en JS contra
   // "marca nombre" combinado. priceCheckFlag != "none" en GROQ también matchea null/undefined
   // (autos aún sin revisar), así que se filtra explícitamente por los dos valores de alerta.
+  // Un auto entra en la lista si tiene flag de alerta, si le quedaron hallazgos
+  // sin resolver, o si la revisión le cambió el precio sola (ese caso puede no
+  // tener flag: el oficial subió y seguimos siendo más baratos, así que no hay
+  // nada que "aplicar" — pero sí hay algo que revertir).
   const flagged = await sanity.fetch<FlaggedCarLookup[]>(
-    `*[_type == "car" && priceCheckFlag in ["price_high", "discontinued"] && !(_id in path("drafts.**"))] {
-      _id, name, "brand": brand->name, priceCheckFlag, priceCheckSuggestedPrice
+    `*[_type == "car" && !(_id in path("drafts.**")) && (
+        priceCheckFlag in ["price_high", "discontinued", "fuente_muerta", "version_nueva", "anio_nuevo"]
+        || count(catalogFindings) > 0
+        || defined(priceCheckPreviousBasePrice)
+      )] {
+      _id, name, "brand": brand->name, priceCheckFlag,
+      priceCheckSuggestedPrice, priceCheckPreviousBasePrice
     }`
   );
   const q = query.toLowerCase().trim();
@@ -186,7 +217,9 @@ async function applySuggestedPrice(query: string): Promise<string> {
   await sanity
     .patch(car._id)
     .set({ discountPrice: car.priceCheckSuggestedPrice, priceCheckFlag: "none" })
-    .unset(["priceCheckNote", "priceCheckSuggestedPrice"])
+    // Sin limpiar catalogFindings, el auto vuelve a salir en el digest del lunes
+    // siguiente aunque Francisco ya lo resolvió.
+    .unset(FLAG_FIELDS)
     .commit();
   return `Listo — ${car.brand} ${car.name} ahora en $${car.priceCheckSuggestedPrice.toLocaleString("es-CL")}.`;
 }
@@ -199,8 +232,8 @@ async function restoreCar(query: string): Promise<string> {
   }
   await sanity
     .patch(car._id)
-    .set({ hidden: false, priceCheckFlag: "none" })
-    .unset(["priceCheckNote"])
+    .set({ hidden: false, priceCheckFlag: "none", hiddenByCheck: false })
+    .unset(FLAG_FIELDS)
     .commit();
   return `Listo — ${car.brand} ${car.name} vuelve a estar visible en el sitio.`;
 }
@@ -208,8 +241,23 @@ async function restoreCar(query: string): Promise<string> {
 async function dismissPriceFlag(query: string): Promise<string> {
   const car = await findFlaggedCar(query);
   if (!car) return `No encontré ningún auto con avisos pendientes que calce con "${query}".`;
-  await sanity.patch(car._id).set({ priceCheckFlag: "none" }).unset(["priceCheckNote", "priceCheckSuggestedPrice"]).commit();
+  await sanity.patch(car._id).set({ priceCheckFlag: "none" }).unset(FLAG_FIELDS).commit();
   return `Listo — descarté el aviso de ${car.brand} ${car.name}, queda tal como está.`;
+}
+
+async function revertAutoPrice(query: string): Promise<string> {
+  const car = await findFlaggedCar(query);
+  if (!car) return `No encontré ningún auto con avisos pendientes que calce con "${query}".`;
+  if (!car.priceCheckPreviousBasePrice) {
+    return `${car.brand} ${car.name} no tiene un precio anterior guardado — la revisión no le cambió el precio sola.`;
+  }
+  const previous = car.priceCheckPreviousBasePrice;
+  await sanity
+    .patch(car._id)
+    .set({ basePrice: previous, priceCheckFlag: "none" })
+    .unset([...FLAG_FIELDS, "priceCheckPreviousBasePrice"])
+    .commit();
+  return `Listo — ${car.brand} ${car.name} vuelve a $${previous.toLocaleString("es-CL")} de precio lista.`;
 }
 
 // ─── Revisión conversacional de specs/fotos (M3.2) ─────────────────────────────
@@ -466,6 +514,7 @@ export async function runAdminAdvisor(history: ChatMessage[], phone: string): Pr
         APPLY_PRICE_TOOL,
         RESTORE_CAR_TOOL,
         DISMISS_FLAG_TOOL,
+        REVERT_PRICE_TOOL,
       ],
     });
 
@@ -509,6 +558,8 @@ export async function runAdminAdvisor(history: ChatMessage[], phone: string): Pr
         result = await restoreCar(((tu.input as { query?: string }).query ?? "").trim());
       } else if (tu.name === "dismiss_price_flag") {
         result = await dismissPriceFlag(((tu.input as { query?: string }).query ?? "").trim());
+      } else if (tu.name === "revert_auto_price") {
+        result = await revertAutoPrice(((tu.input as { query?: string }).query ?? "").trim());
       } else {
         result = "Tool desconocida.";
       }

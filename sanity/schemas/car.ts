@@ -393,6 +393,8 @@ export const car = defineType({
                 { title: "Año de modelo nuevo", value: "anio_nuevo" },
                 { title: "Ya no aparece en el catálogo oficial", value: "descontinuado" },
                 { title: "La fuente no responde", value: "fuente_caida" },
+                { title: "Precio aplicado automáticamente", value: "precio_aplicado" },
+                { title: "La fuente cubre varias PDPs", value: "fuente_compartida" },
               ],
             },
           }),
@@ -420,6 +422,33 @@ export const car = defineType({
     defineField({
       name: "needsReextract", title: "Conviene re-extraer la ficha", type: "boolean", group: "ai",
       description: "La fuente publica un año de modelo nuevo: las specs probablemente cambiaron. Lo resuelve el flujo de creación (v2), no la revisión semanal.",
+    }),
+    defineField({
+      name: "checkSlot", title: "Lote de revisión (0–27)", type: "number", group: "ai",
+      description: "Cuál de las 28 corridas semanales revisa este auto. Se asigna solo al crearlo, al lote menos cargado. 0 = lunes 09:00, 1 = lunes 15:00, … 27 = domingo 23:00.",
+      validation: (r) => r.min(0).max(27),
+    }),
+    defineField({
+      name: "priceCheckPreviousBasePrice", title: "Precio lista anterior (antes del último ajuste automático)", type: "number", group: "ai",
+      description: "Lo deja la revisión cuando aplica un precio sola. Es lo que restaura 'revertir <modelo>'. Si está vacío, nadie tocó el precio automáticamente.",
+    }),
+
+    // Reparto de versiones cuando una página oficial cubre más de una PDP.
+    // Pasa en 9 familias del catálogo (Porsche Taycan + Taycan Cross Turismo,
+    // Volvo EX30 + EX30 Cross Country, Geely EX5 + E-DMi + EM-i, GWM Ora 03 +
+    // Ora 03 GT, …). Sin esto, cada PDP ve las versiones de su hermana como
+    // "versión nueva" todas las semanas — ~30 hallazgos fantasma por semana.
+    defineField({
+      name: "sourceVersionScope", title: "Versiones de la fuente que son de esta PDP", type: "array", group: "ai",
+      of: [defineArrayMember({ type: "string" })],
+      options: { layout: "tags" },
+      description: 'Solo si la página oficial cubre varias PDPs. Texto que el nombre de la versión DEBE contener para contar acá. Ej: en la PDP del Taycan Cross Turismo, poner "Cross Turismo". Vacío = la revisión no compara versiones cuando detecta fuente compartida.',
+    }),
+    defineField({
+      name: "sourceVersionExclude", title: "Versiones de la fuente que NO son de esta PDP", type: "array", group: "ai",
+      of: [defineArrayMember({ type: "string" })],
+      options: { layout: "tags" },
+      description: 'Lo inverso. Ej: en la PDP del Taycan base, poner "Cross Turismo" para que las 3 versiones de la hermana no aparezcan como versiones nuevas.',
     }),
 
     // ─── SEO ────────────────────────────────────────────────────────────────

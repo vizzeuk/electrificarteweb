@@ -1,18 +1,20 @@
 /**
  * POST /api/admin/recheck/queue — arma el lote de la corrida.
  *
- * Lo llama el cron de n8n (4 veces al día). Devuelve los autos publicados con la
- * revisión más antigua, más la lista de los que no se pueden revisar porque les
- * falta la URL de fuente.
+ * Lo llama el cron de n8n (4 veces al día). Dos cosas pasan acá:
  *
- * El lote se elige por COLA DE ANTIGÜEDAD, no por partición fija de 28 grupos.
- * Con partición fija, agregar o borrar un auto obliga a reasignar los 28 grupos
- * (si no, unos se revisan dos veces y otros ninguna), y una corrida perdida se
- * salta la semana entera. Con cola, los autos de una corrida caída quedan a la
- * cabeza y entran en la siguiente. Es el mismo reparto en 28 partes, calculado
- * por quién lleva más tiempo sin revisión.
+ * 1. **Asignación de lote.** Todo auto publicado lleva un `checkSlot` 0–27, así
+ *    que "¿cuándo se revisa este auto?" se contesta con "martes a las 15:00".
+ *    Se asigna al crear el auto; esta llamada además barre los que quedaron sin
+ *    asignar (creados a mano en Studio, o de antes de que existiera el campo).
  *
- * Auth: header `x-admin-secret`. Body: { limit?: number }.
+ * 2. **Selección del lote.** Primero los autos del slot de esta corrida y, si no
+ *    llenan el lote, se completa con la cola por antigüedad. Ese relleno es lo
+ *    que evita el problema del lote fijo puro: si se cae la corrida del martes,
+ *    esos autos entran en las siguientes en vez de saltarse la semana entera, y
+ *    no hace falta ningún script mensual de rebalanceo.
+ *
+ * Auth: header `x-admin-secret`. Body: { limit?: number, slot?: number }.
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -23,6 +25,8 @@ import {
   sanityWrite,
   SLOTS_PER_WEEK,
 } from "@/lib/catalog-recheck/admin";
+import { assignMissingSlots } from "@/lib/catalog-recheck/assign";
+import { describeSlot, slotFor, TOTAL_SLOTS } from "@/lib/catalog-recheck/slots";
 import { getSupabase } from "@/lib/whatsapp/subscription";
 
 export const runtime = "nodejs";
@@ -35,6 +39,7 @@ interface QueueCar {
   slug: string;
   sourceUrl: string;
   extraUrls: string[];
+  checkSlot: number | null;
 }
 
 interface NoSourceCar {
@@ -44,17 +49,31 @@ interface NoSourceCar {
   slug: string;
 }
 
+const CAR_FIELDS = `
+  "carId": _id, "nombre": name, "marca": brand->name, "slug": slug.current,
+  "sourceUrl": sourceUrls[0], "extraUrls": sourceUrls[1...3], checkSlot
+`;
+
+const PUBLISHED = `_type == "car" && hidden != true && !(_id in path("drafts.**"))`;
+
 export async function POST(req: NextRequest): Promise<Response> {
   if (!authorized(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const sanity = sanityWrite();
   if (!sanity) return NextResponse.json({ error: "Sanity no configurado" }, { status: 500 });
 
-  const body = (await req.json().catch(() => ({}))) as { limit?: number };
+  const body = (await req.json().catch(() => ({}))) as { limit?: number; slot?: number };
 
-  const published = await sanity.fetch<number>(
-    `count(*[_type == "car" && hidden != true && !(_id in path("drafts.**"))])`
-  );
+  // Barre los autos creados a mano en Studio. Normalmente no escribe nada.
+  const { asignados } = await assignMissingSlots(sanity);
+
+  // `slot` en el body es solo para poder probar un lote concreto a mano.
+  const slot =
+    Number.isInteger(body.slot) && body.slot! >= 0 && body.slot! < TOTAL_SLOTS
+      ? body.slot!
+      : slotFor();
+
+  const published = await sanity.fetch<number>(`count(*[${PUBLISHED}])`);
 
   // Sin `limit` (o con 0) el tamaño se recalcula solo: si el catálogo crece a 200
   // autos, el lote pasa a 8 sin tocar el cron ni el workflow. n8n manda 0 justo
@@ -63,28 +82,33 @@ export async function POST(req: NextRequest): Promise<Response> {
   const limit = requested || Math.max(1, Math.ceil(published / SLOTS_PER_WEEK));
   const cutoff = daysAgoIso(MIN_DAYS_BETWEEN_CHECKS);
 
-  const { cars, sinFuente, revisadosEstaSemana } = await sanity.fetch<{
-    cars: QueueCar[];
+  // `revisable` = publicado, con fuente, y sin revisar en los últimos 5 días
+  // (C14: un auto no se revisa dos veces en la misma semana).
+  const revisable = `${PUBLISHED} && count(sourceUrls) > 0 && (!defined(lastPriceCheckAt) || lastPriceCheckAt < $cutoff)`;
+
+  const { delSlot, relleno, sinFuente, revisadosEstaSemana } = await sanity.fetch<{
+    delSlot: QueueCar[];
+    relleno: QueueCar[];
     sinFuente: NoSourceCar[];
     revisadosEstaSemana: number;
   }>(
     `{
-      "cars": *[_type == "car" && hidden != true && !(_id in path("drafts.**"))
-                && count(sourceUrls) > 0
-                && (!defined(lastPriceCheckAt) || lastPriceCheckAt < $cutoff)]
-               | order(coalesce(lastPriceCheckAt, "1970-01-01") asc) [0...$limit] {
-        "carId": _id, "nombre": name, "marca": brand->name, "slug": slug.current,
-        "sourceUrl": sourceUrls[0], "extraUrls": sourceUrls[1...3]
-      },
-      "sinFuente": *[_type == "car" && hidden != true && !(_id in path("drafts.**"))
-                     && count(sourceUrls) == 0] {
+      "delSlot": *[${revisable} && checkSlot == $slot]
+                 | order(coalesce(lastPriceCheckAt, "1970-01-01") asc) [0...$limit] { ${CAR_FIELDS} },
+      "relleno": *[${revisable} && checkSlot != $slot]
+                 | order(coalesce(lastPriceCheckAt, "1970-01-01") asc) [0...$limit] { ${CAR_FIELDS} },
+      "sinFuente": *[${PUBLISHED} && count(sourceUrls) == 0] {
         "carId": _id, "nombre": name, "marca": brand->name, "slug": slug.current
       },
-      "revisadosEstaSemana": count(*[_type == "car" && hidden != true && !(_id in path("drafts.**"))
-                                     && defined(lastPriceCheckAt) && lastPriceCheckAt >= $semana])
+      "revisadosEstaSemana": count(*[${PUBLISHED} && defined(lastPriceCheckAt) && lastPriceCheckAt >= $semana])
     }`,
-    { cutoff, limit, semana: daysAgoIso(7) }
+    { cutoff, limit, slot, semana: daysAgoIso(7) }
   );
+
+  // Ojo: `checkSlot != $slot` en GROQ también matchea null/undefined, así que el
+  // relleno incluye a los recién asignados de esta misma llamada. Es lo deseado.
+  const yaEn = new Set(delSlot.map((c) => c.carId));
+  const cars = [...delSlot, ...relleno.filter((c) => !yaEn.has(c.carId))].slice(0, limit);
 
   const runId = crypto.randomUUID();
 
@@ -102,7 +126,14 @@ export async function POST(req: NextRequest): Promise<Response> {
 
   return NextResponse.json({
     runId,
+    slot,
+    slotDescrito: describeSlot(slot),
     cars,
+    // Cuántos vinieron del lote que tocaba y cuántos son relleno de la cola. Si
+    // el relleno es alto corrida tras corrida, es que algo se está cayendo.
+    delSlot: delSlot.length,
+    relleno: cars.length - delSlot.length,
+    slotAsignados: asignados.length,
     // n8n avisa esto agrupado, una vez, no un mensaje por auto.
     sinFuente: sinFuente.slice(0, 50),
     sinFuenteTotal: sinFuente.length,

@@ -7,7 +7,7 @@
 // orden" de "el cron lleva tres semanas caído". El mensaje va encabezado por la
 // cobertura real — 28/28 corridas · 176/176 autos — leída de catalog_check_runs.
 //
-// Flujo C. Ver docs/FLUJO-PDP-N8N.md §2.7.
+// Flujo C. Ver docs/FLUJO-PDP-N8N.md §2.9.
 
 import { createClient } from "@sanity/client";
 import { coverageLine, weeklyCoverage, type Coverage } from "@/lib/catalog-recheck/coverage";
@@ -47,6 +47,22 @@ export function buildDigestMessage(
     coverageLine(coverage, publicados),
   ];
 
+  const has = (c: FlaggedCar, kind: string) =>
+    (c.catalogFindings ?? []).some((f) => f.kind === kind);
+
+  // Primero lo que ya cambió en el sitio: es lo único del digest sobre lo que
+  // Francisco puede querer actuar hacia atrás ("revertir <modelo>").
+  const aplicados = cars.filter((c) => has(c, "precio_aplicado"));
+  if (aplicados.length > 0) {
+    lines.push("", `✅ *${aplicados.length} precio(s) actualizado(s) automáticamente* (ya están en el sitio):`);
+    aplicados.forEach((c) => {
+      const f = (c.catalogFindings ?? []).find((x) => x.kind === "precio_aplicado");
+      lines.push(`   - ${c.brand} ${c.name}: ${f?.detail ?? ""}`);
+    });
+  }
+
+  const compartidas = cars.filter((c) => has(c, "fuente_compartida"));
+
   const of = (...flags: string[]) => cars.filter((c) => flags.includes(c.priceCheckFlag ?? ""));
   const discontinued = of("discontinued");
   const deadSource = of("fuente_muerta");
@@ -79,11 +95,24 @@ export function buildDigestMessage(
     years.forEach((c) => lines.push(`   - ${c.brand} ${c.name}`));
   }
 
+  if (compartidas.length > 0) {
+    lines.push(
+      "",
+      `⚙️ *${compartidas.length} con la fuente compartida entre varias PDPs* — no se comparan versiones ahí.`,
+      "   Para activar la detección, declarar el reparto de versiones en Studio (grupo 🤖 IA).",
+    );
+    compartidas.forEach((c) => lines.push(`   - ${c.brand} ${c.name}`));
+  }
+
   // Los autos con hallazgos que no llegaron a levantar flag: la fuente cambió su
   // precio pero ya somos más baratos. No hay nada que aplicar, pero enterarse de
   // que la lista se movió es parte de verificar el precio.
+  const yaContados = new Set([...aplicados, ...compartidas]);
   const informative = cars.filter(
-    (c) => (c.priceCheckFlag ?? "none") === "none" && (c.catalogFindings?.length ?? 0) > 0,
+    (c) =>
+      (c.priceCheckFlag ?? "none") === "none" &&
+      (c.catalogFindings?.length ?? 0) > 0 &&
+      !yaContados.has(c),
   );
   if (informative.length > 0) {
     lines.push("", `ℹ️ *${informative.length} con precio oficial distinto, sin acción* (seguimos más baratos):`);
@@ -95,7 +124,7 @@ export function buildDigestMessage(
   } else {
     lines.push(
       "",
-      `Escríbeme "aplicar <modelo>" para bajar el precio al sugerido, "restaurar <modelo>" si un descontinuado fue un error, o "descartar <modelo>" para dejarlo como está.`,
+      `Escríbeme "aplicar <modelo>" para bajar el precio al sugerido, "revertir <modelo>" para deshacer un ajuste automático, "restaurar <modelo>" si un descontinuado fue un error, o "descartar <modelo>" para dejarlo como está.`,
     );
   }
 
