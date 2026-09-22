@@ -237,24 +237,47 @@ ya hay un flag pendiente con el mismo valor  → no se re-avisa (C12, dedup)
 
 ### 2.5 El contrato del modelo
 
-Una llamada, `claude-sonnet-5`, `web_fetch_20260209` con `allowed_domains` limitado al host de
-`sourceUrls[0]` (sin búsqueda web, sin segunda fuente — C2/C10), `max_uses: 3` (página + PDF +
-un redirect), y **salida estructurada**:
+Una llamada, `claude-sonnet-5`, `web_fetch_20250910` (**fetch básico, sin filtrado dinámico**)
+limitado al host de `sourceUrls[0]` — sin búsqueda web, sin segunda fuente (C2/C10) — `max_uses: 3`
+(página + PDF + un redirect), `max_content_tokens: 8000`, y **salida estructurada**:
 
 ```json
 {
   "fuente_ok": true,
   "modelo_vigente": true,
-  "precio_base": 24990000,
+  "precio_base": 26490000,
   "anio_modelo": 2026,
-  "versiones": [{ "nombre": "GLX", "precio": 24990000 }],
-  "evidencia": "cita textual de donde salió precio_base",
+  "versiones": [{ "nombre": "Ora 03 SR", "precio": null }],
+  "evidencia": "Precio Lista $26.490.000",
   "nota": null
 }
 ```
 
-Regla en el prompt (R3/C4): **campo sin evidencia textual en la fuente = `null`**. Nunca
-inferido, nunca estimado. Sin `evidencia`, el precio se descarta en el diff.
+**Por qué el fetch básico y no el de filtrado dinámico.** Medido sobre la misma página, 3 corridas
+de cada uno:
+
+| Variante | Latencia | Resultado |
+|---|---|---|
+| `web_fetch_20250910` (básico) | 3,6 / 4,2 / 9,1 s — **prom 5,6 s** | idéntico, misma cita |
+| `web_fetch_20260309` (filtrado dinámico) | 12,6 / 18,2 / 23,1 s — **prom 18,0 s** | idéntico, misma cita |
+
+El filtrado dinámico corre code execution por debajo y acá no aporta nada: la página son ~3k
+tokens y ya hay techo con `max_content_tokens`. Importa porque el límite duro de una función en
+Vercel Hobby son 60 s, y con filtrado dinámico **una lectura sola llegó a 61,6 s**.
+
+Presupuesto real medido, lectura + confirmación: **15,8 s (GWM) y 23,1 s (BYD)** — 37–44 s de
+margen. Antes de este cambio eran 71,4 s, sobre el límite.
+
+**Regla en el prompt (R3/C4):** campo sin evidencia textual = `null`. Nunca inferido. Sin
+`evidencia`, el precio se descarta en el diff.
+
+**La regla que más cuesta: cuál de los dos precios es el de lista.** Las marcas chilenas muestran
+casi siempre dos. La página del Ora 03 pone *"Desde: $17.990.000*"* arriba y
+*"Precio Lista $26.490.000"* más abajo — la diferencia son $7.000.000 de bono de marca más
+$1.500.000 de bono de financiamiento. El prompt lleva ese ejemplo textual porque **sin él el
+modelo reportaba el promocional**: primera medición con el fetch básico, leyó $17.990.000. Con el
+ejemplo, lee $26.490.000. Si solo hay precio promocional, `precio_base` va en `null` con la razón
+en `nota` — es mejor que reportar el promocional.
 
 ### 2.6 Aplicar precios solo — qué se escribe y qué no
 
@@ -282,9 +305,13 @@ Las guardas, todas obligatorias:
 5. **No deja el lista bajo el precio con descuento.** Si la marca baja su lista por debajo de
    nuestro `discountPrice`, la PDP mostraría un "descuento" más caro que la lista. Eso es
    decisión comercial, no lectura → flag.
-6. **Segunda lectura de confirmación** en la misma corrida. El modo de falla real no es que la
-   fuente mienta: es que la extracción salga distinta dos veces. Cuesta ~US$0,015 y solo corre
-   en los autos que cambiaron (pocos). Si las dos lecturas no coinciden, no se escribe.
+6. **Segunda lectura de confirmación, independiente.** Prefiere una lectura fresca con Firecrawl
+   (`maxAge: 0`, navegador propio, otro motor de extracción): así no solo mide la varianza del
+   modelo, también descarta que el primer valor viniera de una página cacheada. 1 credit, y solo
+   en los autos cuyo precio cambió — que son pocos. Sin Firecrawl configurado cae a re-extraer del
+   mismo texto ya leído: guarda más débil, pero no bloquea.
+   **Esto ya atrapó un error real:** con el prompt sin el ejemplo de precio promocional, la lectura
+   dio $17.990.000 y la confirmación $26.490.000 → no se escribió nada. Funcionó como corresponde.
 
 Y siempre queda **vuelta atrás**: `priceCheckPreviousBasePrice` guarda el valor anterior, y
 `revertir <modelo>` por WhatsApp lo restaura. Un precio aplicado solo **avisa al instante**
@@ -412,10 +439,24 @@ Env var: `FIRECRAWL_API_KEY`. Sin ella el fallback no corre y queda en el log.
 **Palancas de token que sí son gratis y ya están aplicadas:**
 - `max_content_tokens: 8000` — una página normal son ~3k tokens, pero una de 100 kB son ~25k, o
   4× lo que cuesta revisar un auto entero.
-- `use_cache: false` (requiere `web_fetch_20260309`, ya en el SDK 0.96) — con auto-aplicar
-  encendido, una página del caché de Anthropic significaría escribir un precio ya viejo.
+- Fetch básico en vez del de filtrado dinámico: 3,2× más rápido con salida idéntica (§2.5).
+- `use_cache: false` **no se usa**: solo existe en `_20260309`, que es la variante lenta. La
+  frescura se recupera mejor en la confirmación, que hace una lectura independiente con Firecrawl
+  y `maxAge: 0` — más fuerte que saltar el caché en la primera lectura.
 - Pendiente: `web_fetch_20260318` + `response_inclusion: "excluded"` recorta tokens de salida.
   **No está en el SDK 0.96** (llega hasta `_20260309`), y nuestra salida son ~400 tokens: vale poco.
+
+**Probado en vivo el 22-09-2026**, con el catálogo real:
+
+| Caso | Camino | Resultado |
+|---|---|---|
+| GWM Ora 03 (`gwm.cl`) | `web_fetch` | $26.490.000, cita "Precio Lista $26.490.000", `sin_cambios` |
+| BYD Sealion 7 (`byd.com/cl/sealion-7`) | fallback a Firecrawl | sin precio **ni con navegador**: la URL es una ficha de características, no de venta |
+| BYD Yuan Plus (`byd.com/cl/order-yuan-plus`) | fallback a Firecrawl | **$23.990.000**, cita `## CLP 23990000.00` — el caso que estaba roto en silencio |
+
+El caso del Sealion 7 enseñó dos cosas: que BYD pone los precios en `/cl/order-*` (ahora el
+matcher del Sheet lo premia), y un bug — una fuente que **no lista ninguna** versión volvía
+"faltantes" a las nuestras. Corregido: una página sin versiones no dice nada del inventario.
 
 ## 3. Flujo v2 — Creación desde el Sheet
 
@@ -519,12 +560,25 @@ patrones (eso da 404 casi siempre: cada marca arma sus URLs distinto). Lo que ha
 
 Resultado del pase actual: **48 candidatos válidos, 0 de mercado equivocado, 134 sin candidato.**
 
-Los 134 son casi todos el mismo problema un nivel arriba: **la home de la marca tampoco se puede
-leer sin navegador.** 12 sitios dieron timeout (Cupra, DS, Haval, Jaecoo, Jetour, Leapmotor,
-Mercedes-Benz, Nammi, Omoda, Ora, Riddara), Tesla y Jeep bloquean, y Chery/Deepal/GAC devuelven
-1 link. La salida es el mismo Firecrawl: **~40 páginas de catálogo de marca, una sola vez, ~40
-credits** — muy por debajo del free tier. Alternativa: el agente multiagente en Console con
-búsqueda web (más caro, mejor juicio para distinguir página de precios de newsroom).
+Se corrió también con `--firecrawl` (35 credits). Subió poco, y al investigar por qué apareció
+el motivo real: **8 marcas tienen el `website` muerto en Sanity.** No es bloqueo de bots ni
+JavaScript — el dominio no resuelve:
+
+| Marca | `website` en Sanity | DNS |
+|---|---|---|
+| Cupra · Haval · Jetour · Leapmotor · Nammi | `www.<marca>.cl` | ✗ no resuelve, ni con ni sin `www` |
+| Mercedes-Benz | `www.mercedes-benz.cl` | apex redirige a un `www` que no resuelve |
+| Ora · Riddara | `www.<marca>.cl` | el apex resuelve pero no sirve contenido |
+
+Ningún scraper arregla eso. **Pista concreta:** en Chile Ora y Haval se venden bajo GWM, y el
+único `sourceUrls` que ya funcionaba en producción es `gwm.cl/vehiculo/ora/ora-03/`. Lo mismo
+aplica a Jaecoo/Jetour/Omoda (grupo Chery, y `omoda.cl` y `jaecoo.cl` sí resuelven). Hay que
+apuntar esas marcas al sitio del importador, no al dominio propio.
+
+El resto de los 134 sí es el problema un nivel arriba — el catálogo de la marca lo pinta
+JavaScript (Chery/Deepal/GAC devuelven 1 link). Ahí Firecrawl ayuda, pero conviene primero
+corregir los 8 `website` y volver a correr: el pase cuesta ~35 credits y con los dominios malos
+se gasta en vano.
 
 **Optimización a decidir acá y no después:** varias marcas publican una sola página de precios
 (BYD cubre 9 autos, MG 8, Porsche 8). Un `priceListUrl` por marca bajaría las lecturas semanales

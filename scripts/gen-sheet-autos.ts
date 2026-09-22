@@ -19,8 +19,15 @@ import { createClient } from "@sanity/client";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { isChileConfirmedUrl } from "@/lib/chile-url";
 import { describeSlot } from "@/lib/catalog-recheck/slots";
+import { firecrawlConfigured } from "@/lib/catalog-recheck/firecrawl";
 
 const descubrir = !process.argv.includes("--sin-descubrir");
+/**
+ * Usa Firecrawl para las marcas cuya home no se puede leer sin navegador. Son ~40
+ * (12 dan timeout, Tesla y Jeep bloquean, y varias devuelven 1 link porque
+ * renderizan todo con JavaScript). 1 credit por página, una sola vez.
+ */
+const conFirecrawl = process.argv.includes("--firecrawl");
 const OUT = ".context/sheet";
 const UA =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0 Safari/537.36";
@@ -188,7 +195,11 @@ function bestLink(model: string, links: Link[], sitePrefix: string): Link | null
   // que más duelen: de un newsroom salió el "precio oficial" de $151.900 que
   // motivó el piso de plausibilidad del código.
   const RUIDO =
-    /accesorio|repuesto|post|blog|news|noticia|stories|historia|prensa|press|servicio|taller|cotiz|contacto|test-?drive|garantia|reciclaje|sustentab/i;
+    /accesorio|repuesto|post|blog|news|noticia|stories|historia|prensa|press|servicio|taller|contacto|test-?drive|garantia|reciclaje|sustentab/i;
+  // Donde viven los precios. Visto en producción: byd.com/cl/sealion-7 es una
+  // ficha de características SIN precios (ni con navegador real aparecen), y el
+  // precio está en byd.com/cl/order-sealion-7.
+  const PRECIOS = /precio|order|ordenar|configurador|cotizador|comprar/i;
   // Subpáginas de una ficha que existen, pero no son donde está el precio.
   const SUBPAGINA = /dimension|equipamiento|galeria|gallery|interior|exterior|seguridad|tecnolog|financiamiento|accesorios/i;
 
@@ -226,6 +237,7 @@ function bestLink(model: string, links: Link[], sitePrefix: string): Link | null
     score -= Math.max(0, path.split("/").filter(Boolean).length - 2) * 0.8;
     if (RUIDO.test(path)) score -= 12;
     if (SUBPAGINA.test(path)) score -= 5;
+    if (PRECIOS.test(path)) score += 3;
     if (score > bestScore) {
       bestScore = score;
       best = link;
@@ -240,6 +252,36 @@ interface Suggestion {
   staticPrices: boolean;
   nota: string;
 }
+
+/**
+ * Links de una página renderizada, vía Firecrawl. `formats: ["links"]` cuesta 1
+ * credit (solo json/question/highlights cobran los +4 extra).
+ */
+async function scrapeLinks(url: string): Promise<string[]> {
+  const key = (process.env.FIRECRAWL_API_KEY ?? "").trim();
+  if (!key) return [];
+  try {
+    const res = await fetch("https://api.firecrawl.dev/v2/scrape", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ url, formats: ["links"], onlyMainContent: false, waitFor: 2_500, timeout: 45_000 }),
+    });
+    if (!res.ok) return [];
+    const json = (await res.json()) as { data?: { links?: string[] } };
+    const host = new URL(url).hostname;
+    return (json.data?.links ?? []).filter((u) => {
+      try {
+        return new URL(u).hostname === host;
+      } catch {
+        return false;
+      }
+    });
+  } catch {
+    return [];
+  }
+}
+
+let creditsUsados = 0;
 
 async function discover(cars: Car[]): Promise<Map<string, Suggestion>> {
   const result = new Map<string, Suggestion>();
@@ -292,6 +334,25 @@ async function discover(cars: Car[]): Promise<Map<string, Suggestion>> {
       }
     }
 
+    // Si la home no se pudo leer (timeout, 403) o devolvió casi nada, es el mismo
+    // problema que motivó el fallback del re-check, un nivel más arriba: el
+    // catálogo lo pinta JavaScript. Acá sí conviene gastar un credit, porque es
+    // una sola página por marca y por única vez.
+    let viaFirecrawl = 0;
+    if (conFirecrawl && firecrawlConfigured() && (!reachable || links.size < 8)) {
+      for (const root of roots.slice(0, 2)) {
+        const fc = await scrapeLinks(root);
+        viaFirecrawl += 1;
+        for (const u of fc) {
+          if (!links.has(u)) links.set(u, "");
+        }
+        if (links.size >= 8) break;
+      }
+      if (links.size > 0) reachable = true;
+    }
+
+    creditsUsados += viaFirecrawl;
+
     if (!reachable) {
       const status = pages.find((p) => p.status !== 0)?.status ?? 0;
       for (const c of brandCars) {
@@ -342,7 +403,8 @@ async function discover(cars: Car[]): Promise<Map<string, Suggestion>> {
     const ok = validated.filter((v) => v.status === 200).length;
     console.log(
       `  ${brand.padEnd(14)} ${ok}/${brandCars.length} candidatos válidos ` +
-        `(${all.length} links${fromSitemap.length ? `, ${fromSitemap.length} del sitemap` : ", sin sitemap"})`
+        `(${all.length} links${fromSitemap.length ? `, ${fromSitemap.length} del sitemap` : ", sin sitemap"}` +
+        `${viaFirecrawl ? `, ${viaFirecrawl} credit(s) de Firecrawl` : ""})`
     );
   }
 
@@ -445,6 +507,7 @@ async function main(): Promise<void> {
     console.log(`  candidatos propuestos y válidos: ${utiles.length} / ${cars.length - conFuente} pendientes`);
     console.log(`  de esos, necesitan navegador:    ${navegador.length} (${Math.round((navegador.length / Math.max(utiles.length, 1)) * 100)}%)`);
     console.log(`  sin candidato (buscar a mano):   ${sug.length - utiles.length}`);
+    if (creditsUsados) console.log(`  credits de Firecrawl usados:     ${creditsUsados}`);
   }
   console.log(`\n  Archivos en ${OUT}/ : autos.tsv · corridas.tsv · faltan-fuentes.tsv · instrucciones.tsv\n`);
 }

@@ -174,6 +174,13 @@ test("versión nueva en la fuente", () => {
   assert.equal(d.flag, "version_nueva");
 });
 
+test("una fuente que no lista NINGUNA versión no vuelve faltantes a las nuestras", () => {
+  // byd.com/cl/sealion-7 es una ficha de características sin precios: reportaba
+  // "GL" y "GS" como desaparecidas cuando lo que pasa es que la URL está mal.
+  const d = decide(car(), ok({ versiones: [] }));
+  assert.equal(d.findings.filter((f) => f.kind === "version_faltante").length, 0);
+});
+
 test("versión que desapareció se reporta pero NO se borra ni oculta", () => {
   const d = decide(car(), ok({ versiones: [{ nombre: "GLX", precio: 25_000_000 }] }));
   const f = d.findings.find((x) => x.kind === "version_faltante");

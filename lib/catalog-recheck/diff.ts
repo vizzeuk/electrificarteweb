@@ -257,7 +257,12 @@ export function decide(car: CarSnapshot, report: SourceReport): CheckDecision {
 
   // Una versión que desapareció de la fuente se reporta, pero NO se borra: puede
   // ser que la marca partió su catálogo en dos páginas, no que dejó de venderla.
-  if (inventoryComparable) {
+  //
+  // Y solo si la fuente listó ALGUNA versión. Una página que no lista ninguna no
+  // dice nada sobre nuestro inventario — dice que es una página de marketing, no
+  // de precios. Visto en producción: byd.com/cl/sealion-7 es una ficha de
+  // características sin precios, y reportaba "GL" y "GS" como desaparecidas.
+  if (inventoryComparable && scoped.length > 0) {
     for (const [key, mine] of ours) {
       if (seen.has(key)) continue;
       findings.push({

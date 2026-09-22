@@ -30,8 +30,17 @@ export interface FirecrawlResult {
   error?: string;
 }
 
+/**
+ * `.trim()` a propósito: una key pegada en Vercel con un espacio al final se ve
+ * idéntica en la UI y devuelve "Unauthorized: Invalid token" — un fallo que
+ * cuesta encontrar porque el fallback está diseñado para degradar en silencio.
+ */
+function apiKey(): string {
+  return (process.env.FIRECRAWL_API_KEY ?? "").trim();
+}
+
 export function firecrawlConfigured(): boolean {
-  return Boolean(process.env.FIRECRAWL_API_KEY);
+  return apiKey().length > 0;
 }
 
 /**
@@ -39,8 +48,11 @@ export function firecrawlConfigured(): boolean {
  * footer, que es exactamente el ruido que confunde la extracción de precios
  * (los menús de otros modelos traen sus propios precios).
  */
-export async function scrapeMarkdown(url: string): Promise<FirecrawlResult> {
-  const key = process.env.FIRECRAWL_API_KEY;
+export async function scrapeMarkdown(
+  url: string,
+  opts: { fresh?: boolean } = {},
+): Promise<FirecrawlResult> {
+  const key = apiKey();
   if (!key) return { ok: false, error: "FIRECRAWL_API_KEY no configurada" };
 
   const controller = new AbortController();
@@ -58,6 +70,11 @@ export async function scrapeMarkdown(url: string): Promise<FirecrawlResult> {
         // por el que estamos acá, así que vale la latencia extra.
         waitFor: 2_500,
         timeout: 30_000,
+        // `maxAge: 0` salta el caché de Firecrawl. Solo se usa en la confirmación
+        // de un precio que se va a escribir: ahí el punto es justamente que la
+        // lectura sea independiente de la primera. Cuesta lo mismo (1 credit),
+        // pero es más lento, así que la lectura normal sí usa caché.
+        ...(opts.fresh ? { maxAge: 0 } : {}),
       }),
       signal: controller.signal,
     });

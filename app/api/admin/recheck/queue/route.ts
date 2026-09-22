@@ -77,7 +77,7 @@ export async function POST(req: NextRequest): Promise<Response> {
 
   // Sin `limit` (o con 0) el tamaño se recalcula solo: si el catálogo crece a 200
   // autos, el lote pasa a 8 sin tocar el cron ni el workflow. n8n manda 0 justo
-  // para eso, así que un 0 no puede significar "revisá cero autos".
+  // para eso, así que un 0 no puede significar "revisa cero autos".
   const requested = Number(body.limit) > 0 ? Math.floor(Number(body.limit)) : 0;
   const limit = requested || Math.max(1, Math.ceil(published / SLOTS_PER_WEEK));
   const cutoff = daysAgoIso(MIN_DAYS_BETWEEN_CHECKS);

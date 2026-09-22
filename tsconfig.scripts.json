@@ -1,0 +1,16 @@
+{
+  "//": "tsconfig.json excluye `scripts`, así que ningún script se typecheckea con `npx tsc --noEmit` — por eso un `via is not defined` llegó a producirse en un test. Este config los cubre. Correr los dos con: npm run typecheck",
+  "//2": "El `include` está acotado a los scripts del re-check a propósito: los más viejos (import-cars, qa/http, reviews-e2e) arrastran 18 errores de tipos preexistentes, y arreglarlos no es parte de esto. Al sumar un script nuevo, agregalo acá.",
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "noEmit": true },
+  "include": [
+    "lib/**/*.ts",
+    "types/**/*.ts",
+    "scripts/recheck-backfill.ts",
+    "scripts/gen-sheet-autos.ts",
+    "scripts/import-sheet-fuentes.ts",
+    "scripts/qa/recheck-diff.test.ts",
+    "scripts/qa/recheck-source.test.ts"
+  ],
+  "exclude": ["node_modules"]
+}

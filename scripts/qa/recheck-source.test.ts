@@ -14,7 +14,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@sanity/client";
 import { decide } from "@/lib/catalog-recheck/diff";
 import { readSource } from "@/lib/catalog-recheck/read-source";
-import type { CarSnapshot } from "@/lib/catalog-recheck/types";
+import type { CarSnapshot, SourceReport } from "@/lib/catalog-recheck/types";
 
 const argSlug = process.argv[process.argv.indexOf("--slug") + 1];
 const slug = process.argv.includes("--slug") ? argSlug : undefined;
@@ -66,9 +66,10 @@ async function main(): Promise<void> {
     console.log(`  tenemos: base ${clp(car.basePrice)} · año ${car.modelYear ?? "—"} · ${car.versions?.length ?? 0} versiones`);
   
     const t0 = Date.now();
-    let report;
+    let report: SourceReport;
+    let via: string;
     try {
-      report = await readSource({
+      const read = await readSource({
         anthropic,
         brand: car.brand,
         model: car.name,
@@ -76,6 +77,8 @@ async function main(): Promise<void> {
         extraUrls: car.extraUrls,
         log: (l) => console.log(`  ${l}`),
       });
+      report = read.report;
+      via = read.via;
     } catch (e) {
       fallos++;
       console.error(`  \x1b[31m✗ error de API: ${(e as Error).message}\x1b[0m`);

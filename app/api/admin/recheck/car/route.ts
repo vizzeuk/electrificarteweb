@@ -23,7 +23,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
 import { authorized, sanityWrite } from "@/lib/catalog-recheck/admin";
 import { decide } from "@/lib/catalog-recheck/diff";
-import { readFromText, readSource } from "@/lib/catalog-recheck/read-source";
+import { confirmPrice, readSource } from "@/lib/catalog-recheck/read-source";
 import type { AutoApply, CarSnapshot, SourceReport } from "@/lib/catalog-recheck/types";
 
 export const runtime = "nodejs";
@@ -94,7 +94,11 @@ export async function POST(req: NextRequest): Promise<Response> {
 
   let report: SourceReport;
   let via: "web_fetch" | "firecrawl" = "web_fetch";
-  /** El markdown de Firecrawl, si ese fue el camino. Evita un segundo credit. */
+  /**
+   * El texto de la página, venga de web_fetch o de Firecrawl. Con esto la
+   * confirmación no vuelve a buscar la página: ahorra ~30 s (el límite duro de
+   * una función en Vercel Hobby son 60 s) y un credit de Firecrawl.
+   */
   let scrapedText: string | undefined;
 
   try {
@@ -128,18 +132,14 @@ export async function POST(req: NextRequest): Promise<Response> {
 
   if (decision.autoApply && autoApplyEnabled()) {
     try {
-      // Si el precio vino de Firecrawl, se re-extrae del MISMO markdown: un solo
-      // credit, y con input idéntico la única variable que queda es el modelo,
-      // que es justo lo que esta guarda quiere medir.
-      const second = scrapedText
-        ? await readFromText(readInput, scrapedText)
-        : (await readSource(readInput)).report;
-      if (second.fuente_ok && second.precio_base === decision.autoApply.to) {
+      const check = await confirmPrice(readInput, decision.autoApply.to, scrapedText);
+      if (check.confirmado) {
         applied = decision.autoApply;
+        log(`✓ precio confirmado por ${check.via}`);
       } else {
         confirmDetail =
-          `La segunda lectura no confirmó ${clp(decision.autoApply.to)} ` +
-          `(leyó ${second.precio_base ? clp(second.precio_base) : "nada"}), así que no se aplicó solo.`;
+          `La segunda lectura (${check.via}) no confirmó ${clp(decision.autoApply.to)} ` +
+          `(leyó ${check.leido ? clp(check.leido) : "nada"}), así que no se aplicó solo.`;
         log(`⚠ ${confirmDetail}`);
       }
     } catch (err) {

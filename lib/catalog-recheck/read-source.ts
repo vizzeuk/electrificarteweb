@@ -53,8 +53,23 @@ const SYSTEM = [
   "- 'evidencia' debe ser la cita textual literal de donde sale precio_base. Sin cita, manda",
   "  precio_base en null: un precio sin respaldo se descarta igual más adelante.",
   "- Los precios van en pesos chilenos, como número entero, sin puntos ni símbolos.",
-  "  '$25.990.000' es 25990000. Si la página muestra una cuota mensual, un bono, un pie o un",
-  "  precio de otro mercado, eso NO es el precio de lista: manda null.",
+  "  '$25.990.000' es 25990000.",
+  "",
+  "CUÁL PRECIO ES EL DE LISTA (lo que más se equivoca):",
+  "Las marcas chilenas muestran casi siempre DOS precios en la misma página. El de lista es el",
+  "más alto y suele estar etiquetado 'Precio Lista', 'Precio normal' o 'Valor'. El otro es el",
+  "precio promocional, y NO sirve: aparece como 'Desde $X', 'Precio con bonos', 'Precio web',",
+  "'Oferta', o con asterisco, y está calculado restando bonos de marca, bonos de financiamiento,",
+  "descuentos por pago contado o canje. Reporta SIEMPRE el precio de lista.",
+  "",
+  "Ejemplo real: la página del GWM Ora 03 muestra 'Desde: $17.990.000*' arriba y",
+  "'Precio Lista $26.490.000' más abajo (la diferencia son $7.000.000 de bono de marca y",
+  "$1.500.000 de bono de financiamiento). La respuesta correcta es precio_base = 26490000,",
+  "con evidencia 'Precio Lista $26.490.000'. El valor de 'Desde' se descarta.",
+  "",
+  "Si la página SOLO muestra un precio promocional y en ninguna parte el de lista, manda",
+  "precio_base en null y explica por qué en 'nota'. Es mejor que reportar el promocional.",
+  "Tampoco son precio de lista: una cuota mensual, un pie, un arriendo, ni un precio de otro país.",
   "- 'modelo_vigente' es false solo si la página muestra que el modelo salió del catálogo",
   "  (descontinuado, 'ya no disponible', no aparece entre los modelos vigentes). Que no haya",
   "  precio visible no significa que el modelo no exista.",
@@ -131,10 +146,37 @@ export interface SourceRead {
   /** Qué camino trajo el dato. Va al log de la corrida y al digest. */
   via: "web_fetch" | "firecrawl";
   /**
-   * El texto que se extrajo, cuando vino de Firecrawl. Permite volver a extraer
-   * (la confirmación del auto-aplicar) sin gastar otro credit — y con input
-   * idéntico, que es un test más limpio de la varianza del modelo.
+   * El texto de la página que se leyó, venga de `web_fetch` o de Firecrawl.
+   * Permite que la confirmación del auto-aplicar re-extraiga sin volver a buscar
+   * la página: ahorra ~30 s (clave contra el límite de 60 s de Vercel) y un
+   * credit de Firecrawl. Con input idéntico, además, la única variable que queda
+   * es la varianza del modelo — que es justo lo que esa guarda mide.
    */
+  text?: string;
+}
+
+/**
+ * El texto que `web_fetch` metió en el contexto. Se recupera del propio bloque de
+ * resultado para que la CONFIRMACIÓN del auto-aplicar pueda re-extraer sin volver
+ * a buscar la página: una segunda lectura completa son ~37 s más, y sumada a la
+ * primera pasa el límite duro de 60 s de una función en Vercel Hobby — justo en
+ * los autos que cambiaron de precio, que son los que importan.
+ */
+function fetchedText(content: Anthropic.ContentBlock[]): string | undefined {
+  for (const block of content) {
+    if (block.type !== "web_fetch_tool_result") continue;
+    const result = block.content as { content?: { source?: { type?: string; data?: string } } };
+    const source = result?.content?.source;
+    if (source?.type === "text" && typeof source.data === "string" && source.data.trim()) {
+      return source.data;
+    }
+  }
+  return undefined;
+}
+
+interface Extraction {
+  report: SourceReport;
+  /** Solo en el camino de `web_fetch`: el texto de la página que se leyó. */
   text?: string;
 }
 
@@ -143,7 +185,7 @@ async function extract(
   input: ReadSourceInput,
   userContent: string,
   tools?: Anthropic.ToolUnion[],
-): Promise<SourceReport> {
+): Promise<Extraction> {
   const response = await input.anthropic.messages.create({
     model: MODEL,
     max_tokens: 4000,
@@ -159,18 +201,22 @@ async function extract(
     .join("")
     .trim();
 
-  if (!text) return failed("El modelo no devolvió contenido al leer la fuente.");
+  const pageText = tools ? fetchedText(response.content) : undefined;
+
+  if (!text) {
+    return { report: failed("El modelo no devolvió contenido al leer la fuente."), text: pageText };
+  }
 
   try {
-    return sanitize(JSON.parse(text));
+    return { report: sanitize(JSON.parse(text)), text: pageText };
   } catch {
     input.log?.(`⚠ salida no-JSON: ${text.slice(0, 200)}`);
-    return failed("La salida del modelo no fue JSON válido.");
+    return { report: failed("La salida del modelo no fue JSON válido."), text: pageText };
   }
 }
 
 /** Camino 1: `web_fetch` de Anthropic. Gratis, pero no ejecuta JavaScript. */
-async function readWithWebFetch(input: ReadSourceInput, urls: string[]): Promise<SourceReport> {
+async function readWithWebFetch(input: ReadSourceInput, urls: string[]): Promise<Extraction> {
   const allowed = [...new Set(urls.map(hostOf).filter((h): h is string => Boolean(h)))];
   const prompt = [
     `Marca: ${input.brand}`,
@@ -186,16 +232,21 @@ async function readWithWebFetch(input: ReadSourceInput, urls: string[]): Promise
   // que el endpoint lo marque como error de corrida y el auto vuelva a la cola.
   return extract(input, prompt, [
     {
-      // `_20260309` agrega `use_cache`. Se desactiva el caché de Anthropic a
-      // propósito: si sirviera una versión vieja de la página, el diff estaría
-      // comparando contra un precio que ya cambió — y con auto-aplicar
-      // encendido, escribiríamos ese precio viejo en el sitio.
-      type: "web_fetch_20260309",
+      // Fetch BÁSICO, sin filtrado dinámico, a propósito. Medido sobre la misma
+      // página, 3 corridas cada uno: básico 5,6 s promedio · `_20260309` con
+      // filtrado dinámico 18,0 s — y salida idéntica, misma cita textual. El
+      // filtrado corre code execution por debajo y acá no aporta: la página son
+      // ~3k tokens y ya hay techo con `max_content_tokens`.
+      //
+      // Importa porque el límite duro de una función en Vercel Hobby son 60 s: con
+      // filtrado dinámico una lectura sola llegó a 61,6 s. La frescura que daba
+      // `use_cache: false` (solo en `_20260309`) se recupera mejor en la
+      // confirmación, que hace una lectura independiente con Firecrawl.
+      type: "web_fetch_20250910",
       name: "web_fetch",
       max_uses: MAX_FETCHES,
       allowed_domains: allowed,
       max_content_tokens: MAX_CONTENT_TOKENS,
-      use_cache: false,
     },
   ]);
 }
@@ -215,7 +266,7 @@ export async function readFromText(
     "",
     markdown.slice(0, MAX_TEXT_CHARS),
   ].join("\n");
-  return extract(input, prompt);
+  return (await extract(input, prompt)).report;
 }
 
 /**
@@ -231,19 +282,49 @@ export function needsBrowserFallback(report: SourceReport): boolean {
   return report.fuente_ok && report.modelo_vigente && report.precio_base === null;
 }
 
+/**
+ * Segunda lectura para confirmar un precio antes de escribirlo solo.
+ *
+ * Prefiere una lectura **independiente** con Firecrawl (`maxAge: 0`, navegador
+ * propio): así no solo mide la varianza del modelo, también descarta que el
+ * primer valor viniera de una página cacheada por Anthropic. Cuesta 1 credit y
+ * solo corre en los autos cuyo precio cambió, que son pocos.
+ *
+ * Sin Firecrawl configurado cae a re-extraer del mismo texto: es una guarda más
+ * débil (solo cubre varianza del modelo), pero no bloquea el flujo.
+ */
+export async function confirmPrice(
+  input: ReadSourceInput,
+  esperado: number,
+  textoPrevio?: string,
+): Promise<{ confirmado: boolean; leido: number | null; via: string }> {
+  if (firecrawlConfigured()) {
+    const fresh = await scrapeMarkdown(input.sourceUrl, { fresh: true });
+    if (fresh.ok && fresh.markdown) {
+      const r = await readFromText(input, fresh.markdown);
+      return { confirmado: r.precio_base === esperado, leido: r.precio_base, via: "firecrawl (lectura fresca)" };
+    }
+    input.log?.(`⚠ la confirmación con Firecrawl falló (${fresh.error}) — se cae al texto ya leído`);
+  }
+
+  if (!textoPrevio) return { confirmado: false, leido: null, via: "sin texto para confirmar" };
+  const r = await readFromText(input, textoPrevio);
+  return { confirmado: r.precio_base === esperado, leido: r.precio_base, via: "re-extracción del mismo texto" };
+}
+
 export async function readSource(input: ReadSourceInput): Promise<SourceRead> {
   if (!hostOf(input.sourceUrl)) {
     return { report: failed(`URL inválida: ${input.sourceUrl}`), via: "web_fetch" };
   }
 
   const urls = [input.sourceUrl, ...(input.extraUrls ?? [])];
-  const report = await readWithWebFetch(input, urls);
+  const { report, text } = await readWithWebFetch(input, urls);
 
   if (!needsBrowserFallback(report) || !firecrawlConfigured()) {
     if (needsBrowserFallback(report)) {
       input.log?.("⚠ la página cargó sin precio y Firecrawl no está configurado — sin fallback");
     }
-    return { report, via: "web_fetch" };
+    return { report, via: "web_fetch", text };
   }
 
   input.log?.("↻ sin precio en el HTML estático — reintento con Firecrawl (navegador real)");
@@ -253,7 +334,7 @@ export async function readSource(input: ReadSourceInput): Promise<SourceRead> {
     input.log?.(`⚠ Firecrawl falló: ${scraped.error}`);
     // Se devuelve la lectura de web_fetch tal cual: la página sí respondió, así
     // que esto NO es fuente caída. Queda sin precio y el diff no propone nada.
-    return { report, via: "web_fetch" };
+    return { report, via: "web_fetch", text };
   }
 
   const second = await readFromText(input, scraped.markdown);

@@ -117,7 +117,7 @@ const nodes = [
         "### Antes de activar",
         "1. **Credenciales** (3): `Electrificarte Admin (x-admin-secret)` (Header Auth, name `x-admin-secret`),",
         "   y `Google Sheets — Electrificarte`. Los nodos que dicen REEMPLAZAR las necesitan.",
-        "2. **Nodo Config**: pegá `siteBase` (sin barra final) y `sheetId`.",
+        "2. **Nodo Config**: pega `siteBase` (sin barra final) y `sheetId`.",
         "3. **El Sheet** necesita dos pestañas: `corridas` y `faltan fuentes`.",
         "4. **Bloqueante**: hoy solo 1 de 176 autos publicados tiene `sourceUrls`. Hasta que la Fase 0",
         "   los complete, este cron corre en vacío y avisa 175 autos sin fuente. Probá primero a mano",
@@ -163,7 +163,7 @@ const nodes = [
     },
     id: "cfg", name: "Config",
     type: "n8n-nodes-base.set", typeVersion: 3.4, position: [140, 300],
-    notes: "Lo único que se edita a mano. `lote` en 0 = la web lo calcula sola (techo(publicados/28)). Para probar, ponelo en 1.",
+    notes: "Lo único que se edita a mano. `lote` en 0 = la web lo calcula sola (techo(publicados/28)). Para probar, ponlo en 1.",
   },
 
   http("queue", "Tomar el lote", "/api/admin/recheck/queue",
