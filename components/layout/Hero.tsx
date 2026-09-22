@@ -88,13 +88,13 @@ export function Hero({ data }: HeroProps) {
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 py-14 md:py-20 lg:py-24 w-full">
         {/* Bloque editorial — alineado a la izquierda, con jerarquía clara */}
-        <div className="hero-fade-in max-w-3xl">
+        <div className="hero-fade-in max-w-3xl text-center md:text-left">
           <Badge variant="primary" className="mb-5">{badge}</Badge>
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-[4.25rem] font-headline font-extrabold text-white leading-[1.03] mb-5">
             {title}{" "}
             <span className="text-primary">{highlight}</span>
           </h1>
-          <p className="text-base md:text-lg text-white/70 leading-relaxed max-w-xl mb-8">
+          <p className="text-base md:text-lg text-white/70 leading-relaxed max-w-xl mx-auto md:mx-0 mb-8">
             {heroSubtitle}
           </p>
 
@@ -102,7 +102,7 @@ export function Hero({ data }: HeroProps) {
               Ambos comparten estructura ícono + dos líneas; el principal va
               relleno (teal) para marcar jerarquía. El orden se invirtió con el
               giro: antes el relleno era la Oferta $19.990, hoy en standby. */}
-          <div className="flex flex-col sm:flex-row sm:items-stretch gap-3 sm:gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-stretch justify-center md:justify-start gap-3 sm:gap-4">
             <Link
               href={advCtaHref}
               className="group inline-flex items-center gap-3 rounded-xl bg-primary hover:bg-primary-dark text-black px-5 py-4 transition-all shadow-[0_6px_32px_rgba(0,229,229,0.30)] hover:shadow-[0_10px_44px_rgba(0,229,229,0.50)] hover:scale-[1.02] active:scale-[0.99]"
@@ -110,7 +110,7 @@ export function Hero({ data }: HeroProps) {
               <span className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-black/15 shrink-0">
                 <Icon name="forum" className="text-[20px]" />
               </span>
-              <span className="text-left leading-tight">
+              <span className="text-center sm:text-left leading-tight">
                 <span className="block text-base md:text-lg font-extrabold">Te ayudamos a elegir</span>
                 <span className="block text-xs font-semibold text-black/70">Asesoría personalizada por {advPrice}</span>
               </span>
@@ -124,7 +124,7 @@ export function Hero({ data }: HeroProps) {
               <span className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-primary/15 text-primary shrink-0">
                 <Icon name="sell" className="text-[20px]" />
               </span>
-              <span className="text-left leading-tight">
+              <span className="text-center sm:text-left leading-tight">
                 <span className="block text-base md:text-lg font-extrabold text-white">Consigue la mejor oferta</span>
                 <span className="block text-xs font-semibold text-white/55">Únete a la waitlist</span>
               </span>
@@ -139,9 +139,9 @@ export function Hero({ data }: HeroProps) {
         </div>
 
         {/* Prueba social + propuesta de valor de la asesoría */}
-        <div className="hero-fade-in mt-11 md:mt-14 flex flex-col sm:flex-row sm:items-center gap-6 sm:gap-8">
+        <div className="hero-fade-in mt-11 md:mt-14 flex flex-col items-center md:items-start sm:flex-row sm:items-center md:justify-start justify-center gap-6 sm:gap-8 text-center md:text-left">
           {/* Red de vendedores — el mecanismo real que consigue el descuento */}
-          <div className="flex items-center gap-3.5">
+          <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-3.5">
             <div className="flex -space-x-3">
               {avatars.map((src) => (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -157,8 +157,8 @@ export function Hero({ data }: HeroProps) {
               ))}
             </div>
             <div className="leading-tight">
-              <p className="text-white text-sm font-bold">+15 vendedores oficiales</p>
-              <p className="text-xs text-white/55 mt-0.5">en nuestra red a lo largo de Chile</p>
+              <p className="text-white text-sm font-bold">Asesoría 1 a 1 por WhatsApp</p>
+              <p className="text-xs text-white/55 mt-0.5">con un experto en autos electrificados</p>
             </div>
           </div>
 
@@ -175,7 +175,7 @@ export function Hero({ data }: HeroProps) {
         </div>
 
         {/* Enlace secundario a "Cómo funciona" */}
-        <div className="mt-8">
+        <div className="mt-8 text-center md:text-left">
           <a
             href="#como-funciona"
             className="inline-flex items-center gap-1.5 text-white/50 hover:text-white text-sm font-medium transition-colors"

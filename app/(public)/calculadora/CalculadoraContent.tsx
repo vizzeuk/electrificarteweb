@@ -7,6 +7,7 @@ import { m, AnimatePresence } from "framer-motion";
 import { formatCLP } from "@/lib/utils";
 import type { CalcCar, CalcVersion } from "./types";
 import { Icon } from "@/components/ui/Icon";
+import { OfferCta } from "@/components/waitlist/OfferCta";
 
 // ─── Constantes Chile ────────────────────────────────────────────────────────
 const ELECTRICITY_CLP_KWH  = 200;   // CLP/kWh tarifa residencial promedio
@@ -810,12 +811,14 @@ export default function CalculadoraContent({ cars }: Props) {
                   <div className="text-right sm:text-center flex-shrink-0">
                     <p className="hidden sm:block text-text-ghost text-xs mb-0.5">Desde</p>
                     <p className="hidden sm:block font-headline font-bold text-text-main text-base">{formatCLP(price)}</p>
-                    <Link
-                      href={`/solicitar?auto=${car.slug}`}
+                    <OfferCta
+                      carSlug={car.slug}
+                      model={car.name}
+                      source="calculadora"
                       className="relative z-[1] mt-0 sm:mt-2 inline-flex items-center gap-1 bg-primary hover:bg-primary-dark text-black font-bold text-xs px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-all shadow-[0_2px_12px_rgba(0,229,229,0.25)] hover:shadow-[0_4px_18px_rgba(0,229,229,0.40)] hover:scale-[1.02]"
                     >
                       Lo quiero
-                    </Link>
+                    </OfferCta>
                   </div>
 
                   <Link href={`/auto/${car.slug}`} className="absolute inset-0 rounded-2xl z-0" aria-label={`Ver ${car.brand} ${car.name}`} />
@@ -851,15 +854,17 @@ export default function CalculadoraContent({ cars }: Props) {
                   : "Solicita tu oferta y empieza a ahorrar"}
               </h2>
               <p className="text-white/50 text-sm mt-1">
-                Negociamos por ti con nuestra red exclusiva de vendedores en Chile.
+                Súmate a la waitlist y te avisamos cuando abramos el acceso.
               </p>
             </div>
-            <Link
-              href={selectedCar ? `/solicitar?auto=${selectedCar.slug}` : "/solicitar"}
+            <OfferCta
+              carSlug={selectedCar?.slug}
+              model={selectedCar?.name}
+              source="calculadora"
               className="flex-shrink-0 inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-black px-8 py-4 rounded-xl transition-all text-sm whitespace-nowrap shadow-[0_4px_20px_rgba(0,229,229,0.30)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]"
             >
               Quiero mi oferta
-            </Link>
+            </OfferCta>
           </div>
         </div>
       </section>

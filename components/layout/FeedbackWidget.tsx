@@ -106,7 +106,7 @@ export function FeedbackWidget() {
             position: "fixed",
             left: "1rem",
             bottom: "calc(1rem + env(safe-area-inset-bottom))",
-            zIndex: 40,
+            zIndex: 10000, // el chat usa 9999; sin esto queda tapado
           }}
         >
           <button
@@ -125,9 +125,9 @@ export function FeedbackWidget() {
             onClick={dismiss}
             aria-label="Ocultar feedback"
             title="Ocultar"
-            className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-black text-white/70 shadow-md hover:text-white transition-colors"
+            className="absolute -top-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full border border-white/10 bg-black text-white/70 shadow-md transition-colors hover:text-white"
           >
-            <Icon name="close" className="text-[12px]" />
+            <Icon name="close" className="text-[14px]" />
           </button>
         </div>
       )}
@@ -139,9 +139,9 @@ export function FeedbackWidget() {
             position: "fixed",
             left: "1rem",
             bottom: "calc(1rem + env(safe-area-inset-bottom))",
-            zIndex: 41,
+            zIndex: 10001, // por encima del chat (9999) para que no lo tape
             width: "min(320px, calc(100vw - 2rem))",
-            maxHeight: "calc(100dvh - 2rem)",
+            maxHeight: "calc(100dvh - 6rem)", // aire para el teclado del celular
           }}
           className="bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-y-auto"
         >

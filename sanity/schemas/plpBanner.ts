@@ -31,7 +31,7 @@ export const plpBanner = defineType({
       name: "ctaHref",
       title: "URL destino (al hacer clic)",
       type: "string",
-      description: 'Relativa o externa. Ej: "/solicitar?auto=bmw-i7" o "https://electrificarte.com/auto/bmw-i7"',
+      description: 'Relativa o externa. Ej: "/?waitlist=1" o "https://electrificarte.com/auto/bmw-i7". ⚠️ NO usar /solicitar: está oculta por el giro a waitlist.',
     }),
     defineField({
       name: "altText",

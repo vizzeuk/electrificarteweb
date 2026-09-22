@@ -90,9 +90,7 @@ export default function TerminosPage() {
             <h2>9. Contacto</h2>
             <p>
               Para consultas relacionadas con estos términos, puedes contactarnos a través del formulario en{" "}
-              <Link href="/solicitar" className="text-primary-deep hover:text-primary transition-colors">
-                electrificarte.cl/solicitar
-              </Link>{" "}
+              <span className="text-text-muted">electrificarte.cl/solicitar</span>{" "}
               o escribiéndonos directamente.
             </p>
 

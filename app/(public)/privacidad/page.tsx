@@ -80,9 +80,7 @@ export default function PrivacidadPage() {
             </ul>
             <p>
               Para ejercer estos derechos, contáctanos a través de{" "}
-              <Link href="/solicitar" className="text-primary-deep hover:text-primary transition-colors">
-                electrificarte.cl/solicitar
-              </Link>.
+              <span className="text-text-muted">electrificarte.cl/solicitar</span>.
             </p>
 
             <h2>7. Seguridad</h2>
@@ -103,9 +101,7 @@ export default function PrivacidadPage() {
             <h2>10. Contacto</h2>
             <p>
               Para cualquier consulta sobre el tratamiento de tus datos personales, escríbenos a través del formulario en{" "}
-              <Link href="/solicitar" className="text-primary-deep hover:text-primary transition-colors">
-                electrificarte.cl/solicitar
-              </Link>.
+              <span className="text-text-muted">electrificarte.cl/solicitar</span>.
             </p>
 
           </div>

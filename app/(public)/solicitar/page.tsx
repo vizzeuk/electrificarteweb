@@ -2,6 +2,8 @@ import React from "react";
 import type { Metadata } from "next";
 import { client } from "@/lib/sanity/client";
 import { carNamesForFormQuery } from "@/lib/queries/car";
+import { notFound } from "next/navigation";
+import { OFERTA_STANDBY } from "@/lib/products";
 import { SolicitarContent } from "./SolicitarContent";
 
 // 🟡 STANDBY (giro sep-2026): esta página existe pero está OCULTA — ningún CTA del
@@ -17,6 +19,14 @@ export const metadata: Metadata = {
 export const revalidate = 3600;
 
 export default async function SolicitarPage() {
+  // 🚫 INACCESIBLE mientras dure el standby. No basta con sacar los CTAs: si alguien
+  // tiene el link guardado o lo adivina, llegaría a un formulario que cobra $19.990
+  // por un servicio que hoy no se presta. Devuelve 404.
+  //
+  // OJO: solo se bloquea ESTE formulario. `/solicitar/gracias` y
+  // `/solicitar/pago-rechazado` siguen vivas porque las usa el flujo de la ASESORÍA.
+  if (OFERTA_STANDBY) notFound();
+
   const [rawCars, homePage] = await Promise.all([
     client.fetch(carNamesForFormQuery, {}, { next: { tags: ["car"], revalidate: 3600 } }).catch(() => []),
     client.fetch<{ formServicePrice?: string } | null>(`*[_type == "homePage"][0]{ formServicePrice }`, {}, { next: { tags: ["homePage"], revalidate: 3600 } }).catch(() => null),

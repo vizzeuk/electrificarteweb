@@ -59,6 +59,6 @@ export const CHAT_QUOTA_MESSAGE =
   `Igual puedes avanzar por acá:\n\n` +
   `[MENU]\n` +
   `1. Ver el catálogo completo → /marcas\n` +
-  `2. Negociar el mejor precio de un modelo → /solicitar\n` +
+  `2. Súmate a la waitlist de ofertas → /?waitlist=1\n` +
   `3. Escribirnos directamente → /contacto\n` +
   `[/MENU]`;
