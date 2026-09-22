@@ -118,7 +118,7 @@ const nodes = [
         "1. **Credenciales** (3): `Electrificarte Admin (x-admin-secret)` (Header Auth, name `x-admin-secret`),",
         "   y `Google Sheets — Electrificarte`. Los nodos que dicen REEMPLAZAR las necesitan.",
         "2. **Nodo Config**: pega `siteBase` (sin barra final) y `sheetId`.",
-        "3. **El Sheet** necesita dos pestañas: `corridas` y `faltan fuentes`.",
+        "3. **El Sheet** necesita las hojas `AUTOS`, `CORRIDAS` y `FALTAN FUENTES` (mayúsculas: el nodo las busca por nombre exacto).",
         "4. **Bloqueante**: hoy solo 1 de 176 autos publicados tiene `sourceUrls`. Hasta que la Fase 0",
         "   los complete, este cron corre en vacío y avisa 175 autos sin fuente. Probá primero a mano",
         "   con el botón de test y `lote = 1`.",
@@ -187,7 +187,7 @@ const nodes = [
     [860, 40],
     "La columna url_oficial queda vacía a propósito: es la que llena Francisco."),
 
-  sheet("sheet-fuentes", "Sheet · faltan fuentes", "faltan fuentes", {
+  sheet("sheet-fuentes", "Sheet · faltan fuentes", "FALTAN FUENTES", {
     fecha: "={{ $json.fecha }}",
     marca: "={{ $json.marca }}",
     modelo: "={{ $json.modelo }}",
@@ -281,7 +281,7 @@ const nodes = [
     [1340, 380],
     "Graba la corrida en Supabase (catalog_check_runs). De esa tabla sale la cobertura del digest semanal."),
 
-  sheet("sheet-corridas", "Sheet · corridas", "corridas", {
+  sheet("sheet-corridas", "Sheet · corridas", "CORRIDAS", {
     fecha: "={{ new Date().toLocaleString('es-CL', { timeZone: 'America/Santiago' }) }}",
     runId: "={{ $json.runId }}",
     lote: "={{ $('Tomar el lote').first().json.slot }} ({{ $('Tomar el lote').first().json.slotDescrito }})",

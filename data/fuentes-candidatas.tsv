@@ -1,0 +1,131 @@
+# Fuentes oficiales candidatas por auto — marca<TAB>modelo<TAB>url
+#
+# Se aplica con:  npx tsx --env-file=.env.local scripts/validar-fuentes.ts data/fuentes-candidatas.tsv
+# y de ahí a Sanity con: scripts/import-sheet-fuentes.ts (tras revisar en el Sheet).
+#
+# Armado a mano cruzando sitemaps de marca, buscadores y los patrones de cada sitio.
+# Vale conservarlo: el descubrimiento automatico solo llega a ~48 de 182 porque la mayoria
+# de los sitios chilenos no exponen el catalogo sin JavaScript.
+
+Audi	A6 Sportback e-tron	https://www.audi.cl/a6-e-tron/a6-sportback-e-tron/informacion-general 	# necesita navegador
+Audi	Q4 Sportback e-tron	https://www.audi.cl/q4/q4-sportback-e-tron/informacion-general 	# necesita navegador
+Audi	Q6 E-tron	https://www.audi.cl/q6-e-tron 	# necesita navegador
+Audi	Q6 Sportback e-tron	https://www.audi.cl/q6-e-tron/q6-sportback-e-tron/informacion-general 	# necesita navegador
+BMW	X1 PHEV	https://www.bmw.cl/modelos/x1
+BMW	i4 eDrive40 Gran Coupé	https://www.bmw.cl/modelos/i4
+BMW	i5 eDrive40 Berlina M Sport	https://www.bmw.cl/modelos/i5
+BMW	iX1 xDrive30 xLine	https://www.bmw.cl/modelos/ix1
+BMW	iX2 xDrive30 M Sport HEA	https://www.bmw.cl/modelos/ix2
+BYD	Atto 8	https://www.byd.com/cl/atto-8 	# necesita navegador
+BYD	Dolphin Mini	https://www.byd.com/cl/car/dolphin-mini 	# necesita navegador
+BYD	Sealion 7	https://www.byd.com/cl/sealion-7 	# necesita navegador
+BYD	Shark	https://www.byd.com/cl/order-shark 	# necesita navegador
+BYD	Song Plus DM-I	https://www.byd.com/cl/order-song-plus-dmi 	# necesita navegador
+BYD	Song Pro	https://www.byd.com/cl/Order-Song-Pro 	# necesita navegador
+BYD	Tang	https://www.byd.com/cl/car/tang 	# necesita navegador
+BYD	Yuan Plus	https://www.byd.com/cl/order-yuan-plus 	# necesita navegador
+BYD	Yuan Pro	https://www.byd.com/cl/yuan-pro-dmi 	# necesita navegador
+Changan	CS55 Plus iDD	https://www.changan.cl/vehiculo/cs55-plus-idd/
+Changan	Eado Plus iDD	https://www.changan.cl/vehiculo/eado-plus-idd/
+Changan	Hunter E REEV	https://www.changan.cl/vehiculo/new-hunter-reev/
+Changan	Lumin	https://www.changan.cl/vehiculo/lumin/
+Chery	Tiggo 4 HEV	https://chery.cl/tiggo-4-hev/
+Chery	Tiggo 7 Pro Max PHEV	https://chery.cl/tiggo-7-pro-max-phev/
+Chery	Tiggo 9 PHEV	https://chery.cl/tiggo-9-phev/
+Chevrolet	Blazer EV	https://www.chevrolet.cl/autos-electricos/blazer-rs-ev
+Chevrolet	Bolt EUV	https://www.chevrolet.cl/autos-electricos
+Chevrolet	Captiva EV	https://www.chevrolet.cl/autos-electricos/captiva-ev
+Chevrolet	Captiva PHEV	https://www.chevrolet.cl/autos-hibridos/captiva-phev
+Chevrolet	Equinox EV	https://www.chevrolet.cl/autos-electricos/equinox-ev
+Chevrolet	Spark EUV	https://www.chevrolet.cl/autos-electricos/spark-euv
+Cupra	Tavascan EV	https://www.cupraofficial.cl/Tavascan/tavascan
+Cupra	Terramar	https://www.cupraofficial.cl/Terramar
+DFSK	600 PHEV	https://www.dfsk.cl/600-phev/
+DFSK	E5 Plus	https://www.dfsk.cl/vehiculos/dfsk/e5-plus/
+Deepal	S05	https://forsale.dynadot.com/deepal.cl?drefid=2071 	# necesita navegador
+Deepal	S05 REEV	https://forsale.dynadot.com/deepal.cl?drefid=2071 	# necesita navegador
+Deepal	S07 BEV	https://forsale.dynadot.com/deepal.cl?drefid=2071 	# necesita navegador
+Deepal	S07 REEV	https://forsale.dynadot.com/deepal.cl?drefid=2071 	# necesita navegador
+Fiat	500 e	https://www.fiat.cl/modelos/500e.html 	# necesita navegador
+Ford	F-150 Híbrida	https://www.ford.cl/hibridos/f-150-hibrida/
+Ford	F-150 Platinum HEV	https://www.ford.cl/hibridos/f-150-hibrida/
+Ford	Maverick HEV	https://www.ford.cl/pickups/maverick/models/
+Ford	Territory	https://www.ford.cl/suvs-crossovers/territory/
+GWM	Ora 03	https://www.gwm.cl/vehiculo/ora/ora-03/
+GWM	Ora 03 GT	https://www.gwm.cl/vehiculo/ora/ora-03/
+GWM	Tank 500 HEV	https://www.gwm.cl/vehiculo/tank/tank-500/
+Geely	EX2	https://www.geely.cl/modelos/geely-ex2/
+Geely	EX5	https://www.geely.cl/modelos/ex5/
+Geely	EX5 E-DMi	https://www.geely.cl/modelos/geely-ex5-em-i/
+Geely	EX5 EM-i	https://www.geely.cl/modelos/geely-ex5-em-i/
+Haval	H6 Híbrido	https://www.gwm.cl/vehiculo/haval/h6-hev/
+Haval	H7 Híbrido	https://www.gwm.cl/vehiculo/haval/h7/
+Haval	Jolion Híbrido	https://www.gwm.cl/vehiculo/haval/jolion-hev/
+Haval	Jolion Pro Híbrido	https://www.gwm.cl/vehiculo/haval/jolion-pro/
+Hyundai	IONIQ 5	https://www.hyundai.cl/nuestros-modelos/electricos/
+Hyundai	Inster	https://www.hyundai.cl/nuestros-modelos/ecologicos/all-new-inster/precios-y-financiamiento/
+Hyundai	Kona Eléctrico	https://www.hyundai.cl/nuestros-modelos/ecologicos/all-new-kona-electrico/
+Hyundai	Kona Híbrido	https://www.hyundai.cl/nuestros-modelos/ecologicos/all-new-kona-hibrido/precios-y-financiamiento/
+Hyundai	Santa Fé Híbrido	https://www.hyundai.cl/nuestros-modelos/ecologicos/all-new-santa-fe-hibrido/precios-y-financiamiento/
+Hyundai	Tucson Híbrido	https://www.hyundai.cl/nuestros-modelos/ecologicos/the-new-tucson-hibrido/
+Kia	Carnival	https://www.kia.cl/modelos/hibridos-electricos/kia-carnival.html
+Kia	EV5	https://www.kia.cl/modelos/hibridos-electricos/kia-ev5.html
+Kia	EV6	https://www.kia.cl/modelos/hibridos-electricos/kia-ev6.html
+Kia	EV9	https://www.kia.cl/modelos/hibridos-electricos/kia-ev9.html
+Kia	Sorento	https://www.kia.cl/modelos/hibridos-electricos/kia-sorento.html
+Kia	Sportage Híbrido	https://www.kia.cl/modelos/hibridos-electricos/kia-sportage.html
+Lexus	LBX	https://www.lexus.cl/es/modelos/lbx/lbx-active/
+Lexus	NX	https://www.lexus.cl/es/modelos/nx/nx-350h-luxury/
+Lexus	RZ 450 e	https://lexus.cl/es/modelos/ 	# necesita navegador
+Lexus	UX	https://www.lexus.cl/es/modelos/ux/ux-300h-premium/
+MG	3 Hybrid HEV	https://www.mgmotor.cl/
+MG	4	https://www.mg.cl/model/MG-4-URBAN-EV
+MG	4 Urban EV	https://www.mg.cl/model/MG-4-URBAN-EV
+MG	Cyberster	https://www.mgmotor.cl/
+MG	Marvel R	https://www.mgmotor.cl/
+MG	S5 EV	https://www.mgmotor.cl/
+MG	ZS EV	https://www.mgmotor.cl/
+MG	ZS Hybrid	https://www.mgmotor.cl/
+MINI	Aceman eléctrico	https://www.mini.cl/modelos/mini-aceman
+MINI	Cooper Eléctrico	https://www.mini.cl/modelos/mini-cooper-electrico
+MINI	Countryman eléctrico	https://www.mini.cl/modelos/mini-countryman
+Maxus	All New T90 EV	https://maxus.cl/ 	# necesita navegador
+Mazda	CX60 SIGNATURE 2.5 PHEV	https://www.mazda.cl/vehiculo/mazda-cx-60/
+Ora	03	https://www.gwm.cl/vehiculo/ora/ora-03/
+Peugeot	NEW 3008 MHEV	https://www.peugeot.cl/gama/suv-peugeot-3008-hibrido.html 	# necesita navegador
+Peugeot	New 5008 MHEV	https://www.peugeot.cl/gama/new-5008.html 	# necesita navegador
+Porsche	Cayenne Coupé Electric	https://compare.porsche.com/es-CL?model-series=cayenne
+Porsche	Cayenne E-Hybrid	https://compare.porsche.com/es-CL?model-series=cayenne
+Porsche	Cayenne E-Hybrid Coupé	https://compare.porsche.com/es-CL?model-series=cayenne
+Porsche	Cayenne Electric	https://compare.porsche.com/es-CL?model-series=cayenne
+Porsche	Macan Electric	https://compare.porsche.com/es-CL?model-series=macan
+Porsche	Panamera 4 E-Hybrid	https://compare.porsche.com/es-CL?model-series=panamera
+Porsche	Taycan	https://compare.porsche.com/es-CL?model-series=taycan
+Porsche	Taycan 4 Cross Turismo	https://compare.porsche.com/es-CL?model-series=taycan
+Renault	Arkana E-TECH Hybrid	https://renault.cl/modelo/arkana/
+Renault	Koleos Full Hybrid E-Tech	https://renault.cl/modelo/koleos/
+Skoda	Elroq	https://www.skoda.cl/elroq/elroq
+Skoda	Enyaq EV	https://www.skoda.cl/enyaq/enyaq
+Subaru	Crosstrek Híbrido	https://www.subaru.cl/vehiculos/all-new-crosstrek-hibrido/
+Subaru	Forester Híbrido	https://www.subaru.cl/forester-hibrido/
+Subaru	Forester Strong Hybrid	https://www.subaru.cl/precios-y-especificaciones-new-forester-hybrid/
+Subaru	Forester Strong Hybrid ASD	https://www.subaru.cl/precios-y-especificaciones-new-forester-hybrid/
+Suzuki	Across Hybrid	https://www.suzuki.cl/vehiculo/across-hybrid/
+Suzuki	Fronx Hybrid	https://www.suzuki.cl/vehiculo/fronx/
+Suzuki	New Swift Hybrid	https://www.suzuki.cl/vehiculo/swift-hybrid/
+Suzuki	Vitara Hybrid	https://www.suzuki.cl/vehiculo/across-hybrid/
+Suzuki	e VITARA	https://www.suzuki.cl/vehiculo/e-vitara/
+Toyota	All New RAV4 Híbrido	https://toyota.cl/modelos/suv/all-new-rav4-hibrido/ 	# necesita navegador
+Toyota	Corolla Cross Híbrido	https://toyota.cl/modelos/suv/corolla-cross-hybrid/ 	# necesita navegador
+Toyota	Corolla Híbrido	https://toyota.cl/modelos/sedan/corolla-sedan/ 	# necesita navegador
+Toyota	Yaris Cross Híbrido	https://toyota.cl/modelos/suv/yaris-cross-hybrid/ 	# necesita navegador
+Toyota	bZ4X	https://toyota.cl/modelos/suv/auto-electrico-toyota-bz4x/ 	# necesita navegador
+Volkswagen	ID.4	https://www.volkswagen.cl/id4/id4
+Volkswagen	Tiguan E-TSI	https://www.volkswagen.cl/tiguan/nuevo-tiguan-MHEV
+Volvo	EC40 Pure Electric	https://www.volvocars.com/cl/cars/ec40-electric/ 	# necesita navegador
+Volvo	EX30	https://www.volvocars.com/cl/cars/ex30-electric/ 	# necesita navegador
+Volvo	EX30 Cross Country	https://www.volvocars.com/cl/cars/ex30-electric/ 	# necesita navegador
+Volvo	EX40 Pure Electric	https://www.volvocars.com/cl/cars/ex40-electric/ 	# necesita navegador
+Volvo	EX90 Electric	https://www.volvocars.com/cl/cars/ex90-electric/ 	# necesita navegador
+Volvo	XC60 Híbrido Enchufable	https://www.volvocars.com/cl/cars/xc60-hybrid/ 	# necesita navegador
+Volvo	XC90 Plug-in Hybrid	https://www.volvocars.com/cl/cars/xc90-hybrid/ 	# necesita navegador

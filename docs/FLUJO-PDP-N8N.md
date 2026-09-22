@@ -482,7 +482,9 @@ el mapeo completo a Sanity con subida de portada. **Se reusa casi entero.** Lo q
 
 ### 3.2 El Sheet
 
-Sheet real: `1QYqaKy3pRkGhAe4K4VnV0uUa5G1sOWNMvkyWQxTiGd8`. Cuatro pestañas.
+Sheet real: **AUTOS ELECTRIFICARTE** (`1QYqaKy3pRkGhAe4K4VnV0uUa5G1sOWNMvkyWQxTiGd8`), con las
+hojas `AUTOS`, `FALTAN FUENTES`, `CORRIDAS` e `INSTRUCCIONES`. Los nombres van en **mayúsculas**:
+el nodo de Google Sheets las busca por nombre exacto.
 
 Los TSV se generan con **`npx tsx --env-file=.env.local scripts/gen-sheet-autos.ts`** y quedan
 en `.context/sheet/`. El script hace dos cosas: volcar el catálogo y **proponer la URL oficial**
@@ -503,8 +505,8 @@ de cada auto (ver §4).
 | `publicado` `lote` | informativo | `lote` = cuál de las 28 corridas revisa este auto |
 | `detalle` `link_studio` | n8n | |
 
-Pestañas `corridas` y `faltan fuentes` son del Flujo C (solo encabezados; las llena n8n), y
-`instrucciones` es la guía para Francisco.
+`CORRIDAS` y `FALTAN FUENTES` son del Flujo C (solo encabezados; las llena n8n), e
+`INSTRUCCIONES` es la guía para Francisco.
 
 **Para volver del Sheet a Sanity** (mientras no exista la credencial de Google en n8n):
 
@@ -558,27 +560,44 @@ patrones (eso da 404 casi siempre: cada marca arma sus URLs distinto). Lo que ha
 4. Validar el candidato con un GET y registrar **si el precio está en el HTML estático** — de ahí
    sale la columna `necesita_navegador`.
 
-Resultado del pase actual: **48 candidatos válidos, 0 de mercado equivocado, 134 sin candidato.**
+Resultado del pase automático: **48 candidatos válidos de 179.** No alcanza, y no por el
+matcher: la mayoría de los sitios chilenos no expone el catálogo sin JavaScript.
 
-Se corrió también con `--firecrawl` (35 credits). Subió poco, y al investigar por qué apareció
-el motivo real: **8 marcas tienen el `website` muerto en Sanity.** No es bloqueo de bots ni
-JavaScript — el dominio no resuelve:
+**Pase manual (22-09-2026), cruzando sitemaps de marca, buscadores y el patrón de cada sitio:**
 
-| Marca | `website` en Sanity | DNS |
+```
+182 autos · 3 con url_oficial en Sanity · 119 con candidato validado · 60 sin candidato
+de los 119: 86 traen el precio en el HTML · 33 necesitan navegador (Firecrawl)
+```
+
+Está persistido en **`data/fuentes-candidatas.tsv`** y versionado a propósito: el descubrimiento
+automático no puede reproducirlo, así que regenerar el TSV sin esa semilla borraría el trabajo.
+`gen-sheet-autos.ts` lo lee y lo siembra solo.
+
+```
+# volver a validar todo y actualizar la hoja AUTOS
+npx tsx --env-file=.env.local scripts/validar-fuentes.ts data/fuentes-candidatas.tsv
+```
+
+**Lo que hizo rendir el pase manual** — patrones por marca, no adivinanza por auto:
+
+| Marca | Patrón | Nota |
 |---|---|---|
-| Cupra · Haval · Jetour · Leapmotor · Nammi | `www.<marca>.cl` | ✗ no resuelve, ni con ni sin `www` |
-| Mercedes-Benz | `www.mercedes-benz.cl` | apex redirige a un `www` que no resuelve |
-| Ora · Riddara | `www.<marca>.cl` | el apex resuelve pero no sirve contenido |
+| Hyundai | `/modelos/<modelo>/precios-y-financiamiento/` | página de precios dedicada |
+| Toyota | `toyota.cl/modelos/<categoria>/<modelo>/` | precio de lista + desglose de bonos |
+| Kia | `/modelos/hibridos-electricos/kia-<modelo>.html` | |
+| **Haval** | `gwm.cl/vehiculo/haval/<modelo>/` | su propio dominio está muerto; en Chile se vende bajo GWM |
+| **Cupra** | `cupraofficial.cl/<Modelo>/<modelo>` | `cupra.cl` no existe |
+| Chery | `chery.cl/<modelo>/` | |
+| Volvo | `/cl/cars/<modelo>-electric/` y `-hybrid/` | |
+| BMW · MG | `/modelos/<modelo>` · `/model/MG-<MODELO>` | |
+| **Porsche** | `compare.porsche.com/es-CL?model-series=<familia>` | no publica precio de lista en página estática; el comparador sí muestra CLP |
 
-Ningún scraper arregla eso. **Pista concreta:** en Chile Ora y Haval se venden bajo GWM, y el
-único `sourceUrls` que ya funcionaba en producción es `gwm.cl/vehiculo/ora/ora-03/`. Lo mismo
-aplica a Jaecoo/Jetour/Omoda (grupo Chery, y `omoda.cl` y `jaecoo.cl` sí resuelven). Hay que
-apuntar esas marcas al sitio del importador, no al dominio propio.
-
-El resto de los 134 sí es el problema un nivel arriba — el catálogo de la marca lo pinta
-JavaScript (Chery/Deepal/GAC devuelven 1 link). Ahí Firecrawl ayuda, pero conviene primero
-corregir los 8 `website` y volver a correr: el pase cuesta ~35 credits y con los dominios malos
-se gasta en vano.
+**Los 60 que faltan** son casi todos marcas chinas con importador propio, sitio lento o sin
+catálogo estático: JAC (4), Deepal (4), Smart (3), Leapmotor (3), Jaecoo (3), Dongfeng (3),
+Jetour (2), GAC (2), Maxus (2), Lynk & Co (2), Mercedes-Benz (2), BAIC (2), y sueltos. Jaecoo,
+Omoda y DS dan timeout incluso con el dominio correcto. Ahí el camino es Firecrawl sobre la home
+de cada una (~15 credits) o buscarlas a mano.
 
 **Optimización a decidir acá y no después:** varias marcas publican una sola página de precios
 (BYD cubre 9 autos, MG 8, Porsche 8). Un `priceListUrl` por marca bajaría las lecturas semanales

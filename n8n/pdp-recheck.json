@@ -4,7 +4,7 @@
   "nodes": [
     {
       "parameters": {
-        "content": "## Flujo C — Re-check semanal de precios de PDP\n\n4 corridas al día × 7 días = **28 lotes por semana**. Lote = techo(publicados / 28) → hoy 7 autos.\nCada auto lleva un `checkSlot` 0–27 asignado al crearse, así que se revisa siempre el mismo día y hora.\nLa corrida toma primero los de su lote y, si no llenan, completa con la cola por antigüedad —\nasí una corrida caída no hace que esos autos se salten la semana.\n\n**Precios**: si el precio oficial cambió y una segunda lectura lo confirma, se actualiza solo en Sanity\n(solo `basePrice`, nunca el precio con descuento, nunca versiones ni año). Apagable con\n`RECHECK_AUTOAPPLY=false` en Vercel. El digest lo reporta y `revertir <modelo>` lo deshace.\n\n### Antes de activar\n1. **Credenciales** (3): `Electrificarte Admin (x-admin-secret)` (Header Auth, name `x-admin-secret`),\n   y `Google Sheets — Electrificarte`. Los nodos que dicen REEMPLAZAR las necesitan.\n2. **Nodo Config**: pega `siteBase` (sin barra final) y `sheetId`.\n3. **El Sheet** necesita dos pestañas: `corridas` y `faltan fuentes`.\n4. **Bloqueante**: hoy solo 1 de 176 autos publicados tiene `sourceUrls`. Hasta que la Fase 0\n   los complete, este cron corre en vacío y avisa 175 autos sin fuente. Probá primero a mano\n   con el botón de test y `lote = 1`.\n\n### Por qué el lote se itera acá y no en la web\nEl lote completo tarda 40–90 s y el límite duro de una función en Vercel Hobby es 60 s (ignora el\n`maxDuration` del código). Un auto por llamada son 10–20 s, con reintento propio, y una fuente\nlenta no arrastra a los otros 6.\n\n### Lo que este flujo NO hace\nNo crea versiones, no borra versiones y no sube el año de modelo. Eso es acto humano desde\nWhatsApp o Studio: mientras 9 familias del catálogo compartan una sola página oficial, la\ndetección de versiones no es confiable como para escribir sola.\n\nDetalle completo: `docs/FLUJO-PDP-N8N.md` §2",
+        "content": "## Flujo C — Re-check semanal de precios de PDP\n\n4 corridas al día × 7 días = **28 lotes por semana**. Lote = techo(publicados / 28) → hoy 7 autos.\nCada auto lleva un `checkSlot` 0–27 asignado al crearse, así que se revisa siempre el mismo día y hora.\nLa corrida toma primero los de su lote y, si no llenan, completa con la cola por antigüedad —\nasí una corrida caída no hace que esos autos se salten la semana.\n\n**Precios**: si el precio oficial cambió y una segunda lectura lo confirma, se actualiza solo en Sanity\n(solo `basePrice`, nunca el precio con descuento, nunca versiones ni año). Apagable con\n`RECHECK_AUTOAPPLY=false` en Vercel. El digest lo reporta y `revertir <modelo>` lo deshace.\n\n### Antes de activar\n1. **Credenciales** (3): `Electrificarte Admin (x-admin-secret)` (Header Auth, name `x-admin-secret`),\n   y `Google Sheets — Electrificarte`. Los nodos que dicen REEMPLAZAR las necesitan.\n2. **Nodo Config**: pega `siteBase` (sin barra final) y `sheetId`.\n3. **El Sheet** necesita las hojas `AUTOS`, `CORRIDAS` y `FALTAN FUENTES` (mayúsculas: el nodo las busca por nombre exacto).\n4. **Bloqueante**: hoy solo 1 de 176 autos publicados tiene `sourceUrls`. Hasta que la Fase 0\n   los complete, este cron corre en vacío y avisa 175 autos sin fuente. Probá primero a mano\n   con el botón de test y `lote = 1`.\n\n### Por qué el lote se itera acá y no en la web\nEl lote completo tarda 40–90 s y el límite duro de una función en Vercel Hobby es 60 s (ignora el\n`maxDuration` del código). Un auto por llamada son 10–20 s, con reintento propio, y una fuente\nlenta no arrastra a los otros 6.\n\n### Lo que este flujo NO hace\nNo crea versiones, no borra versiones y no sube el año de modelo. Eso es acto humano desde\nWhatsApp o Studio: mientras 9 familias del catálogo compartan una sola página oficial, la\ndetección de versiones no es confiable como para escribir sola.\n\nDetalle completo: `docs/FLUJO-PDP-N8N.md` §2",
         "height": 760,
         "width": 520,
         "color": 5
@@ -171,7 +171,7 @@
         },
         "sheetName": {
           "__rl": true,
-          "value": "faltan fuentes",
+          "value": "FALTAN FUENTES",
           "mode": "name"
         },
         "columns": {
@@ -451,7 +451,7 @@
         },
         "sheetName": {
           "__rl": true,
-          "value": "corridas",
+          "value": "CORRIDAS",
           "mode": "name"
         },
         "columns": {
