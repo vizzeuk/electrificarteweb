@@ -263,6 +263,9 @@ Más n8n (VPS de Matías) y Supabase. Un cambio en el modelo de leads toca a los
 
 - **`docs/PIVOT-WAITLIST-PLAN.md` — 🔴 EL PLAN VIGENTE.** El giro a waitlist + asesoría-first:
   fases, inventario de qué cambia, estado y tareas manuales. **Empezar por acá.**
+- `docs/FLUJO-PDP-N8N.md` — los dos flujos de PDP en n8n (creación desde Sheet + re-check
+  semanal de precios). Directrices, contratos de endpoint, reparto web/n8n/Claude Console y
+  orden de fases. Implementa el board de Miro "FLUJO PDP's".
 - `docs/REVIEWS-UGC-PLAN.md` — sistema de reseñas UGC: arquitectura, costos y estado por fase.
 - `docs/COSTOS-PARA-FRANCISCO.md` — **explicación de costos sin tecnicismos**, para Francisco.
 - `docs/DASHBOARD_REVIEWS_MODERACION.md` — contrato de la pantalla de moderación (otro repo).

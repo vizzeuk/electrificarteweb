@@ -4,8 +4,9 @@
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 
-const PURE = new Set(["auction-score.test.ts", "auction-routing.test.ts"]);
+const PURE = new Set(["auction-score.test.ts", "auction-routing.test.ts", "recheck-diff.test.ts"]);
 const TESTS = [
+  "recheck-diff.test.ts",
   "auction-score.test.ts",
   "auction-routing.test.ts",
   "auction-sin-ofertas.test.ts",

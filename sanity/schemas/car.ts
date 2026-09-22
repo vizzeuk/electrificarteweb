@@ -357,9 +357,12 @@ export const car = defineType({
           { title: "Sin novedad", value: "none" },
           { title: "🟡 Precio sobre el oficial", value: "price_high" },
           { title: "🔴 Posiblemente descontinuado", value: "discontinued" },
+          { title: "🔴 Fuente caída", value: "fuente_muerta" },
+          { title: "🟡 Versión nueva en la fuente", value: "version_nueva" },
+          { title: "🟡 Año de modelo nuevo", value: "anio_nuevo" },
         ],
       },
-      description: "Resultado de la última revisión automática (Flujo B) — se limpia al resolver desde WhatsApp o Studio.",
+      description: "Hallazgo más grave de la última revisión automática (Flujo C) — se limpia al resolver desde WhatsApp o Studio. El detalle completo está en 'Hallazgos de la revisión'.",
     }),
     defineField({
       name: "priceCheckNote", title: "Detalle de la revisión", type: "text", rows: 3, group: "ai",
@@ -368,6 +371,55 @@ export const car = defineType({
     defineField({
       name: "priceCheckSuggestedPrice", title: "Precio sugerido (5% bajo el oficial)", type: "number", group: "ai",
       description: "Solo cuando priceCheckFlag = 'price_high' — el valor que aplicaría 'aplicar <modelo>' desde WhatsApp.",
+    }),
+
+    // Flujo C (re-check semanal contra la fuente oficial). Un auto puede tener varios hallazgos
+    // a la vez — priceCheckFlag guarda solo el más grave, para que el digest y los comandos de
+    // WhatsApp que ya existen sigan funcionando; el detalle completo vive acá.
+    defineField({
+      name: "catalogFindings", title: "Hallazgos de la revisión", type: "array", group: "ai",
+      description: "Todo lo que la revisión semanal encontró en la fuente oficial. Son propuestas: aplicarlas es siempre acto humano.",
+      of: [defineArrayMember({
+        type: "object", name: "finding", title: "Hallazgo",
+        fields: [
+          defineField({
+            name: "kind", title: "Tipo", type: "string", validation: (r) => r.required(),
+            options: {
+              list: [
+                { title: "Precio base distinto", value: "precio_base" },
+                { title: "Precio de versión distinto", value: "precio_version" },
+                { title: "Versión nueva en la fuente", value: "version_nueva" },
+                { title: "Versión que desapareció de la fuente", value: "version_faltante" },
+                { title: "Año de modelo nuevo", value: "anio_nuevo" },
+                { title: "Ya no aparece en el catálogo oficial", value: "descontinuado" },
+                { title: "La fuente no responde", value: "fuente_caida" },
+              ],
+            },
+          }),
+          defineField({ name: "detail", title: "Detalle", type: "text", rows: 2, description: "Legible para Francisco: qué decíamos, qué dice la fuente." }),
+          defineField({ name: "proposedPrice", title: "Precio leído en la fuente (CLP)", type: "number", description: "Lo que la fuente publica. NO se aplica solo." }),
+          defineField({ name: "versionName", title: "Versión afectada", type: "string", description: "Vacío si el hallazgo es del modelo completo." }),
+          defineField({ name: "evidence", title: "Cita textual de la fuente", type: "text", rows: 2, description: "Sin cita, el hallazgo se descarta: la IA no infiere precios." }),
+        ],
+        preview: {
+          select: { title: "kind", subtitle: "detail" },
+          prepare({ title, subtitle }: any) {
+            return { title: title || "Sin tipo", subtitle: subtitle || undefined };
+          },
+        },
+      })],
+    }),
+    defineField({
+      name: "sourceFailStreak", title: "Corridas seguidas con la fuente caída", type: "number", group: "ai",
+      description: "Se reinicia en cuanto la fuente vuelve a responder. Al llegar a 2 se marca 'fuente_muerta' y se avisa (no espera al digest del lunes).",
+    }),
+    defineField({
+      name: "hiddenByCheck", title: "Oculto por la revisión automática", type: "boolean", group: "ai",
+      description: "El auto se ocultó solo porque salió del catálogo oficial. Es reversible: sirve para saber qué revierte 'restaurar <modelo>' sin pisar lo que se ocultó a mano.",
+    }),
+    defineField({
+      name: "needsReextract", title: "Conviene re-extraer la ficha", type: "boolean", group: "ai",
+      description: "La fuente publica un año de modelo nuevo: las specs probablemente cambiaron. Lo resuelve el flujo de creación (v2), no la revisión semanal.",
     }),
 
     // ─── SEO ────────────────────────────────────────────────────────────────
