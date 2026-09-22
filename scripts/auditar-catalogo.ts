@@ -295,7 +295,13 @@ async function main(): Promise<void> {
     // En Chile los precios de lista se publican en miles redondos. Un
     // $48.021.708 no lo publicó nadie: salió de convertir UF, o de leer un
     // número que no era el precio. Es la señal más barata de una mala lectura.
-    const noRedondo = (n: number) => n % 1000 !== 0;
+    /**
+     * Ford Chile publica precios que terminan en 100 ($81.622.100 confirmado
+     * contra ford.cl), así que "no termina en miles" flagea de más. Lo que sí es
+     * imposible de publicar a mano es un precio que ni siquiera es múltiplo de
+     * 100: $48.021.708 salió de convertir UF, no de una lista de precios.
+     */
+    const noRedondo = (n: number) => n % 100 !== 0;
     if (typeof c.basePrice === "number" && noRedondo(c.basePrice)) {
       add("precio-no-redondo", "media", etiqueta,
         `basePrice ${clp(c.basePrice)} no termina en miles redondos — probable conversión de UF o mala lectura`, c.id);

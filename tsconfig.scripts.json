@@ -18,6 +18,7 @@
     "scripts/corregir-desde-fuente.ts",
     "scripts/fusionar-pdp.ts",
     "scripts/buscar-fichas.ts",
+    "scripts/separar-version-del-nombre.ts",
     "scripts/qa/recheck-diff.test.ts",
     "scripts/qa/recheck-source.test.ts"
   ],
