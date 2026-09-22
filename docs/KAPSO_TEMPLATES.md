@@ -54,23 +54,33 @@ Es un aviso sobre un servicio que la persona **ya pagó** y está por vencer —
 utilitario. Si se marca como MARKETING, Meta puede rechazarla o aplicarle los límites
 y costos de marketing.
 
-## Después de que Meta la apruebe
+## Estado actual (sep-2026)
 
-Agregar en Vercel (Production + Preview):
+| | |
+|---|---|
+| Nombre en Kapso | `asesoria_ultimo_dia` |
+| Idioma | **Español (Chile) → `es_CL`** — verificado contra la lista de Meta |
+| Estado | ⏳ **Pendiente de aprobación** |
+
+Ya está puesto en Vercel (Production + Preview):
+```
+ASESORIA_REMINDER_TEMPLATE_LANG=es_CL
+```
+Es **inerte**: `REMINDER_TEMPLATE_LANG` solo se usa dentro del `if (REMINDER_TEMPLATE)`, así
+que mientras no exista el nombre no cambia nada.
+
+## ⏳ El paso que FALTA — solo cuando Meta la apruebe
 
 ```
 ASESORIA_REMINDER_TEMPLATE=asesoria_ultimo_dia
 ```
 
-⚠️ **Si al crearla eligieron un idioma distinto de `es`** (ej. `es_CL` o `es_ES`), hay que
-agregar también:
+> 🚫 **No configurarla antes de que el estado sea APPROVED.** Si se activa con la plantilla
+> pendiente o rechazada, Meta rechaza cada envío y **el recordatorio no le llega a nadie**.
+> Sin la variable, el código cae a texto libre y **sí llega** a quienes escribieron en las
+> últimas 24 h. Configurarla antes de tiempo empeora la situación.
 
-```
-ASESORIA_REMINDER_TEMPLATE_LANG=es_CL
-```
-
-El código usa `es` por defecto. Si el código y Meta no coinciden en el idioma, **el envío
-falla en silencio** (queda solo un warning en los logs).
+Después de agregarla hay que **redesplegar** para que tome efecto.
 
 ## Mientras no esté aprobada
 

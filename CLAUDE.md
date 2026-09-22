@@ -293,6 +293,11 @@ Bloqueantes de lanzamiento (detalle en `docs/HANDOFF-CONDUCTOR.md` §8):
 - Decidir www vs no-www (canonical usa no-www, Reveniu retorna a www)
 
 Otros:
+- **Plantilla WhatsApp `asesoria_ultimo_dia`**: creada en Kapso (idioma `es_CL`), ⏳ **pendiente
+  de aprobación de Meta**. `ASESORIA_REMINDER_TEMPLATE_LANG=es_CL` ya está en Vercel. Cuando
+  Meta la apruebe, agregar `ASESORIA_REMINDER_TEMPLATE=asesoria_ultimo_dia` y redesplegar.
+  🚫 NO configurarla antes de APPROVED: fallaría para todos, y sin ella el fallback a texto
+  libre al menos llega a quienes escribieron en 24 h. Ver `docs/KAPSO_TEMPLATES.md`.
 - `N8N_CONTACT_URL` en Vercel necesita URL de producción (sin `-test`)
 - Terminología "concesionario" → "vendedores oficiales": quedan 3 archivos
 - 10 autos sin imágenes: Tesla Model Y, Chevrolet Blazer/Bolt/Equinox/Spark, Cupra Tavascan, JAC E-JS1/JS4, Skoda Elroq, Changan Hunter E
