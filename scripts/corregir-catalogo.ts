@@ -31,6 +31,7 @@ interface Car {
   hidden: boolean | null;
   basePrice: number | null;
   discountPrice: number | null;
+  versions: { _key?: string; name?: string; price?: number | null }[] | null;
 }
 
 /**
@@ -44,6 +45,35 @@ const OCULTAR: Record<string, string> = {
     "byd.com/cl no lo lista. Además sus 3 versiones están las tres a $47.990.000, así que el precio tampoco es confiable.",
   "Renault E-Kwid":
     "Duplicado de 'Kwid E-TECH': mismas specs (298 km, 26,8 kWh, 65 CV) con otro slug y otro precio. Y renault.cl no lista ningún Kwid.",
+  "Ford F-150 Platinum HEV":
+    "Duplicado de 'F-150 Híbrida'. ford.cl/hibridos/f-150-hibrida/ lista UNA sola versión (F-150 Platinum FHEV, $81.622.100) y nosotros teníamos dos PDPs de la misma camioneta a $81.027.100 y $76.148.100.",
+  "Chery Tiggo 7 Pro PHEV":
+    "Duplicado de 'Tiggo 7 Pro Max PHEV'. chery.cl lista UNA sola versión PHEV (1.5 DHT PHEV, $25.990.000); el Tiggo 7 Pro a secas no existe como PHEV en el catálogo chileno.",
+  "Suzuki Vitara Hybrid":
+    "suzuki.cl/vehiculo/grand-vitara/ redirige a across-hybrid: Suzuki Chile tiene un solo SUV de esa clase, y sus precios son los del doc 'Across Hybrid'. Confirmado por Matías: el real es el Across.",
+};
+
+/**
+ * Precios que la fuente oficial confirma y que hay que aplicar a mano, porque la
+ * pasada automática los saltó: la fuente estaba compartida con la PDP duplicada
+ * y la guarda —con razón— no sabe a cuál de las dos atribuir el precio. Al
+ * ocultar la duplicada deja de estar compartida y el valor pasa a ser inequívoco.
+ */
+const PRECIOS: Record<string, { base: number; version?: { de: string; a: number }; fuente: string }> = {
+  "Suzuki Across Hybrid": {
+    base: 20_190_000,
+    fuente: "suzuki.cl/vehiculo/across-hybrid/ — 'Precio Lista $20.190.000' (versión de entrada GL MT)",
+  },
+  "Ford F-150 Híbrida": {
+    base: 81_622_100,
+    version: { de: "Doble Cabina 3.5L 4x4 Platinum FHEV", a: 81_622_100 },
+    fuente: "ford.cl/hibridos/f-150-hibrida/ — 'F-150 Platinum FHEV $81.622.100'",
+  },
+  "Chery Tiggo 7 Pro Max PHEV": {
+    base: 25_990_000,
+    version: { de: "1.5T DHT CSH PHEV", a: 25_990_000 },
+    fuente: "chery.cl/tiggo-7-pro-max-phev/ — '1.5 DHT PHEV $25.990.000' (el precio de lista está tachado; $21.990.000 es campaña con bonos)",
+  },
 };
 
 interface Correccion {
@@ -58,7 +88,8 @@ interface Correccion {
 async function main(): Promise<void> {
   const cars = await sanity.fetch<Car[]>(
     `*[_type == "car" && !(_id in path("drafts.**"))] | order(brand->name asc, name asc) {
-      "id": _id, name, "brand": brand->name, hidden, basePrice, discountPrice
+      "id": _id, name, "brand": brand->name, hidden, basePrice, discountPrice,
+      "versions": versions[]{ _key, name, price }
     }`
   );
 
@@ -75,6 +106,25 @@ async function main(): Promise<void> {
         accion: "ocultar del sitio (hidden = true)",
         motivo: OCULTAR[label],
         set: { hidden: true, hiddenByCheck: false },
+      });
+    }
+
+    // ── Precio confirmado contra la fuente ──────────────────────────────────
+    const fijo = PRECIOS[label];
+    if (fijo && (c.basePrice !== fijo.base || fijo.version)) {
+      const set: Record<string, unknown> = { basePrice: fijo.base };
+      if (c.basePrice) set.priceCheckPreviousBasePrice = c.basePrice;
+      if (fijo.version) {
+        set.versions = (c.versions ?? []).map((v) =>
+          v.name === fijo.version!.de ? { ...v, price: fijo.version!.a } : v,
+        );
+      }
+      correcciones.push({
+        id: c.id,
+        label,
+        accion: `basePrice ${clp(c.basePrice)} → ${clp(fijo.base)}${fijo.version ? ` y versión "${fijo.version.de}" → ${clp(fijo.version.a)}` : ""}`,
+        motivo: fijo.fuente,
+        set,
       });
     }
 
