@@ -33,6 +33,19 @@ interface Car {
   discountPrice: number | null;
 }
 
+/**
+ * Autos a ocultar por decisión explícita de Matías. Van acá y no en una regla
+ * automática porque "este auto ya no se vende" es un juicio de negocio, no algo
+ * que se deduzca de los datos. `hiddenByCheck` queda en false a propósito: ese
+ * flag marca lo que ocultó el re-check solo, y esto lo pidió una persona.
+ */
+const OCULTAR: Record<string, string> = {
+  "BYD Seal":
+    "byd.com/cl no lo lista. Además sus 3 versiones están las tres a $47.990.000, así que el precio tampoco es confiable.",
+  "Renault E-Kwid":
+    "Duplicado de 'Kwid E-TECH': mismas specs (298 km, 26,8 kWh, 65 CV) con otro slug y otro precio. Y renault.cl no lista ningún Kwid.",
+};
+
 interface Correccion {
   id: string;
   label: string;
@@ -53,6 +66,17 @@ async function main(): Promise<void> {
 
   for (const c of cars) {
     const label = `${c.brand} ${c.name}`;
+
+    // ── Ocultar por decisión explícita ──────────────────────────────────────
+    if (OCULTAR[label] && c.hidden !== true) {
+      correcciones.push({
+        id: c.id,
+        label,
+        accion: "ocultar del sitio (hidden = true)",
+        motivo: OCULTAR[label],
+        set: { hidden: true, hiddenByCheck: false },
+      });
+    }
 
     // ── Descuento que no es descuento ───────────────────────────────────────
     // Igual al precio de lista no es un descuento: es ruido en la PDP. Mayor que

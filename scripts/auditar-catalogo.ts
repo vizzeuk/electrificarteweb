@@ -132,6 +132,32 @@ async function main(): Promise<void> {
       `${grupo.length} documentos con la misma marca+modelo: ${estados.join(" · ")}`, grupo[0].id);
   }
 
+  // PDPs distintas de la misma marca con la MISMA ficha técnica. Es el caso que
+  // el chequeo por nombre no ve: "E-Kwid" y "Kwid E-TECH" son el mismo Renault
+  // (298 km, 26,8 kWh, 65 CV) con dos slugs y dos precios distintos.
+  const fichaDeAuto = (c: Car) => {
+    const vs = (c.versions ?? []).filter((v) => v?.name && tieneSpecs(v));
+    if (!vs.length) return null;
+    return [...vs.map(huella)].sort().join("//");
+  };
+  const porFicha = new Map<string, Car[]>();
+  for (const c of cars) {
+    const f = fichaDeAuto(c);
+    if (!f) continue;
+    const k = `${norm(c.brand)}|${f}`;
+    porFicha.set(k, [...(porFicha.get(k) ?? []), c]);
+  }
+  for (const [, grupo] of porFicha) {
+    if (grupo.length < 2) continue;
+    // Si ya salieron por nombre igual, no se repite el hallazgo.
+    if (new Set(grupo.map((g) => norm(g.name))).size === 1) continue;
+    const detalle = grupo
+      .map((g) => `"${g.name}" (${clp(g.basePrice)}, /${g.slug}${g.hidden === true ? ", oculto" : ""})`)
+      .join(" · ");
+    add("pdp-misma-ficha", "alta", `${grupo[0].brand} ${grupo[0].name}`,
+      `${grupo.length} PDPs de la misma marca con ficha técnica idéntica y nombres distintos: ${detalle}`, grupo[0].id);
+  }
+
   const porSlug = new Map<string, Car[]>();
   for (const c of cars) porSlug.set(c.slug, [...(porSlug.get(c.slug) ?? []), c]);
   for (const [slug, grupo] of porSlug) {
@@ -232,6 +258,21 @@ async function main(): Promise<void> {
       if (v.price! < PISO) {
         add("precio-implausible", "alta", etiqueta, `versión "${v.name}" a ${clp(v.price)}, bajo el piso`, c.id);
       }
+    }
+
+    // ── 8b. Precios que no son redondos ─────────────────────────────────────
+    // En Chile los precios de lista se publican en miles redondos. Un
+    // $48.021.708 no lo publicó nadie: salió de convertir UF, o de leer un
+    // número que no era el precio. Es la señal más barata de una mala lectura.
+    const noRedondo = (n: number) => n % 1000 !== 0;
+    if (typeof c.basePrice === "number" && noRedondo(c.basePrice)) {
+      add("precio-no-redondo", "media", etiqueta,
+        `basePrice ${clp(c.basePrice)} no termina en miles redondos — probable conversión de UF o mala lectura`, c.id);
+    }
+    const raros = conPrecio.filter((v) => noRedondo(v.price!));
+    if (raros.length) {
+      add("precio-no-redondo", "media", etiqueta,
+        `${raros.length} versión(es) con precio no redondo: ${raros.map((v) => `${v.name} ${clp(v.price)}`).join(" · ")}`, c.id);
     }
 
     // ── 9. El nombre del modelo arrastra la versión ─────────────────────────

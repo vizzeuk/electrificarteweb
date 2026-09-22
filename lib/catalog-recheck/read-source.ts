@@ -270,16 +270,31 @@ export async function readFromText(
 }
 
 /**
+ * Señales de que a `web_fetch` lo BLOQUEARON, no de que la fuente esté caída.
+ * Medido en producción: lexus.cl y mg.cl devuelven "permiso denegado al dominio"
+ * (`url_not_allowed`, que Anthropic aplica también por robots.txt). Ahí el sitio
+ * está perfectamente vivo y Firecrawl lo lee sin problema.
+ */
+const BLOQUEO = /permiso|denied|not_allowed|no permitido|forbidden|403|robots|bloque/i;
+
+/**
  * ¿Hay que reintentar con navegador real?
  *
- * Solo cuando la página cargó BIEN y no había precio: eso es la firma de un
- * precio pintado por JavaScript (o de un bloqueo que devolvió una página de
- * error con 200). Si `fuente_ok` es false, el problema es la URL, y Firecrawl
- * tampoco la va a arreglar — ahí corresponde pedir otra URL (C11), no gastar
- * un credit.
+ * Dos casos, y la diferencia importa porque cada intento cuesta un credit:
+ *
+ *  1. La página cargó bien y no había precio → es la firma de un precio pintado
+ *     por JavaScript.
+ *  2. A nosotros nos bloquearon → el sitio está vivo, el que no pasa es el
+ *     fetch. Antes esto caía en "fuente caída" y a las dos corridas marcaba
+ *     `fuente_muerta` pidiendo otra URL, cuando la URL estaba perfecta.
+ *
+ * Lo que NO dispara el fallback es una fuente genuinamente caída (404, dominio
+ * que no responde): ahí Firecrawl tampoco la va a arreglar y corresponde pedir
+ * otra URL (C11).
  */
 export function needsBrowserFallback(report: SourceReport): boolean {
-  return report.fuente_ok && report.modelo_vigente && report.precio_base === null;
+  if (report.fuente_ok) return report.modelo_vigente && report.precio_base === null;
+  return BLOQUEO.test(report.nota ?? "");
 }
 
 /**

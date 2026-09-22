@@ -62,8 +62,8 @@ export async function POST(req: NextRequest): Promise<Response> {
       // catálogo (Porsche Taycan + Cross Turismo, Volvo EX30 + Cross Country,
       // Geely EX5 + E-DMi + EM-i, GWM Ora 03 + GT, …). Sin esto, cada PDP ve las
       // versiones de su hermana como "versión nueva" todas las semanas.
-      "sharedSource": count(*[_type == "car" && hidden != true && !(_id in path("drafts.**"))
-                              && _id != ^._id && sourceUrls[0] == ^.sourceUrls[0]]) > 0
+      "sharedSource": defined(sourceUrls[0]) && count(*[_type == "car" && hidden != true && !(_id in path("drafts.**"))
+                              && _id != ^._id && defined(sourceUrls[0]) && sourceUrls[0] == ^.sourceUrls[0]]) > 0
     }`,
     { id: body.carId }
   );

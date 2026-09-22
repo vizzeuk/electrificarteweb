@@ -475,8 +475,16 @@ test("fallback: la página cargó bien y no hay precio → sí (precio pintado p
 });
 
 test("fallback: la fuente no respondió → NO (el problema es la URL, no el navegador)", () => {
-  assert.equal(needsBrowserFallback(ok({ fuente_ok: false, precio_base: null })), false,
+  assert.equal(needsBrowserFallback(ok({ fuente_ok: false, precio_base: null, nota: "404 Not Found" })), false,
     "ahí corresponde pedir otra URL, no gastar un credit");
+});
+
+test("fallback: nos BLOQUEARON → SÍ (el sitio está vivo, el que no pasa es el fetch)", () => {
+  // Medido en producción: lexus.cl y mg.cl devuelven "permiso denegado al
+  // dominio". Antes caía en fuente_caida y a las 2 corridas pedía otra URL,
+  // con la URL perfecta.
+  const bloqueada = ok({ fuente_ok: false, precio_base: null, nota: "No se pudo acceder a la página (permiso denegado al dominio)." });
+  assert.equal(needsBrowserFallback(bloqueada), true);
 });
 
 test("fallback: el modelo salió del catálogo → NO (no hay precio que buscar)", () => {
