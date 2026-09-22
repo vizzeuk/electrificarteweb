@@ -192,11 +192,40 @@ async function main(): Promise<void> {
       if (!tieneSpecs(v)) continue;
       porHuella.set(huella(v), [...(porHuella.get(huella(v)) ?? []), v]);
     }
+    /**
+     * Que dos versiones tengan la misma ficha NO siempre es un error: en las
+     * gamas chilenas GL y GLX, o Core/Plus/Ultra, son niveles de EQUIPAMIENTO
+     * sobre el mismo tren motriz — misma batería, misma potencia. Flagearlas
+     * ensuciaba la lista con 30 casos de los que la mayoría estaban bien.
+     *
+     * Solo es sospechoso cuando el propio NOMBRE dice que el tren motriz difiere:
+     * otra capacidad de batería, otra tracción, otra cantidad de motores. Ahí sí
+     * es imposible que las specs coincidan.
+     */
+    const señalTren = (n: string) => {
+      const t = norm(n);
+      return {
+        kwh: (n.match(/(\d+[.,]?\d*)\s*kw/i) ?? [])[1] ?? "",
+        traccion: /awd|4wd|4x4|quattro|twin|xdrive|allrad/.test(t) ? "awd"
+          : /rwd|fwd|4x2|2wd|single/.test(t) ? "2wd" : "",
+        motor: (n.match(/(\d[.,]\d)\s*(?:t|l|tsi|tdi)?/i) ?? [])[1] ?? "",
+      };
+    };
     for (const [, grupo] of porHuella) {
       if (grupo.length < 2) continue;
+      const señales = grupo.map((v) => señalTren(v.name ?? ""));
+      const difiere = (k: "kwh" | "traccion" | "motor") =>
+        new Set(señales.map((s) => s[k]).filter(Boolean)).size > 1;
+      if (!difiere("kwh") && !difiere("traccion") && !difiere("motor")) continue;
+
       const nombres = grupo.map((v) => `${v.name} (${clp(v.price)})`);
+      const porQue = [
+        difiere("kwh") && "distinta batería",
+        difiere("traccion") && "distinta tracción",
+        difiere("motor") && "distinto motor",
+      ].filter(Boolean).join(" y ");
       add("versiones-iguales", "alta", etiqueta,
-        `${grupo.length} versiones con specs idénticas pero distinto nombre: ${nombres.join(" · ")}`, c.id);
+        `${grupo.length} versiones con ficha idéntica pese a declarar ${porQue} en el nombre: ${nombres.join(" · ")}`, c.id);
     }
 
     // ── 4. Versiones sin ninguna spec ───────────────────────────────────────
