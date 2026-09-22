@@ -126,7 +126,7 @@ async function main(): Promise<void> {
     porNombre.set(k, [...(porNombre.get(k) ?? []), c]);
   }
   for (const [, grupo] of porNombre) {
-    if (grupo.length < 2) continue;
+    if (grupo.filter((g) => g.hidden !== true).length < 2) continue;
     const estados = grupo.map((g) => `${g.id.slice(0, 12)} (${g.hidden === true ? "oculto" : "publicado"}, ${clp(g.basePrice)})`);
     add("pdp-duplicada", "alta", `${grupo[0].brand} ${grupo[0].name}`,
       `${grupo.length} documentos con la misma marca+modelo: ${estados.join(" · ")}`, grupo[0].id);
@@ -142,6 +142,8 @@ async function main(): Promise<void> {
   };
   const porFicha = new Map<string, Car[]>();
   for (const c of cars) {
+    // Una PDP oculta no es un duplicado vivo: ya se resolvió ocultándola.
+    if (c.hidden === true) continue;
     const f = fichaDeAuto(c);
     if (!f) continue;
     const k = `${norm(c.brand)}|${f}`;

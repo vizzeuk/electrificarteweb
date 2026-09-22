@@ -31,7 +31,7 @@ interface Car {
   hidden: boolean | null;
   basePrice: number | null;
   discountPrice: number | null;
-  versions: { _key?: string; name?: string; price?: number | null }[] | null;
+  versions: { _key?: string; name?: string; price?: number | null; discountPrice?: number | null; [k: string]: unknown }[] | null;
 }
 
 /**
@@ -89,11 +89,14 @@ async function main(): Promise<void> {
   const cars = await sanity.fetch<Car[]>(
     `*[_type == "car" && !(_id in path("drafts.**"))] | order(brand->name asc, name asc) {
       "id": _id, name, "brand": brand->name, hidden, basePrice, discountPrice,
-      "versions": versions[]{ _key, name, price }
+      "versions": versions[]{ ... }
     }`
   );
 
   const correcciones: Correccion[] = [];
+  const bloqueados: string[] = [];
+  /** Mismo piso que el re-check: bajo esto no es un precio, es una mala lectura. */
+  const PISO_PLAUSIBLE = 3_000_000;
 
   for (const c of cars) {
     const label = `${c.brand} ${c.name}`;
@@ -111,7 +114,10 @@ async function main(): Promise<void> {
 
     // ── Precio confirmado contra la fuente ──────────────────────────────────
     const fijo = PRECIOS[label];
-    if (fijo && (c.basePrice !== fijo.base || fijo.version)) {
+    const versionYaOk =
+      !fijo?.version ||
+      (c.versions ?? []).some((v) => v.name === fijo.version!.de && v.price === fijo.version!.a);
+    if (fijo && (c.basePrice !== fijo.base || !versionYaOk)) {
       const set: Record<string, unknown> = { basePrice: fijo.base };
       if (c.basePrice) set.priceCheckPreviousBasePrice = c.basePrice;
       if (fijo.version) {
@@ -125,6 +131,63 @@ async function main(): Promise<void> {
         accion: `basePrice ${clp(c.basePrice)} → ${clp(fijo.base)}${fijo.version ? ` y versión "${fijo.version.de}" → ${clp(fijo.version.a)}` : ""}`,
         motivo: fijo.fuente,
         set,
+      });
+    }
+
+    // ── basePrice = la versión más barata ───────────────────────────────────
+    // Regla de Francisco: el precio de lista de un modelo ES el de su versión de
+    // entrada. Cuando no coinciden, el basePrice quedó apuntando a una versión
+    // que ya no es la más barata (o a un precio suelto de una lectura vieja).
+    // Es aritmética sobre datos que ya están: no se consulta ninguna fuente.
+    const conPrecio = (c.versions ?? [])
+      .map((v) => v.price)
+      .filter((p): p is number => typeof p === "number" && p >= PISO_PLAUSIBLE);
+
+    if (conPrecio.length && !PRECIOS[label]) {
+      const min = Math.min(...conPrecio);
+      if (c.basePrice !== min) {
+        // Bajar el lista por debajo del descuento dejaría la PDP mostrando una
+        // oferta más cara que la lista. El descuento es el número negociado, así
+        // que no se pisa: se avisa.
+        if (typeof c.discountPrice === "number" && min <= c.discountPrice) {
+          // El descuento quedó por encima de la versión más barata, así que ya
+          // no descuenta nada: es de una lista de precios vieja. Se quita junto
+          // con la corrección, en vez de dejar el basePrice mal para sostenerlo.
+          correcciones.push({
+            id: c.id,
+            label,
+            accion: `basePrice ${clp(c.basePrice)} → ${clp(min)} y quitar discountPrice ${clp(c.discountPrice)}`,
+            motivo: `la versión más barata (${clp(min)}) está por debajo del "descuento" (${clp(c.discountPrice)}), así que ese descuento es de una lista vieja`,
+            set: { basePrice: min, ...(c.basePrice ? { priceCheckPreviousBasePrice: c.basePrice } : {}) },
+            unset: ["discountPrice"],
+          });
+        } else {
+          correcciones.push({
+            id: c.id,
+            label,
+            accion: `basePrice ${clp(c.basePrice)} → ${clp(min)}`,
+            motivo: `es el precio de la versión más barata de las ${conPrecio.length} con precio`,
+            set: { basePrice: min, ...(c.basePrice ? { priceCheckPreviousBasePrice: c.basePrice } : {}) },
+          });
+        }
+      }
+    }
+
+    // ── Descuento invertido dentro de una versión ───────────────────────────
+    const conDescMalo = (c.versions ?? []).filter(
+      (v) => typeof v.discountPrice === "number" && typeof v.price === "number" && v.discountPrice >= v.price,
+    );
+    if (conDescMalo.length) {
+      correcciones.push({
+        id: c.id,
+        label,
+        accion: `quitar el descuento de ${conDescMalo.length} versión(es): ${conDescMalo.map((v) => `"${v.name}" ${clp(v.discountPrice)} ≥ ${clp(v.price)}`).join(" · ")}`,
+        motivo: "un descuento igual o mayor que el precio de la versión no es un descuento",
+        set: {
+          versions: (c.versions ?? []).map((v) =>
+            conDescMalo.includes(v) ? { ...v, discountPrice: null } : v,
+          ),
+        },
       });
     }
 
@@ -145,6 +208,11 @@ async function main(): Promise<void> {
         unset: ["discountPrice"],
       });
     }
+  }
+
+  if (bloqueados.length) {
+    console.log(`\n\x1b[33m${bloqueados.length} bloqueada(s) por invertir el descuento:\x1b[0m`);
+    for (const b of bloqueados) console.log(`  · ${b}`);
   }
 
   if (!correcciones.length) {
