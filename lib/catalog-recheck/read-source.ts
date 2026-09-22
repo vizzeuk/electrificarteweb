@@ -22,6 +22,18 @@ const MODEL = "claude-sonnet-5";
 /** Página de precios + PDF de ficha + un redirect. Más que eso es que la URL está mal. */
 const MAX_FETCHES = 3;
 
+/**
+ * Techo de contenido que el fetch puede meter en el contexto.
+ *
+ * Una página de marca normal son ~2.500–3.000 tokens de texto (medido: la de
+ * GWM son 228 kB de HTML que quedan en 11,8 kB de texto — el boilerplate nunca
+ * entra, `web_fetch` entrega `text/plain`). Pero una página de documentación de
+ * 100 kB son ~25.000 tokens, y eso cuesta 4× más que revisar un auto entero.
+ * 8.000 deja holgura para la página más gorda del catálogo y pone un techo a lo
+ * que puede costar una sola lectura. Sale gratis: es un parámetro del tool.
+ */
+const MAX_CONTENT_TOKENS = 8_000;
+
 const SYSTEM = [
   "Lees UNA página oficial de una marca de autos en Chile y reportas EXACTAMENTE lo que dice",
   "sobre precios, versiones, año de modelo y vigencia del modelo. No investigas, no buscas en",
@@ -131,10 +143,16 @@ export async function readSource(input: ReadSourceInput): Promise<SourceReport> 
     messages: [{ role: "user", content: prompt }],
     tools: [
       {
-        type: "web_fetch_20260209",
+        // `_20260309` agrega `use_cache`. Se desactiva el caché de Anthropic a
+        // propósito: si sirviera una versión vieja de la página, el diff estaría
+        // comparando contra un precio que ya cambió — y con auto-aplicar
+        // encendido, escribiríamos ese precio viejo en el sitio.
+        type: "web_fetch_20260309",
         name: "web_fetch",
         max_uses: MAX_FETCHES,
         allowed_domains: allowed,
+        max_content_tokens: MAX_CONTENT_TOKENS,
+        use_cache: false,
       },
     ],
     output_config: { format: { type: "json_schema", schema: OUTPUT_SCHEMA } },
