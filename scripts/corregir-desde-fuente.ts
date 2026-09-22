@@ -104,6 +104,8 @@ interface VersionDoc {
 
 interface Car {
   id: string;
+  sharedSource?: boolean;
+  discountPrice?: number | null;
   name: string;
   brand: string;
   slug: string;
@@ -134,7 +136,12 @@ async function main(): Promise<void> {
      | order(brand->name asc, name asc) [$desde...$hasta] {
       "id": _id, name, "brand": brand->name, "slug": slug.current, basePrice,
       "sourceUrl": sourceUrls[0], "extraUrls": sourceUrls[1...3],
-      "versions": versions[]{ _key, name, price }
+      discountPrice,
+      "versions": versions[]{ _key, name, price },
+      // Otra PDP publicada lee la MISMA pagina. Pasa en 7 familias del catalogo.
+      "sharedSource": defined(sourceUrls[0]) && count(*[_type == "car" && hidden != true
+        && !(_id in path("drafts.**")) && _id != ^._id
+        && defined(sourceUrls[0]) && sourceUrls[0] == ^.sourceUrls[0]]) > 0
     }`,
     { desde, hasta: desde + limite, ...(marca ? { marca } : {}) }
   );
@@ -180,8 +187,23 @@ async function main(): Promise<void> {
       car, precios: [], nuevas: [], sinCalce: [], evidencia: r.evidencia ?? "",
     };
 
+    // Con la fuente compartida entre varias PDPs, el unico "precio lista" que
+    // publica la pagina no se puede atribuir a un modelo: el Volvo EX30 y el
+    // EX30 Cross Country leen la misma pagina y no valen lo mismo. Se reporta y
+    // lo resuelve una persona.
     if (nuevoBase && nuevoBase !== car.basePrice) {
-      cambio.basePrice = { de: car.basePrice, a: nuevoBase };
+      // Bajar el precio de lista puede dejarlo BAJO el precio con descuento, y
+      // entonces la PDP muestra una "oferta" mas cara que la lista. Paso con el
+      // SOUEAST S06: la fuente bajo la lista a $17.990.000 y el descuento
+      // guardado era $21.990.000. El descuento es el numero negociado de
+      // Francisco, asi que no se toca: se avisa y decide una persona.
+      if (typeof car.discountPrice === "number" && nuevoBase <= car.discountPrice) {
+        console.log(`  \x1b[33m~\x1b[0m ${etiqueta.padEnd(34)} basePrice ${clp(car.basePrice)} → ${clp(nuevoBase)} NO aplicado: quedaria bajo el descuento ${clp(car.discountPrice)}`);
+      } else if (car.sharedSource) {
+        console.log(`  \x1b[33m~\x1b[0m ${etiqueta.padEnd(34)} basePrice ${clp(car.basePrice)} → ${clp(nuevoBase)} NO aplicado: la fuente cubre varias PDPs`);
+      } else {
+        cambio.basePrice = { de: car.basePrice, a: nuevoBase };
+      }
     }
 
     const mias = car.versions ?? [];
