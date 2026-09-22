@@ -11,6 +11,7 @@
     "scripts/import-sheet-fuentes.ts",
     "scripts/validar-fuentes.ts",
     "scripts/fuentes-firecrawl.ts",
+    "scripts/fix-brand-websites.ts",
     "scripts/qa/recheck-diff.test.ts",
     "scripts/qa/recheck-source.test.ts"
   ],

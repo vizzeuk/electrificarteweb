@@ -88,14 +88,21 @@ async function main(): Promise<void> {
     if (c[iUrl]) return line; // ya tiene url_oficial: no se toca
 
     // El candidato final puede diferir por redirects; se guarda el que respondió.
+    // Un 403/429 no dice que la URL esté mal: dice que el sitio bloquea clientes
+    // sin navegador. Firecrawl sí la lee en la corrida, así que la URL sirve y lo
+    // que corresponde es marcarla como "necesita navegador", no descartarla.
+    const bloqueado = cand.status === 403 || cand.status === 429;
+    const sirve = cand.status === 200 || bloqueado;
+
     c[iSug] = cand.status === 200 ? cand.final : cand.url;
-    c[iRev] =
-      cand.status !== 200
+    c[iRev] = bloqueado
+      ? `el sitio bloquea clientes sin navegador (${cand.status}) — la lee Firecrawl`
+      : cand.status !== 200
         ? `responde ${cand.status || "timeout"} — revisar`
         : cand.prices > 0
           ? `ok · ${cand.prices} precio(s) en el HTML`
           : "sin precio en el HTML estático — va a necesitar navegador (Firecrawl)";
-    c[iNav] = cand.status === 200 && cand.prices === 0 ? "SI" : "";
+    c[iNav] = sirve && cand.prices === 0 ? "SI" : "";
     escritos++;
     return c.join("\t");
   });
@@ -104,15 +111,15 @@ async function main(): Promise<void> {
 
   writeFileSync(HOJA, out.join("\n") + "\n");
 
-  const ok = checked.filter((c) => c.status === 200);
+  const ok = checked.filter((c) => c.status === 200 || c.status === 403 || c.status === 429);
   const conPrecio = ok.filter((c) => c.prices > 0);
-  console.log(`  responden 200:            ${ok.length}/${checked.length}`);
+  console.log(`  sirven (200, o 403/429 que lee Firecrawl): ${ok.length}/${checked.length}`);
   console.log(`  con precio en estático:   ${conPrecio.length}`);
   console.log(`  necesitan navegador:      ${ok.length - conPrecio.length}`);
   console.log(`  filas actualizadas:       ${escritos}`);
   if (sinFila.length) console.log(`  \x1b[33msin fila en la hoja (revisar nombre): ${sinFila.join(", ")}\x1b[0m`);
 
-  const malos = checked.filter((c) => c.status !== 200);
+  const malos = checked.filter((c) => c.status !== 200 && c.status !== 403 && c.status !== 429);
   if (malos.length) {
     console.log(`\n  \x1b[33mNo responden:\x1b[0m`);
     for (const m of malos) console.log(`    ${m.marca} ${m.modelo}  ${m.status || "timeout"}  ${m.url}`);

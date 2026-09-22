@@ -10,8 +10,9 @@
  * no exponen el catálogo sin JavaScript: `formats: ["links"]` devuelve los links
  * de la página YA renderizada, por 1 credit.
  *
- * El dominio de cada marca lo toma de Sanity (`brand.website`), salvo las que
- * tienen el sitio muerto ahí — para esas hay un override abajo, con el motivo.
+ * El dominio de cada marca lo toma de Sanity (`brand.website`) — corregido en 22
+ * marcas por scripts/fix-brand-websites.ts. Cuando la home igual no lista modelos,
+ * CATALOGOS apunta a la ruta más profunda donde sí están.
  */
 
 import { createClient } from "@sanity/client";
@@ -34,21 +35,31 @@ const UA =
  * otra marca. Vale más que la URL en sí — corregir esto en Sanity arregla también
  * el enlace de la página de marca del sitio.
  */
-const OVERRIDES: Record<string, { url: string; motivo: string }> = {
-  cupra: { url: "https://www.cupraofficial.cl", motivo: "cupra.cl no existe" },
-  haval: { url: "https://www.gwm.cl/haval/", motivo: "haval.cl no resuelve; en Chile se vende bajo GWM" },
-  ora: { url: "https://www.gwm.cl", motivo: "ora.cl no sirve contenido; en Chile se vende bajo GWM" },
-  maxus: { url: "https://maxus.cl", motivo: "sin www" },
-  omoda: { url: "https://omoda.cl", motivo: "sin www" },
-  jaecoo: { url: "https://jaecoo.cl", motivo: "sin www" },
-  jetour: { url: "https://jetour.cl", motivo: "www.jetour.cl no resuelve" },
-  leapmotor: { url: "https://leapmotor.cl", motivo: "www.leapmotor.cl no resuelve" },
-  nammi: { url: "https://nammi.cl", motivo: "www.nammi.cl no resuelve" },
-  riddara: { url: "https://riddara.cl", motivo: "www.riddara.cl no sirve contenido" },
-  "mercedes-benz": { url: "https://www.mercedes-benz.cl/passengercars.html", motivo: "el apex redirige a un www que no resuelve" },
-  tesla: { url: "https://www.tesla.com/es_cl", motivo: "no tiene dominio .cl" },
-  smart: { url: "https://www.smart.com/cl/es", motivo: "no tiene dominio .cl" },
-  jac: { url: "https://www.jacchile.cl", motivo: "el dominio chileno es jacchile.cl" },
+/**
+ * Páginas de CATÁLOGO donde buscar, cuando la home de la marca no lista modelos.
+ * El `website` de cada marca ya está corregido en Sanity (scripts/fix-brand-websites.ts),
+ * así que acá solo van los casos en que hay que entrar a una ruta más profunda.
+ */
+const CATALOGOS: Record<string, { url: string; motivo: string }> = {
+  leapmotor: { url: "https://www.leapmotorchile.cl/modelos.html", motivo: "la home no lista modelos" },
+  baic: { url: "https://www.baic.cl/modelos/", motivo: "los modelos están bajo /modelos/" },
+  gac: { url: "https://www.gacautos.cl/modelos/electricos/", motivo: "los eléctricos están en una sección aparte" },
+  dongfeng: { url: "https://dongfengindumotora.cl/cotizador.html", motivo: "el catálogo vive en el cotizador" },
+  nammi: { url: "https://dongfengindumotora.cl/cotizador.html", motivo: "en Chile el E70 lo vende Dongfeng/Indumotora" },
+  jmc: { url: "https://jmcchile.cl/electricos/", motivo: "los eléctricos están en una sección aparte" },
+  maxus: { url: "https://maxus.cl/modelos", motivo: "la home no lista modelos" },
+  jac: { url: "https://www.jacautoschile.cl/modelos/electricos/", motivo: "sección de eléctricos" },
+  ford: { url: "https://www.ford.cl/suvs-crossovers/", motivo: "el Escape está en SUVs" },
+  fiat: { url: "https://www.fiat.cl/modelos.html", motivo: "la home no lista modelos" },
+  dfsk: { url: "https://www.dfsk.cl/vehiculos/", motivo: "los modelos están bajo /vehiculos/" },
+  tesla: { url: "https://www.tesla.com/es_cl/inventory/new/my", motivo: "no tiene dominio .cl; el precio vive en el inventario" },
+  ssangyong: { url: "https://www.kgm.cl/modelos/", motivo: "Ssangyong pasó a llamarse KGM" },
+  renault: { url: "https://renault.cl/todos-los-modelos/", motivo: "para confirmar si el Kwid sigue en el catálogo" },
+  audi: { url: "https://www.audi.cl/modelos/", motivo: "el Q8 e-tron no aparece en la home" },
+  gwm: { url: "https://www.gwm.cl/poer/", motivo: "la Poer tiene su propia sección" },
+  haval: { url: "https://www.gwm.cl/haval/", motivo: "en Chile se vende bajo GWM" },
+  bmw: { url: "https://www.bmw.cl/bmw-i", motivo: "los eléctricos están bajo /bmw-i" },
+  byd: { url: "https://www.byd.com/cl/car", motivo: "las fichas viven bajo /car" },
 };
 
 const sanity = createClient({
@@ -229,7 +240,7 @@ async function main(): Promise<void> {
   const encontrados: string[] = [];
 
   for (const [marca, modelos] of [...grupos].sort((a, b) => b[1].length - a[1].length)) {
-    const over = OVERRIDES[marca.toLowerCase()];
+    const over = CATALOGOS[marca.toLowerCase()];
     const site = over?.url ?? porMarca.get(norm(marca)) ?? null;
     if (!site) {
       console.log(`  ${marca.padEnd(14)} — sin sitio (ni en Sanity ni override)`);
