@@ -17,6 +17,7 @@
     "scripts/recheck-corrida.ts",
     "scripts/corregir-desde-fuente.ts",
     "scripts/fusionar-pdp.ts",
+    "scripts/buscar-fichas.ts",
     "scripts/qa/recheck-diff.test.ts",
     "scripts/qa/recheck-source.test.ts"
   ],

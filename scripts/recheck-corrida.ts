@@ -97,9 +97,10 @@ async function main(): Promise<void> {
           marca ? { marca } : {},
         )
       : await sanity.fetch(
-          `*[_type == "car" && hidden != true && !(_id in path("drafts.**")) && count(sourceUrls) > 0]
+          `*[_type == "car" && hidden != true && !(_id in path("drafts.**")) && count(sourceUrls) > 0
+             ${marca ? "&& brand->name == $marca" : ""}]
            | order(coalesce(lastPriceCheckAt, "1970-01-01") asc) [0...$limite] ${PROY}`,
-          { limite },
+          { limite, ...(marca ? { marca } : {}) },
         );
 
   if (fuentes) {
