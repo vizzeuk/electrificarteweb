@@ -593,11 +593,39 @@ npx tsx --env-file=.env.local scripts/validar-fuentes.ts data/fuentes-candidatas
 | BMW · MG | `/modelos/<modelo>` · `/model/MG-<MODELO>` | |
 | **Porsche** | `compare.porsche.com/es-CL?model-series=<familia>` | no publica precio de lista en página estática; el comparador sí muestra CLP |
 
-**Los 60 que faltan** son casi todos marcas chinas con importador propio, sitio lento o sin
-catálogo estático: JAC (4), Deepal (4), Smart (3), Leapmotor (3), Jaecoo (3), Dongfeng (3),
-Jetour (2), GAC (2), Maxus (2), Lynk & Co (2), Mercedes-Benz (2), BAIC (2), y sueltos. Jaecoo,
-Omoda y DS dan timeout incluso con el dominio correcto. Ahí el camino es Firecrawl sobre la home
-de cada una (~15 credits) o buscarlas a mano.
+**Pase con Firecrawl (22-09-2026, 36 marcas, ~90 credits en tres corridas).** Cerró 7 más y,
+más útil, explicó por qué el resto no cierra. Estado final:
+
+```
+182 autos · 3 con url_oficial en Sanity · 125 con candidato validado · 54 sin candidato
+de los 125: 91 traen el precio en el HTML · 34 necesitan navegador (Firecrawl)
+```
+
+Tres cosas que costaron y conviene no repetir:
+
+- **Rate limit sin throttle.** El tier gratis son 10 req/min. La primera corrida revisó 10 marcas
+  y las otras 26 devolvieron 429. Ahora hay una espera de 10 s entre llamadas (un 429 no consume
+  credit, así que lo que se perdió fue tiempo, no cuota).
+- **Los nombres del catálogo traen la versión, las URLs no.** "Escape HEV" vive en
+  `/all-new-escape/`, "i7 M70 xDrive Berlina" en `/modelos/i7`. Exigir todos los tokens deja todo
+  afuera; no exigir ninguno trae el auto equivocado. El matcher separa el **núcleo** (lo
+  identificatorio) de los sufijos de versión, exige el núcleo, y puntúa los sufijos aparte.
+- **Los números que van solos sí son obligatorios.** Sin eso "Tiggo 8 Pro PHEV" elegía
+  `/tiggo-7-pro-max-phev/`, que es otro auto con otro precio. Y lo que la ruta trae **de más**
+  penaliza: `/modelos/hatchback/gr_yaris` calzaba con "Yaris Sedán Híbrido" y es el GR Yaris, a
+  combustión. Con la penalización pasó a `/modelos/sedan/new-yaris-sedan-hybrid/`.
+
+**Los 54 que faltan, por motivo** — y ninguno se arregla con más scraping:
+
+| Motivo | Autos | Detalle |
+|---|---|---|
+| El modelo **no está** en el sitio de la marca | 5 | `bmw.cl` lista i4/i5/iX1/iX2/iX3 pero **no** i7 ni iX. `byd.com/cl` no lista Seal ni Tang. `gwm.cl` no lista una H6 PHEV. Comprobado sobre la página renderizada: son candidatos a **descontinuado**, no a búsqueda. |
+| Sitio de marca no scrapeable | ~22 | Jaecoo, Omoda y DS fallan con `ERR_TUNNEL` incluso en Firecrawl. Leapmotor, Jetour, Nammi y Mercedes-Benz no resuelven DNS con ningún subdominio. Jeep agota todos los motores. |
+| Sin sitio web en Sanity | 4 | BAIC (2), AVTR, SOUEST |
+| Catálogo renderizado sin link al modelo | ~23 | Smart, Dongfeng, GAC, Lynk & Co, Renault (Kwid), Tesla, Audi (Q8), Nissan, Honda, Fiat, Ford, JMC, Maxus, Riddara, DFSK, Hyundai (Palisade) |
+
+Las dos primeras filas son **datos para Francisco**, no trabajo pendiente de scraping: hay que
+decidir si esos autos siguen a la venta, y corregir 12 `brand.website` en Sanity.
 
 **Optimización a decidir acá y no después:** varias marcas publican una sola página de precios
 (BYD cubre 9 autos, MG 8, Porsche 8). Un `priceListUrl` por marca bajaría las lecturas semanales

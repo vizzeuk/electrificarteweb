@@ -10,6 +10,7 @@
     "scripts/gen-sheet-autos.ts",
     "scripts/import-sheet-fuentes.ts",
     "scripts/validar-fuentes.ts",
+    "scripts/fuentes-firecrawl.ts",
     "scripts/qa/recheck-diff.test.ts",
     "scripts/qa/recheck-source.test.ts"
   ],
