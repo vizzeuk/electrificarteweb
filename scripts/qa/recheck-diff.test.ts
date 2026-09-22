@@ -20,6 +20,7 @@ import {
   proposeAutoApply,
 } from "@/lib/catalog-recheck/diff";
 import { assignSlots, describeSlot, leastLoadedSlot, slotFor, TOTAL_SLOTS } from "@/lib/catalog-recheck/slots";
+import { needsBrowserFallback, sanitize } from "@/lib/catalog-recheck/read-source";
 import type { CarSnapshot, SourceReport } from "@/lib/catalog-recheck/types";
 
 let passed = 0;
@@ -455,6 +456,59 @@ test("assignSlots: respeta la carga previa", () => {
   counts[21] = 0;
   const pairs = assignSlots(["x", "y"], counts);
   assert.deepEqual(pairs.map((p) => p.checkSlot), [20, 21]);
+});
+
+
+// ─── Cuándo se gasta un credit de Firecrawl ───────────────────────────────────
+// El free tier son 1.000 credits/mes y una lectura cacheada igual cuesta 1. El
+// gatillo tiene que ser angosto o el tier no alcanza.
+
+test("fallback: la página cargó bien y no hay precio → sí (precio pintado por JS)", () => {
+  assert.equal(needsBrowserFallback(ok({ precio_base: null })), true);
+});
+
+test("fallback: la fuente no respondió → NO (el problema es la URL, no el navegador)", () => {
+  assert.equal(needsBrowserFallback(ok({ fuente_ok: false, precio_base: null })), false,
+    "ahí corresponde pedir otra URL, no gastar un credit");
+});
+
+test("fallback: el modelo salió del catálogo → NO (no hay precio que buscar)", () => {
+  assert.equal(needsBrowserFallback(ok({ modelo_vigente: false, precio_base: null })), false);
+});
+
+test("fallback: ya hay precio → NO", () => {
+  assert.equal(needsBrowserFallback(ok()), false);
+});
+
+// ─── Normalización de la salida del modelo ────────────────────────────────────
+
+test("sanitize: precios con puntos de mil se convierten a número", () => {
+  const r = sanitize({ precio_base: "$25.990.000", versiones: [{ nombre: "GLX", precio: "27.490.000" }] });
+  assert.equal(r.precio_base, 25_990_000);
+  assert.equal(r.versiones[0].precio, 27_490_000);
+});
+
+test("sanitize: ante la duda, el modelo queda vigente", () => {
+  // Ocultar un auto del sitio por una lectura ambigua es peor que dejar un
+  // descontinuado una semana más.
+  assert.equal(sanitize({}).modelo_vigente, true);
+  assert.equal(sanitize({ modelo_vigente: null }).modelo_vigente, true);
+  assert.equal(sanitize({ modelo_vigente: false }).modelo_vigente, false);
+});
+
+test("sanitize: un año imposible se descarta", () => {
+  assert.equal(sanitize({ anio_modelo: 25 }).anio_modelo, null);
+  assert.equal(sanitize({ anio_modelo: 2026 }).anio_modelo, 2026);
+});
+
+test("sanitize: versiones sin nombre se descartan, no rompen", () => {
+  const r = sanitize({ versiones: [{ precio: 1 }, { nombre: "  " }, { nombre: "GT", precio: null }] });
+  assert.deepEqual(r.versiones, [{ nombre: "GT", precio: null }]);
+});
+
+test("sanitize: precios negativos o cero quedan en null", () => {
+  assert.equal(sanitize({ precio_base: -5 }).precio_base, null);
+  assert.equal(sanitize({ precio_base: 0 }).precio_base, null);
 });
 
 console.log(`\n${failed === 0 ? "✓" : "✗"} ${passed} pasaron, ${failed} fallaron\n`);

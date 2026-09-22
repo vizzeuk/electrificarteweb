@@ -23,7 +23,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
 import { authorized, sanityWrite } from "@/lib/catalog-recheck/admin";
 import { decide } from "@/lib/catalog-recheck/diff";
-import { readSource } from "@/lib/catalog-recheck/read-source";
+import { readFromText, readSource } from "@/lib/catalog-recheck/read-source";
 import type { AutoApply, CarSnapshot, SourceReport } from "@/lib/catalog-recheck/types";
 
 export const runtime = "nodejs";
@@ -83,19 +83,25 @@ export async function POST(req: NextRequest): Promise<Response> {
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   const label = `${car.brand} ${car.name}`;
   const log = (l: string) => console.log(`[recheck/car] ${label} ${l}`);
-  const read = () =>
-    readSource({
-      anthropic,
-      brand: car.brand,
-      model: car.name,
-      sourceUrl: car.sourceUrl,
-      extraUrls: car.extraUrls,
-      log,
-    });
+  const readInput = {
+    anthropic,
+    brand: car.brand,
+    model: car.name,
+    sourceUrl: car.sourceUrl,
+    extraUrls: car.extraUrls,
+    log,
+  };
 
   let report: SourceReport;
+  let via: "web_fetch" | "firecrawl" = "web_fetch";
+  /** El markdown de Firecrawl, si ese fue el camino. Evita un segundo credit. */
+  let scrapedText: string | undefined;
+
   try {
-    report = await read();
+    const read = await readSource(readInput);
+    report = read.report;
+    via = read.via;
+    scrapedText = read.text;
   } catch (err) {
     // Falla nuestra (rate limit, 5xx), no de la fuente: no se toca nada en Sanity
     // ni se cuenta para la racha de fuente_muerta, y el auto queda a la cabeza de
@@ -122,7 +128,12 @@ export async function POST(req: NextRequest): Promise<Response> {
 
   if (decision.autoApply && autoApplyEnabled()) {
     try {
-      const second = await read();
+      // Si el precio vino de Firecrawl, se re-extrae del MISMO markdown: un solo
+      // credit, y con input idéntico la única variable que queda es el modelo,
+      // que es justo lo que esta guarda quiere medir.
+      const second = scrapedText
+        ? await readFromText(readInput, scrapedText)
+        : (await readSource(readInput)).report;
       if (second.fuente_ok && second.precio_base === decision.autoApply.to) {
         applied = decision.autoApply;
       } else {
@@ -200,6 +211,9 @@ export async function POST(req: NextRequest): Promise<Response> {
     urgente: Boolean(applied) || (decision.urgent && decision.hasNewFindings),
     ocultado: decision.hide,
     fuente: car.sourceUrl,
+    // Cuántos autos necesitaron navegador real = cuántos credits de Firecrawl
+    // consumió la corrida. Es el número que dice si el free tier alcanza.
+    via,
     nota: note || undefined,
   });
 }

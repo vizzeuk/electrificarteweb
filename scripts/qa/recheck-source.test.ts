@@ -83,7 +83,7 @@ async function main(): Promise<void> {
     }
     const secs = ((Date.now() - t0) / 1000).toFixed(1);
   
-    console.log(`  leyó en ${secs}s: fuente_ok=${report.fuente_ok} · vigente=${report.modelo_vigente} · base ${clp(report.precio_base)} · año ${report.anio_modelo ?? "—"}`);
+    console.log(`  vía ${via} · leyó en ${secs}s: fuente_ok=${report.fuente_ok} · vigente=${report.modelo_vigente} · base ${clp(report.precio_base)} · año ${report.anio_modelo ?? "—"}`);
     if (report.versiones.length) {
       for (const v of report.versiones) console.log(`    · ${v.nombre} — ${clp(v.precio)}`);
     }

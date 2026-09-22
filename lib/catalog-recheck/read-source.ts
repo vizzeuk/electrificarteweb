@@ -10,6 +10,7 @@
  */
 
 import type Anthropic from "@anthropic-ai/sdk";
+import { firecrawlConfigured, scrapeMarkdown } from "./firecrawl";
 import type { SourceReport } from "./types";
 
 /**
@@ -33,6 +34,13 @@ const MAX_FETCHES = 3;
  * que puede costar una sola lectura. Sale gratis: es un parámetro del tool.
  */
 const MAX_CONTENT_TOKENS = 8_000;
+
+/**
+ * Techo del markdown de Firecrawl que se le pasa al modelo. Medido: las páginas
+ * de marca quedan en 8–12k chars con `onlyMainContent`. 40k deja holgura y evita
+ * que una página patológica cueste 10× lo normal.
+ */
+const MAX_TEXT_CHARS = 40_000;
 
 const SYSTEM = [
   "Lees UNA página oficial de una marca de autos en Chile y reportas EXACTAMENTE lo que dice",
@@ -118,12 +126,52 @@ export interface ReadSourceInput {
   log?: (line: string) => void;
 }
 
-export async function readSource(input: ReadSourceInput): Promise<SourceReport> {
-  if (!hostOf(input.sourceUrl)) return failed(`URL inválida: ${input.sourceUrl}`);
+export interface SourceRead {
+  report: SourceReport;
+  /** Qué camino trajo el dato. Va al log de la corrida y al digest. */
+  via: "web_fetch" | "firecrawl";
+  /**
+   * El texto que se extrajo, cuando vino de Firecrawl. Permite volver a extraer
+   * (la confirmación del auto-aplicar) sin gastar otro credit — y con input
+   * idéntico, que es un test más limpio de la varianza del modelo.
+   */
+  text?: string;
+}
 
-  const urls = [input.sourceUrl, ...(input.extraUrls ?? [])];
+/** Lo común a los dos caminos: mismo system prompt, misma salida estructurada. */
+async function extract(
+  input: ReadSourceInput,
+  userContent: string,
+  tools?: Anthropic.ToolUnion[],
+): Promise<SourceReport> {
+  const response = await input.anthropic.messages.create({
+    model: MODEL,
+    max_tokens: 4000,
+    system: SYSTEM,
+    messages: [{ role: "user", content: userContent }],
+    ...(tools ? { tools } : {}),
+    output_config: { format: { type: "json_schema", schema: OUTPUT_SCHEMA } },
+  });
+
+  const text = response.content
+    .filter((b): b is Anthropic.TextBlock => b.type === "text")
+    .map((b) => b.text)
+    .join("")
+    .trim();
+
+  if (!text) return failed("El modelo no devolvió contenido al leer la fuente.");
+
+  try {
+    return sanitize(JSON.parse(text));
+  } catch {
+    input.log?.(`⚠ salida no-JSON: ${text.slice(0, 200)}`);
+    return failed("La salida del modelo no fue JSON válido.");
+  }
+}
+
+/** Camino 1: `web_fetch` de Anthropic. Gratis, pero no ejecuta JavaScript. */
+async function readWithWebFetch(input: ReadSourceInput, urls: string[]): Promise<SourceReport> {
   const allowed = [...new Set(urls.map(hostOf).filter((h): h is string => Boolean(h)))];
-
   const prompt = [
     `Marca: ${input.brand}`,
     `Modelo: ${input.model}`,
@@ -136,45 +184,86 @@ export async function readSource(input: ReadSourceInput): Promise<SourceReport> 
   // Un 429 o un 5xx de Anthropic no se atrapa acá a propósito: no es "la fuente
   // está caída" y no debe contar para la racha de fuente_muerta. Se propaga para
   // que el endpoint lo marque como error de corrida y el auto vuelva a la cola.
-  const response = await input.anthropic.messages.create({
-    model: MODEL,
-    max_tokens: 4000,
-    system: SYSTEM,
-    messages: [{ role: "user", content: prompt }],
-    tools: [
-      {
-        // `_20260309` agrega `use_cache`. Se desactiva el caché de Anthropic a
-        // propósito: si sirviera una versión vieja de la página, el diff estaría
-        // comparando contra un precio que ya cambió — y con auto-aplicar
-        // encendido, escribiríamos ese precio viejo en el sitio.
-        type: "web_fetch_20260309",
-        name: "web_fetch",
-        max_uses: MAX_FETCHES,
-        allowed_domains: allowed,
-        max_content_tokens: MAX_CONTENT_TOKENS,
-        use_cache: false,
-      },
-    ],
-    output_config: { format: { type: "json_schema", schema: OUTPUT_SCHEMA } },
-  });
+  return extract(input, prompt, [
+    {
+      // `_20260309` agrega `use_cache`. Se desactiva el caché de Anthropic a
+      // propósito: si sirviera una versión vieja de la página, el diff estaría
+      // comparando contra un precio que ya cambió — y con auto-aplicar
+      // encendido, escribiríamos ese precio viejo en el sitio.
+      type: "web_fetch_20260309",
+      name: "web_fetch",
+      max_uses: MAX_FETCHES,
+      allowed_domains: allowed,
+      max_content_tokens: MAX_CONTENT_TOKENS,
+      use_cache: false,
+    },
+  ]);
+}
 
-  const text = response.content
-    .filter((b): b is Anthropic.TextBlock => b.type === "text")
-    .map((b) => b.text)
-    .join("")
-    .trim();
+/** Camino 2: texto que ya bajamos (Firecrawl). Sin tools: el modelo solo extrae. */
+export async function readFromText(
+  input: ReadSourceInput,
+  markdown: string,
+): Promise<SourceReport> {
+  const prompt = [
+    `Marca: ${input.brand}`,
+    `Modelo: ${input.model}`,
+    `País: Chile`,
+    `Fuente: ${input.sourceUrl}`,
+    "",
+    "Este es el contenido de la página. Reporta lo que dice de este modelo:",
+    "",
+    markdown.slice(0, MAX_TEXT_CHARS),
+  ].join("\n");
+  return extract(input, prompt);
+}
 
-  if (!text) return failed("El modelo no devolvió contenido al leer la fuente.");
+/**
+ * ¿Hay que reintentar con navegador real?
+ *
+ * Solo cuando la página cargó BIEN y no había precio: eso es la firma de un
+ * precio pintado por JavaScript (o de un bloqueo que devolvió una página de
+ * error con 200). Si `fuente_ok` es false, el problema es la URL, y Firecrawl
+ * tampoco la va a arreglar — ahí corresponde pedir otra URL (C11), no gastar
+ * un credit.
+ */
+export function needsBrowserFallback(report: SourceReport): boolean {
+  return report.fuente_ok && report.modelo_vigente && report.precio_base === null;
+}
 
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(text);
-  } catch {
-    input.log?.(`  ⚠ salida no-JSON: ${text.slice(0, 200)}`);
-    return failed("La salida del modelo no fue JSON válido.");
+export async function readSource(input: ReadSourceInput): Promise<SourceRead> {
+  if (!hostOf(input.sourceUrl)) {
+    return { report: failed(`URL inválida: ${input.sourceUrl}`), via: "web_fetch" };
   }
 
-  return sanitize(parsed);
+  const urls = [input.sourceUrl, ...(input.extraUrls ?? [])];
+  const report = await readWithWebFetch(input, urls);
+
+  if (!needsBrowserFallback(report) || !firecrawlConfigured()) {
+    if (needsBrowserFallback(report)) {
+      input.log?.("⚠ la página cargó sin precio y Firecrawl no está configurado — sin fallback");
+    }
+    return { report, via: "web_fetch" };
+  }
+
+  input.log?.("↻ sin precio en el HTML estático — reintento con Firecrawl (navegador real)");
+  const scraped = await scrapeMarkdown(input.sourceUrl);
+
+  if (!scraped.ok || !scraped.markdown) {
+    input.log?.(`⚠ Firecrawl falló: ${scraped.error}`);
+    // Se devuelve la lectura de web_fetch tal cual: la página sí respondió, así
+    // que esto NO es fuente caída. Queda sin precio y el diff no propone nada.
+    return { report, via: "web_fetch" };
+  }
+
+  const second = await readFromText(input, scraped.markdown);
+  input.log?.(
+    second.precio_base
+      ? `✓ Firecrawl resolvió el precio (${scraped.markdown.length} chars de markdown)`
+      : "⚠ ni con navegador real hay precio legible en esa página",
+  );
+
+  return { report: second, via: "firecrawl", text: scraped.markdown };
 }
 
 /**

@@ -372,6 +372,51 @@ búsqueda web, pero deja de correr.
 
 ---
 
+### 2.11 Firecrawl como fallback (no como camino por defecto)
+
+**Evaluado el 22-09-2026.** El motivo no es ahorrar tokens — ahí no hay nada que ganar:
+
+| Página | HTML crudo | Lo que llega al contexto |
+|---|---|---|
+| GWM Ora 03 | 228.103 chars (~57k tok) | **11.834 chars (~3k tok)** |
+| BYD Sealion 7 | 83.306 chars (~21k tok) | **8.730 chars (~2,2k tok)** |
+
+`web_fetch` entrega un bloque `document` con `media_type: "text/plain"` y **sin cargo extra**
+("no additional charges beyond standard token costs"), así que el boilerplate nunca entra.
+Limpiarlo antes con Firecrawl ahorraría ~US$1,2/mes sobre el catálogo completo, a cambio de
+~763 credits/mes = **76% del free tier**, sin margen para la Fase 0 ni para crecer. Y "cached
+results still cost 1 credit": el caché de Firecrawl acelera, no ahorra.
+
+El motivo real es que **`web_fetch` no ejecuta JavaScript** (documentado) y lo bloquean varios
+sitios. Medido sobre 48 candidatos de URL validados: **31% carga la página y no tiene ni un
+precio en el HTML estático.** BYD (SPA Vue, 9 autos), Audi, Volvo y Peugeot son los casos
+confirmados. En esos autos el re-check leería "bien" y sin precio, en silencio, todas las semanas.
+
+**El gatillo es angosto a propósito** (`needsBrowserFallback`, testeado):
+
+```
+fuente_ok && modelo_vigente && precio_base === null   → Firecrawl (1 credit)
+fuente_ok === false                                    → NO — el problema es la URL (C11)
+modelo_vigente === false                               → NO — no hay precio que buscar
+precio_base presente                                   → NO
+```
+
+Consumo estimado: ~55 autos/semana × 4,3 = **~235 credits/mes, 24% del free tier.**
+
+Cuando el precio viene de Firecrawl, la **confirmación del auto-aplicar re-extrae del mismo
+markdown**: un solo credit, dos llamadas al modelo, y con input idéntico la única variable que
+queda es la varianza del modelo — que es justo lo que esa guarda mide.
+
+Env var: `FIRECRAWL_API_KEY`. Sin ella el fallback no corre y queda en el log.
+
+**Palancas de token que sí son gratis y ya están aplicadas:**
+- `max_content_tokens: 8000` — una página normal son ~3k tokens, pero una de 100 kB son ~25k, o
+  4× lo que cuesta revisar un auto entero.
+- `use_cache: false` (requiere `web_fetch_20260309`, ya en el SDK 0.96) — con auto-aplicar
+  encendido, una página del caché de Anthropic significaría escribir un precio ya viejo.
+- Pendiente: `web_fetch_20260318` + `response_inclusion: "excluded"` recorta tokens de salida.
+  **No está en el SDK 0.96** (llega hasta `_20260309`), y nuestra salida son ~400 tokens: vale poco.
+
 ## 3. Flujo v2 — Creación desde el Sheet
 
 ### 3.1 Qué hay que corregir en el workflow existente
@@ -394,19 +439,41 @@ el mapeo completo a Sanity con subida de portada. **Se reusa casi entero.** Lo q
 5. **`sourceUrls`.** El v2 debe escribirlo siempre. Es lo que hace que la Fase 0 no se repita
    nunca más.
 
-### 3.2 Estructura del Sheet
+### 3.2 El Sheet
 
-Pestaña `autos` — una fila = un modelo = una PDP (R1, nunca una fila por versión):
+Sheet real: `1QYqaKy3pRkGhAe4K4VnV0uUa5G1sOWNMvkyWQxTiGd8`. Cuatro pestañas.
+
+Los TSV se generan con **`npx tsx --env-file=.env.local scripts/gen-sheet-autos.ts`** y quedan
+en `.context/sheet/`. El script hace dos cosas: volcar el catálogo y **proponer la URL oficial**
+de cada auto (ver §4).
+
+**Pestaña `autos`** — una fila = un modelo = una PDP (R1, nunca una fila por versión):
 
 | Columna | Dueño | Notas |
 |---|---|---|
-| `marca` `modelo` `anio` `tipo` `electrificacion` | humano | deben existir como refs en Sanity |
-| `url_oficial` | humano | única fuente (R2) |
-| `versiones` | humano | `"GLX\|24990000, GLS\|27490000"` |
-| `estado` | n8n | `listo` → `procesando` → `listo para revisar` \| `borrador incompleto` \| `error` |
-| `detalle` `link_studio` `pdp_id` | n8n | |
+| `estado` | n8n | Vacío = la fila no se procesa. `listo` **solo** para crear una PDP nueva. Las 182 precargadas ya existen: van vacías. |
+| `pdp_id` | automático | `_id` de Sanity. Lleno = el auto existe (solo se actualiza la fuente). Vacío = PDP nueva. |
+| `marca` `modelo` `anio` `tipo` `electrificacion` | humano | Deben existir como refs en Sanity |
+| **`url_oficial`** | **humano** | **La columna que importa.** Página de precios, configurador o ficha de venta. Nunca newsroom ni nota de prensa. |
+| `url_sugerida` | automático | Candidato encontrado por el script. Revisar y copiar a `url_oficial` si está bien. |
+| `revision_url` | automático | Qué pasó con el candidato: ok, 404, el sitio bloquea bots, sin link que calce |
+| `necesita_navegador` | automático | `SI` = el precio lo pinta JavaScript → lo resuelve el fallback de Firecrawl solo (§2.11) |
+| `versiones` | humano | `"GLX\|24990000, GLS AWD\|27490000"` — pesos, sin puntos ni símbolos |
+| `publicado` `lote` | informativo | `lote` = cuál de las 28 corridas revisa este auto |
+| `detalle` `link_studio` | n8n | |
 
-Pestañas `corridas` y `faltan fuentes` son del Flujo C.
+Pestañas `corridas` y `faltan fuentes` son del Flujo C (solo encabezados; las llena n8n), y
+`instrucciones` es la guía para Francisco.
+
+**Para volver del Sheet a Sanity** (mientras no exista la credencial de Google en n8n):
+
+```
+Sheet → Archivo → Descargar → .tsv
+npx tsx --env-file=.env.local scripts/import-sheet-fuentes.ts ~/Downloads/autos.tsv --aplicar
+```
+
+Solo escribe `sourceUrls`. Rechaza URLs inválidas, de otro mercado (reusa `lib/chile-url.ts`) y
+`pdp_id` que no existan. Sin `--aplicar` solo reporta.
 
 ### 3.3 El agente en Console
 
@@ -427,26 +494,41 @@ iterar el prompt sin romper lo que está corriendo.
 
 ---
 
-## 4. Fase 0 — Descubrir los 176 `sourceUrls`
+## 4. Fase 0 — Descubrir los `sourceUrls`
 
-Sin esto no hay Flujo C. La alternativa manual son 1,5–2 h de Francisco buscando URLs.
+Sin esto no hay Flujo C. Estado medido el 22-09-2026: **3 de 182 autos tienen `sourceUrls`.**
 
-**Agente multiagente en Console**, roster `[{"type":"self"}]`, reparte por marca (53 marcas para
-176 autos). Por auto propone `{slug, url_propuesta, tipo_de_pagina, confianza, evidencia}` y n8n
-lo escribe en una pestaña `fuentes propuestas`. Francisco aprueba en bloque (~15 min) y un
-workflow escribe `sourceUrls` en Sanity.
+`scripts/gen-sheet-autos.ts` ya hace el primer pase, sin IA y sin costo. No adivina rutas con
+patrones (eso da 404 casi siempre: cada marca arma sus URLs distinto). Lo que hace es:
 
-Regla del board que hay que respetar acá: **la URL tiene que ser página de precios /
-configurador / ficha de venta** — nunca newsroom ni nota de prensa. Ese error ya pasó en
-producción: un "precio oficial" de $151.900 salido de un newsroom
-(`lib/price-check/check.ts`, `MIN_PLAUSIBLE_PRICE`).
+1. Bajar el **sitemap** de la marca (`/sitemap.xml` y variantes, siguiendo un nivel de índice).
+   Es XML estático, así que funciona incluso en sitios que renderizan todo con JavaScript — que
+   son justo los que no dejan ver ni un link en la home. Esto subió los candidatos de 41 a 59.
+2. Bajar la home y `/modelos`, `/vehiculos`, `/autos` para sumar el **texto del ancla**, que
+   desambigua cuando la ruta no dice el nombre completo.
+3. Elegir el link que mejor calza con el modelo, con tres filtros que importan:
+   - **El primer token del modelo tiene que aparecer.** Sin eso, "i4 eDrive40 Gran Coupé" elegía
+     `/modelos/2-gran-coupe`, que es otro auto.
+   - **Mercado Chile** (`lib/chile-url.ts`). Los sitemaps de las marcas globales listan todos los
+     países: sin el filtro el Sheet se llenaba de `/us/en/ev6` y `/kr/vehicles/ev5`.
+   - **Penalización fuerte a `stories`, `blog`, `news`, `prensa`.** De un newsroom salió el
+     "precio oficial" de $151.900 que motivó el piso de plausibilidad del código; el matcher
+     había elegido `audi.cl/stories/...` para el Q8 e-tron antes de este filtro.
+4. Validar el candidato con un GET y registrar **si el precio está en el HTML estático** — de ahí
+   sale la columna `necesita_navegador`.
 
-**Optimización que vale la pena evaluar acá y no después:** varias marcas publican una sola
-página de precios (BYD cubre 9 autos, MG 8, Porsche 8). Un `priceListUrl` por marca bajaría las
-lecturas semanales de 176 a ~53 y el costo del Flujo C a ~US$4/mes. Decidirlo en Fase 0 evita
-migrar después.
+Resultado del pase actual: **48 candidatos válidos, 0 de mercado equivocado, 134 sin candidato.**
 
----
+Los 134 son casi todos el mismo problema un nivel arriba: **la home de la marca tampoco se puede
+leer sin navegador.** 12 sitios dieron timeout (Cupra, DS, Haval, Jaecoo, Jetour, Leapmotor,
+Mercedes-Benz, Nammi, Omoda, Ora, Riddara), Tesla y Jeep bloquean, y Chery/Deepal/GAC devuelven
+1 link. La salida es el mismo Firecrawl: **~40 páginas de catálogo de marca, una sola vez, ~40
+credits** — muy por debajo del free tier. Alternativa: el agente multiagente en Console con
+búsqueda web (más caro, mejor juicio para distinguir página de precios de newsroom).
+
+**Optimización a decidir acá y no después:** varias marcas publican una sola página de precios
+(BYD cubre 9 autos, MG 8, Porsche 8). Un `priceListUrl` por marca bajaría las lecturas semanales
+de 176 a ~53 y el costo a ~US$4/mes. Contra: si esa página cambia de formato, caen 9 autos juntos.
 
 ## 5. Orden de construcción
 
@@ -456,7 +538,7 @@ migrar después.
 | **2** | `/api/admin/recheck/*` + auto-aplicar con guardas + `revertir` por WhatsApp + 45 tests | ✅ hecho, falta la prueba en vivo (key sin saldo) |
 | **3** | `n8n/pdp-recheck.json` + credenciales + prueba con lote de 1 auto real | Fase 2 · credencial Google |
 | **4** | Digest: cobertura real + "se manda siempre" · apagar el Flujo B | Fase 3 |
-| **5** | Fase 0: agente de descubrimiento + aprobación en bloque | Console · credencial Google |
+| **5** | Fase 0: 48 candidatos propuestos sin costo ✅ · faltan 134, necesitan Firecrawl o Console | `FIRECRAWL_API_KEY` |
 | **6** | Flujo v2: retriggear al Sheet, credenciales, umbral N/M | Console · credencial Google |
 
 Las fases 1 y 2 no dependen de nada externo y se pueden testear contra el único auto que hoy
@@ -473,6 +555,9 @@ tiene `sourceUrls` (Ora 03, `https://www.gwm.cl/vehiculo/ora/ora-03/`) más 2–
 3. **API key de Anthropic** — la credencial `Anthropic account` de n8n es de otro proyecto. Para
    crear los agentes en el Console del cliente hace falta la key de ese workspace (y su
    `environment_id`).
+3b. **`FIRECRAWL_API_KEY`** — la credencial `Firecrawl account` de n8n también parece de otro
+   proyecto. Se necesita en `.env.local` y en Vercel para que corra el fallback (§2.11) y para
+   cerrar los 134 `sourceUrls` que faltan (§4).
 4. **`priceListUrl` por marca** — decidir en Fase 0 (§4). Baja el costo ~3×, pero acopla varios
    autos a una sola fuente: si esa página cambia de formato, caen 9 autos juntos en vez de 1.
 5. **El reparto de versiones de las 9 familias** (§2.10). Sin declararlo, el re-check compara
