@@ -11,8 +11,11 @@
 // nodo "Config", visible y editable desde la UI sin tocar la VPS.
 import { writeFileSync } from "node:fs";
 
-const ADMIN_CRED = { httpHeaderAuth: { id: "REEMPLAZAR", name: "Electrificarte Admin (x-admin-secret)" } };
-const SHEETS_CRED = { googleSheetsOAuth2Api: { id: "REEMPLAZAR", name: "Google Sheets — Electrificarte" } };
+// IDs reales de las credenciales que ya existen en la instancia de n8n
+// (n8n-cadre, volumen n8n-pruebas_n8n_data). Van con ID para que el workflow
+// quede funcional al importar, sin pasar por la UI a elegirlas a mano.
+const ADMIN_CRED = { httpHeaderAuth: { id: "V9iMtS3nXUravFD5", name: "Electrificarte Admin" } };
+const SHEETS_CRED = { googleSheetsOAuth2Api: { id: "rwCyQeH6TnQJDJkS", name: "Sheets Cadre" } };
 
 /** Lee un valor del nodo Config desde cualquier punto del flujo. */
 const cfg = (k) => `{{ $('Config').first().json.${k} }}`;
@@ -115,8 +118,9 @@ const nodes = [
         "`RECHECK_AUTOAPPLY=false` en Vercel. El digest lo reporta y `revertir <modelo>` lo deshace.",
         "",
         "### Antes de activar",
-        "1. **Credenciales** (3): `Electrificarte Admin (x-admin-secret)` (Header Auth, name `x-admin-secret`),",
-        "   y `Google Sheets — Electrificarte`. Los nodos que dicen REEMPLAZAR las necesitan.",
+        "1. **Credenciales**: ya vienen enchufadas — `Electrificarte Admin` (Header Auth) y `Sheets Cadre`",
+        "   (Google Sheets OAuth2). Verificá que la primera tenga el header con nombre `x-admin-secret`",
+        "   y como valor el mismo `ADMIN_API_SECRET` que está en Vercel.",
         "2. **Nodo Config**: pega `siteBase` (sin barra final) y `sheetId`.",
         "3. **El Sheet** necesita las hojas `AUTOS`, `CORRIDAS` y `FALTAN FUENTES` (mayúsculas: el nodo las busca por nombre exacto).",
         "4. **Bloqueante**: hoy solo 1 de 176 autos publicados tiene `sourceUrls`. Hasta que la Fase 0",
@@ -155,7 +159,7 @@ const nodes = [
       assignments: {
         assignments: [
           { id: "c-site", name: "siteBase", value: "https://electrificarte.com", type: "string" },
-          { id: "c-sheet", name: "sheetId", value: "REEMPLAZAR_ID_DEL_SHEET", type: "string" },
+          { id: "c-sheet", name: "sheetId", value: "1QYqaKy3pRkGhAe4K4VnV0uUa5G1sOWNMvkyWQxTiGd8", type: "string" },
           { id: "c-lote", name: "lote", value: 0, type: "number" },
         ],
       },

@@ -63,9 +63,14 @@ Credenciales que **faltan crear**:
 |---|---|---|---|
 | Header Auth | `Sanity (Bearer write)` | `Authorization` = `Bearer <SANITY_API_TOKEN>` | mutaciones de Sanity |
 | Header Auth | `Kapso (X-API-Key)` | `X-API-Key` = `<KAPSO_API_KEY>` | avisos por WhatsApp |
-| Google Sheets OAuth2 *o* Service Account | `Google Sheets — Electrificarte` | — | **no existe ninguna credencial de Google en la instancia** |
+| ~~Google Sheets OAuth2~~ | ~~`Google Sheets — Electrificarte`~~ | — | ✅ **ya existe**: `Sheets Cadre` (`rwCyQeH6TnQJDJkS`) |
 
-La de Google es bloqueante para el Flujo v2 y para los logs del Flujo C.
+**Actualización (22-09-2026):** las dos credenciales que faltaban ya están creadas en la
+instancia — `Electrificarte Admin` (`V9iMtS3nXUravFD5`) y `Sheets Cadre` (`rwCyQeH6TnQJDJkS`) —
+y el workflow las trae enchufadas **por ID**, así que al importarlo queda funcional sin pasar por
+la UI. Lo único que hay que verificar a mano es que la de admin tenga el header con nombre
+`x-admin-secret` y como valor el mismo `ADMIN_API_SECRET` que está en Vercel (el valor está
+encriptado en la base de n8n y no se puede comprobar desde afuera).
 
 ### 0.3 El límite de 60 s de Vercel mata el lote completo, no el auto
 

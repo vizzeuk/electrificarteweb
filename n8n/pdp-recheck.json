@@ -4,7 +4,7 @@
   "nodes": [
     {
       "parameters": {
-        "content": "## Flujo C — Re-check semanal de precios de PDP\n\n4 corridas al día × 7 días = **28 lotes por semana**. Lote = techo(publicados / 28) → hoy 7 autos.\nCada auto lleva un `checkSlot` 0–27 asignado al crearse, así que se revisa siempre el mismo día y hora.\nLa corrida toma primero los de su lote y, si no llenan, completa con la cola por antigüedad —\nasí una corrida caída no hace que esos autos se salten la semana.\n\n**Precios**: si el precio oficial cambió y una segunda lectura lo confirma, se actualiza solo en Sanity\n(solo `basePrice`, nunca el precio con descuento, nunca versiones ni año). Apagable con\n`RECHECK_AUTOAPPLY=false` en Vercel. El digest lo reporta y `revertir <modelo>` lo deshace.\n\n### Antes de activar\n1. **Credenciales** (3): `Electrificarte Admin (x-admin-secret)` (Header Auth, name `x-admin-secret`),\n   y `Google Sheets — Electrificarte`. Los nodos que dicen REEMPLAZAR las necesitan.\n2. **Nodo Config**: pega `siteBase` (sin barra final) y `sheetId`.\n3. **El Sheet** necesita las hojas `AUTOS`, `CORRIDAS` y `FALTAN FUENTES` (mayúsculas: el nodo las busca por nombre exacto).\n4. **Bloqueante**: hoy solo 1 de 176 autos publicados tiene `sourceUrls`. Hasta que la Fase 0\n   los complete, este cron corre en vacío y avisa 175 autos sin fuente. Probá primero a mano\n   con el botón de test y `lote = 1`.\n\n### Por qué el lote se itera acá y no en la web\nEl lote completo tarda 40–90 s y el límite duro de una función en Vercel Hobby es 60 s (ignora el\n`maxDuration` del código). Un auto por llamada son 10–20 s, con reintento propio, y una fuente\nlenta no arrastra a los otros 6.\n\n### Lo que este flujo NO hace\nNo crea versiones, no borra versiones y no sube el año de modelo. Eso es acto humano desde\nWhatsApp o Studio: mientras 9 familias del catálogo compartan una sola página oficial, la\ndetección de versiones no es confiable como para escribir sola.\n\nDetalle completo: `docs/FLUJO-PDP-N8N.md` §2",
+        "content": "## Flujo C — Re-check semanal de precios de PDP\n\n4 corridas al día × 7 días = **28 lotes por semana**. Lote = techo(publicados / 28) → hoy 7 autos.\nCada auto lleva un `checkSlot` 0–27 asignado al crearse, así que se revisa siempre el mismo día y hora.\nLa corrida toma primero los de su lote y, si no llenan, completa con la cola por antigüedad —\nasí una corrida caída no hace que esos autos se salten la semana.\n\n**Precios**: si el precio oficial cambió y una segunda lectura lo confirma, se actualiza solo en Sanity\n(solo `basePrice`, nunca el precio con descuento, nunca versiones ni año). Apagable con\n`RECHECK_AUTOAPPLY=false` en Vercel. El digest lo reporta y `revertir <modelo>` lo deshace.\n\n### Antes de activar\n1. **Credenciales**: ya vienen enchufadas — `Electrificarte Admin` (Header Auth) y `Sheets Cadre`\n   (Google Sheets OAuth2). Verificá que la primera tenga el header con nombre `x-admin-secret`\n   y como valor el mismo `ADMIN_API_SECRET` que está en Vercel.\n2. **Nodo Config**: pega `siteBase` (sin barra final) y `sheetId`.\n3. **El Sheet** necesita las hojas `AUTOS`, `CORRIDAS` y `FALTAN FUENTES` (mayúsculas: el nodo las busca por nombre exacto).\n4. **Bloqueante**: hoy solo 1 de 176 autos publicados tiene `sourceUrls`. Hasta que la Fase 0\n   los complete, este cron corre en vacío y avisa 175 autos sin fuente. Probá primero a mano\n   con el botón de test y `lote = 1`.\n\n### Por qué el lote se itera acá y no en la web\nEl lote completo tarda 40–90 s y el límite duro de una función en Vercel Hobby es 60 s (ignora el\n`maxDuration` del código). Un auto por llamada son 10–20 s, con reintento propio, y una fuente\nlenta no arrastra a los otros 6.\n\n### Lo que este flujo NO hace\nNo crea versiones, no borra versiones y no sube el año de modelo. Eso es acto humano desde\nWhatsApp o Studio: mientras 9 familias del catálogo compartan una sola página oficial, la\ndetección de versiones no es confiable como para escribir sola.\n\nDetalle completo: `docs/FLUJO-PDP-N8N.md` §2",
         "height": 760,
         "width": 520,
         "color": 5
@@ -52,7 +52,7 @@
             {
               "id": "c-sheet",
               "name": "sheetId",
-              "value": "REEMPLAZAR_ID_DEL_SHEET",
+              "value": "1QYqaKy3pRkGhAe4K4VnV0uUa5G1sOWNMvkyWQxTiGd8",
               "type": "string"
             },
             {
@@ -106,8 +106,8 @@
       ],
       "credentials": {
         "httpHeaderAuth": {
-          "id": "REEMPLAZAR",
-          "name": "Electrificarte Admin (x-admin-secret)"
+          "id": "V9iMtS3nXUravFD5",
+          "name": "Electrificarte Admin"
         }
       },
       "notes": "Devuelve los 7 autos con la revisión más antigua (cola por antigüedad, no partición fija) + los que no tienen URL de fuente + la cobertura de la semana."
@@ -254,8 +254,8 @@
       ],
       "credentials": {
         "googleSheetsOAuth2Api": {
-          "id": "REEMPLAZAR",
-          "name": "Google Sheets — Electrificarte"
+          "id": "rwCyQeH6TnQJDJkS",
+          "name": "Sheets Cadre"
         }
       },
       "notes": "Francisco pega la URL en url_oficial; el flujo de aprobación la escribe en Sanity."
@@ -291,8 +291,8 @@
       ],
       "credentials": {
         "httpHeaderAuth": {
-          "id": "REEMPLAZAR",
-          "name": "Electrificarte Admin (x-admin-secret)"
+          "id": "V9iMtS3nXUravFD5",
+          "name": "Electrificarte Admin"
         }
       },
       "notes": "Un solo mensaje con el total. El detalle está en el Sheet."
@@ -362,8 +362,8 @@
       ],
       "credentials": {
         "httpHeaderAuth": {
-          "id": "REEMPLAZAR",
-          "name": "Electrificarte Admin (x-admin-secret)"
+          "id": "V9iMtS3nXUravFD5",
+          "name": "Electrificarte Admin"
         }
       },
       "notes": "Lee la fuente (1 llamada a Claude), hace el diff aritmético y escribe los campos de auditoría. 10–20 s.",
@@ -435,8 +435,8 @@
       ],
       "credentials": {
         "httpHeaderAuth": {
-          "id": "REEMPLAZAR",
-          "name": "Electrificarte Admin (x-admin-secret)"
+          "id": "V9iMtS3nXUravFD5",
+          "name": "Electrificarte Admin"
         }
       },
       "notes": "Graba la corrida en Supabase (catalog_check_runs). De esa tabla sale la cobertura del digest semanal."
@@ -584,8 +584,8 @@
       ],
       "credentials": {
         "googleSheetsOAuth2Api": {
-          "id": "REEMPLAZAR",
-          "name": "Google Sheets — Electrificarte"
+          "id": "rwCyQeH6TnQJDJkS",
+          "name": "Sheets Cadre"
         }
       },
       "notes": "Se escribe SIEMPRE, haya cambios o no (C15). Es lo que permite detectar la falla que ningún cron puede reportar sobre sí mismo: la corrida que no ocurrió."
@@ -656,8 +656,8 @@
       ],
       "credentials": {
         "httpHeaderAuth": {
-          "id": "REEMPLAZAR",
-          "name": "Electrificarte Admin (x-admin-secret)"
+          "id": "V9iMtS3nXUravFD5",
+          "name": "Electrificarte Admin"
         }
       },
       "notes": "Va al instante porque o ya cambió algo en el sitio (precio aplicado, auto oculto), o la revisión de ese auto quedó detenida."
