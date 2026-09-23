@@ -99,11 +99,22 @@ const REMINDER_TEMPLATE_LANG = process.env.ASESORIA_REMINDER_TEMPLATE_LANG ?? "e
  */
 export async function sendAsesoriaReminder(phone: string): Promise<boolean> {
   if (REMINDER_TEMPLATE) {
-    return sendTemplate(phone, REMINDER_TEMPLATE, REMINDER_TEMPLATE_LANG);
+    const enviada = await sendTemplate(phone, REMINDER_TEMPLATE, REMINDER_TEMPLATE_LANG);
+    if (enviada) return true;
+    // La plantilla falló: aún sin aprobar por Meta, idioma que no calza, o nombre mal
+    // escrito. Antes esto significaba NO enviar nada. Ahora caemos a texto libre, que
+    // no reemplaza a la plantilla (solo llega dentro de la ventana de 24 h) pero es
+    // mejor que quedarse callado. No hay riesgo de envío doble: solo entra acá si el
+    // envío por plantilla no salió.
+    console.warn(
+      `[outbound] la plantilla "${REMINDER_TEMPLATE}" (${REMINDER_TEMPLATE_LANG}) falló — ` +
+        "cayendo a texto libre. Revisar que esté APPROVED en Meta y que el idioma coincida.",
+    );
+  } else {
+    console.warn(
+      "[outbound] ASESORIA_REMINDER_TEMPLATE no configurada — usando texto libre " +
+        "(solo llegará a clientes dentro de la ventana de 24h de WhatsApp)",
+    );
   }
-  console.warn(
-    "[outbound] ASESORIA_REMINDER_TEMPLATE no configurada — usando texto libre " +
-      "(solo llegará a clientes dentro de la ventana de 24h de WhatsApp)",
-  );
   return sendProactiveText(phone, ASESORIA_REMINDER_TEXT);
 }

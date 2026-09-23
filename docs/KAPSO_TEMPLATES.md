@@ -60,7 +60,7 @@ y costos de marketing.
 |---|---|
 | Nombre en Kapso | `asesoria_ultimo_dia` |
 | Idioma | **Español (Chile) → `es_CL`** — verificado contra la lista de Meta |
-| Estado | ⏳ **Pendiente de aprobación** |
+| Estado | ⏳ **Pendiente de aprobación de Meta** |
 
 Ya está puesto en Vercel (Production + Preview):
 ```
@@ -69,18 +69,30 @@ ASESORIA_REMINDER_TEMPLATE_LANG=es_CL
 Es **inerte**: `REMINDER_TEMPLATE_LANG` solo se usa dentro del `if (REMINDER_TEMPLATE)`, así
 que mientras no exista el nombre no cambia nada.
 
-## ⏳ El paso que FALTA — solo cuando Meta la apruebe
-
+Y también, por decisión de Vicente (sep-2026), **ya se activó el nombre** aunque Meta todavía
+no la apruebe:
 ```
 ASESORIA_REMINDER_TEMPLATE=asesoria_ultimo_dia
 ```
 
-> 🚫 **No configurarla antes de que el estado sea APPROVED.** Si se activa con la plantilla
-> pendiente o rechazada, Meta rechaza cada envío y **el recordatorio no le llega a nadie**.
-> Sin la variable, el código cae a texto libre y **sí llega** a quienes escribieron en las
-> últimas 24 h. Configurarla antes de tiempo empeora la situación.
+### Por qué eso ahora es seguro
 
-Después de agregarla hay que **redesplegar** para que tome efecto.
+Originalmente esto era riesgoso: si la plantilla fallaba, **no se enviaba nada**. Se cambió
+`sendAsesoriaReminder` para que, **si el envío por plantilla falla, caiga a texto libre**
+(`lib/whatsapp/outbound.ts`).
+
+Con eso, el comportamiento es:
+
+| Situación | Qué pasa |
+|---|---|
+| Plantilla **aprobada** | Llega a **todos**, dentro y fuera de la ventana de 24 h ✅ |
+| Plantilla **pendiente o rechazada** | Falla, cae a texto libre → llega a quienes escribieron en 24 h |
+| Sin variable configurada | Texto libre directo |
+
+O sea que activar el nombre antes de tiempo **ya no puede dejar a nadie sin mensaje**.
+No hay riesgo de envío doble: el fallback solo corre si la plantilla no salió.
+
+Cuando Meta apruebe, no hay que hacer nada más — empieza a funcionar sola.
 
 ## Mientras no esté aprobada
 
