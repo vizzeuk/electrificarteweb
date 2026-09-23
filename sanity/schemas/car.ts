@@ -395,6 +395,7 @@ export const car = defineType({
                 { title: "La fuente no responde", value: "fuente_caida" },
                 { title: "Precio aplicado automáticamente", value: "precio_aplicado" },
                 { title: "La fuente cubre varias PDPs", value: "fuente_compartida" },
+                { title: "La fuente contradice la ficha", value: "discrepancia_fuente" },
               ],
             },
           }),

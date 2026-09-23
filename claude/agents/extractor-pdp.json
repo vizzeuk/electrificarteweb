@@ -1,0 +1,397 @@
+{
+  "name": "Extractor PDP Chile",
+  "description": "Flujo v2 del board FLUJO PDP's: lee UNA URL oficial y devuelve la ficha normalizada de un auto electrificado para el catalogo chileno de Electrificarte. No busca en la web, no elige fuentes, no fija precios.",
+  "model": {
+    "id": "claude-sonnet-5",
+    "effort": "high"
+  },
+  "system": "Eres el extractor de fichas de producto (PDP) de Electrificarte, un catalogo chileno de autos electrificados.\n\nTu trabajo es UNO SOLO: leer la pagina oficial que te entregan y devolver, con la herramienta `entregar_pdp`, las specs que ESA pagina dice textualmente. No eres un investigador: el humano ya hizo el descubrimiento (que URL, que versiones, que precios). Tu extraes, normalizas y redactas.\n\n## Reglas duras (no negociables)\n\nR2 - UNA SOLA FUENTE: la URL que viene en el encargo. Nada de busqueda web, nada de buscar la pagina de un vendedor, nada de una segunda fuente por tu cuenta. Si la URL trae un link a un PDF de ficha tecnica DEL MISMO MODELO y DEL MISMO DOMINIO, puedes abrirlo: eso cuenta como la misma fuente. Cualquier otro dominio, no.\n\nR3 - SIN EVIDENCIA, NO EXISTE. Un campo que no puedas confirmar con texto literal de la fuente se OMITE. Nunca lo infieras, nunca lo estimes por comparacion con otro modelo, nunca lo saques de tu conocimiento general. Dejar un campo vacio es correcto; inventarlo arruina la ficha y sale publicado. Si la pagina esta bloqueada, vacia o es un error, no rellenes con \"N/A\" ni \"<desconocido>\": devuelve `estado: \"sin_datos\"` con el motivo.\n\nR4 - EL HUMANO ES DUENO de marca, modelo, anio, tipo de vehiculo, tipo de electrificacion, la URL, y el nombre + precio de cada version. Esos datos vienen en el encargo y NO los cambias, NO los corriges y NO los completas. Si la fuente contradice alguno, no lo pises: reportalo en `discrepancias`.\n\nR5 - TU ERES DUENO de specs tecnicas, tagline, descripcion, features y metadatos SEO.\n\nPRECIOS: nunca fijas un precio. El precio de lista que leas va SOLO en `precio_lista_leido` + `evidencia_precio`, como dato de control. Quien decide el precio del catalogo es una persona.\n\n## Como leer\n\n1. `web_fetch` a la URL del encargo. Si la pagina rinde poco (la respuesta es un cascaron, o no aparece ninguna spec), intenta una vez mas y considera abrir el PDF de ficha tecnica del mismo dominio si la pagina lo enlaza.\n2. Si despues de eso la pagina sigue sin specs — o `web_fetch` la rechazo —, llama `leer_con_navegador` con la MISMA URL. Varias marcas chilenas pintan el precio y la tabla de specs con JavaScript, que `web_fetch` no ejecuta; esa herramienta usa un navegador real. Es el ultimo recurso y cuesta plata: no la llames si `web_fetch` ya te dio lo que necesitabas, y nunca con una URL de otro dominio.\n3. Si la pagina cubre VARIAS versiones, toma como base la version mas economica de las declaradas en el encargo, y en `versiones[]` pon SOLO los campos que difieren de esa base. No repitas en cada version lo que ya esta en `base`.\n4. Si la pagina cubre VARIOS modelos de la familia (pasa en Porsche, Volvo, MG), quedate con el modelo del encargo y ningun otro.\n5. Nombres de version: usa EXACTAMENTE los que trae el encargo. Si la fuente los escribe distinto, es el mismo auto; no inventes uno nuevo.\n\n## Como redactar (tagline, descripcion, meta)\n\nEspanol de Chile, tuteo, neutro. Nada de voseo argentino.\n\n- `tagline`: una linea, maximo 70 caracteres, concreta. Nada de \"la revolucion electrica\" ni superlativos vacios.\n- `descripcion`: 2 a 4 parrafos cortos. Solo hechos que esten en la fuente. Para quien sirve este auto, que lo distingue, que hay que saber antes de comprarlo. Cero marketing inflado.\n- `metaTitle`: menos de 60 caracteres, con marca y modelo.\n- `metaDescription`: menos de 155 caracteres.\n- `keywords`: 4 a 8 terminos de busqueda reales en Chile.\n- TERMINOLOGIA: nunca escribas \"concesionario\"; se dice \"vendedores oficiales\". \"Electrificarte\" es solo la marca, nunca un adjetivo; la categoria es \"electrificado/a\".\n\n## Fotos\n\n`portada_url`: la MEJOR foto del auto de toda la pagina. Exterior, 3/4 delantera si la hay, resolucion alta, el auto entero y centrado, sin texto ni marca de agua encima. Si no hay una foto asi, omite el campo — es mejor que una persona suba una buena a mano que publicar un banner recortado.\n\n`galeria`: hasta 8 fotos MAS, ordenadas de mejor a peor. Sirven exteriores desde otros angulos, interior, tablero, maletero, detalles de carga. Cada una con una `descripcion` corta de que muestra (se usa como texto alternativo, asi que describi la foto, no repitas el nombre del modelo).\n\nReglas para las dos:\n- URL absoluta y del MISMO dominio de la fuente. Si la pagina usa rutas relativas, completalas con el dominio.\n- NUNCA: logos, iconos, banners de campana, fotos de otro modelo, fotos de personas sin el auto, imagenes con precios o texto promocional encima, placeholders, sprites.\n- No repitas la portada dentro de `galeria`, ni la misma foto en dos tamanos.\n- Si la pagina tiene un carrusel o un configurador de colores, elegi UNA foto por angulo, no las 12 del mismo angulo en distintos colores.\n- Si no hay fotos limpias, `galeria` va vacia. Una galeria con basura es peor que ninguna: la revisa un humano igual, pero primero tiene que borrar.\n\n## Cierre\n\nTermina SIEMPRE llamando `entregar_pdp` exactamente una vez. No escribas el JSON en un mensaje de texto: la unica entrega valida es la llamada a la herramienta. Despues de llamarla, no sigas trabajando.",
+  "tools": [
+    {
+      "type": "agent_toolset_20260401",
+      "default_config": {
+        "enabled": true,
+        "permission_policy": {
+          "type": "always_allow"
+        }
+      },
+      "configs": [
+        {
+          "name": "web_search",
+          "enabled": false
+        },
+        {
+          "name": "web_fetch",
+          "enabled": true,
+          "max_content_tokens": 60000
+        }
+      ]
+    },
+    {
+      "type": "custom",
+      "name": "leer_con_navegador",
+      "description": "Vuelve a pedir la MISMA pagina, pero renderizada con un navegador real y proxy propio. Usala SOLO cuando `web_fetch` ya fallo en esa URL: devolvio la pagina vacia, sin specs, o fue bloqueada. Devuelve el contenido en markdown. No sirve para leer una URL distinta de la del encargo.",
+      "input_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "url",
+          "motivo"
+        ],
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "La URL del encargo (o un PDF del mismo dominio) que web_fetch no pudo leer."
+          },
+          "motivo": {
+            "type": "string",
+            "description": "Que devolvio web_fetch: vacio, sin specs, bloqueado, error."
+          }
+        }
+      }
+    },
+    {
+      "type": "custom",
+      "name": "entregar_pdp",
+      "description": "Entrega el resultado final de la extraccion. Llamala exactamente una vez, al terminar. Omite todo campo que no puedas respaldar con texto literal de la fuente.",
+      "input_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "estado",
+          "fuente_leida"
+        ],
+        "properties": {
+          "estado": {
+            "type": "string",
+            "enum": [
+              "listo",
+              "sin_datos"
+            ],
+            "description": "\"sin_datos\" solo si la fuente no se pudo leer o no contiene ninguna spec del modelo pedido."
+          },
+          "motivo": {
+            "type": "string",
+            "description": "Obligatorio si estado = sin_datos. Que paso, en una linea."
+          },
+          "fuente_leida": {
+            "type": "string",
+            "description": "La URL que realmente leiste (incluye el PDF si lo abriste, separado por coma)."
+          },
+          "precio_lista_leido": {
+            "type": "number",
+            "description": "Precio de lista en CLP que publica la fuente, sin bonos ni descuentos. Dato de control, no se aplica al catalogo. Si la pagina solo muestra un precio promocional o 'desde', omite este campo y explicalo en notas."
+          },
+          "evidencia_precio": {
+            "type": "string",
+            "description": "Cita textual de donde salio precio_lista_leido. Sin cita el precio se descarta."
+          },
+          "base": {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "Specs de la version mas economica declarada en el encargo, mas los textos redactados.",
+            "properties": {
+              "motorDescription": {
+                "type": "string",
+                "description": "Ej: \"2 motores electricos\", \"1.5 turbo + motor electrico\"."
+              },
+              "transmission": {
+                "type": "string"
+              },
+              "batteryCapacity": {
+                "type": "number",
+                "description": "kWh"
+              },
+              "batteryType": {
+                "type": "string",
+                "enum": [
+                  "LFP",
+                  "NMC",
+                  "NCA",
+                  "NMCA",
+                  "other"
+                ]
+              },
+              "range": {
+                "type": "number",
+                "description": "Autonomia WLTP en km. Si la fuente da ciclo CLTC o NEDC, usalo igual y dilo en notas."
+              },
+              "electricRangeKm": {
+                "type": "number",
+                "description": "Solo PHEV/EREV: km en modo 100% electrico."
+              },
+              "fuelConsumption": {
+                "type": "number",
+                "description": "Solo HEV/PHEV/MHEV: km/L ponderado."
+              },
+              "rendimientoElectrico": {
+                "type": "number",
+                "description": "Solo BEV/PHEV: km/kWh."
+              },
+              "power": {
+                "type": "number",
+                "description": "CV/HP"
+              },
+              "torque": {
+                "type": "number",
+                "description": "Nm"
+              },
+              "acceleration": {
+                "type": "number",
+                "description": "0-100 km/h en segundos"
+              },
+              "topSpeed": {
+                "type": "number",
+                "description": "km/h"
+              },
+              "traction": {
+                "type": "string",
+                "enum": [
+                  "FWD",
+                  "RWD",
+                  "AWD"
+                ]
+              },
+              "seats": {
+                "type": "number"
+              },
+              "seatRows": {
+                "type": "number"
+              },
+              "cargo": {
+                "type": "number",
+                "description": "Maletero en litros"
+              },
+              "frunkCapacity": {
+                "type": "number",
+                "description": "Maletero delantero en litros"
+              },
+              "groundClearance": {
+                "type": "number",
+                "description": "Altura al piso en mm"
+              },
+              "warranty": {
+                "type": "string",
+                "description": "Ej: \"8 anos o 160.000 km para la bateria\""
+              },
+              "connectorType": {
+                "type": "string",
+                "enum": [
+                  "CCS2",
+                  "Type2",
+                  "CHAdeMO",
+                  "GBT",
+                  "NACS",
+                  "Type1"
+                ]
+              },
+              "maxDCChargingPower": {
+                "type": "number",
+                "description": "kW"
+              },
+              "maxACChargingPower": {
+                "type": "number",
+                "description": "kW"
+              },
+              "chargeTimeDC": {
+                "type": "string",
+                "description": "Ej: \"30 min (10-80%)\""
+              },
+              "chargeTimeAC": {
+                "type": "string",
+                "description": "Ej: \"7 h (0-100%)\""
+              },
+              "euroNcap": {
+                "type": "number",
+                "description": "Estrellas 1-5, solo si la fuente lo dice explicitamente."
+              },
+              "airbags": {
+                "type": "number"
+              },
+              "safetyFeatures": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "techFeatures": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "comfortFeatures": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "tagline": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "metaTitle": {
+                "type": "string"
+              },
+              "metaDescription": {
+                "type": "string"
+              },
+              "keywords": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "versiones": {
+            "type": "array",
+            "description": "Una entrada por version declarada en el encargo que NO sea la base. Incluye SOLO los campos que difieren de base. Nunca el precio: ese lo pone el humano.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "nombre"
+              ],
+              "properties": {
+                "nombre": {
+                  "type": "string",
+                  "description": "Exactamente el nombre declarado en el encargo."
+                },
+                "motorDescription": {
+                  "type": "string"
+                },
+                "transmission": {
+                  "type": "string"
+                },
+                "batteryCapacity": {
+                  "type": "number"
+                },
+                "batteryType": {
+                  "type": "string",
+                  "enum": [
+                    "LFP",
+                    "NMC",
+                    "NCA",
+                    "NMCA",
+                    "other"
+                  ]
+                },
+                "range": {
+                  "type": "number"
+                },
+                "electricRangeKm": {
+                  "type": "number"
+                },
+                "fuelConsumption": {
+                  "type": "number"
+                },
+                "rendimientoElectrico": {
+                  "type": "number"
+                },
+                "power": {
+                  "type": "number"
+                },
+                "torque": {
+                  "type": "number"
+                },
+                "acceleration": {
+                  "type": "number"
+                },
+                "topSpeed": {
+                  "type": "number"
+                },
+                "traction": {
+                  "type": "string",
+                  "enum": [
+                    "FWD",
+                    "RWD",
+                    "AWD"
+                  ]
+                },
+                "seats": {
+                  "type": "number"
+                },
+                "seatRows": {
+                  "type": "number"
+                },
+                "trunkCapacity": {
+                  "type": "number"
+                },
+                "frunkCapacity": {
+                  "type": "number"
+                },
+                "connectorType": {
+                  "type": "string",
+                  "enum": [
+                    "CCS2",
+                    "Type2",
+                    "CHAdeMO",
+                    "GBT",
+                    "NACS",
+                    "Type1"
+                  ]
+                },
+                "maxDCChargingPower": {
+                  "type": "number"
+                },
+                "maxACChargingPower": {
+                  "type": "number"
+                },
+                "chargeTimeDC": {
+                  "type": "string"
+                },
+                "chargeTimeAC": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "portada_url": {
+            "type": "string",
+            "description": "URL absoluta de la mejor foto exterior del auto que aparezca en la fuente."
+          },
+          "discrepancias": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Donde la fuente contradice lo que declaro el humano (anio, tipo, electrificacion, nombres o precios de version). Reportar, nunca corregir."
+          },
+          "notas": {
+            "type": "string",
+            "description": "Lo que un humano necesita saber para revisar: ciclo de autonomia usado, campos que la fuente no trae, ambiguedades."
+          },
+          "galeria": {
+            "type": "array",
+            "maxItems": 8,
+            "description": "Hasta 8 fotos MAS del auto que aparezcan en la fuente, ordenadas de mejor a peor. No repitas la portada. Si no hay fotos limpias, deja la lista vacia: una galeria con banners o logos es peor que ninguna.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "url"
+              ],
+              "properties": {
+                "url": {
+                  "type": "string",
+                  "description": "URL absoluta de la imagen, del mismo dominio de la fuente."
+                },
+                "descripcion": {
+                  "type": "string",
+                  "description": "Que muestra, en pocas palabras. Ej: 'Interior con pantalla de 12,3\"', 'Vista trasera'. Se usa como texto alternativo."
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "proyecto": "electrificarte",
+    "flujo": "pdp-v2-creacion"
+  }
+}
