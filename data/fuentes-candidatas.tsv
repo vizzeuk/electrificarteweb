@@ -98,10 +98,10 @@ Kia	EV6	https://www.kia.cl/modelos/hibridos-electricos/kia-ev6.html
 Kia	EV9	https://www.kia.cl/modelos/hibridos-electricos/kia-ev9.html
 Kia	Sorento	https://www.kia.cl/modelos/hibridos-electricos/kia-sorento.html
 Kia	Sportage Híbrido	https://www.kia.cl/modelos/hibridos-electricos/kia-sportage.html
-Lexus	LBX	https://lexus.cl/es/modelos/lbx/lbx-active/
-Lexus	NX	https://lexus.cl/es/modelos/nx/nx-350h-luxury/
+Lexus	LBX	https://lexus.cl/es/terminos-y-condiciones-comerciales-por-modelo/	# la ficha de modelo solo publica precio con bonos; esta pagina publica el de lista
+Lexus	NX	https://lexus.cl/es/terminos-y-condiciones-comerciales-por-modelo/	# la ficha de modelo solo publica precio con bonos; esta pagina publica el de lista
 Lexus	RZ 450 e	https://lexus.cl/es/modelos/ 	# necesita navegador
-Lexus	UX	https://lexus.cl/es/modelos/ux/ux-300h-premium/
+Lexus	UX	https://lexus.cl/es/terminos-y-condiciones-comerciales-por-modelo/	# la ficha de modelo solo publica precio con bonos; esta pagina publica el de lista
 Lynk & Co	08 PHEV	https://www.lynkco.com/es-cl/lynkco08 	# necesita navegador
 Lynk & Co	09 MHEV	https://www.lynkco.com/es-cl/lynkco09 	# necesita navegador
 MG	3 Hybrid HEV	https://www.mgmotor.cl/model/MG-3-HEV

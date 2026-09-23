@@ -30,6 +30,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@sanity/client";
 import { writeFileSync } from "node:fs";
 import { readSource } from "@/lib/catalog-recheck/read-source";
+import { guardarCache, leerCache } from "@/lib/catalog-recheck/cache";
 import { MIN_PLAUSIBLE_PRICE } from "@/lib/catalog-recheck/diff";
 
 const arg = (n: string) => {
@@ -40,6 +41,11 @@ const limite = Number(arg("--limit")) || 200;
 const marca = arg("--marca");
 const desde = Number(arg("--desde")) || 0;
 const aplicar = process.argv.includes("--aplicar");
+/**
+ * Relee la pagina en vivo en vez de usar la lectura guardada. Sin esto, ajustar
+ * la logica y volver a correr no cuesta ni una llamada a la API.
+ */
+const sinCache = process.argv.includes("--sin-cache");
 /**
  * Agregar versiones que la fuente lista y nosotros no tenemos va detrás de su
  * propio flag. Es de donde salen los duplicados: la fuente escribe "1.2 GL" y
@@ -210,10 +216,17 @@ async function main(): Promise<void> {
     const etiqueta = `${car.brand} ${car.name}`;
     let r;
     try {
-      r = (await readSource({
-        anthropic, brand: car.brand, model: car.name,
-        sourceUrl: car.sourceUrl, extraUrls: car.extraUrls,
-      })).report;
+      const cacheado = sinCache ? null : leerCache(car.sourceUrl, car.name);
+      if (cacheado) {
+        r = cacheado.report;
+      } else {
+        const read = await readSource({
+          anthropic, brand: car.brand, model: car.name,
+          sourceUrl: car.sourceUrl, extraUrls: car.extraUrls,
+        });
+        r = read.report;
+        guardarCache(car.sourceUrl, car.name, { report: read.report, via: read.via, text: read.text });
+      }
     } catch (e) {
       fallidos++;
       console.log(`  \x1b[31m✗\x1b[0m ${etiqueta.padEnd(34)} error: ${(e as Error).message.slice(0, 60)}`);

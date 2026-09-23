@@ -5,7 +5,7 @@ Implementación de los dos diagramas del board de Miro **FLUJO PDP's**
 
 | Flujo | Qué hace | Estado |
 |---|---|---|
-| **v2 — Creación** | Google Sheet → validación sin IA → 1 agente Claude → borrador `hidden:true` en Sanity | Parcialmente hecho (workflow n8n existente, con trigger equivocado) |
+| **v2 — Creación** | Google Sheet → validación sin IA → 1 agente Claude → borrador `hidden:true` en Sanity | **Construido y probado en vivo** (§3). El workflow viejo no servía: auditoría en §3.1 |
 | **C — Re-check semanal** | 28 lotes/semana × 7 autos → lee la URL oficial → diff aritmético → flags de auditoría | Por construir (reemplaza al Flujo B actual) |
 
 Este documento es el **contrato**: qué vive en n8n, qué vive en la web, qué vive en Claude
@@ -460,25 +460,150 @@ matcher del Sheet lo premia), y un bug — una fuente que **no lista ninguna** v
 
 ## 3. Flujo v2 — Creación desde el Sheet
 
-### 3.1 Qué hay que corregir en el workflow existente
+### 3.1 Auditoría del workflow existente (22-09-2026)
 
-`6ViRF8qaij5BI2Cq` tiene bien resuelto lo difícil — el ciclo de vida del Managed Agent:
-verificación HMAC del webhook de Anthropic sobre el body crudo, la ventana de 300 s, el
-`session_id → job` en static data, el `GET /v1/sessions/{id}/events`, la idempotencia por slug, y
-el mapeo completo a Sanity con subida de portada. **Se reusa casi entero.** Lo que cambia:
+`6ViRF8qaij5BI2Cq — PDP desde WhatsApp · Claude Managed Agents + Sanity` (34 nodos, inactivo,
+sin ejecuciones). **No podía funcionar**, y no por un detalle: falla en los tres puntos donde se
+habla con un sistema externo.
 
-1. **El trigger.** Hoy es un webhook de WhatsApp. El board dice Google Sheet cada 15 min, y la
-   razón es buena: el humano es dueño de marca, modelo, año, URL y `versiones =
-   "nombre|precio, nombre|precio"` (R4), y eso no se dicta por WhatsApp sin errores.
-2. **Los `$env`** → credenciales + nodo Config (Directriz 1).
-3. **El umbral.** Hoy `PDP_MIN_FILLED_SPECS` decide *si crea*. El board lo cambió: **el borrador
-   SIEMPRE se crea**; el umbral solo decide el mensaje y el estado de la fila. Lo único que
-   impide crear es la validación sin IA o el slug duplicado (R8).
-4. **La métrica.** `N/M campos aplicables`, no % sobre 32 fijos: BEV 29 · PHEV/EREV 31 ·
-   HEV/MHEV 25. Un HEV perfecto no puede pasar de 25/32 con el denominador plano — por eso el
-   porcentaje actual miente.
-5. **`sourceUrls`.** El v2 debe escribirlo siempre. Es lo que hace que la Fase 0 no se repita
-   nunca más.
+#### Bloqueantes
+
+| # | Qué | Dónde | Por qué importa |
+|---|---|---|---|
+| **B1** | **El agente y el entorno no existían.** `GET /v1/agents` y `GET /v1/environments` del workspace devolvían `{"data":[]}`. | `Crear sesión Claude Managed Agent` | `PDP_MANAGED_AGENT_ID` / `PDP_MANAGED_ENVIRONMENT_ID` apuntaban a nada. La primera llamada daba 404. |
+| **B2** | **Ninguna de las 13 `$env` existe en el contenedor.** `docker exec n8n_app env \| grep -E "ANTHROPIC\|SANITY\|KAPSO\|PDP"` → vacío. | todo el flujo | Toda expresión `$env.*` resolvía a `undefined`: `Authorization: Bearer undefined`, `x-api-key: undefined`. Es la Directriz 1 del §0.2. |
+| **B3** | **`GET /v1/sessions/{id}/events?limit=100` sin `order`.** El default de la API es **ascendente** (verificado en vivo). | `Obtener eventos de la sesión` | La entrega es de lo *último* que pasa. Con más de 100 eventos —una sesión con PDF y reintentos los pasa— la primera página trae el arranque y el flujo concluye "Claude no devolvió el JSON" habiendo devuelto todo. Falla **en los casos difíciles**, que son justo los que importan. |
+| **B4** | **El contrato de salida era texto libre.** El extractor barría todos los strings de la respuesta buscando algo parseable con `.fields` y `.status`. | `Extraer plantilla PDP del Agent` | No existe ningún "pegá la plantilla como contrato estricto" en Managed Agents: eso era una instrucción para un humano en un sticky note, no una garantía de la API. |
+| **B5** | **`$getWorkflowStaticData('global')` como cola de trabajos.** | `Guardar job` / `Verificar evento` | Es estado **global al workflow**, compartido entre ejecuciones concurrentes. El propio sticky note lo admitía pidiendo *"queue mode y worker concurrency 1"*. Además: si el webhook de Anthropic se pierde (3 reintentos y se descarta, sin aviso), el trabajo queda colgado para siempre. |
+| **B6** | **El trigger era un webhook de WhatsApp.** | `Webhook PDP` | El board pide Google Sheet cada 15 min, y con razón: el humano es dueño de marca, modelo, año, URL y `versiones = "nombre\|precio"` (R4). Eso no se dicta por WhatsApp sin errores. |
+
+#### Defectos de diseño
+
+- **El umbral decidía si crear.** `PDP_MIN_FILLED_SPECS` abortaba la creación. El board lo invirtió:
+  **el borrador siempre se crea**; el umbral decide el mensaje y el estado de la fila.
+- **La métrica mentía.** `filled/32` con denominador plano: un HEV impecable no puede pasar de 25/32
+  porque no tiene conector ni carga DC. Ahora es **N/M aplicables** — 29 BEV · 31 PHEV/EREV ·
+  25 HEV/MHEV — y el umbral ya no es un porcentaje (§3.4b).
+- **La IA era dueña del precio.** `basePrice: Number(f.base_price_clp)` escribía en Sanity lo que
+  leyó el modelo. Contra R4 y contra la regla que ya rige el Flujo C.
+- **~100 líneas de mapeo a Sanity en un `Code` node**, sin forma de correrlas (Directriz 4).
+- **n8n hablaba con Anthropic, Sanity y Kapso directo**, con las tres keys en un stack de Portainer
+  compartido con ~30 workflows de Retoma, CADRE y frank.
+- **Sin `sourceUrls` garantizado** — que es lo que hace que la Fase 0 no se repita nunca más.
+
+#### Qué se rescató
+
+La idea. El ciclo de vida del Managed Agent, la idempotencia por slug, el mapeo campo a campo
+(verificado contra `sanity/schemas/car.ts`: está bien) y la subida de portada se conservan — pero
+mudados a `lib/pdp-creacion/*`, con tests.
+
+### 3.1b La arquitectura nueva
+
+```
+n8n (VPS)                         Web (Vercel)                    Anthropic / Sanity
+─────────                         ────────────                    ──────────────────
+Cron 15 min                       POST /api/admin/pdp/iniciar     Managed Agent
+Sheet: filas "listo"     ───────▶   · valida SIN IA        ─────▶  sesión (agent_with_overrides,
+Marcar "procesando"                 · abre la sesión                web_fetch cercado al host)
+                                    ← {sessionId, host}
+Esperar 30 s  ◀──┐
+POST cerrar   ───┴──────────────▶ POST /api/admin/pdp/cerrar
+  (hasta 20 vueltas)                · ¿sigue corriendo? → esperar
+                                    · ¿pidió navegador? → Firecrawl ─▶ markdown de vuelta al agente
+Sheet: resultado ◀────────────────  · mide N/M, sube portada,
+Kapso: aviso     ◀────────────────    crea el borrador OCULTO  ────▶ Sanity + checkSlot
+```
+
+**n8n no tiene ninguna key nuestra salvo `x-admin-secret`.** Ni Anthropic, ni Sanity, ni Kapso,
+ni Firecrawl: todas viven en Vercel. Es la Directriz 1 y la Directriz 4, las dos.
+
+**Se poletea en vez de usar webhooks.** Anthropic ofrece webhooks de sesión, pero: hay que
+registrarlos a mano en Console, se pierden sin aviso tras 3 reintentos, no garantizan orden, y
+obligan al mapa `session_id → job` que era B5. n8n self-hosted no tiene límite de ejecución
+(`EXECUTIONS_TIMEOUT = -1`), así que esperar es gratis. Una corrida real tardó **155 s**.
+
+#### Piezas
+
+| Pieza | Qué hace |
+|---|---|
+| `claude/agents/extractor-pdp.json` | La definición del agente, versionada en el repo. Prompt con R2–R5 textuales + los dos custom tools. |
+| `claude/environments/pdp.json` | Sandbox `cloud`, sin vaults ni repos: no hay un solo secreto adentro. |
+| `scripts/claude-agents-apply.ts` | Aplica las dos por nombre (crea o actualiza). Idempotente: nunca deja agentes huérfanos. |
+| `lib/pdp-creacion/encargo.ts` | Fila → encargo + el cerco de `web_fetch` al host (R2). |
+| `lib/pdp-creacion/contrato.ts` | Tipos del contrato + la métrica N/M y las 5 vitales. |
+| `lib/pdp-creacion/validar.ts` | La validación sin IA (paso 5 del diagrama). |
+| `lib/pdp-creacion/sanity-doc.ts` | Contrato + fila → documento `car`. |
+| `lib/pdp-creacion/sesion.ts` | Abrir, consultar, leer la entrega, contestar tools, cerrar. |
+| `lib/pdp-creacion/imagenes.ts` | Portada + galería: bajada, guardas y subida a Sanity (§3.4). |
+| `lib/pdp-creacion/sanity.ts` | Cliente de Sanity propio del flujo, con `timeout`. |
+| `app/api/admin/pdp/{iniciar,cerrar}` | Los dos endpoints que llama n8n. |
+| `n8n/pdp-creacion.json` | 20 nodos, generado por `scripts/gen-pdp-creacion.mjs`. Importado en la VPS como `ecPdpCreacionV2`, inactivo. |
+| `scripts/qa/pdp-contrato.test.ts` | 27 tests, en `npm test`. |
+
+#### El contrato de salida: un custom tool, no un mensaje
+
+`entregar_pdp` es una herramienta con `input_schema`. Tres cosas que un mensaje de texto no da:
+
+1. **La plataforma valida la forma.** `additionalProperties: false`, enums cerrados en `traction`,
+   `batteryType` y `connectorType`. No hay JSON a medio escribir que parsear.
+2. **El evento es identificable.** `agent.custom_tool_use` con `name == "entregar_pdp"` — no hay
+   que adivinar cuál de los mensajes traía el resultado (B4).
+3. **La sesión queda `idle` esperándonos** justo cuando el payload existe. No hace falta detectar
+   "¿ya terminó?" por heurística.
+
+#### Firecrawl adentro del flujo
+
+`leer_con_navegador` es el **segundo** custom tool: el agente lo pide cuando `web_fetch` ya falló
+en esa URL, la web lo resuelve con Firecrawl y le devuelve el markdown por el mismo canal.
+
+Está así y no como camino por defecto por lo mismo del §2.11: `web_fetch` no ejecuta JavaScript
+y hay sitios que lo bloquean —BYD es una SPA de Vue, Volvo devuelve 403— pero cada scrape cuesta
+1 credit del tier gratis. Poniéndolo como fallback, el consumo del flujo v2 es de **1–2 credits
+por auto y solo en los que lo necesitan**, que al volumen de creación (unas pocas filas por
+semana) es ruido. Como camino por defecto serían 179 credits de una sentada, sin necesidad.
+
+Dos cercos: la web solo acepta releer **el host de la sesión** (R2 otra vez — el navegador no es
+una puerta trasera a otra fuente), y la key de Firecrawl nunca entra al sandbox.
+
+`FIRECRAWL_API_KEY` verificada el 22-09-2026 contra `api.firecrawl.dev/v2/scrape`: la SPA de BYD
+(`byd.com/cl/order-yuan-plus`) devuelve 3.058 chars de markdown con `CLP 23990000.00` adentro —
+justo la página que `web_fetch` lee vacía. Sin la key el fallback degrada avisándole al agente que
+no hay navegador; no rompe nada.
+
+#### Medido en vivo
+
+| Auto | Fuente | Resultado |
+|---|---|---|
+| GWM Ora 03 | `gwm.cl/vehiculo/ora/ora-03/` | contrato completo · leyó la página **y el PDF de ficha técnica** del mismo dominio · precio de lista **$26.490.000** con su cita, no el promocional de $17.990.000 · solo el delta de la GT (batería 59,1 kWh, 400 km) · reportó que el meta de GWM llama "híbrido" a un auto 100% eléctrico |
+| GWM Tank 300 | `gwm.cl/vehiculo/tank/tank-300/` | borrador oculto creado en Sanity, `basePrice` del humano, y **avisó que esa página cubre la versión a combustión** — la fila de prueba estaba mal, no el flujo |
+| Kia EV3 | `kia.com/cl/...` | rebotada: la URL redirige a otro dominio (ver abajo) |
+
+**155 s · US$0,26 por auto.** El board presupuestaba US$0,04 para el v2; el número real está en el
+orden del v1 (US$0,26). El costo se puede bajar con `effort: "medium"` en
+`claude/agents/extractor-pdp.json` si hace falta, a costa de calidad de redacción.
+
+#### Dos bugs que encontró el testing
+
+1. **Los redirects entre dominios.** `www.kia.com/cl/modelos/…/kia-ev3.html` responde **200**…
+   aterrizando en `www.kia.cl`. Como `web_fetch` va cercado al host de la fila, la sesión entera
+   moría con `url_not_allowed` después de gastar plata. Ahora la validación sigue el redirect,
+   usa el **host de destino** para el cerco, guarda la **URL efectiva** en `sourceUrls`, y avisa
+   en el mensaje para que se corrija el Sheet. Y si el redirect va a la **home**, rebota la fila:
+   es una ficha borrada disfrazada de 200.
+2. **El cliente de Sanity no tenía timeout.** Una mutación colgada esperó **36 minutos** en local;
+   en Vercel sería un corte a los 60 s sin explicación. Ahora `timeout: 25_000` en
+   `lib/catalog-recheck/admin.ts` — aplica también a los endpoints del Flujo C.
+
+Y la portada ahora **reintenta una vez** y dice por qué falló: la primera versión se tragaba
+cualquier hipo de red y la PDP salía sin foto diciendo "subila a mano", sin que nadie supiera que
+la foto estaba perfecta y lo que había fallado era la subida.
+
+#### Los "duplicados" de Sanity eran borradores
+
+Una consulta sin `!(_id in path("drafts.**"))` devuelve cada documento dos veces cuando tiene
+cambios sin publicar. Con el filtro puesto: **5 `electricType`, 5 `vehicleType`, 0 slugs de auto
+repetidos.** No hay nada que limpiar. Las queries de `lib/pdp-creacion/validar.ts` filtran drafts,
+así que el flujo nunca elige un borrador por error.
 
 ### 3.2 El Sheet
 
@@ -521,21 +646,297 @@ Solo escribe `sourceUrls`. Rechaza URLs inválidas, de otro mercado (reusa `lib/
 ### 3.3 El agente en Console
 
 ```
-name:  Extractor PDP Chile
-model: claude-sonnet-5
-tools: agent_toolset_20260401            (bash + archivos: PDF de ficha técnica)
-       web_fetch_20260209  allowed_domains = [host de la URL de la fila]
+name:  Extractor PDP Chile         id: agent_01Gzn3iesyaqA3AqAdixgojk   (v2)
+model: claude-sonnet-5 · effort high
+env:   Electrificarte PDP          id: env_013ZGErAchy9an2tDxtPURQ3
+tools: agent_toolset_20260401 · web_search APAGADO (R2)
+                                 · web_fetch allowed_domains = [host de la fila]
+       custom leer_con_navegador  (Firecrawl, lo resuelve la web)
+       custom entregar_pdp        (el contrato de salida)
 ```
 
-Sistema: las reglas R2–R5 y R9 textuales. Salida: el contrato estricto de
-`claude-pdp-output-template.json`, JSON puro, sin markdown.
+La definición vive en `claude/agents/extractor-pdp.json` y `claude/environments/pdp.json`. Se
+aplican con:
 
-Se crea **una vez** (`POST /v1/agents`), se guarda `id` + `version`, y cada corrida solo abre
-sesión (`POST /v1/sessions` con `agent`, `environment_id`, `initial_events`). Nunca
-`agents.create()` por ejecución: las sesiones se fijan a una versión, y eso es lo que permite
-iterar el prompt sin romper lo que está corriendo.
+```
+npx tsx --env-file=.env.local scripts/claude-agents-apply.ts            # seco
+npx tsx --env-file=.env.local scripts/claude-agents-apply.ts --aplicar
+```
 
----
+El script busca **por nombre**: si el agente ya existe lo actualiza (versión nueva), si no lo crea.
+Nunca `agents.create()` por corrida — eso acumula agentes huérfanos y rompe el versionado al que
+se fijan las sesiones.
+
+**El cerco de dominio va por sesión, no en el agente.** Cada fila apunta a un sitio distinto, así
+que la sesión se abre con `agent_with_overrides` y un `tools` que lleva `allowed_domains: [host]`.
+Detalle que cuesta: **un override reemplaza `tools` entero, no mergea** — por eso
+`toolsDeSesion()` repite los dos custom tools. Sin eso la sesión se queda sin forma de entregar
+el resultado y el agente termina escribiendo el JSON en un mensaje, que es justo lo que este
+contrato evita. Hay un test que lo cubre.
+
+**Para iterar el prompt**: editás `claude/agents/extractor-pdp.json`, corrés el script con
+`--aplicar`, y probás en vivo sin tocar n8n ni Vercel:
+
+```
+npx tsx --env-file=.env.local scripts/qa/pdp-crear.test.ts \
+  --agent agent_01Gzn3iesyaqA3AqAdixgojk --env env_013ZGErAchy9an2tDxtPURQ3 \
+  --marca GWM --modelo "Ora 03" --anio 2026 --tipo "City Car" --electrificacion EV \
+  --url https://www.gwm.cl/vehiculo/ora/ora-03/ \
+  --versiones "ORA 03 SR|17990000, ORA 03 GT|21990000"
+```
+
+Cada sesión lleva **tope de gasto propio** (`budget`, US$1,50 por defecto). Una sesión que se
+enrede se pausa sola en vez de llevarse el presupuesto del mes.
+
+### 3.3b El umbral de llenado: por qué no es el 85%
+
+El board pide *"≥85% de campos aplicables + las 5 vitales + portada + textos"*. Con las dos primeras
+corridas reales ese número quedó desmentido:
+
+| Auto | N/M | % | Lo que realmente faltaba |
+|---|---|---|---|
+| GWM Ora 5 (EV) | 23/29 | 79% | `seats`. El resto — `topSpeed`, `seatRows`, `euroNcap`, `batteryType`, `chargeTimeDC` — **gwm.cl no los publica** |
+| GWM Tank 300 (HEV) | 19/25 | 76% | `batteryCapacity` y `acceleration`: dos vitales |
+
+Con el 85%, los dos caían del mismo lado y con el mismo mensaje. Pero uno estaba a un campo de ser
+publicable y el otro no sabíamos ni cuánta batería tiene. **Un umbral que no distingue eso no sirve
+para decidir nada**, que es para lo único que existe.
+
+El umbral ahora son tres escalones:
+
+```
+🔴 Vitales (5)        autonomía · potencia · batería · 0-100 · tracción
+                      (en HEV/MHEV la autonomía es el rendimiento de combustible)
+
+🟠 Importantes (6-8)  motorDescription · transmission · torque · seats · warranty · safetyFeatures
+                      + connectorType · maxDCChargingPower   (solo enchufables)
+
+⚪ Piso               al menos 20 campos llenos
+```
+
+`completo` = 0 vitales + 0 importantes + ≥20 campos + portada + tagline/descripción/meta.
+
+Lo que queda **fuera de los dos escalones** es deliberado: `euroNcap`, `seatRows`, `topSpeed`,
+`groundClearance` y `batteryType` casi nunca están en una página de marca chilena. Siguen contando
+en el N/M si aparecen, pero exigirlos marcaba como incompleta una ficha que estaba lista.
+
+El piso de 20 existe para que una ficha con las 5 vitales y nada más no pase por completa.
+
+Efecto sobre los mismos dos autos:
+
+```
+Ora 5      → 🟡 borrador · falta 1 importante: seats
+Tank 300   → 🟡 borrador · faltan 2 vitales: batteryCapacity, acceleration
+```
+
+Los dos siguen en borrador, pero ahora el mensaje dice **qué** falta y de qué gravedad, y el de
+Francisco es un campo de un minuto en Studio.
+
+> Ajustar esto es editar dos listas en `lib/pdp-creacion/contrato.ts` (`vitales` e `importantes`)
+> y `MIN_CAMPOS`. Hay 31 tests que lo cubren.
+
+### 3.4 Las fotos
+
+R7 del board dice *"1 foto automática (portada), galería manual en Studio"*. **Se amplió a galería
+automática** por decisión de Francisco/Matías (sep-2026). La procedencia es la misma que la de la
+portada —la página oficial de la marca— así que no cambia el riesgo de derechos; lo que cambia es
+que hay que evitar que la "galería" termine siendo ocho banners de campaña que alguien tiene que
+borrar a mano.
+
+El agente devuelve `portada_url` + `galeria[] = {url, descripcion}` (hasta 8). La web las baja y
+las sube (`lib/pdp-creacion/imagenes.ts`), con cinco guardas:
+
+| Guarda | Qué evita |
+|---|---|
+| `content-type` tiene que ser `image/*` | una página de error que devuelve **200 con HTML**: pasa el status y Sanity guarda un asset roto |
+| SVG descartado | los logos y los íconos son SVG casi siempre |
+| Entre **25 kB y 12 MB** | abajo son sprites y placeholders; arriba, renders sin comprimir |
+| Dedup por **SHA-256 del contenido**, no por URL | las marcas sirven la misma foto en varias rutas (CDN, tamaños, query string) y la galería salía con la misma imagen tres veces |
+| Mismo dominio que la fuente | R2 otra vez: la foto sale de la fuente, no de cualquier lado |
+
+Cada bajada **reintenta una vez**: un hipo de red no es "no hay foto". Y si la portada falla pero
+la galería trajo algo, **la primera de la galería pasa a portada** — el caso real fue un banner que
+devolvía 404 mientras las seis fotos del carrusel estaban perfectas.
+
+La `descripcion` de cada foto va como **texto alternativo** en Sanity. El prompt pide que describa
+la foto ("Interior: tablero con pantalla central"), no que repita el nombre del modelo.
+
+**`PDP_GALERIA_MAX`** controla el tope (default 6, máximo 8). **`PDP_GALERIA_MAX=0` vuelve al
+comportamiento del board**: solo portada.
+
+Medido en vivo (GWM Tank 300, `gwm.cl`): **6 fotos subidas, 0 descartadas**, todas 1555×670 y
+250–457 kB — cuatro exteriores desde ángulos distintos y dos de interior, con el alt text correcto
+en cada una.
+
+### 3.5 Los avisos por WhatsApp y la ventana de 24 h
+
+Los avisos salen por `POST /api/admin/notify` → `sendProactiveText` → Kapso, a los números de
+`ADMIN_PHONE_NUMBERS`. n8n no habla con Kapso: si lo hiciera habría que duplicar allá la lista de
+números y el manejo de la ventana.
+
+**El problema medido (22-09-2026):** Kapso responde
+`Cannot send non-template messages outside the 24-hour window`. Texto libre **solo** llega si ese
+número le escribió al negocio en las últimas 24 h. Y este flujo lo dispara un cron cada 15 min, así
+que el caso normal es estar **fuera** de la ventana.
+
+| Para | Qué hace falta |
+|---|---|
+| **Probar hoy** | Nada. Escribile cualquier cosa al WhatsApp del negocio desde tu teléfono y la ventana queda abierta 24 h. El texto libre llega tal cual, con emojis y saltos de línea. |
+| **Producción** | Una **plantilla aprobada en Kapso/Meta** con un solo parámetro de cuerpo, y `ADMIN_NOTIFY_TEMPLATE` (+ `ADMIN_NOTIFY_TEMPLATE_LANG`, default `es`) en Vercel. El texto del aviso viaja como ese parámetro. |
+
+#### La plantilla
+
+```
+Nombre:     pdp_aviso_catalogo
+Categoría:  Utility
+Idioma:     Español  (código es — tiene que coincidir con ADMIN_NOTIFY_TEMPLATE_LANG)
+Header:     ninguno
+Footer:     ninguno
+Botones:    ninguno
+
+Cuerpo:
+Electrificarte · flujo automatico de PDPs
+
+{{1}}
+
+Si necesitas el detalle con formato, responde este mensaje.
+```
+
+Tres reglas de Meta que condicionan ese diseño:
+
+1. **El cuerpo no puede empezar ni terminar con una variable**, ni ser solo variables. De ahí el
+   texto fijo arriba y abajo.
+2. **Un parámetro no puede tener saltos de línea, tabs ni más de 4 espacios seguidos.** Esto no se
+   rechaza al crear la plantilla: se rechaza **en el envío**, con `Parameter format does not
+   match` — o sea, el error aparece recién en producción, con el aviso ya perdido. Por eso
+   `lib/whatsapp/plantilla.ts` aplana el aviso a una línea con ` · ` antes de mandarlo.
+3. **El cuerpo son 1.024 caracteres incluido el texto fijo.** El parámetro va topeado en 850.
+
+Ejemplo de `{{1}}` para el formulario de Meta (un aviso real del flujo, ya aplanado, 274 chars):
+
+```
+🟡 GWM Ora 5 — quedo en borrador. · 23/29 campos aplicables · Fotos: 7 subida(s) · Pendientes: topSpeed, seats, seatRows, euroNcap, batteryType, chargeTimeDC · Lote de re-check: se asigna al publicarlo. · https://electrificarte.com/studio/structure/car;L73c2B0odFpWpv6l4jcKuM
+```
+
+La misma plantilla le sirve al Flujo C: los dos avisan por `/api/admin/notify`.
+
+**Opcional, si se quiere el link como botón**: agregar un botón de URL con base estática
+`https://electrificarte.com/studio/structure/` y sufijo dinámico `{{1}}`. Queda más lindo pero
+obliga a un segundo parámetro y a cambiar el contrato de `/api/admin/notify`; con el link adentro
+del cuerpo, WhatsApp igual lo hace clickeable.
+
+`/api/admin/notify` ahora **intenta texto libre y, si falla, cae a la plantilla**, y devuelve
+`{sent, phones, viaPlantilla, fallidos[]}` con el motivo de cada número que no recibió. Antes
+devolvía `sent: 0` sin explicación: un aviso que no llega era indistinguible de un flujo que no
+avisó nada.
+
+> Meta corta los parámetros de plantilla mucho antes que el texto libre, así que por esa vía el
+> aviso se recorta a 900 caracteres. Los mensajes de este flujo entran holgados.
+
+### 3.5b La reserva del lote (por qué no basta con marcar fila por fila)
+
+El cron corre cada 15 min y una fila tarda ~3 min. Si la reserva fuera por fila:
+
+```
+10:00  corrida A lee [f12, f13, f14] · marca f12 · empieza a trabajar
+10:15  corrida B lee [f13, f14]  ← siguen en "listo": A todavía no llegó a ellas
+       las dos corridas terminan creando la PDP de f13
+```
+
+La segunda la rebota R8 por slug duplicado, así que **no se duplica nada en Sanity** — pero recién
+después de gastar ~US$0,30 y tres minutos, y la fila queda marcada `rechazada` sin que nadie
+entienda por qué.
+
+Por eso el nodo **`Reservar el lote`** marca las filas leídas como `en cola` de una sola vez, antes
+del loop. La corrida siguiente ya no las ve.
+
+**Estados de `estado`:** `listo` → `en cola` → `procesando` → resultado. Ninguno de los finales es
+`listo`, así que una fila nunca se re-procesa sola. Si una ejecución se corta a la mitad, la fila
+queda en `en cola` o `procesando` y se ve en el Sheet; para reintentarla se pone de vuelta en
+`listo`.
+
+### 3.5c Los timeouts: de quién es cada uno
+
+Que n8n no tenga límite de ejecución **no elimina el corte de 60 s de Vercel**. Son dos relojes
+distintos y conviene no mezclarlos:
+
+| Reloj | Quién lo impone | Qué pasa si se agota |
+|---|---|---|
+| `maxConsultas × segundosEntreConsultas` = **12 min** | nosotros, en el nodo `Config` | La ejecución se rinde y avisa. Es un techo elegido (4× el peor caso medido), no un límite: n8n corre con `EXECUTIONS_TIMEOUT = -1`. Importa porque las filas se procesan de a una: una fila trabada retrasa a las que siguen |
+| **60 s por llamada** a `/api/admin/pdp/*` | **Vercel, y sigue vigente** | La función se corta sin aviso: n8n ve un 504 y la PDP puede quedar escrita a medias |
+| Sanity 25 s · fotos 30 s · Firecrawl 45 s · URL viva 15 s | nosotros, adentro del endpoint | Reparten ese presupuesto de 60 s para que ninguna pieza se lo coma entera |
+
+Lo que la arquitectura saca del medio es hacer **la investigación** en Vercel: eso tarda 3 minutos
+y ahí sí el corte era fatal. Ahora esos 3 minutos los espera n8n, y cada llamada suya es corta.
+
+**Medido (Ora 5, 22-09-2026):**
+
+```
+6 vueltas de espera   0,4 – 0,7 s cada una
+vuelta final          9,5 s   ← baja 7 fotos, las sube a Sanity, crea el documento
+```
+
+50 s de margen sobre el corte. **No lo tenía antes:** las fotos se bajaban y subían de a una, y
+siete fotos secuenciales se acercaban peligrosamente al límite. Ahora van en paralelo, con un
+presupuesto de reloj de 30 s: si bajarlas se lo come, sube solo la portada y anota el resto como
+descartes. Mejor una PDP con portada que un 504 a mitad de la escritura.
+
+### 3.6 Dónde quedan los logs
+
+No hay un solo lugar. Cinco, con vidas distintas:
+
+| Dónde | Qué guarda | Cuánto dura |
+|---|---|---|
+| **n8n → Executions** | La ejecución entera: qué fila, qué devolvió cada endpoint, cuántas vueltas de espera, el error si lo hubo | Defaults de n8n (no hay override en el contenedor): ~14 días y **10.000 ejecuciones compartidas con los otros 30 workflows** de la instancia. La base ya pesa 251 MB, así que no cuentes con los 14 días |
+| **Hoja `AUTOS`** | `estado` y `detalle` de cada fila | Para siempre, pero **se sobrescribe**: solo queda el último intento de esa fila |
+| **Claude Console → Sessions** | La sesión completa: cada `web_fetch`, el razonamiento, el contrato entregado, tokens y costo | Persistente. El flujo archiva la sesión al terminar, y archivada sigue siendo legible (solo pasa a ser de solo lectura) |
+| **Vercel → Logs** | Los `console.warn` de `/api/admin/notify` con los avisos que no se entregaron | En Hobby, corto. Es el eslabón más débil |
+| **Sanity** | El documento en sí: `aiGenerated`, `sourceUrls`, `catalogFindings` con las discrepancias y su cita | Para siempre |
+
+**El agujero:** no hay historial append-only del flujo de creación. Si la misma fila se procesa dos
+veces, el primer resultado se pierde del Sheet, y n8n lo puede haber podado. El Flujo C sí lo tiene
+(hoja `CORRIDAS` + `catalog_check_runs` en Supabase).
+
+Taparlo cuesta dos nodos: una hoja `CREACIONES` en modo append con
+`fecha · fila · modelo · estado · N/M · fotos · costo · sessionId · carId`. Queda propuesto, no
+implementado.
+
+### 3.7 Prueba end-to-end (22-09-2026)
+
+Auto real que no estaba en el catálogo: **GWM Ora 5**, `gwm.cl/vehiculo/ora/nuevo-ora-5/`.
+
+```
+1. iniciar  → validó sin IA y abrió la sesión           ~2 s
+2. cerrar   → 7 vueltas de 25 s (≈ 3 min)               US$0,31
+3. notify   → rebotado por la ventana de 24 h
+```
+
+Lo que quedó en Sanity (`hidden: true`, borrador):
+
+```
+GWM · Ora 5 · 2026 · SUV · EV          basePrice 26.490.000 (el declarado, no el leído)
+23/29 campos aplicables · 0 vitales faltantes
+435 km · 201 HP · 58,3 kWh · 7,5 s 0-100 · FWD
+tagline: "SUV eléctrico con 435 km de autonomía y carga rápida DC de 120 kW"
+7 fotos (portada + 6 de galería), 0 descartadas
+sourceUrls: la URL de la fila
+pendientes: topSpeed, seats, seatRows, euroNcap, batteryType, chargeTimeDC
+```
+
+Sin hallazgos de precio: lo que leyó en la fuente coincidió con lo declarado. El costo real por
+auto quedó en **US$0,26–0,31** (tres corridas), contra los US$0,04 que presupuestaba el board.
+
+### 3.8 Qué falta para encender el v2
+
+| # | Tarea | Dueño |
+|---|---|---|
+| 1 | Env vars en Vercel: `ANTHROPIC_API_KEY`, `PDP_AGENT_ID`, `PDP_ENVIRONMENT_ID`, `ADMIN_API_SECRET`, `FIRECRAWL_API_KEY`, `ADMIN_PHONE_NUMBERS` | Matías |
+| 2 | ~~Reemplazar la `FIRECRAWL_API_KEY`~~ ✅ hecha y verificada el 22-09-2026 | — |
+| 3 | En n8n, nodo `Config` de `ecPdpCreacionV2`: confirmar `sheetId` y `siteBase` | Matías |
+| 4 | Probar con **una** fila real marcada `listo` en la hoja AUTOS, con el workflow todavía inactivo (botón *Execute workflow*) | Matías |
+| 5 | Decidir qué hacer con `6ViRF8qaij5BI2Cq` (el viejo): queda inactivo y sin tocar, pero tener dos workflows "PDP" confunde | Francisco/Matías |
+| 6 | Decidir `PDP_GALERIA_MAX` (default 6; `0` = solo portada, como pedía R7) | Francisco |
+| 7 | **Plantilla `pdp_aviso_catalogo` en Kapso/Meta** (copy listo en §3.5) + `ADMIN_NOTIFY_TEMPLATE` en Vercel — sin esto los avisos del cron se pierden | Matías |
 
 ## 4. Fase 0 — Descubrir los `sourceUrls`
 
@@ -640,12 +1041,37 @@ de 176 a ~53 y el costo a ~US$4/mes. Contra: si esa página cambia de formato, c
 | **3** | `n8n/pdp-recheck.json` + credenciales + prueba con lote de 1 auto real | Fase 2 · credencial Google |
 | **4** | Digest: cobertura real + "se manda siempre" · apagar el Flujo B | Fase 3 |
 | **5** | Fase 0: 48 candidatos propuestos sin costo ✅ · faltan 134, necesitan Firecrawl o Console | `FIRECRAWL_API_KEY` |
-| **6** | Flujo v2: retriggear al Sheet, credenciales, umbral N/M | Console · credencial Google |
+| **6** | Flujo v2: agente + entorno en Console, endpoints `/api/admin/pdp/*`, workflow nuevo, 27 tests | ✅ hecho y probado en vivo · falta lo del §3.4 |
 
 Las fases 1 y 2 no dependen de nada externo y se pueden testear contra el único auto que hoy
 tiene `sourceUrls` (Ora 03, `https://www.gwm.cl/vehiculo/ora/ora-03/`) más 2–3 sembrados a mano.
 
 ---
+
+## 5b. Costo de los scripts de mantenimiento — leer antes de correr uno
+
+Los scripts de `scripts/` que leen fuentes (`corregir-desde-fuente`,
+`recheck-corrida`, `buscar-fichas`) hacen **una llamada a la API de Anthropic por
+auto**. Una pasada completa del catálogo son ~145 llamadas; con el fallback de
+Firecrawl y la confirmación de precio, algunas son dos o tres.
+
+**Lo que costó aprenderlo:** iterando el matcher de versiones se releyeron las
+mismas páginas en vivo una y otra vez. Esas re-corridas eran depuración, no
+trabajo entregado, y se llevaron cerca de la mitad de un gasto de **US**.
+
+Reglas, en orden:
+
+1. **La lectura se guarda en disco** (`lib/catalog-recheck/cache.ts`, TTL una
+   semana). Ajustar la lógica y volver a correr cuesta **cero**. Solo
+   `--sin-cache` vuelve a leer en vivo, y solo hace falta cuando el precio de
+   verdad pudo cambiar.
+2. **Antes de una pasada completa, decir el costo estimado.** 145 lecturas a
+   ~US/bin/zsh,015 son ~US por pasada, y se acumulan rápido.
+3. **Para verificar uno o dos autos sueltos**, usar las herramientas de la sesión
+   (búsqueda y fetch del agente), que no consumen la API del cliente. Fue lo que
+   se hizo con el descubrimiento de las 158 fuentes y salió gratis.
+4. El endpoint de producción (`/api/admin/recheck/car`) **no usa la caché**: ahí
+   el punto es leer la página de nuevo cada semana.
 
 ## 6. Decisiones pendientes de Francisco / Matías
 

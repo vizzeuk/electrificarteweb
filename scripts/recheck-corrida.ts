@@ -23,6 +23,7 @@ import { createClient } from "@sanity/client";
 import { readFileSync } from "node:fs";
 import { decide } from "@/lib/catalog-recheck/diff";
 import { readSource } from "@/lib/catalog-recheck/read-source";
+import { guardarCache, leerCache } from "@/lib/catalog-recheck/cache";
 import type { CarSnapshot } from "@/lib/catalog-recheck/types";
 
 const arg = (n: string) => {
@@ -33,6 +34,11 @@ const limite = Number(arg("--limit")) || 12;
 const slug = arg("--slug");
 const marca = arg("--marca");
 const aplicar = process.argv.includes("--aplicar");
+/**
+ * Relee la pagina en vivo en vez de usar la lectura guardada. Sin esto, ajustar
+ * la logica y volver a correr no cuesta ni una llamada a la API.
+ */
+const sinCache = process.argv.includes("--sin-cache");
 /**
  * Toma las fuentes de un TSV de candidatas en vez de `sourceUrls` de Sanity.
  * Es lo que permite correr la revisión ANTES de que alguien apruebe las URLs:
@@ -128,10 +134,16 @@ async function main(): Promise<void> {
     const t0 = Date.now();
     let read;
     try {
-      read = await readSource({
-        anthropic, brand: car.brand, model: car.name,
-        sourceUrl: car.sourceUrl, extraUrls: car.extraUrls,
-      });
+      const cacheado = sinCache ? null : leerCache(car.sourceUrl, car.name);
+      if (cacheado) {
+        read = { report: cacheado.report, via: cacheado.via as "web_fetch" | "firecrawl", text: cacheado.text };
+      } else {
+        read = await readSource({
+          anthropic, brand: car.brand, model: car.name,
+          sourceUrl: car.sourceUrl, extraUrls: car.extraUrls,
+        });
+        guardarCache(car.sourceUrl, car.name, { report: read.report, via: read.via, text: read.text });
+      }
     } catch (e) {
       resumen.error++;
       console.log(`\x1b[1m▶ ${etiqueta}\x1b[0m\n  \x1b[31m✗ error de API: ${(e as Error).message.slice(0, 90)}\x1b[0m\n`);
