@@ -1116,6 +1116,58 @@ renderizado con JavaScript y el bypass de anti-bot vienen sin recargo. Tener las
 son 2.000 credits gratis al mes. No se migró nada: Firecrawl sigue siendo el fallback del
 re-check y anda bien.
 
+### El script: `scripts/precios-desde-pdf.ts`
+
+```
+npx tsx --env-file=.env.local scripts/precios-desde-pdf.ts [--marca MG] [--aplicar] [--forzar] [--sin-cache]
+```
+
+Lee las filas `tipo=precios` de `data/fichas-tecnicas.tsv`, parsea cada PDF con `/v1/parse` y
+compara la tabla contra `versions[]` en Sanity. En seco por defecto.
+
+Cuatro cosas que costaron encontrar y que conviene no re-descubrir:
+
+1. **El primer precio de la fila es el de lista; el segundo es el de campaña.** Verificado contra
+   el sitio de MG (ZS HEV LUX figura a $21.990.000). Es la misma trampa del GWM Ora 03 (§2.6):
+   quien lea la columna equivocada mete el precio con bonos como si fuera el de lista.
+2. **La letra chica repite los mismos precios** dentro de las condiciones del bono y del crédito.
+   Sin filtrarla, el PDF de Subaru pasa de 10 versiones a 30 filas, dos tercios basura.
+3. **El emparejamiento fila↔versión no puede ser por tokens.** El PDF abrevia (`STD`, `DLX`,
+   `49 KWh`) donde nosotros escribimos (`Standard`, `Deluxe`, `49kW`). Se resuelve con asignación
+   global puntuada, y sobre todo con la regla de que **precio idéntico dentro del mismo modelo
+   gana a cualquier parecido de nombre** — eso solo calzó 6 de los 8 MG al peso.
+4. **Cache en disco obligatorio** (`.context/cache-pdf/`). Una lista de precios cambia una vez al
+   mes; iterar el matcher sobre ella no puede volver a pagarse. Regla §5b.
+
+Lo que el script **no** hace y es a propósito: no toca `discountPrice` (ese campo es el descuento
+de Electrificarte, no el bono de la marca), no aplica cambios con deriva >25% sin `--forzar`, y no
+borra versiones — las filas sin calce y las que ningún auto reclama se imprimen para que decida
+una persona.
+
+### Resultado de la primera corrida (sep-2026)
+
+Solo hay **2 listas de precios reales** en el TSV, no 12: las 12 filas son 8 autos MG apuntando al
+mismo PDF y 4 de Subaru, de las cuales 3 eran fichas técnicas mal etiquetadas (ya corregidas a
+`tipo=ficha`, porque re-parsearlas gastaba credits en vano y una da timeout).
+
+- **MG — 6 de 8 autos calzan exactos** con la lista oficial de septiembre 2026. Las 14 filas
+  huérfanas son MG3/ZX/ZS/ONE a combustión pura, fuera de alcance.
+- **MG Marvel R:** teníamos $29.990.000, que es el precio **con bonos**. El de lista es
+  $40.990.000. Corregido.
+- **MG ZS EV Long Range:** teníamos $27.990.000; la lista dice $33.990.000 para la única ZS EV que
+  publica (`DLX 72KHw`). Corregido y renombrada. Queda una `ZS EV Standard` a $21.990.000 que el
+  PDF **no lista** — probablemente descontinuada; no se borró.
+- **Subaru Forester Híbrido:** teníamos **una** versión a $31.190.000, precio que no existe en la
+  lista oficial. El PDF publica **dos** e-Boxer: Dynamic EyeSight $33.590.000 y Limited EyeSight
+  $36.090.000. Aplicadas ambas.
+
+El PDF de Subaru no lleva fecha impresa (el de MG sí: "LISTA DE PRECIOS SEPTIEMBRE 2026"). Se tomó
+como vigente por ser el que subaru.cl linkea hoy.
+
+**Lo que esto demuestra:** el PDF de lista es la única fuente que separa precio de lista de precio
+con bonos. Los 3 errores encontrados son los 3 autos donde la web publicaba solo el precio
+promocional — exactamente el agujero que el re-check por web no puede tapar solo.
+
 ## 6. Decisiones pendientes de Francisco / Matías
 
 1. **Credencial de Google en n8n** — no existe ninguna en la instancia. OAuth2 (más simple, pero
