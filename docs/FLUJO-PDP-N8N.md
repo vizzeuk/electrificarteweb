@@ -1078,6 +1078,44 @@ Reglas, en orden:
 4. El endpoint de producción (`/api/admin/recheck/car`) **no usa la caché**: ahí
    el punto es leer la página de nuevo cada semana.
 
+## 5c. PDFs oficiales — dónde vive el dato que la web no publica
+
+`scripts/buscar-fichas.ts` barre la fuente de cada auto buscando PDFs y los guarda en
+**`data/fichas-tecnicas.tsv`** (90 enlaces: 78 fichas técnicas y 12 listas de precios). Antes solo
+los imprimía en consola y se perdían al cerrar la terminal.
+
+**Qué sirve y qué no**, probado sobre los PDFs reales:
+
+| | Resultado |
+|---|---|
+| Ficha técnica (Lexus NX) | ❌ **no desglosa por versión** — "240 hp" para toda la serie, y la fila "Versión" trae `Plus Premium Premium Lux F-Sport` en una sola celda |
+| **Lista de precios (MG)** | ✅ **30 filas** con versión, transmisión, potencia, cilindrada, equipamiento y **dos precios: lista y promocional** |
+
+O sea: las fichas técnicas casi nunca resuelven el problema de specs por versión — las marcas
+publican la ficha del modelo, no de cada trim. **Las listas de precios sí**, y son justo donde
+está el precio de lista que la web esconde detrás del promocional.
+
+### context.dev para parsear los PDFs
+
+`POST https://api.context.dev/v1/parse` con los bytes del PDF y `Content-Type: application/pdf`
+devuelve markdown **con las tablas preservadas**, por **1 credit**. Free tier de 1.000
+credits/mes, sin tarjeta. Env var: `CONTEXT_API_KEY`.
+
+Notas de la prueba, para no perder tiempo:
+- `/parse` toma **bytes**, no una URL. Hay que bajar el PDF primero.
+- `/web/scrape` con `formats.parse` exige además `parseParams.rules`, así que para un PDF suelto
+  conviene `/parse` directo.
+- Los requests fallidos no se cobran.
+
+**Por qué no lo reemplaza `web_fetch`:** Anthropic lee PDFs nativamente, pero devuelve prosa —
+hay que pedirle que interprete. `/parse` devuelve la tabla, y sobre una tabla el diff aritmético
+funciona sin intermediar un modelo, que es la regla C4 de este flujo.
+
+**Como alternativa a Firecrawl:** mismo free tier (1.000/mes), 1 credit por scrape, y el
+renderizado con JavaScript y el bypass de anti-bot vienen sin recargo. Tener las dos configuradas
+son 2.000 credits gratis al mes. No se migró nada: Firecrawl sigue siendo el fallback del
+re-check y anda bien.
+
 ## 6. Decisiones pendientes de Francisco / Matías
 
 1. **Credencial de Google en n8n** — no existe ninguna en la instancia. OAuth2 (más simple, pero
