@@ -168,6 +168,12 @@ clases del sistema (`app/globals.css`, `app/styles/*.css`):
   botones/chips en píldora, `rounded-xl`/`2xl`.
 - Botones `.btn`, chips `.chip`, campos `.field`/`.input`, secciones `.section` + `.wrap`.
 
+**Antes de escribir UI nueva: `docs/design/GUIDELINES.md`** — equivalencias viejo→nuevo (si copiás
+un patrón de un commit anterior a `f98b3af`, ahí está su traducción), inventario de las ~300 clases
+ya definidas (buscá ahí antes de crear: `.card.car`, `.buy`, `.vers`, `.sim` ya existen) y reglas de
+composición. **`npm run design:check`** falla si vuelve un patrón del diseño anterior (cyan,
+`font-headline`, glass, píldoras, mayúsculas, sombras decorativas); corre dentro de `npm test`.
+
 ## Stack
 - Next.js 16.2.6 App Router · React 19.2.4 · Tailwind v4 · Framer Motion 12 · Sanity v5 · TypeScript
 - Node.js 22
@@ -277,6 +283,9 @@ Electrificarte son **tres proyectos separados** y acoplados entre sí:
 Más n8n (VPS de Matías) y Supabase. Un cambio en el modelo de leads toca a los tres.
 
 ## Documentación
+
+- **`DESIGN.md` + `docs/design/GUIDELINES.md`** — sistema de diseño v1: el primero describe qué es,
+  el segundo qué está prohibido, con qué se reemplaza y cómo se verifica.
 
 - **`docs/PIVOT-WAITLIST-PLAN.md` — 🔴 EL PLAN VIGENTE.** El giro a waitlist + asesoría-first:
   fases, inventario de qué cambia, estado y tareas manuales. **Empezar por acá.**

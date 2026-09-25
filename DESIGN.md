@@ -5,6 +5,10 @@ Vigente desde septiembre de 2026. Reemplaza al sistema anterior (Space Grotesk /
 referencia: `docs/design/electrificarte-home.html`, `electrificarte-asesoria.html`,
 `electrificarte-plp-electricos.html` y `electrificarte-pdp-ioniq-5.html`.
 
+**Para construir algo nuevo, leé `docs/design/GUIDELINES.md`**: qué patrones quedaron prohibidos,
+con qué se reemplaza cada uno (tabla de equivalencias), el inventario de las ~300 clases ya
+definidas y el checklist de revisión. Se verifica con `npm run design:check`.
+
 En código:
 - Tokens: `app/globals.css` (`@theme` con primitivos, `@theme inline` con la capa semántica,
   `.theme-dark` para bandas oscuras).

@@ -25,6 +25,14 @@ const TESTS = [
 
 const hasEnv = existsSync(".env.local");
 const results = [];
+
+// Chequeo del sistema de diseño (sin env, sin red): falla si volvió un patrón del diseño
+// anterior. Ver docs/design/GUIDELINES.md.
+{
+  const r = spawnSync("node", ["scripts/qa/check-design.mjs"], { stdio: "inherit" });
+  results.push({ t: "check-design.mjs", ok: r.status === 0 });
+}
+
 for (const t of TESTS) {
   const args = ["tsx"];
   if (!PURE.has(t) && hasEnv) args.push("--env-file=.env.local");
