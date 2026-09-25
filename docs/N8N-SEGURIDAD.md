@@ -52,13 +52,23 @@ Estado:
    ```
    Y un registro real desde el sitio para confirmar que el camino feliz sigue andando.
 
+## Dónde viven los webhooks
+
+En n8n **no** hay un workflow por flujo: todos los webhooks de Electrificarte están en un solo
+workflow central (hoy se llama "Reseñas UGC (captura + correos)", id `80ByudGuUOy5EkJzQga6g`):
+clientes, vendedores, pago Reveniu, newsletter, rating, asesoría, waitlist y reseñas.
+`n8n/waitlist.json` y `n8n/reviews.json` del repo son la versión suelta de dos de esos tramos.
+
+Waitlist y reseñas tienen un nodo **"¿Datos válidos?"** antes del insert: si falta un campo
+obligatorio el flujo se corta sin error (antes fallaba en Supabase y disparaba la alerta de
+Discord del workflow "Manejo Errores").
+
 ## Lo que el header NO cubre
 
-- **El webhook de pagos de Reveniu → n8n.** Reveniu no puede mandar nuestro header. Su
-  protección es el nodo de verificación que ya existe: el `orderId` del pago tiene que coincidir
-  con una fila `pendiente` creada por el checkout. Mejor aún: antes de activar, consultar el
-  estado del pago a la API de Reveniu con ese `orderId`, en vez de confiar en el cuerpo del
-  webhook. **No poner Header Auth en ese webhook** o se dejan de activar los pagos.
+- **El webhook de pagos de Reveniu → n8n** (`electrificarte-pago`). No lleva nuestro header: lo
+  llama Reveniu. Ya está protegido por su cuenta: el nodo `External id not null` valida el header
+  `reveniu-secret-key` contra el secreto de Reveniu y que el evento sea
+  `subscription_payment_succeeded`. **No ponerle Header Auth** o se dejan de activar los pagos.
 - **Webhooks que llaman otros sistemas** (sheet-sync ya usa su propio `x-sheet-sync-secret`;
   los flujos 1–5 de la subasta los llama n8n a la web, no al revés).
 

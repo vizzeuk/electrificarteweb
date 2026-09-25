@@ -44,19 +44,27 @@ async function main() {
   }
 
   console.log("\n─── n8n ───");
+  // NO se le hace POST al webhook de producción: un cuerpo vacío corre el workflow, falla en el
+  // insert de Supabase (first_name NOT NULL) y dispara una alerta de error a Discord. Se
+  // verifica por la API de n8n que el workflow esté activo y tenga un webhook con esa ruta.
   const n8n = process.env.N8N_REVIEWS_URL;
+  const apiUrl = process.env.N8N_API_URL, apiKey = process.env.N8N_API_KEY;
   if (!n8n) bad("N8N_REVIEWS_URL no configurada");
+  else if (!apiUrl || !apiKey) console.log("  — N8N_API_URL / N8N_API_KEY no están: no se puede verificar n8n sin tocar producción");
   else {
+    const path = new URL(n8n).pathname.replace(/^\/webhook\//, "");
     try {
-      const r = await fetch(n8n, {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ __preflight: true }), signal: AbortSignal.timeout(6000),
-      });
-      // Cualquier respuesta HTTP significa que el webhook existe y responde.
-      ok(`webhook de n8n responde (HTTP ${r.status})`);
-      if (r.status === 404) bad("404 = el workflow puede estar INACTIVO en n8n, o la URL es la de test");
+      const r = await fetch(`${apiUrl}/workflows?limit=250`, { headers: { "X-N8N-API-KEY": apiKey }, signal: AbortSignal.timeout(8000) });
+      if (!r.ok) bad(`la API de n8n respondió ${r.status} (¿key vencida?)`);
+      else {
+        const { data } = (await r.json()) as { data: { name: string; active: boolean; nodes: { type: string; parameters: { path?: string } }[] }[] };
+        const wf = data.find((w) => w.nodes.some((n) => n.type.endsWith(".webhook") && n.parameters.path === path));
+        if (!wf) bad(`ningún workflow tiene un webhook con la ruta "${path}"`);
+        else if (!wf.active) bad(`el workflow "${wf.name}" está INACTIVO`);
+        else ok(`webhook "${path}" en el workflow activo "${wf.name}"`);
+      }
     } catch {
-      bad("el webhook de n8n no respondió  ← ¿está activo el workflow? ¿la URL es la de producción?");
+      bad("no se pudo consultar la API de n8n");
     }
   }
 
