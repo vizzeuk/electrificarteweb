@@ -1,10 +1,15 @@
 import {
-  ADVISORY_TABLE,
   ADVISORY_PHONE_COLUMN,
+  ADVISORY_START_FALLBACK,
+  ADVISORY_TABLE,
+  ASESORIA_WINDOW_DAYS,
   getSupabase,
+  inicioAsesoria,
   isRowActive,
   normalizePhone,
 } from "@/lib/whatsapp/subscription";
+
+export { ASESORIA_WINDOW_DAYS };
 
 // ─── Ciclo de vida de la asesoría $4.990 ──────────────────────────────────────
 // La asesoría IA por WhatsApp se activa cuando el cliente paga los $4.990 y dura
@@ -16,13 +21,9 @@ import {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-// Ventana total de la asesoría (días). Aviso el penúltimo día → 1 día restante.
-export const ASESORIA_WINDOW_DAYS = Number(process.env.ASESORIA_WINDOW_DAYS ?? 10);
+// Ventana total (ASESORIA_WINDOW_DAYS, en subscription.ts). Aviso el penúltimo
+// día → 1 día restante. El inicio es `paid_at` (o el respaldo): ver inicioAsesoria.
 export const ASESORIA_REMINDER_DAY = Number(process.env.ASESORIA_REMINDER_DAY ?? 9);
-
-// Columna con la fecha de activación (pago). Configurable por si el esquema real
-// usa otro nombre (ej: "paid_at", "fecha_pago"). Default "created_at".
-const CREATED_COLUMN = process.env.SUPABASE_SUBSCRIPTION_CREATED_COLUMN ?? "created_at";
 
 export interface AsesoriaLifecycle {
   phone: string;
@@ -54,11 +55,14 @@ export async function findAsesoriaReminderDue(now = new Date()): Promise<Asesori
   const newerThan = new Date(now.getTime() - (ASESORIA_REMINDER_DAY + 1) * DAY_MS); // hace 10 días
 
   try {
+    // El inicio puede estar en `paid_at` o en la columna de respaldo, y PostgREST
+    // no sabe hacer coalesce en un filtro. Se trae un superconjunto (cualquiera
+    // de las dos dentro de los últimos 10 días) y el corte exacto se hace abajo.
+    const cols = [...new Set(["paid_at", ADVISORY_START_FALLBACK])];
     const { data, error } = await supabase
       .from(ADVISORY_TABLE)
       .select("*")
-      .gt(CREATED_COLUMN, newerThan.toISOString())
-      .lte(CREATED_COLUMN, olderThan.toISOString());
+      .or(cols.map((c) => `${c}.gt.${newerThan.toISOString()}`).join(","));
 
     if (error) {
       console.warn("[lifecycle] error consultando asesorías por vencer:", error.message);
@@ -66,16 +70,18 @@ export async function findAsesoriaReminderDue(now = new Date()): Promise<Asesori
     }
 
     const due: AsesoriaLifecycle[] = [];
+    const vistos = new Set<string>();
     for (const row of data ?? []) {
-      if (!isRowActive(row)) continue; // respeta status cancelado/expirado
-      const rawStart = (row as Record<string, unknown>)[CREATED_COLUMN];
+      if (!isRowActive(row)) continue; // respeta status pendiente/cancelado/expirado
+      const startedAt = inicioAsesoria(row as Record<string, unknown>);
       const rawPhone = (row as Record<string, unknown>)[ADVISORY_PHONE_COLUMN];
-      if (!rawStart || !rawPhone) continue;
+      if (!startedAt || !rawPhone) continue;
+      // Día 9 cumplido ⇔ el inicio cayó hace [9, 10) días.
+      if (startedAt <= newerThan || startedAt > olderThan) continue;
 
-      const startedAt = new Date(rawStart as string);
-      if (Number.isNaN(startedAt.getTime())) continue;
       const phone = normalizePhone(String(rawPhone));
-      if (!phone || phone.length < 6) continue;
+      if (!phone || phone.length < 6 || vistos.has(phone)) continue;
+      vistos.add(phone);
 
       const elapsed = daysElapsed(startedAt, now);
       due.push({
