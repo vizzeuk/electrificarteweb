@@ -168,13 +168,16 @@ export async function sincronizar(
     clave: (fila: Record<string, string>) => string;
     noVaciar?: string[];
     ausentes?: { columna: string; valor: string };
+    /** Calcula todo y no escribe nada. */
+    enSeco?: boolean;
   },
 ): Promise<Resultado> {
   const noVaciar = new Set(opts.noVaciar ?? []);
-  await asegurarHoja(hoja);
-  const actual = await leerHoja(hoja);
+  if (!opts.enSeco) await asegurarHoja(hoja);
+  const actual = opts.enSeco && !(await hojas()).includes(hoja) ? [] : await leerHoja(hoja);
 
   if (!actual.length) {
+    if (opts.enSeco) return { celdas: 0, agregadas: opts.filas.length, soloEnSheet: 0, sinClave: 0, pisadas: [] };
     await reemplazarHoja(hoja, [opts.columnas, ...opts.filas.map((f) => opts.columnas.map((c) => f[c]))], { forzar: true });
     return { celdas: 0, agregadas: opts.filas.length, soloEnSheet: 0, sinClave: 0, pisadas: [] };
   }
@@ -242,6 +245,8 @@ export async function sincronizar(
       }
     }
   }
+
+  if (opts.enSeco) return { celdas, agregadas: nuevas.length, soloEnSheet, sinClave, pisadas };
 
   // De a 500 rangos: el batchUpdate aguanta más, pero el webhook tiene 60 s.
   for (let i = 0; i < escrituras.length; i += 500) {

@@ -191,6 +191,25 @@ await test("una segunda corrida sin cambios no escribe nada", async () => {
   assert.equal(llamadas, 2); // listar hojas + leer; ninguna escritura
 });
 
+await test("en seco calcula lo mismo y no escribe nada", async () => {
+  const antes = [COLS, ["", "a", "EX30", "https://vieja.cl", "Core|1"]];
+  hojas.set("AUTOS", antes.map((f) => [...f]));
+  const r = await sincronizar("AUTOS", {
+    ...opts([{ pdp_id: "a", modelo: "EX30", url_oficial: "https://nueva.cl", versiones: "Core|2" }, { pdp_id: "b" }]),
+    enSeco: true,
+  });
+  assert.equal(r.celdas, 2);
+  assert.equal(r.agregadas, 1);
+  assert.equal(r.pisadas.length, 1);
+  assert.deepEqual(hojas.get("AUTOS"), antes);
+});
+
+await test("en seco sobre una hoja que no existe no la crea", async () => {
+  const r = await sincronizar("NUEVA", { ...opts([{ pdp_id: "a" }]), enSeco: true });
+  assert.equal(r.agregadas, 1);
+  assert.equal(hojas.has("NUEVA"), false);
+});
+
 console.log("\nreemplazarHoja / asegurarEncabezado:");
 
 await test("reemplazarHoja aborta si la hoja tiene columnas agregadas a mano", async () => {

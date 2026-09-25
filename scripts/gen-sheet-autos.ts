@@ -39,6 +39,8 @@ const descubrir = !process.argv.includes("--sin-descubrir");
  */
 const conFirecrawl = process.argv.includes("--firecrawl");
 const soloTsv = process.argv.includes("--solo-tsv");
+/** Muestra qué cambiaría en el Sheet sin escribir nada. */
+const enSeco = process.argv.includes("--en-seco");
 const OUT = ".context/sheet";
 const UA =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0 Safari/537.36";
@@ -543,20 +545,25 @@ async function main(): Promise<void> {
       filas: autos.map((f) => Object.fromEntries(AUTOS_HEADER.map((h, i) => [h, f[i]]))),
       clave: (f) => f.pdp_id,
       noVaciar: ["estado", "url_oficial", "detalle"],
+      enSeco,
     });
     console.log(describir("AUTOS", r));
-    const log = await guardarPisadas("AUTOS", r.pisadas);
-    if (log) {
+    const log = enSeco ? null : await guardarPisadas("AUTOS", r.pisadas);
+    if (r.pisadas.length) {
       for (const p of r.pisadas.slice(0, 10)) console.log(`      ${p.columna}: ${p.antes} → ${p.ahora}`);
       if (r.pisadas.length > 10) console.log(`      … y ${r.pisadas.length - 10} más`);
-      console.log(`      lo anterior quedó en ${log}`);
+      if (log) console.log(`      lo anterior quedó en ${log}`);
     }
-    for (const [hoja, header] of [["CORRIDAS", CORRIDAS_HEADER], ["FALTAN FUENTES", FALTAN_HEADER]] as const) {
-      const creado = await asegurarEncabezado(hoja, [...header]);
-      console.log(`  Sheet · ${hoja.padEnd(15)} ${creado ? "encabezado escrito" : "ya tiene datos (lo llena n8n, no se toca)"}`);
+    if (enSeco) {
+      console.log("\n  (--en-seco: no se escribió nada en el Sheet)");
+    } else {
+      for (const [hoja, header] of [["CORRIDAS", CORRIDAS_HEADER], ["FALTAN FUENTES", FALTAN_HEADER]] as const) {
+        const creado = await asegurarEncabezado(hoja, [...header]);
+        console.log(`  Sheet · ${hoja.padEnd(15)} ${creado ? "encabezado escrito" : "ya tiene datos (lo llena n8n, no se toca)"}`);
+      }
+      await reemplazarHoja("INSTRUCCIONES", instrucciones);
+      console.log(`  Sheet · ${"INSTRUCCIONES".padEnd(15)} reescrita`);
     }
-    await reemplazarHoja("INSTRUCCIONES", instrucciones);
-    console.log(`  Sheet · ${"INSTRUCCIONES".padEnd(15)} reescrita`);
   }
 
   // ── Resumen ──────────────────────────────────────────────────────────────
