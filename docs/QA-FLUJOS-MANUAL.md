@@ -219,6 +219,17 @@ Autos sembrados: `hyundai-ioniq-5` · `byd-dolphin-mini` · `byd-song-plus-dm-i`
 `kia-ev6` · `hyundai-tucson-hibrido`. Alimentan también la sección de la home
 (`getTopReviews` toma las de 4★ o más).
 
+**Fotos de la demo** (aparte, porque las reseñas sembradas nacen sin fotos):
+
+```bash
+npx tsx --env-file=.env.local scripts/qa/seed-review-photos-demo.ts            # poner
+npx tsx --env-file=.env.local scripts/qa/seed-review-photos-demo.ts --cleanup  # quitar
+```
+
+⚠️ Usa las **fotos del catálogo** (Sanity) como marcador de posición, redimensionadas a
+card/full igual que lo haría el navegador, y las sube al bucket público. **No son fotos
+de usuarios reales** — sirven para mostrar el layout.
+
 ### Correos
 El e2e no manda correos (los manda n8n). Para verlos:
 ```bash

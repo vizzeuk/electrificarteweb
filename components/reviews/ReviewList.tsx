@@ -28,10 +28,10 @@ export function ReviewList({
   if (reviews.length === 0) return null;
 
   return (
-    <section className="py-16 md:py-20 bg-white" aria-labelledby="reviews-title">
+    <section className="py-12 md:py-14 bg-white" aria-labelledby="reviews-title">
       <div className="max-w-4xl mx-auto px-4 md:px-8">
 
-        <div className="mb-10 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-5">
+        <div className="mb-7 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-5">
           <div>
             <p className="text-[11px] uppercase tracking-widest text-primary-deep font-bold mb-2">Opiniones reales</p>
             <h2 id="reviews-title" className="text-2xl md:text-3xl font-headline font-black uppercase tracking-tight">

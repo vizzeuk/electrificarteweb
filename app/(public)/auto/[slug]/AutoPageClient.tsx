@@ -535,6 +535,9 @@ export default function AutoPageClient({ car, similarCars, reviewsSlot }: AutoPa
         carName={`${car.brand} ${car.name}`}
       />
 
+      {/* ─── Reseñas aprobadas: arriba, para que se vean sin scrollear ── */}
+      {reviewsSlot}
+
       {/* ─── Version selector ─────────────────────────────────────────── */}
       {car.versions.length > 1 && (
         <section className="bg-black py-10" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
@@ -961,8 +964,6 @@ export default function AutoPageClient({ car, similarCars, reviewsSlot }: AutoPa
       </section>
 
       {/* ─── Reseñas aprobadas (viene del server) ─────────────────────── */}
-      {reviewsSlot}
-
       {/* ─── Vehículos similares ──────────────────────────────────────── */}
       {similarCars.length > 0 && (
         <section className="py-16 bg-surface border-t border-gray-100">
