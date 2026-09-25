@@ -3,67 +3,67 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="light">
-  <title>Nuevo lead de Oferta Exclusiva</title>
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
+  <title>Electrificarte</title>
 </head>
 <!--
-  VENTAS · USO INTERNO (Francisco). Se dispara cuando un cliente paga la Oferta
-  Exclusiva ($19.990). Va DIRECTO al nodo Resend de n8n.
-  Expresiones n8n (verificá los nombres de nodo/campo contra tu flujo):
-    {{ $('HTTP Request2').item.json.customer.name }}  → nombre del cliente
-    {{ $json.descripcion_interes }}                    → vehículo buscado
-    {{ $json.telefono }}   {{ $json.email }}           → contacto del cliente
-    {{ $json.region }}     {{ $json.comuna }}          → ubicación (opcional)
+  OFERTA EXCLUSIVA (🟡 STANDBY): aviso a Francisco de un lead pagado.
+  Lee del nodo Set "Datos correo oferta": nombre, auto, telefono, email, comuna, region.
+
+  GENERADO por scripts/gen-emails.mjs (sistema de diseño v1). No editar a mano: cambiá el
+  generador y corré  node scripts/gen-emails.mjs && node scripts/gen-waitlist-reviews-workflows.mjs
+  Todo dato que escribe el usuario va escapado para HTML.
 -->
-<body style="margin:0;padding:0;background:#F3F4F6;font-family:'Helvetica Neue',Arial,sans-serif;-webkit-font-smoothing:antialiased;">
-  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">Nuevo cliente pagó la Oferta Exclusiva — a buscar la mejor oferta.</div>
+<body style="margin:0;padding:0;background:#f2f7f6;-webkit-font-smoothing:antialiased;">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">Un cliente pagó la Oferta Exclusiva.</div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f2f7f6;">
+    <tr><td align="center" style="padding:32px 12px;">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;">
 
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F3F4F6;">
-    <tr><td align="center" style="padding:24px 12px;">
-      <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;background:#FFFFFF;border:1px solid #E5E7EB;border-radius:16px;overflow:hidden;">
-
-        <tr><td style="padding:26px 32px;border-bottom:1px solid #F3F4F6;">
-          <table role="presentation" width="100%"><tr>
-            <td><picture><source srcset="https://www.electrificarte.com/logo-email-white.png" media="(prefers-color-scheme: dark)"><img src="https://www.electrificarte.com/logo-email.png" alt="Electrificarte" height="28" style="display:block;border:0;height:28px;width:auto;"></picture></td>
-            <td align="right" style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:#9CA3AF;">Uso interno</td>
+        <tr><td style="padding:0 4px 20px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+            <td><picture><source srcset="https://www.electrificarte.com/brand/email-wordmark-niebla.png" media="(prefers-color-scheme: dark)"><img src="https://www.electrificarte.com/brand/email-wordmark-tinta.png" alt="Electrificarte" width="218" height="16" style="display:block;border:0;width:218px;height:16px;"></picture></td>
           </tr></table>
         </td></tr>
 
-        <tr><td style="padding:36px 32px 8px;">
-          <p style="margin:0 0 8px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#00A6A6;">Nuevo lead · Oferta Exclusiva</p>
-          <h1 style="margin:0 0 16px;font-size:24px;font-weight:800;line-height:1.2;color:#111827;letter-spacing:-0.01em;">Un cliente pagó los $19.990</h1>
-          <p style="margin:0 0 20px;font-size:15px;line-height:1.65;color:#4B5563;">Hola <strong style="color:#111827;">Francisco</strong>, entró un cliente nuevo que ya decidió su auto y busca el mejor precio en la red. Hay que conseguirle una oferta dentro de las próximas 72 horas.</p>
+        <tr><td style="background:#ffffff;border:1px solid #dfe4e4;border-radius:12px;padding:36px 32px 32px;">
+<h1 style="margin:0 0 16px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:28px;font-weight:700;line-height:1.1;letter-spacing:-0.02em;color:#0f1716;">Un cliente pagó la Oferta Exclusiva</h1>
+<p style="margin:0 0 16px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.55;color:#495251;">Ya decidió su auto y busca el mejor precio en la red. Hay que conseguirle una oferta dentro de las próximas 72 horas.</p>
 
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #E5E7EB;border-radius:12px;margin:0 0 20px;">
-            <tr><td style="padding:14px 20px;border-bottom:1px solid #F3F4F6;">
-              <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;color:#9CA3AF;">Cliente</div>
-              <div style="font-size:15px;font-weight:700;color:#111827;margin-top:3px;">{{ $('HTTP Request2').item.json.customer.name }}</div>
-            </td></tr>
-            <tr><td style="padding:14px 20px;border-bottom:1px solid #F3F4F6;">
-              <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;color:#9CA3AF;">Vehículo buscado</div>
-              <div style="font-size:15px;font-weight:700;color:#006A61;margin-top:3px;">{{ $json.descripcion_interes }}</div>
-            </td></tr>
-            <tr>
-              <td style="padding:14px 20px;">
-                <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;color:#9CA3AF;">Teléfono</div>
-                <div style="font-size:15px;font-weight:700;color:#111827;margin-top:3px;">{{ $json.telefono }}</div>
-              </td>
-            </tr>
-          </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:8px 0 24px;background:#caefea;border-radius:12px;">
+  <tr><td style="padding:20px;">
+    <p style="margin:0;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#0f1716;">Auto que busca</p>
+    <p style="margin:4px 0 0;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:20px;line-height:1.25;font-weight:700;letter-spacing:-0.01em;color:#0f1716;">{{ String(($('Datos correo oferta').item.json.auto) ?? '').trim().replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';') || 'Sin indicar' }}</p>
+  </td></tr>
+</table>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:8px 0 24px;border-top:1px solid #dfe4e4;">
+  <tr>
+    <td style="padding:12px 16px 12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#495251;vertical-align:top;width:34%;">Cliente</td>
+    <td style="padding:12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;font-weight:600;color:#0f1716;vertical-align:top;">{{ String(($('Datos correo oferta').item.json.nombre) ?? '').trim().replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';') }}</td>
+  </tr>
+  <tr>
+    <td style="padding:12px 16px 12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#495251;vertical-align:top;width:34%;">Teléfono</td>
+    <td style="padding:12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;font-weight:600;color:#0f1716;vertical-align:top;">{{ String(($('Datos correo oferta').item.json.telefono) ?? '').trim().replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';') }}</td>
+  </tr>
+  <tr>
+    <td style="padding:12px 16px 12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#495251;vertical-align:top;width:34%;">Email</td>
+    <td style="padding:12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;font-weight:600;color:#0f1716;vertical-align:top;">{{ String(($('Datos correo oferta').item.json.email) ?? '').trim().replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';') }}</td>
+  </tr>
+  <tr>
+    <td style="padding:12px 16px 12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#495251;vertical-align:top;width:34%;">Ubicación</td>
+    <td style="padding:12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;font-weight:600;color:#0f1716;vertical-align:top;">{{ [$('Datos correo oferta').item.json.comuna, $('Datos correo oferta').item.json.region].filter(Boolean).join(', ').replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';') || 'Sin indicar' }}</td>
+  </tr>
+</table>
+
+<table role="presentation" cellpadding="0" cellspacing="0" style="margin:8px 0 0;"><tr>
+  <td style="border-radius:8px;background:#1d605b;">
+    <a href="https://wa.me/{{ String(($('Datos correo oferta').item.json.telefono) ?? '').replace(/[^0-9]/g, '') }}" style="display:inline-block;padding:14px 24px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;font-weight:600;line-height:1.2;color:#ffffff;text-decoration:none;border-radius:8px;">Escribir por WhatsApp</a>
+  </td>
+</tr></table>
         </td></tr>
 
-        <tr><td style="padding:0 32px 36px;">
-          <table role="presentation" cellpadding="0" cellspacing="0"><tr>
-            <td style="border-radius:12px;background:#00E5E5;">
-              <a href="https://wa.me/{{ $json.telefono }}" style="display:inline-block;padding:15px 34px;font-size:14px;font-weight:700;color:#000000;text-decoration:none;border-radius:12px;">Escribir al cliente</a>
-            </td>
-          </tr></table>
-        </td></tr>
-
-        <tr><td style="padding:28px 32px;background:#000000;">
-          <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:#FFFFFF;letter-spacing:-0.01em;">ELECTRIFICARTE<span style="color:#00E5E5;">.COM</span></p>
-          <p style="margin:0;font-size:12px;line-height:1.6;color:rgba(255,255,255,0.55);">Alerta interna generada automáticamente.</p>
-        </td></tr>
 
       </table>
     </td></tr>

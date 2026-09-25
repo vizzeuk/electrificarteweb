@@ -3,55 +3,138 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="light">
-  <title>Pago confirmado — Electrificarte</title>
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
+  <title>Electrificarte</title>
 </head>
 <!--
-  VENTAS · Cliente que pagó la Oferta Exclusiva ($19.990). Va DIRECTO al nodo Resend de n8n.
-  Expresiones n8n (verificá los nombres de nodo contra tu flujo):
-    {{ $('HTTP Request2').item.json.customer.name }}  → nombre del cliente
-    {{ $json.descripcion_interes }}                    → vehículo de interés
+  OFERTA EXCLUSIVA (🟡 STANDBY): confirmación de pago al cliente.
+  Lee del nodo Set "Datos correo oferta": nombre, auto.
+
+  GENERADO por scripts/gen-emails.mjs (sistema de diseño v1). No editar a mano: cambiá el
+  generador y corré  node scripts/gen-emails.mjs && node scripts/gen-waitlist-reviews-workflows.mjs
+  Todo dato que escribe el usuario va escapado para HTML.
 -->
-<body style="margin:0;padding:0;background:#F3F4F6;font-family:'Helvetica Neue',Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+<body style="margin:0;padding:0;background:#f2f7f6;-webkit-font-smoothing:antialiased;">
   <div style="display:none;max-height:0;overflow:hidden;opacity:0;">Tu pago fue confirmado y tu solicitud ya está en proceso.</div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f2f7f6;">
+    <tr><td align="center" style="padding:32px 12px;">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;">
 
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F3F4F6;">
-    <tr><td align="center" style="padding:24px 12px;">
-      <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;background:#FFFFFF;border:1px solid #E5E7EB;border-radius:16px;overflow:hidden;">
-
-        <tr><td style="padding:26px 32px;border-bottom:1px solid #F3F4F6;">
-          <picture><source srcset="https://www.electrificarte.com/logo-email-white.png" media="(prefers-color-scheme: dark)"><img src="https://www.electrificarte.com/logo-email.png" alt="Electrificarte" height="28" style="display:block;border:0;height:28px;width:auto;"></picture>
-        </td></tr>
-
-        <tr><td style="padding:36px 32px 8px;">
-          <p style="margin:0 0 8px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#00A6A6;">Pago confirmado</p>
-          <h1 style="margin:0 0 16px;font-size:24px;font-weight:800;line-height:1.2;color:#111827;letter-spacing:-0.01em;">Tu solicitud está en proceso</h1>
-          <p style="margin:0 0 16px;font-size:15px;line-height:1.65;color:#4B5563;">Hola <strong style="color:#111827;">{{ $('HTTP Request2').item.json.customer.name }}</strong>, tu pago se procesó con éxito. Nuestro equipo ya está buscando la mejor oferta para tu auto en la red de vendedores oficiales y te contactará a la brevedad.</p>
-
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #E5E7EB;border-radius:12px;margin:8px 0 20px;">
-            <tr><td style="padding:16px 20px;">
-              <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;color:#9CA3AF;">Vehículo de interés</div>
-              <div style="font-size:16px;font-weight:700;color:#111827;margin-top:3px;">{{ $json.descripcion_interes }}</div>
-            </td></tr>
-          </table>
-
-          <p style="margin:0 0 24px;font-size:14px;line-height:1.6;color:#4B5563;">En un plazo máximo de <strong style="color:#111827;">72 horas hábiles</strong> recibirás un correo con los próximos pasos para avanzar.</p>
-        </td></tr>
-
-        <tr><td style="padding:0 32px 36px;">
-          <table role="presentation" cellpadding="0" cellspacing="0"><tr>
-            <td style="border-radius:12px;background:#00E5E5;">
-              <a href="https://www.electrificarte.com" style="display:inline-block;padding:15px 34px;font-size:14px;font-weight:700;color:#000000;text-decoration:none;border-radius:12px;">Ver vehículos</a>
-            </td>
+        <tr><td style="padding:0 4px 20px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+            <td><picture><source srcset="https://www.electrificarte.com/brand/email-wordmark-niebla.png" media="(prefers-color-scheme: dark)"><img src="https://www.electrificarte.com/brand/email-wordmark-tinta.png" alt="Electrificarte" width="218" height="16" style="display:block;border:0;width:218px;height:16px;"></picture></td>
           </tr></table>
         </td></tr>
 
-        <tr><td style="padding:28px 32px;background:#000000;">
-          <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:#FFFFFF;letter-spacing:-0.01em;">ELECTRIFICARTE<span style="color:#00E5E5;">.COM</span></p>
-          <p style="margin:0;font-size:12px;line-height:1.6;color:rgba(255,255,255,0.55);">Marketplace de autos electrificados en Chile.<br>
-          <a href="https://www.electrificarte.com" style="color:#00E5E5;text-decoration:none;">www.electrificarte.com</a> · contacto@electrificarte.com</p>
+        <tr><td style="background:#ffffff;border:1px solid #dfe4e4;border-radius:12px;padding:36px 32px 32px;">
+<h1 style="margin:0 0 16px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:28px;font-weight:700;line-height:1.1;letter-spacing:-0.02em;color:#0f1716;">Tu solicitud está en proceso</h1>
+<p style="margin:0 0 16px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.55;color:#495251;">Hola <strong style="font-weight:600;color:#0f1716;">{{ String(($('Datos correo oferta').item.json.nombre) ?? '').trim().replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';') }}</strong>, tu pago se procesó con éxito. Estamos buscando la mejor oferta para tu auto en la red de vendedores oficiales y te contactaremos a la brevedad.</p>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:8px 0 24px;background:#caefea;border-radius:12px;">
+  <tr><td style="padding:20px;">
+    <p style="margin:0;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#0f1716;">Auto que buscas</p>
+    <p style="margin:4px 0 0;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:20px;line-height:1.25;font-weight:700;letter-spacing:-0.01em;color:#0f1716;">{{ String(($('Datos correo oferta').item.json.auto) ?? '').trim().replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';') || 'Sin indicar' }}</p>
+  </td></tr>
+</table>
+<p style="margin:0 0 12px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:18px;font-weight:700;line-height:1.3;letter-spacing:-0.01em;color:#0f1716;">Qué pasa ahora</p>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:8px 0 24px;border-top:1px solid #dfe4e4;">
+  <tr>
+    <td style="padding:12px 16px 12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#495251;vertical-align:top;width:8%;">1</td>
+    <td style="padding:12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;font-weight:600;color:#0f1716;vertical-align:top;">Llevamos tu solicitud a la red de vendedores oficiales.</td>
+  </tr>
+  <tr>
+    <td style="padding:12px 16px 12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#495251;vertical-align:top;width:8%;">2</td>
+    <td style="padding:12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;font-weight:600;color:#0f1716;vertical-align:top;">Comparamos las ofertas que lleguen para tu modelo.</td>
+  </tr>
+  <tr>
+    <td style="padding:12px 16px 12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#495251;vertical-align:top;width:8%;">3</td>
+    <td style="padding:12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;font-weight:600;color:#0f1716;vertical-align:top;">En un plazo máximo de 72 horas hábiles te escribimos con los próximos pasos.</td>
+  </tr>
+</table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:32px 0 28px;"><tr><td style="border-top:1px solid #dfe4e4;font-size:0;line-height:0;">&nbsp;</td></tr></table>
+
+<p style="margin:0 0 12px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:18px;font-weight:700;line-height:1.3;letter-spacing:-0.01em;color:#0f1716;">Mientras tanto</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #dfe4e4;">
+  <tr><td style="border-bottom:1px solid #dfe4e4;">
+    <a href="https://www.electrificarte.com/electrico/ev" style="display:block;padding:14px 0;text-decoration:none;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+        <td style="font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;">
+          <span style="display:block;font-size:15px;font-weight:600;line-height:1.3;color:#0f1716;">Autos 100% eléctricos</span>
+          <span style="display:block;margin-top:2px;font-size:13px;line-height:1.4;color:#495251;">Autonomía, batería y precio de cada modelo</span>
+        </td>
+        <td align="right" style="width:24px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:18px;color:#1d605b;">&rarr;</td>
+      </tr></table>
+    </a>
+  </td></tr>
+  <tr><td style="border-bottom:1px solid #dfe4e4;">
+    <a href="https://www.electrificarte.com/electrico/phev" style="display:block;padding:14px 0;text-decoration:none;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+        <td style="font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;">
+          <span style="display:block;font-size:15px;font-weight:600;line-height:1.3;color:#0f1716;">Híbridos enchufables</span>
+          <span style="display:block;margin-top:2px;font-size:13px;line-height:1.4;color:#495251;">Andan en eléctrico en la ciudad y a bencina en ruta</span>
+        </td>
+        <td align="right" style="width:24px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:18px;color:#1d605b;">&rarr;</td>
+      </tr></table>
+    </a>
+  </td></tr>
+  <tr><td style="border-bottom:1px solid #dfe4e4;">
+    <a href="https://www.electrificarte.com/tipo/suv" style="display:block;padding:14px 0;text-decoration:none;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+        <td style="font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;">
+          <span style="display:block;font-size:15px;font-weight:600;line-height:1.3;color:#0f1716;">SUV electrificados</span>
+          <span style="display:block;margin-top:2px;font-size:13px;line-height:1.4;color:#495251;">El segmento con más modelos en Chile</span>
+        </td>
+        <td align="right" style="width:24px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:18px;color:#1d605b;">&rarr;</td>
+      </tr></table>
+    </a>
+  </td></tr>
+  <tr><td style="border-bottom:1px solid #dfe4e4;">
+    <a href="https://www.electrificarte.com/comparador" style="display:block;padding:14px 0;text-decoration:none;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+        <td style="font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;">
+          <span style="display:block;font-size:15px;font-weight:600;line-height:1.3;color:#0f1716;">Compara modelos lado a lado</span>
+          <span style="display:block;margin-top:2px;font-size:13px;line-height:1.4;color:#495251;">Hasta 3 autos, spec por spec</span>
+        </td>
+        <td align="right" style="width:24px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:18px;color:#1d605b;">&rarr;</td>
+      </tr></table>
+    </a>
+  </td></tr>
+  <tr><td style="border-bottom:1px solid #dfe4e4;">
+    <a href="https://www.electrificarte.com/calculadora" style="display:block;padding:14px 0;text-decoration:none;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+        <td style="font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;">
+          <span style="display:block;font-size:15px;font-weight:600;line-height:1.3;color:#0f1716;">Calcula cuánto ahorras</span>
+          <span style="display:block;margin-top:2px;font-size:13px;line-height:1.4;color:#495251;">Tu gasto en bencina frente a un electrificado</span>
+        </td>
+        <td align="right" style="width:24px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:18px;color:#1d605b;">&rarr;</td>
+      </tr></table>
+    </a>
+  </td></tr>
+</table>
         </td></tr>
 
+
+        <tr><td style="padding:16px 0 0;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0f1716;border-radius:12px;">
+            <tr><td style="padding:28px 32px;">
+              <img src="https://www.electrificarte.com/brand/email-wordmark-niebla.png" alt="Electrificarte" width="190" height="14" style="display:block;border:0;width:190px;height:14px;">
+              <p style="margin:12px 0 20px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:14px;line-height:1.5;color:#b4bdbc;">El marketplace de autos electrificados de Chile. Conéctate a una nueva movilidad.</p>
+              <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+                <td style="padding:0 16px 8px 0;"><a href="https://www.electrificarte.com/marcas" style="font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;font-weight:600;color:#caefea;text-decoration:none;">Catálogo</a></td><td style="padding:0 16px 8px 0;"><a href="https://www.electrificarte.com/comparador" style="font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;font-weight:600;color:#caefea;text-decoration:none;">Comparador</a></td><td style="padding:0 16px 8px 0;"><a href="https://www.electrificarte.com/calculadora" style="font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;font-weight:600;color:#caefea;text-decoration:none;">Calculadora</a></td><td style="padding:0 16px 8px 0;"><a href="https://www.electrificarte.com/asesoria" style="font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;font-weight:600;color:#caefea;text-decoration:none;">Asesoría</a></td><td style="padding:0 16px 8px 0;"><a href="https://www.electrificarte.com/blog" style="font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;font-weight:600;color:#caefea;text-decoration:none;">Blog</a></td>
+              </tr></table>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px;border-top:1px solid #27302f;"><tr>
+                <td style="padding-top:16px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;line-height:1.6;color:#b4bdbc;">
+                  <a href="https://www.instagram.com/autos.electricos.con.francisco" style="color:#b4bdbc;text-decoration:underline;">Instagram</a>&nbsp;&nbsp;&nbsp;
+                  <a href="https://www.tiktok.com/@autos_electricos_con_fco" style="color:#b4bdbc;text-decoration:underline;">TikTok</a>&nbsp;&nbsp;&nbsp;
+                  <a href="mailto:contacto@electrificarte.com" style="color:#b4bdbc;text-decoration:underline;">contacto@electrificarte.com</a><br>
+                  Recibes este correo porque pagaste la Oferta Exclusiva en electrificarte.com.
+                </td>
+              </tr></table>
+            </td></tr>
+          </table>
+        </td></tr>
       </table>
     </td></tr>
   </table>

@@ -3,78 +3,80 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="light">
-  <title>Nuevo vendedor — Electrificarte</title>
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
+  <title>Electrificarte</title>
 </head>
 <!--
-  VENTAS · USO INTERNO (Francisco). Se dispara cuando un vendedor paga su
-  suscripción. Va DIRECTO al nodo Resend de n8n.
-  Expresiones n8n:
-    {{ $('Create a row1').item.json.nombre }} {{ $('Create a row1').item.json.apellido }}
-    {{ $('Create a row1').item.json.nombre_concesionario }}  → punto de venta
-    {{ $('Create a row1').item.json.telefono }}              → contacto
-    {{ $('Create a row1').item.json.marcas }}                → marcas
+  VENDEDORES: aviso a Francisco de una suscripción pagada.
+  Lee del nodo Set "Datos correo vendedor": nombre, apellido, email, telefono, concesionario, marcas.
+
+  GENERADO por scripts/gen-emails.mjs (sistema de diseño v1). No editar a mano: cambiá el
+  generador y corré  node scripts/gen-emails.mjs && node scripts/gen-waitlist-reviews-workflows.mjs
+  Todo dato que escribe el usuario va escapado para HTML.
 -->
-<body style="margin:0;padding:0;background:#F3F4F6;font-family:'Helvetica Neue',Arial,sans-serif;-webkit-font-smoothing:antialiased;">
-  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">Nuevo vendedor pagó su suscripción — contactar para activar.</div>
+<body style="margin:0;padding:0;background:#f2f7f6;-webkit-font-smoothing:antialiased;">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">Un vendedor pagó su suscripción. Hay que contactarlo para activarlo.</div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f2f7f6;">
+    <tr><td align="center" style="padding:32px 12px;">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;">
 
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F3F4F6;">
-    <tr><td align="center" style="padding:24px 12px;">
-      <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;background:#FFFFFF;border:1px solid #E5E7EB;border-radius:16px;overflow:hidden;">
-
-        <tr><td style="padding:26px 32px;border-bottom:1px solid #F3F4F6;">
-          <table role="presentation" width="100%"><tr>
-            <td><picture><source srcset="https://www.electrificarte.com/logo-email-white.png" media="(prefers-color-scheme: dark)"><img src="https://www.electrificarte.com/logo-email.png" alt="Electrificarte" height="28" style="display:block;border:0;height:28px;width:auto;"></picture></td>
-            <td align="right" style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:#9CA3AF;">Uso interno</td>
+        <tr><td style="padding:0 4px 20px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+            <td><picture><source srcset="https://www.electrificarte.com/brand/email-wordmark-niebla.png" media="(prefers-color-scheme: dark)"><img src="https://www.electrificarte.com/brand/email-wordmark-tinta.png" alt="Electrificarte" width="218" height="16" style="display:block;border:0;width:218px;height:16px;"></picture></td>
           </tr></table>
         </td></tr>
 
-        <tr><td style="padding:36px 32px 8px;">
-          <p style="margin:0 0 8px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#00A6A6;">Nuevo vendedor · suscripción pagada</p>
-          <h1 style="margin:0 0 16px;font-size:24px;font-weight:800;line-height:1.2;color:#111827;letter-spacing:-0.01em;">Registro de vendedor completado</h1>
-          <p style="margin:0 0 20px;font-size:15px;line-height:1.65;color:#4B5563;">Hola <strong style="color:#111827;">Francisco</strong>, un nuevo vendedor completó su suscripción. Contactalo para verificar sus datos y activar su cuenta.</p>
+        <tr><td style="background:#ffffff;border:1px solid #dfe4e4;border-radius:12px;padding:36px 32px 32px;">
+<h1 style="margin:0 0 16px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:28px;font-weight:700;line-height:1.1;letter-spacing:-0.02em;color:#0f1716;">Un vendedor pagó su suscripción</h1>
+<p style="margin:0 0 16px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.55;color:#495251;">Completó el registro y el pago. Contáctalo para verificar sus datos y activar su cuenta.</p>
 
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #E5E7EB;border-radius:12px;margin:0 0 20px;">
-            <tr><td style="padding:14px 20px;border-bottom:1px solid #F3F4F6;">
-              <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;color:#9CA3AF;">Vendedor</div>
-              <div style="font-size:15px;font-weight:700;color:#111827;margin-top:3px;">{{ $('Create a row1').item.json.nombre }} {{ $('Create a row1').item.json.apellido }}</div>
-            </td></tr>
-            <tr><td style="padding:14px 20px;border-bottom:1px solid #F3F4F6;">
-              <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;color:#9CA3AF;">Punto de venta</div>
-              <div style="font-size:15px;font-weight:700;color:#111827;margin-top:3px;">{{ $('Create a row1').item.json.nombre_concesionario }}</div>
-            </td></tr>
-            <tr>
-              <td width="50%" style="padding:14px 20px;border-right:1px solid #F3F4F6;">
-                <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;color:#9CA3AF;">Teléfono</div>
-                <div style="font-size:15px;font-weight:700;color:#111827;margin-top:3px;">{{ $('Create a row1').item.json.telefono }}</div>
-              </td>
-              <td width="50%" style="padding:14px 20px;">
-                <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;color:#9CA3AF;">Marcas</div>
-                <div style="font-size:15px;font-weight:700;color:#006A61;margin-top:3px;">{{ $('Create a row1').item.json.marcas }}</div>
-              </td>
-            </tr>
-          </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:8px 0 24px;border-top:1px solid #dfe4e4;">
+  <tr>
+    <td style="padding:12px 16px 12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#495251;vertical-align:top;width:34%;">Vendedor</td>
+    <td style="padding:12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;font-weight:600;color:#0f1716;vertical-align:top;">{{ String(($('Datos correo vendedor').item.json.nombre) ?? '').trim().replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';') }} {{ String(($('Datos correo vendedor').item.json.apellido) ?? '').trim().replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';') }}</td>
+  </tr>
+  <tr>
+    <td style="padding:12px 16px 12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#495251;vertical-align:top;width:34%;">Punto de venta</td>
+    <td style="padding:12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;font-weight:600;color:#0f1716;vertical-align:top;">{{ String(($('Datos correo vendedor').item.json.concesionario) ?? '').trim().replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';') || 'Sin indicar' }}</td>
+  </tr>
+  <tr>
+    <td style="padding:12px 16px 12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#495251;vertical-align:top;width:34%;">Marcas</td>
+    <td style="padding:12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;font-weight:600;color:#0f1716;vertical-align:top;">{{ String(($('Datos correo vendedor').item.json.marcas) ?? '').trim().replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';') || 'Sin indicar' }}</td>
+  </tr>
+  <tr>
+    <td style="padding:12px 16px 12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#495251;vertical-align:top;width:34%;">Teléfono</td>
+    <td style="padding:12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;font-weight:600;color:#0f1716;vertical-align:top;">{{ String(($('Datos correo vendedor').item.json.telefono) ?? '').trim().replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';') }}</td>
+  </tr>
+  <tr>
+    <td style="padding:12px 16px 12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#495251;vertical-align:top;width:34%;">Email</td>
+    <td style="padding:12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;font-weight:600;color:#0f1716;vertical-align:top;">{{ String(($('Datos correo vendedor').item.json.email) ?? '').trim().replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';') }}</td>
+  </tr>
+</table>
+<p style="margin:0 0 12px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:18px;font-weight:700;line-height:1.3;letter-spacing:-0.01em;color:#0f1716;">Próximos pasos</p>
 
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F9FAFB;border:1px solid #E5E7EB;border-radius:12px;margin:0 0 24px;">
-            <tr><td style="padding:16px 20px;">
-              <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;color:#9CA3AF;margin-bottom:8px;">Próximos pasos</div>
-              <div style="font-size:14px;line-height:1.7;color:#4B5563;">1. Contactar al vendedor por WhatsApp o teléfono.<br>2. Verificar sus datos y marcas.<br>3. Activar su cuenta en el panel.</div>
-            </td></tr>
-          </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:8px 0 24px;border-top:1px solid #dfe4e4;">
+  <tr>
+    <td style="padding:12px 16px 12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#495251;vertical-align:top;width:8%;">1</td>
+    <td style="padding:12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;font-weight:600;color:#0f1716;vertical-align:top;">Contactarlo por WhatsApp o teléfono.</td>
+  </tr>
+  <tr>
+    <td style="padding:12px 16px 12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#495251;vertical-align:top;width:8%;">2</td>
+    <td style="padding:12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;font-weight:600;color:#0f1716;vertical-align:top;">Verificar sus datos y sus marcas.</td>
+  </tr>
+  <tr>
+    <td style="padding:12px 16px 12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#495251;vertical-align:top;width:8%;">3</td>
+    <td style="padding:12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;font-weight:600;color:#0f1716;vertical-align:top;">Activar su cuenta en el panel.</td>
+  </tr>
+</table>
+
+<table role="presentation" cellpadding="0" cellspacing="0" style="margin:8px 0 0;"><tr>
+  <td style="border-radius:8px;background:#1d605b;">
+    <a href="https://wa.me/{{ String(($('Datos correo vendedor').item.json.telefono) ?? '').replace(/[^0-9]/g, '') }}" style="display:inline-block;padding:14px 24px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;font-weight:600;line-height:1.2;color:#ffffff;text-decoration:none;border-radius:8px;">Escribir por WhatsApp</a>
+  </td>
+</tr></table>
         </td></tr>
 
-        <tr><td style="padding:0 32px 36px;">
-          <table role="presentation" cellpadding="0" cellspacing="0"><tr>
-            <td style="border-radius:12px;background:#00E5E5;">
-              <a href="https://wa.me/{{ $('Create a row1').item.json.telefono }}" style="display:inline-block;padding:15px 30px;font-size:14px;font-weight:700;color:#000000;text-decoration:none;border-radius:12px;">Escribir al vendedor</a>
-            </td>
-          </tr></table>
-        </td></tr>
-
-        <tr><td style="padding:28px 32px;background:#000000;">
-          <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:#FFFFFF;letter-spacing:-0.01em;">ELECTRIFICARTE<span style="color:#00E5E5;">.COM</span></p>
-          <p style="margin:0;font-size:12px;line-height:1.6;color:rgba(255,255,255,0.55);">Alerta interna generada automáticamente.</p>
-        </td></tr>
 
       </table>
     </td></tr>

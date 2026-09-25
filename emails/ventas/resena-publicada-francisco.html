@@ -23,7 +23,6 @@
         <tr><td style="padding:0 4px 20px;">
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
             <td><picture><source srcset="https://www.electrificarte.com/brand/email-wordmark-niebla.png" media="(prefers-color-scheme: dark)"><img src="https://www.electrificarte.com/brand/email-wordmark-tinta.png" alt="Electrificarte" width="218" height="16" style="display:block;border:0;width:218px;height:16px;"></picture></td>
-            <td align="right"><span style="display:inline-block;padding:4px 8px;border-radius:4px;background:#0f1716;color:#ffffff;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;font-weight:600;line-height:1.2;">Uso interno</span></td>
           </tr></table>
         </td></tr>
 
@@ -55,20 +54,15 @@
     <td style="padding:12px 16px 12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#495251;vertical-align:top;width:34%;">Teléfono</td>
     <td style="padding:12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;font-weight:600;color:#0f1716;vertical-align:top;">{{ String(($('Webhook reseñas').item.json.body.phone) ?? '').trim().replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';') || 'No indicó' }}</td>
   </tr>
-  <tr>
-    <td style="padding:12px 16px 12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#495251;vertical-align:top;width:34%;">Fotos</td>
-    <td style="padding:12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;font-weight:600;color:#0f1716;vertical-align:top;">{{ Math.floor((($('Webhook reseñas').item.json.body.photos) || []).length / 2) }}</td>
-  </tr>
 </table>
 
 <table role="presentation" cellpadding="0" cellspacing="0" style="margin:8px 0 0;"><tr>
   <td style="border-radius:8px;background:#1d605b;">
-    <a href="https://dashboard.electrificarte.com/admin/resenas" style="display:inline-block;padding:14px 24px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;font-weight:600;line-height:1.2;color:#ffffff;text-decoration:none;border-radius:8px;">Ver en el dashboard &rarr;</a>
+    <a href="https://dashboard.electrificarte.com/admin/resenas" style="display:inline-block;padding:14px 24px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;font-weight:600;line-height:1.2;color:#ffffff;text-decoration:none;border-radius:8px;">Ver en el dashboard</a>
   </td>
 </tr></table>
         </td></tr>
 
-        <tr><td style="padding:20px 4px 0;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;line-height:1.6;color:#687170;">Aviso interno generado automáticamente por n8n.</td></tr>
 
       </table>
     </td></tr>

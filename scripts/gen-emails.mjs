@@ -38,9 +38,6 @@ const title = (t) =>
 const p = (t, extra = "") =>
   `<p style="margin:0 0 16px;font-family:${FONT};font-size:16px;line-height:1.55;color:${C.grafito};${extra}">${t}</p>`;
 const strong = (t) => `<strong style="font-weight:600;color:${C.tinta};">${t}</strong>`;
-const chip = (t) =>
-  `<span style="display:inline-block;padding:4px 8px;border-radius:4px;background:${C.tinta};color:${C.papel};font-family:${FONT};font-size:12px;font-weight:600;line-height:1.2;">${t}</span>`;
-
 /** Filas etiqueta / valor separadas por hairlines (el `<dl class="specs">` del sitio). */
 const specs = (rows, labelW = "34%") => `
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:8px 0 24px;border-top:1px solid ${C.linea};">
@@ -70,7 +67,7 @@ const button = (href, label, kind = "primary") => {
   return `
 <table role="presentation" cellpadding="0" cellspacing="0" style="margin:8px 0 0;"><tr>
   <td style="border-radius:8px;background:${primary ? C.laguna : C.papel};${primary ? "" : `border:1px solid ${C.lineaFuerte};`}">
-    <a href="${href}" style="display:inline-block;padding:14px 24px;font-family:${FONT};font-size:15px;font-weight:600;line-height:1.2;color:${primary ? C.papel : C.tinta};text-decoration:none;border-radius:8px;">${label} &rarr;</a>
+    <a href="${href}" style="display:inline-block;padding:14px 24px;font-family:${FONT};font-size:15px;font-weight:600;line-height:1.2;color:${primary ? C.papel : C.tinta};text-decoration:none;border-radius:8px;">${label}</a>
   </td>
 </tr></table>`;
 };
@@ -117,7 +114,7 @@ const promo = ({ title, text, price, href, cta }) => `
     <p style="margin:8px 0 16px;font-family:${FONT};font-size:15px;line-height:1.55;color:${C.grafito};">${text}</p>
     <table role="presentation" cellpadding="0" cellspacing="0"><tr>
       <td style="border-radius:8px;background:${C.papel};border:1px solid ${C.lineaFuerte};">
-        <a href="${href}" style="display:inline-block;padding:12px 20px;font-family:${FONT};font-size:14px;font-weight:600;line-height:1.2;color:${C.tinta};text-decoration:none;">${cta} &rarr;</a>
+        <a href="${href}" style="display:inline-block;padding:12px 20px;font-family:${FONT};font-size:14px;font-weight:600;line-height:1.2;color:${C.tinta};text-decoration:none;">${cta}</a>
       </td>
     </tr></table>
   </td></tr>
@@ -132,21 +129,22 @@ const ASESORIA_PROMO = promo({
 });
 
 /** Mini footer: banda oscura (Tinta), como el footer del sitio. Es la última pieza del correo. */
-const footerBand = (reason) => `
+const SITE_LINKS = [["Catálogo", `${SITE}/marcas`], ["Comparador", `${SITE}/comparador`], ["Calculadora", `${SITE}/calculadora`], ["Asesoría", `${SITE}/asesoria`], ["Blog", `${SITE}/blog`]];
+const footerBand = (reason, links = SITE_LINKS, contacto = "contacto@electrificarte.com") => `
         <tr><td style="padding:16px 0 0;">
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${C.tinta};border-radius:12px;">
             <tr><td style="padding:28px 32px;">
               <img src="${SITE}/brand/email-wordmark-niebla.png" alt="Electrificarte" width="190" height="14" style="display:block;border:0;width:190px;height:14px;">
               <p style="margin:12px 0 20px;font-family:${FONT};font-size:14px;line-height:1.5;color:${C.nocheTexto2};">El marketplace de autos electrificados de Chile. Conéctate a una nueva movilidad.</p>
               <table role="presentation" cellpadding="0" cellspacing="0"><tr>
-                ${[["Catálogo", "/marcas"], ["Comparador", "/comparador"], ["Calculadora", "/calculadora"], ["Asesoría", "/asesoria"], ["Blog", "/blog"]]
-                  .map(([t, h]) => `<td style="padding:0 16px 8px 0;"><a href="${SITE}${h}" style="font-family:${FONT};font-size:13px;font-weight:600;color:${C.glaciar};text-decoration:none;">${t}</a></td>`).join("")}
+                ${links
+                  .map(([t, h]) => `<td style="padding:0 16px 8px 0;"><a href="${h}" style="font-family:${FONT};font-size:13px;font-weight:600;color:${C.glaciar};text-decoration:none;">${t}</a></td>`).join("")}
               </tr></table>
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px;border-top:1px solid ${C.nocheLinea};"><tr>
                 <td style="padding-top:16px;font-family:${FONT};font-size:12px;line-height:1.6;color:${C.nocheTexto2};">
                   <a href="https://www.instagram.com/autos.electricos.con.francisco" style="color:${C.nocheTexto2};text-decoration:underline;">Instagram</a>&nbsp;&nbsp;&nbsp;
                   <a href="https://www.tiktok.com/@autos_electricos_con_fco" style="color:${C.nocheTexto2};text-decoration:underline;">TikTok</a>&nbsp;&nbsp;&nbsp;
-                  <a href="mailto:contacto@electrificarte.com" style="color:${C.nocheTexto2};text-decoration:underline;">contacto@electrificarte.com</a><br>
+                  <a href="mailto:${contacto}" style="color:${C.nocheTexto2};text-decoration:underline;">${contacto}</a><br>
                   ${reason}
                 </td>
               </tr></table>
@@ -154,7 +152,7 @@ const footerBand = (reason) => `
           </table>
         </td></tr>`;
 
-const layout = ({ preheader, doc, internal = false, reason = "", body }) => `<!DOCTYPE html>
+const layout = ({ preheader, doc, internal = false, reason = "", footerLinks, body }) => `<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="utf-8">
@@ -179,7 +177,6 @@ ${doc}
         <tr><td style="padding:0 4px 20px;">
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
             <td><picture><source srcset="${SITE}/brand/email-wordmark-niebla.png" media="(prefers-color-scheme: dark)"><img src="${SITE}/brand/email-wordmark-tinta.png" alt="Electrificarte" width="218" height="16" style="display:block;border:0;width:218px;height:16px;"></picture></td>
-            ${internal ? `<td align="right">${chip("Uso interno")}</td>` : ""}
           </tr></table>
         </td></tr>
 
@@ -187,9 +184,7 @@ ${doc}
 ${body}
         </td></tr>
 
-${internal
-        ? `        <tr><td style="padding:20px 4px 0;font-family:${FONT};font-size:12px;line-height:1.6;color:${C.piedra};">Aviso interno generado automáticamente por n8n.</td></tr>\n`
-        : footerBand(reason)}
+${internal ? "" : footerLinks ? footerBand(reason, footerLinks, "vendedores@electrificarte.com") : footerBand(reason)}
       </table>
     </td></tr>
   </table>
@@ -298,7 +293,7 @@ const resenaPublicada = layout({
   ].join("\n"),
 });
 
-const francisco = ({ titulo, intro, cta }) => [
+const francisco = ({ titulo, intro, cta, fotos = true }) => [
   title(titulo),
   p(intro),
   highlight(esc(carFull, "Auto sin indicar"), `${stars} <span style="font-size:15px;font-weight:600;">${esc(RV("rating"))}/5</span>`),
@@ -307,7 +302,7 @@ const francisco = ({ titulo, intro, cta }) => [
     ["Quién la dejó", `${esc(RV("firstName"))} ${esc(RV("lastName"))}`],
     ["Email", esc(RV("email"))],
     ["Teléfono", esc(RV("phone"), "No indicó")],
-    ["Fotos", `{{ Math.floor(((${RV("photos")}) || []).length / 2) }}`],
+    ...(fotos ? [["Fotos", `{{ Math.floor(((${RV("photos")}) || []).length / 2) }}`]] : []),
   ]),
   button(DASHBOARD, cta),
 ].join("\n");
@@ -333,6 +328,7 @@ const resenaPublicadaFrancisco = layout({
     titulo: "Se publicó una reseña nueva",
     intro: "Llegó una reseña sin fotos, así que se publicó sola. No tienes que hacer nada; queda en el dashboard junto a las demás.",
     cta: "Ver en el dashboard",
+    fotos: false,
   }),
 });
 
@@ -385,6 +381,113 @@ const asesoriaFrancisco = layout({
   ].join("\n"),
 });
 
+
+// ─── VENDEDORES (suscripción $12.990/mes) ─────────────────────────────────────
+// Salen tras el pago de Reveniu (rama VENDORS del Switch). Igual que asesoría, leen de un Set
+// "Datos correo vendedor" que se arma justo antes con la fila de leads_vendors: nombre,
+// apellido, email, telefono, concesionario, marcas. (Hoy los nodos vivos leen de "Create a
+// row1", que es de OTRA ejecución: el formulario de registro. Se corrige en la verificación
+// del flujo de ventas.)
+const VD = (k) => field("Datos correo vendedor", k);
+const VENDOR_LINKS = [["Página de vendedores", "https://vendedores.electrificarte.com"], ["Catálogo", `${SITE}/marcas`], ["Blog", `${SITE}/blog`]];
+
+const registroVendedor = layout({
+  preheader: "Recibimos tu registro y tu pago. Bienvenido a la red de vendedores oficiales.",
+  reason: "Recibes este correo porque te suscribiste a la red de vendedores de electrificarte.com.",
+  footerLinks: VENDOR_LINKS,
+  doc: `  VENDEDORES: bienvenida al vendedor tras pagar la suscripción.
+  Lee del nodo Set "Datos correo vendedor": nombre, concesionario, marcas.
+  Terminología: "punto de venta" / "vendedores oficiales", nunca "concesionario" en el copy.`,
+  body: [
+    title("Bienvenido a la red de vendedores"),
+    p(`Hola ${strong(esc(VD("nombre")))}, recibimos tu registro y tu pago. Tu cuenta está en revisión: en breve te contactamos para activarla y que empieces a recibir clientes interesados en los modelos que vendes.`),
+    highlight("Tu suscripción", "Vendedor oficial, $12.990 al mes"),
+    specs([
+      ["Nombre", esc(VD("nombre"))],
+      ["Punto de venta", esc(VD("concesionario"), "Sin indicar")],
+      ["Marcas", esc(VD("marcas"), "Sin indicar")],
+    ]),
+    h3("Qué sigue"),
+    specs([
+      ["1", "Revisamos tu información y tus marcas."],
+      ["2", "Te contactamos para activar tu acceso al panel."],
+      ["3", "Empiezas a recibir personas interesadas en tus modelos."],
+    ], "8%"),
+    p(`¿Algún dato está mal? Escríbenos a <a href="mailto:vendedores@electrificarte.com" style="color:${C.laguna};">vendedores@electrificarte.com</a>.`, "font-size:14px;"),
+    button("https://vendedores.electrificarte.com", "Ir a la página de vendedores"),
+  ].join("\n"),
+});
+
+const nuevoVendedorFrancisco = layout({
+  internal: true,
+  preheader: "Un vendedor pagó su suscripción. Hay que contactarlo para activarlo.",
+  doc: `  VENDEDORES: aviso a Francisco de una suscripción pagada.
+  Lee del nodo Set "Datos correo vendedor": nombre, apellido, email, telefono, concesionario, marcas.`,
+  body: [
+    title("Un vendedor pagó su suscripción"),
+    p("Completó el registro y el pago. Contáctalo para verificar sus datos y activar su cuenta."),
+    specs([
+      ["Vendedor", `${esc(VD("nombre"))} ${esc(VD("apellido"))}`],
+      ["Punto de venta", esc(VD("concesionario"), "Sin indicar")],
+      ["Marcas", esc(VD("marcas"), "Sin indicar")],
+      ["Teléfono", esc(VD("telefono"))],
+      ["Email", esc(VD("email"))],
+    ]),
+    h3("Próximos pasos"),
+    specs([
+      ["1", "Contactarlo por WhatsApp o teléfono."],
+      ["2", "Verificar sus datos y sus marcas."],
+      ["3", "Activar su cuenta en el panel."],
+    ], "8%"),
+    button(`https://wa.me/${digits(VD("telefono"))}`, "Escribir por WhatsApp"),
+  ].join("\n"),
+});
+
+// ─── OFERTA EXCLUSIVA $19.990 (🟡 STANDBY) ────────────────────────────────────
+// No se envían hoy (nodos desactivados). Quedan listas para cuando se reactive la Oferta.
+// Leen de un Set "Datos correo oferta": nombre, email, telefono, auto, comuna, region. (Los
+// nodos viejos apuntaban a "HTTP Request2", que ya no existe en el workflow.)
+const OF = (k) => field("Datos correo oferta", k);
+
+const pagoConfirmadoCliente = layout({
+  preheader: "Tu pago fue confirmado y tu solicitud ya está en proceso.",
+  reason: "Recibes este correo porque pagaste la Oferta Exclusiva en electrificarte.com.",
+  doc: `  OFERTA EXCLUSIVA (🟡 STANDBY): confirmación de pago al cliente.
+  Lee del nodo Set "Datos correo oferta": nombre, auto.`,
+  body: [
+    title("Tu solicitud está en proceso"),
+    p(`Hola ${strong(esc(OF("nombre")))}, tu pago se procesó con éxito. Estamos buscando la mejor oferta para tu auto en la red de vendedores oficiales y te contactaremos a la brevedad.`),
+    highlight("Auto que buscas", esc(OF("auto"), "Sin indicar")),
+    h3("Qué pasa ahora"),
+    specs([
+      ["1", "Llevamos tu solicitud a la red de vendedores oficiales."],
+      ["2", "Comparamos las ofertas que lleguen para tu modelo."],
+      ["3", "En un plazo máximo de 72 horas hábiles te escribimos con los próximos pasos."],
+    ], "8%"),
+    divider(),
+    explore("Mientras tanto"),
+  ].join("\n"),
+});
+
+const nuevoLeadFrancisco = layout({
+  internal: true,
+  preheader: "Un cliente pagó la Oferta Exclusiva.",
+  doc: `  OFERTA EXCLUSIVA (🟡 STANDBY): aviso a Francisco de un lead pagado.
+  Lee del nodo Set "Datos correo oferta": nombre, auto, telefono, email, comuna, region.`,
+  body: [
+    title("Un cliente pagó la Oferta Exclusiva"),
+    p("Ya decidió su auto y busca el mejor precio en la red. Hay que conseguirle una oferta dentro de las próximas 72 horas."),
+    highlight("Auto que busca", esc(OF("auto"), "Sin indicar")),
+    specs([
+      ["Cliente", esc(OF("nombre"))],
+      ["Teléfono", esc(OF("telefono"))],
+      ["Email", esc(OF("email"))],
+      ["Ubicación", `{{ [${OF("comuna")}, ${OF("region")}].filter(Boolean).join(', ').replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';') || 'Sin indicar' }}`],
+    ]),
+    button(`https://wa.me/${digits(OF("telefono"))}`, "Escribir por WhatsApp"),
+  ].join("\n"),
+});
+
 const out = {
   "waitlist-confirmacion.html": waitlistConfirmacion,
   "waitlist-francisco.html": waitlistFrancisco,
@@ -394,6 +497,10 @@ const out = {
   "resena-publicada-francisco.html": resenaPublicadaFrancisco,
   "asesoria-confirmada.html": asesoriaConfirmada,
   "asesoria-francisco.html": asesoriaFrancisco,
+  "registro-vendedor.html": registroVendedor,
+  "nuevo-vendedor-francisco.html": nuevoVendedorFrancisco,
+  "pago-confirmado-cliente.html": pagoConfirmadoCliente,
+  "nuevo-lead-francisco.html": nuevoLeadFrancisco,
 };
 for (const [f, html] of Object.entries(out)) {
   writeFileSync(`emails/ventas/${f}`, html);
