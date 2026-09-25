@@ -32,6 +32,7 @@ const FIXES: Record<string, { website?: string; name?: string; motivo: string }>
   SOUEST: { name: "SOUEAST", website: "https://soueastchile.cl", motivo: "el nombre estaba mal escrito (SOUEST) y no tenía website" },
   Omoda: { website: "https://www.omodajaecoo.cl", motivo: "omoda.cl no carga; en Chile Omoda y Jaecoo comparten sitio" },
   Jaecoo: { website: "https://www.omodajaecoo.cl", motivo: "jaecoo.cl no carga; en Chile Omoda y Jaecoo comparten sitio" },
+  Deepal: { website: "https://www.deepalautos.cl", motivo: "deepal.cl es un dominio estacionado en venta (dynadot); el sitio real lo linkea changan.cl" },
   DS: { website: "https://cotizador.dsautomobiles.cl", motivo: "www.ds-automobiles.cl no carga" },
   Smart: { website: "https://www.kaufmann.cl/automoviles/smart", motivo: "no tiene sitio .cl propio; en Chile vende Kaufmann" },
   Dongfeng: { website: "https://dongfengindumotora.cl", motivo: "el importador chileno es Indumotora" },

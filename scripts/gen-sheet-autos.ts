@@ -380,7 +380,25 @@ async function discover(cars: Car[]): Promise<Map<string, Suggestion>> {
       continue;
     }
 
-    const all = [...links].map(([url, text]) => ({ url, text }));
+    // Solo links del propio dominio de la marca (o subdominios: compare.porsche.com
+    // vale para porsche.com). Sin esto, un dominio estacionado propone su propia
+    // página de venta: deepal.cl redirige a forsale.dynadot.com, y eso terminó
+    // sugerido como fuente oficial de 4 autos.
+    const dominio = (u: string) => new URL(u).hostname.replace(/^www\./, "").split(".").slice(-2).join(".");
+    const propio = dominio(site);
+    const all = [...links]
+      .filter(([url]) => { try { return dominio(url) === propio; } catch { return false; } })
+      .map(([url, text]) => ({ url, text }));
+    if (links.size && !all.length) {
+      for (const c of brandCars) {
+        result.set(c.id, {
+          url: "", status: 0, staticPrices: false,
+          nota: `el sitio de la marca (${site}) no tiene links propios — ¿dominio estacionado o redirige a otro? Revisar brand.website`,
+        });
+      }
+      console.log(`  ${brand.padEnd(14)} — ningún link del dominio ${propio}: sitio estacionado o redirigido`);
+      continue;
+    }
     // "/" no es prefijo útil; "/cl" sí.
     const rawPrefix = new URL(site).pathname.replace(/\/+$/, "").toLowerCase();
     const sitePrefix = rawPrefix.length > 1 ? rawPrefix : "";
@@ -453,6 +471,12 @@ async function main(): Promise<void> {
     for (const line of readFileSync("data/fuentes-candidatas.tsv", "utf8").split(/\r?\n/)) {
       if (!line.trim() || line.trim().startsWith("#")) continue;
       const [marca, modelo, url] = line.split("\t").map((x) => (x ?? "").split("#")[0].trim());
+      // Un dominio estacionado responde 200 y parece una página real: así entró
+      // forsale.dynadot.com como "fuente" de los 4 Deepal.
+      if (/dynadot|sedo\.com|afternic|hugedomains|parkingcrew|bodis|dan\.com|godaddy/i.test(url)) {
+        console.log(`  \x1b[33m⚠ semilla ignorada — dominio estacionado: ${marca} ${modelo} ${url}\x1b[0m`);
+        continue;
+      }
       if (marca && modelo && url) {
         semilla.set(
           `${marca}${modelo}`.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]/g, ""),
