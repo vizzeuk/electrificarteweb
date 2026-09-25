@@ -6,12 +6,24 @@
 
 ## Qué hay que construir
 
-Una pantalla en la **vista de ADMIN** (`src/app/admin/...`, no la de vendedor) donde
-Francisco vea las reseñas pendientes y las **apruebe o rechace una por una**.
+Una pantalla en la **vista de ADMIN** (`src/app/admin/...`, no la de vendedor) con dos partes:
 
-Francisco pidió explícitamente **moderación 100% manual**, aunque sean 300 al mes. No hay
-pre-filtro automático. Más adelante tendrá gente ayudándolo, por eso se registra **quién**
-moderó cada una.
+1. **Por moderar**: las reseñas en `status = 'pendiente'`, que Francisco **aprueba o rechaza
+   una por una**.
+2. **Todas las reseñas**: lista de solo lectura, cualquier estado, más nuevas primero.
+
+> **Regla vigente (sep-2026, Vicente + Matías): solo se moderan las reseñas CON fotos.** Lo que
+> puede ser inapropiado es la imagen. n8n decide el estado a partir de `photos`:
+> con fotos → `pendiente`; sin fotos → `aprobada` directo (sin `moderated_at` ni `moderated_by`,
+> así se distingue de una aprobada a mano). Las sin fotos solo aparecen en "Todas las reseñas",
+> sin botones. Implementado en la rama `dashboard-resenas-vendedores` del dashboard
+> (`getAllReviews` + `ReviewsTable`).
+>
+> Consecuencia a tener presente: el **texto** de una reseña sin fotos se publica sin revisión
+> humana. React lo escapa (no hay riesgo de código), pero un insulto o spam en texto quedaría
+> visible hasta que alguien lo baje a mano en Supabase.
+
+Más adelante tendrá gente ayudándolo, por eso se registra **quién** moderó cada una.
 
 ## La tabla `reviews` (ya creada en Supabase)
 

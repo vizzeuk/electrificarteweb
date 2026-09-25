@@ -80,6 +80,8 @@ export function ReviewModal({ isOpen, onClose, prefill }: ReviewModalProps) {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [rating, setRating] = useState(0);
   const [photos, setPhotos] = useState<PickedPhoto[]>([]);
+  // true = se envió sin fotos y quedó publicada; false = trae fotos y queda en revisión.
+  const [published, setPublished] = useState(false);
   const submitting = useRef(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -168,6 +170,7 @@ export function ReviewModal({ isOpen, onClose, prefill }: ReviewModalProps) {
         }),
       });
       if (!res.ok) throw new Error();
+      setPublished(photoKeys.length === 0);
       setStatus("success");
     } catch {
       setStatus("error");
@@ -222,8 +225,9 @@ export function ReviewModal({ isOpen, onClose, prefill }: ReviewModalProps) {
                 </div>
                 <h2 id="review-title" className="modal__title text-balance">¡Gracias por tu reseña!</h2>
                 <p className="modal__text">
-                  La revisaremos antes de publicarla. Nos ayuda muchísimo a que otros compradores
-                  decidan mejor.
+                  {published
+                    ? "Ya está publicada en la ficha del auto. Nos ayuda muchísimo a que otros compradores decidan mejor."
+                    : "Como trae fotos, la revisamos antes de publicarla. Nos ayuda muchísimo a que otros compradores decidan mejor."}
                 </p>
                 <button type="button" onClick={onClose} className="btn btn--secondary btn--lg btn--block mt-6">
                   Cerrar
@@ -235,7 +239,8 @@ export function ReviewModal({ isOpen, onClose, prefill }: ReviewModalProps) {
                   {autoLabel ? `¿Cómo ha sido tu ${autoLabel}?` : "Cuéntanos sobre tu auto"}
                 </h2>
                 <p className="modal__text">
-                  Tu reseña ayuda a otros compradores a decidir. La revisamos antes de publicarla.
+                  Tu reseña ayuda a otros compradores a decidir. Si agregas fotos, las revisamos antes de
+                  publicarla.
                 </p>
 
                 <form onSubmit={handleSubmit(onSubmit)} noValidate>

@@ -6,7 +6,7 @@
         "httpMethod": "POST",
         "path": "reviews",
         "authentication": "headerAuth",
-        "responseMode": "onReceived",
+        "responseMode": "responseNode",
         "options": {}
       },
       "id": "rv-webhook",
@@ -25,6 +25,80 @@
         }
       },
       "notes": "La Production URL de este nodo va en Vercel como N8N_REVIEWS_URL."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c4",
+              "leftValue": "={{ $json.body.firstName }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "c5",
+              "leftValue": "={{ $json.body.email }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "c6",
+              "leftValue": "={{ $json.body.body }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "c7",
+              "leftValue": "={{ Number($json.body.rating) }}",
+              "rightValue": 1,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            },
+            {
+              "id": "c8",
+              "leftValue": "={{ Number($json.body.rating) }}",
+              "rightValue": 5,
+              "operator": {
+                "type": "number",
+                "operation": "lte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "rv-valid",
+      "name": "¿Datos válidos? (reseña)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        220,
+        300
+      ],
+      "notes": "Si falta un dato obligatorio responde 422 y no guarda nada."
     },
     {
       "parameters": {
@@ -95,19 +169,19 @@
             },
             {
               "fieldId": "status",
-              "fieldValue": "pendiente"
+              "fieldValue": "={{ (($json.body.photos) || []).length > 0 ? 'pendiente' : 'aprobada' }}"
             }
           ]
         },
         "options": {}
       },
       "id": "rv-supabase",
-      "name": "Guardar reseña (pendiente)",
+      "name": "Guardar reseña",
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        260,
-        300
+        440,
+        240
       ],
       "credentials": {
         "supabaseApi": {
@@ -115,7 +189,76 @@
           "name": "Supabase (service_role)"
         }
       },
-      "notes": "status='pendiente' SIEMPRE: nada se publica sin que Francisco lo apruebe en el dashboard."
+      "notes": "status: con fotos 'pendiente' (Francisco la modera), sin fotos 'aprobada' (se publica sola)."
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\"ok\":true}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "rv-ok",
+      "name": "Responder OK (reseña)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        680,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\"ok\":false,\"error\":\"datos incompletos\"}",
+        "options": {
+          "responseCode": 422
+        }
+      },
+      "id": "rv-bad",
+      "name": "Responder 422 (reseña)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        440,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c9",
+              "leftValue": "={{ (($('Webhook reseñas').item.json.body.photos) || []).length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "rv-photos",
+      "name": "¿Trae fotos?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        680,
+        300
+      ],
+      "notes": "true: correos de 'en revisión'. false: correos de 'publicada'."
     },
     {
       "parameters": {
@@ -138,11 +281,11 @@
             },
             {
               "name": "subject",
-              "value": "Nueva reseña por moderar"
+              "value": "Nueva reseña con fotos por revisar"
             },
             {
               "name": "html",
-              "value": "=<!DOCTYPE html>\n<html lang=\"es\">\n<head>\n  <meta charset=\"utf-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n  <meta name=\"color-scheme\" content=\"light dark\">\n  <meta name=\"supported-color-schemes\" content=\"light dark\">\n  <title>Electrificarte</title>\n</head>\n<!--\n  RESEÑAS: aviso interno a Francisco para moderar.\n  Lee del nodo \"Webhook reseñas\": body.rating, body, carBrand, carModel, carYear, firstName,\n  lastName, email, phone, photos.\n\n  GENERADO por scripts/gen-emails.mjs (sistema de diseño v1). No editar a mano: cambiá el\n  generador y corré  node scripts/gen-emails.mjs && node scripts/gen-waitlist-reviews-workflows.mjs\n  Todo dato que escribe el usuario va escapado para HTML.\n-->\n<body style=\"margin:0;padding:0;background:#f2f7f6;-webkit-font-smoothing:antialiased;\">\n  <div style=\"display:none;max-height:0;overflow:hidden;opacity:0;\">Hay una reseña esperando tu revisión.</div>\n  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#f2f7f6;\">\n    <tr><td align=\"center\" style=\"padding:32px 12px;\">\n      <table role=\"presentation\" width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:100%;max-width:600px;\">\n\n        <tr><td style=\"padding:0 4px 20px;\">\n          <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n            <td><picture><source srcset=\"https://www.electrificarte.com/brand/email-wordmark-niebla.png\" media=\"(prefers-color-scheme: dark)\"><img src=\"https://www.electrificarte.com/brand/email-wordmark-tinta.png\" alt=\"Electrificarte\" width=\"218\" height=\"16\" style=\"display:block;border:0;width:218px;height:16px;\"></picture></td>\n            <td align=\"right\"><span style=\"display:inline-block;padding:4px 8px;border-radius:4px;background:#0f1716;color:#ffffff;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;font-weight:600;line-height:1.2;\">Uso interno</span></td>\n          </tr></table>\n        </td></tr>\n\n        <tr><td style=\"background:#ffffff;border:1px solid #dfe4e4;border-radius:12px;padding:36px 32px 32px;\">\n<h1 style=\"margin:0 0 16px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:28px;font-weight:700;line-height:1.1;letter-spacing:-0.02em;color:#0f1716;\">Nueva reseña por revisar</h1>\n<p style=\"margin:0 0 16px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.55;color:#495251;\">Llegó una reseña nueva. <strong style=\"font-weight:600;color:#0f1716;\">No está publicada</strong>: aparece en el sitio solo cuando la apruebes en el dashboard.</p>\n\n<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin:8px 0 24px;background:#caefea;border-radius:12px;\">\n  <tr><td style=\"padding:20px;\">\n    <p style=\"margin:0;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#0f1716;\">{{ String(([$('Webhook reseñas').item.json.body.carBrand, $('Webhook reseñas').item.json.body.carModel, $('Webhook reseñas').item.json.body.carYear].filter(Boolean).join(' ')) ?? '').trim().replace(/[&<>\"']/g, c => '&#' + c.charCodeAt(0) + ';') || 'Auto sin indicar' }}</p>\n    <p style=\"margin:4px 0 0;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:20px;line-height:1.25;font-weight:700;letter-spacing:-0.01em;color:#0f1716;\">{{ '★'.repeat(Math.max(0, Math.min(5, Number($('Webhook reseñas').item.json.body.rating) || 0))) + '☆'.repeat(5 - Math.max(0, Math.min(5, Number($('Webhook reseñas').item.json.body.rating) || 0))) }} <span style=\"font-size:15px;font-weight:600;\">{{ String(($('Webhook reseñas').item.json.body.rating) ?? '').trim().replace(/[&<>\"']/g, c => '&#' + c.charCodeAt(0) + ';') }}/5</span></p>\n  </td></tr>\n</table>\n\n<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin:0 0 24px;\">\n  <tr><td style=\"padding:4px 0 4px 16px;border-left:2px solid #1d605b;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.6;color:#0f1716;white-space:pre-line;\">{{ String(($('Webhook reseñas').item.json.body.body) ?? '').trim().replace(/[&<>\"']/g, c => '&#' + c.charCodeAt(0) + ';') }}</td></tr>\n</table>\n\n<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin:8px 0 24px;border-top:1px solid #dfe4e4;\">\n  <tr>\n    <td style=\"padding:12px 16px 12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#495251;vertical-align:top;width:34%;\">Quién la dejó</td>\n    <td style=\"padding:12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;font-weight:600;color:#0f1716;vertical-align:top;\">{{ String(($('Webhook reseñas').item.json.body.firstName) ?? '').trim().replace(/[&<>\"']/g, c => '&#' + c.charCodeAt(0) + ';') }} {{ String(($('Webhook reseñas').item.json.body.lastName) ?? '').trim().replace(/[&<>\"']/g, c => '&#' + c.charCodeAt(0) + ';') }}</td>\n  </tr>\n  <tr>\n    <td style=\"padding:12px 16px 12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#495251;vertical-align:top;width:34%;\">Email</td>\n    <td style=\"padding:12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;font-weight:600;color:#0f1716;vertical-align:top;\">{{ String(($('Webhook reseñas').item.json.body.email) ?? '').trim().replace(/[&<>\"']/g, c => '&#' + c.charCodeAt(0) + ';') }}</td>\n  </tr>\n  <tr>\n    <td style=\"padding:12px 16px 12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#495251;vertical-align:top;width:34%;\">Teléfono</td>\n    <td style=\"padding:12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;font-weight:600;color:#0f1716;vertical-align:top;\">{{ String(($('Webhook reseñas').item.json.body.phone) ?? '').trim().replace(/[&<>\"']/g, c => '&#' + c.charCodeAt(0) + ';') || 'No indicó' }}</td>\n  </tr>\n  <tr>\n    <td style=\"padding:12px 16px 12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#495251;vertical-align:top;width:34%;\">Fotos</td>\n    <td style=\"padding:12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;font-weight:600;color:#0f1716;vertical-align:top;\">{{ Math.floor((($('Webhook reseñas').item.json.body.photos) || []).length / 2) }}</td>\n  </tr>\n</table>\n<p style=\"margin:0 0 16px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.55;color:#495251;font-size:14px;\">Revisa que el contenido sea sobre el auto y que sea apropiado antes de publicarla.</p>\n\n<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin:8px 0 0;\"><tr>\n  <td style=\"border-radius:8px;background:#1d605b;\">\n    <a href=\"https://dashboard.electrificarte.com/admin/resenas\" style=\"display:inline-block;padding:14px 24px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;font-weight:600;line-height:1.2;color:#ffffff;text-decoration:none;border-radius:8px;\">Moderar en el dashboard &rarr;</a>\n  </td>\n</tr></table>\n        </td></tr>\n\n        <tr><td style=\"padding:24px 4px 0;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;line-height:1.6;color:#687170;\">\n          Aviso interno generado automáticamente por n8n.\n        </td></tr>\n\n      </table>\n    </td></tr>\n  </table>\n</body>\n</html>\n"
+              "value": "=<!DOCTYPE html>\n<html lang=\"es\">\n<head>\n  <meta charset=\"utf-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n  <meta name=\"color-scheme\" content=\"light dark\">\n  <meta name=\"supported-color-schemes\" content=\"light dark\">\n  <title>Electrificarte</title>\n</head>\n<!--\n  RESEÑAS (con fotos): aviso interno a Francisco para moderar.\n  Lee del nodo \"Webhook reseñas\": rating, body, carBrand, carModel, carYear, firstName,\n  lastName, email, phone, photos.\n\n  GENERADO por scripts/gen-emails.mjs (sistema de diseño v1). No editar a mano: cambiá el\n  generador y corré  node scripts/gen-emails.mjs && node scripts/gen-waitlist-reviews-workflows.mjs\n  Todo dato que escribe el usuario va escapado para HTML.\n-->\n<body style=\"margin:0;padding:0;background:#f2f7f6;-webkit-font-smoothing:antialiased;\">\n  <div style=\"display:none;max-height:0;overflow:hidden;opacity:0;\">Hay una reseña con fotos esperando tu revisión.</div>\n  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#f2f7f6;\">\n    <tr><td align=\"center\" style=\"padding:32px 12px;\">\n      <table role=\"presentation\" width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:100%;max-width:600px;\">\n\n        <tr><td style=\"padding:0 4px 20px;\">\n          <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n            <td><picture><source srcset=\"https://www.electrificarte.com/brand/email-wordmark-niebla.png\" media=\"(prefers-color-scheme: dark)\"><img src=\"https://www.electrificarte.com/brand/email-wordmark-tinta.png\" alt=\"Electrificarte\" width=\"218\" height=\"16\" style=\"display:block;border:0;width:218px;height:16px;\"></picture></td>\n            <td align=\"right\"><span style=\"display:inline-block;padding:4px 8px;border-radius:4px;background:#0f1716;color:#ffffff;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;font-weight:600;line-height:1.2;\">Uso interno</span></td>\n          </tr></table>\n        </td></tr>\n\n        <tr><td style=\"background:#ffffff;border:1px solid #dfe4e4;border-radius:12px;padding:36px 32px 32px;\">\n<h1 style=\"margin:0 0 16px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:28px;font-weight:700;line-height:1.1;letter-spacing:-0.02em;color:#0f1716;\">Nueva reseña con fotos por revisar</h1>\n<p style=\"margin:0 0 16px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.55;color:#495251;\">Llegó una reseña con fotos. <strong style=\"font-weight:600;color:#0f1716;\">No está publicada</strong>: aparece en el sitio solo cuando la apruebes en el dashboard. Revisa que las fotos sean del auto y que sean apropiadas.</p>\n\n<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin:8px 0 24px;background:#caefea;border-radius:12px;\">\n  <tr><td style=\"padding:20px;\">\n    <p style=\"margin:0;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#0f1716;\">{{ String(([$('Webhook reseñas').item.json.body.carBrand, $('Webhook reseñas').item.json.body.carModel, $('Webhook reseñas').item.json.body.carYear].filter(Boolean).join(' ')) ?? '').trim().replace(/[&<>\"']/g, c => '&#' + c.charCodeAt(0) + ';') || 'Auto sin indicar' }}</p>\n    <p style=\"margin:4px 0 0;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:20px;line-height:1.25;font-weight:700;letter-spacing:-0.01em;color:#0f1716;\">{{ '★'.repeat(Math.max(0, Math.min(5, Number($('Webhook reseñas').item.json.body.rating) || 0))) + '☆'.repeat(5 - Math.max(0, Math.min(5, Number($('Webhook reseñas').item.json.body.rating) || 0))) }} <span style=\"font-size:15px;font-weight:600;\">{{ String(($('Webhook reseñas').item.json.body.rating) ?? '').trim().replace(/[&<>\"']/g, c => '&#' + c.charCodeAt(0) + ';') }}/5</span></p>\n  </td></tr>\n</table>\n\n<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin:0 0 24px;\">\n  <tr><td style=\"padding:4px 0 4px 16px;border-left:2px solid #1d605b;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.6;color:#0f1716;white-space:pre-line;\">{{ String(($('Webhook reseñas').item.json.body.body) ?? '').trim().replace(/[&<>\"']/g, c => '&#' + c.charCodeAt(0) + ';') }}</td></tr>\n</table>\n\n<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin:8px 0 24px;border-top:1px solid #dfe4e4;\">\n  <tr>\n    <td style=\"padding:12px 16px 12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#495251;vertical-align:top;width:34%;\">Quién la dejó</td>\n    <td style=\"padding:12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;font-weight:600;color:#0f1716;vertical-align:top;\">{{ String(($('Webhook reseñas').item.json.body.firstName) ?? '').trim().replace(/[&<>\"']/g, c => '&#' + c.charCodeAt(0) + ';') }} {{ String(($('Webhook reseñas').item.json.body.lastName) ?? '').trim().replace(/[&<>\"']/g, c => '&#' + c.charCodeAt(0) + ';') }}</td>\n  </tr>\n  <tr>\n    <td style=\"padding:12px 16px 12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#495251;vertical-align:top;width:34%;\">Email</td>\n    <td style=\"padding:12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;font-weight:600;color:#0f1716;vertical-align:top;\">{{ String(($('Webhook reseñas').item.json.body.email) ?? '').trim().replace(/[&<>\"']/g, c => '&#' + c.charCodeAt(0) + ';') }}</td>\n  </tr>\n  <tr>\n    <td style=\"padding:12px 16px 12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#495251;vertical-align:top;width:34%;\">Teléfono</td>\n    <td style=\"padding:12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;font-weight:600;color:#0f1716;vertical-align:top;\">{{ String(($('Webhook reseñas').item.json.body.phone) ?? '').trim().replace(/[&<>\"']/g, c => '&#' + c.charCodeAt(0) + ';') || 'No indicó' }}</td>\n  </tr>\n  <tr>\n    <td style=\"padding:12px 16px 12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#495251;vertical-align:top;width:34%;\">Fotos</td>\n    <td style=\"padding:12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;font-weight:600;color:#0f1716;vertical-align:top;\">{{ Math.floor((($('Webhook reseñas').item.json.body.photos) || []).length / 2) }}</td>\n  </tr>\n</table>\n\n<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin:8px 0 0;\"><tr>\n  <td style=\"border-radius:8px;background:#1d605b;\">\n    <a href=\"https://dashboard.electrificarte.com/admin/resenas\" style=\"display:inline-block;padding:14px 24px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;font-weight:600;line-height:1.2;color:#ffffff;text-decoration:none;border-radius:8px;\">Moderar en el dashboard &rarr;</a>\n  </td>\n</tr></table>\n        </td></tr>\n\n        <tr><td style=\"padding:20px 4px 0;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;line-height:1.6;color:#687170;\">Aviso interno generado automáticamente por n8n.</td></tr>\n\n      </table>\n    </td></tr>\n  </table>\n</body>\n</html>\n"
             }
           ]
         },
@@ -153,8 +296,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        540,
-        180
+        920,
+        140
       ],
       "credentials": {
         "httpHeaderAuth": {
@@ -162,7 +305,10 @@
           "name": "Resend (Authorization Bearer)"
         }
       },
-      "notes": "Asigná la credencial Resend. El html va en modo expresión (empieza con '=')."
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 2000,
+      "notes": "Asigná la credencial Resend. El html va en modo expresión (empieza con '='). Reintenta 5 veces cada 2 s: Resend limita a 10 envíos por segundo."
     },
     {
       "parameters": {
@@ -189,19 +335,19 @@
             },
             {
               "name": "html",
-              "value": "=<!DOCTYPE html>\n<html lang=\"es\">\n<head>\n  <meta charset=\"utf-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n  <meta name=\"color-scheme\" content=\"light dark\">\n  <meta name=\"supported-color-schemes\" content=\"light dark\">\n  <title>Electrificarte</title>\n</head>\n<!--\n  RESEÑAS: agradecimiento a quien dejó la reseña.\n  Lee del nodo \"Webhook reseñas\": body.firstName, carBrand, carModel (opcionales).\n\n  GENERADO por scripts/gen-emails.mjs (sistema de diseño v1). No editar a mano: cambiá el\n  generador y corré  node scripts/gen-emails.mjs && node scripts/gen-waitlist-reviews-workflows.mjs\n  Todo dato que escribe el usuario va escapado para HTML.\n-->\n<body style=\"margin:0;padding:0;background:#f2f7f6;-webkit-font-smoothing:antialiased;\">\n  <div style=\"display:none;max-height:0;overflow:hidden;opacity:0;\">Recibimos tu reseña y la estamos revisando.</div>\n  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#f2f7f6;\">\n    <tr><td align=\"center\" style=\"padding:32px 12px;\">\n      <table role=\"presentation\" width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:100%;max-width:600px;\">\n\n        <tr><td style=\"padding:0 4px 20px;\">\n          <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n            <td><picture><source srcset=\"https://www.electrificarte.com/brand/email-wordmark-niebla.png\" media=\"(prefers-color-scheme: dark)\"><img src=\"https://www.electrificarte.com/brand/email-wordmark-tinta.png\" alt=\"Electrificarte\" width=\"218\" height=\"16\" style=\"display:block;border:0;width:218px;height:16px;\"></picture></td>\n            \n          </tr></table>\n        </td></tr>\n\n        <tr><td style=\"background:#ffffff;border:1px solid #dfe4e4;border-radius:12px;padding:36px 32px 32px;\">\n<h1 style=\"margin:0 0 16px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:28px;font-weight:700;line-height:1.1;letter-spacing:-0.02em;color:#0f1716;\">Gracias por compartir tu experiencia</h1>\n<p style=\"margin:0 0 16px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.55;color:#495251;\">Hola <strong style=\"font-weight:600;color:#0f1716;\">{{ String(($('Webhook reseñas').item.json.body.firstName) ?? '').trim().replace(/[&<>\"']/g, c => '&#' + c.charCodeAt(0) + ';') }}</strong>, recibimos tu reseña del <strong style=\"font-weight:600;color:#0f1716;\">{{ String(([$('Webhook reseñas').item.json.body.carBrand, $('Webhook reseñas').item.json.body.carModel].filter(Boolean).join(' ')) ?? '').trim().replace(/[&<>\"']/g, c => '&#' + c.charCodeAt(0) + ';') || 'auto' }}</strong>. La revisamos antes de publicarla, para asegurarnos de que todo esté en orden.</p>\n<p style=\"margin:0 0 16px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.55;color:#495251;\">Opiniones como la tuya ayudan a que la próxima persona elija bien su auto electrificado. Gracias por tomarte el tiempo.</p>\n\n<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin:8px 0 0;\"><tr>\n  <td style=\"border-radius:8px;background:#1d605b;\">\n    <a href=\"https://www.electrificarte.com/marcas\" style=\"display:inline-block;padding:14px 24px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;font-weight:600;line-height:1.2;color:#ffffff;text-decoration:none;border-radius:8px;\">Ver el catálogo &rarr;</a>\n  </td>\n</tr></table>\n        </td></tr>\n\n        <tr><td style=\"padding:24px 4px 0;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;line-height:1.6;color:#687170;\">\n          Electrificarte, marketplace de autos electrificados en Chile.<br>\n          <a href=\"https://www.electrificarte.com\" style=\"color:#1d605b;text-decoration:underline;\">electrificarte.com</a> y <a href=\"mailto:contacto@electrificarte.com\" style=\"color:#1d605b;text-decoration:underline;\">contacto@electrificarte.com</a>\n        </td></tr>\n\n      </table>\n    </td></tr>\n  </table>\n</body>\n</html>\n"
+              "value": "=<!DOCTYPE html>\n<html lang=\"es\">\n<head>\n  <meta charset=\"utf-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n  <meta name=\"color-scheme\" content=\"light dark\">\n  <meta name=\"supported-color-schemes\" content=\"light dark\">\n  <title>Electrificarte</title>\n</head>\n<!--\n  RESEÑAS (con fotos): agradecimiento a quien la dejó. Queda en revisión hasta que Francisco\n  la apruebe en el dashboard. Lee del nodo \"Webhook reseñas\": firstName, carBrand, carModel,\n  rating, body.\n\n  GENERADO por scripts/gen-emails.mjs (sistema de diseño v1). No editar a mano: cambiá el\n  generador y corré  node scripts/gen-emails.mjs && node scripts/gen-waitlist-reviews-workflows.mjs\n  Todo dato que escribe el usuario va escapado para HTML.\n-->\n<body style=\"margin:0;padding:0;background:#f2f7f6;-webkit-font-smoothing:antialiased;\">\n  <div style=\"display:none;max-height:0;overflow:hidden;opacity:0;\">Recibimos tu reseña y sus fotos. La revisamos antes de publicarla.</div>\n  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#f2f7f6;\">\n    <tr><td align=\"center\" style=\"padding:32px 12px;\">\n      <table role=\"presentation\" width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:100%;max-width:600px;\">\n\n        <tr><td style=\"padding:0 4px 20px;\">\n          <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n            <td><picture><source srcset=\"https://www.electrificarte.com/brand/email-wordmark-niebla.png\" media=\"(prefers-color-scheme: dark)\"><img src=\"https://www.electrificarte.com/brand/email-wordmark-tinta.png\" alt=\"Electrificarte\" width=\"218\" height=\"16\" style=\"display:block;border:0;width:218px;height:16px;\"></picture></td>\n            \n          </tr></table>\n        </td></tr>\n\n        <tr><td style=\"background:#ffffff;border:1px solid #dfe4e4;border-radius:12px;padding:36px 32px 32px;\">\n<h1 style=\"margin:0 0 16px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:28px;font-weight:700;line-height:1.1;letter-spacing:-0.02em;color:#0f1716;\">Gracias por compartir tu experiencia</h1>\n<p style=\"margin:0 0 16px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.55;color:#495251;\">Hola <strong style=\"font-weight:600;color:#0f1716;\">{{ String(($('Webhook reseñas').item.json.body.firstName) ?? '').trim().replace(/[&<>\"']/g, c => '&#' + c.charCodeAt(0) + ';') }}</strong>, recibimos tu reseña y tus fotos. Como trae imágenes, la revisamos antes de publicarla: te avisaremos si hay algo que ajustar.</p>\n\n<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin:8px 0 24px;background:#caefea;border-radius:12px;\">\n  <tr><td style=\"padding:20px;\">\n    <p style=\"margin:0;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#0f1716;\">Tu reseña del {{ String(([$('Webhook reseñas').item.json.body.carBrand, $('Webhook reseñas').item.json.body.carModel].filter(Boolean).join(' ')) ?? '').trim().replace(/[&<>\"']/g, c => '&#' + c.charCodeAt(0) + ';') || 'auto' }}</p>\n    <p style=\"margin:4px 0 0;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:20px;line-height:1.25;font-weight:700;letter-spacing:-0.01em;color:#0f1716;\">{{ '★'.repeat(Math.max(0, Math.min(5, Number($('Webhook reseñas').item.json.body.rating) || 0))) + '☆'.repeat(5 - Math.max(0, Math.min(5, Number($('Webhook reseñas').item.json.body.rating) || 0))) }} <span style=\"font-size:15px;font-weight:600;\">{{ String(($('Webhook reseñas').item.json.body.rating) ?? '').trim().replace(/[&<>\"']/g, c => '&#' + c.charCodeAt(0) + ';') }}/5</span></p>\n  </td></tr>\n</table>\n\n<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin:0 0 24px;\">\n  <tr><td style=\"padding:4px 0 4px 16px;border-left:2px solid #1d605b;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.6;color:#0f1716;white-space:pre-line;\">{{ String(($('Webhook reseñas').item.json.body.body) ?? '').trim().replace(/[&<>\"']/g, c => '&#' + c.charCodeAt(0) + ';') }}</td></tr>\n</table>\n<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin:32px 0 28px;\"><tr><td style=\"border-top:1px solid #dfe4e4;font-size:0;line-height:0;\">&nbsp;</td></tr></table>\n\n<p style=\"margin:0 0 12px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:18px;font-weight:700;line-height:1.3;letter-spacing:-0.01em;color:#0f1716;\">Mientras tanto</p>\n<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"border-top:1px solid #dfe4e4;\">\n  <tr><td style=\"border-bottom:1px solid #dfe4e4;\">\n    <a href=\"https://www.electrificarte.com/electrico/ev\" style=\"display:block;padding:14px 0;text-decoration:none;\">\n      <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n        <td style=\"font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;\">\n          <span style=\"display:block;font-size:15px;font-weight:600;line-height:1.3;color:#0f1716;\">Autos 100% eléctricos</span>\n          <span style=\"display:block;margin-top:2px;font-size:13px;line-height:1.4;color:#495251;\">Autonomía, batería y precio de cada modelo</span>\n        </td>\n        <td align=\"right\" style=\"width:24px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:18px;color:#1d605b;\">&rarr;</td>\n      </tr></table>\n    </a>\n  </td></tr>\n  <tr><td style=\"border-bottom:1px solid #dfe4e4;\">\n    <a href=\"https://www.electrificarte.com/electrico/phev\" style=\"display:block;padding:14px 0;text-decoration:none;\">\n      <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n        <td style=\"font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;\">\n          <span style=\"display:block;font-size:15px;font-weight:600;line-height:1.3;color:#0f1716;\">Híbridos enchufables</span>\n          <span style=\"display:block;margin-top:2px;font-size:13px;line-height:1.4;color:#495251;\">Andan en eléctrico en la ciudad y a bencina en ruta</span>\n        </td>\n        <td align=\"right\" style=\"width:24px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:18px;color:#1d605b;\">&rarr;</td>\n      </tr></table>\n    </a>\n  </td></tr>\n  <tr><td style=\"border-bottom:1px solid #dfe4e4;\">\n    <a href=\"https://www.electrificarte.com/tipo/suv\" style=\"display:block;padding:14px 0;text-decoration:none;\">\n      <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n        <td style=\"font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;\">\n          <span style=\"display:block;font-size:15px;font-weight:600;line-height:1.3;color:#0f1716;\">SUV electrificados</span>\n          <span style=\"display:block;margin-top:2px;font-size:13px;line-height:1.4;color:#495251;\">El segmento con más modelos en Chile</span>\n        </td>\n        <td align=\"right\" style=\"width:24px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:18px;color:#1d605b;\">&rarr;</td>\n      </tr></table>\n    </a>\n  </td></tr>\n  <tr><td style=\"border-bottom:1px solid #dfe4e4;\">\n    <a href=\"https://www.electrificarte.com/comparador\" style=\"display:block;padding:14px 0;text-decoration:none;\">\n      <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n        <td style=\"font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;\">\n          <span style=\"display:block;font-size:15px;font-weight:600;line-height:1.3;color:#0f1716;\">Compara modelos lado a lado</span>\n          <span style=\"display:block;margin-top:2px;font-size:13px;line-height:1.4;color:#495251;\">Hasta 3 autos, spec por spec</span>\n        </td>\n        <td align=\"right\" style=\"width:24px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:18px;color:#1d605b;\">&rarr;</td>\n      </tr></table>\n    </a>\n  </td></tr>\n  <tr><td style=\"border-bottom:1px solid #dfe4e4;\">\n    <a href=\"https://www.electrificarte.com/calculadora\" style=\"display:block;padding:14px 0;text-decoration:none;\">\n      <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n        <td style=\"font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;\">\n          <span style=\"display:block;font-size:15px;font-weight:600;line-height:1.3;color:#0f1716;\">Calcula cuánto ahorras</span>\n          <span style=\"display:block;margin-top:2px;font-size:13px;line-height:1.4;color:#495251;\">Tu gasto en bencina frente a un electrificado</span>\n        </td>\n        <td align=\"right\" style=\"width:24px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:18px;color:#1d605b;\">&rarr;</td>\n      </tr></table>\n    </a>\n  </td></tr>\n</table>\n\n<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin:28px 0 0;background:#f2f7f6;border:1px solid #dfe4e4;border-radius:12px;\">\n  <tr><td style=\"padding:24px;\">\n    <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n      <td style=\"font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:18px;font-weight:700;line-height:1.3;letter-spacing:-0.01em;color:#0f1716;\">¿Alguien cerca está pensando en cambiarse?</td>\n      \n    </tr></table>\n    <p style=\"margin:8px 0 16px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.55;color:#495251;\">Tu experiencia vale mucho para quien está decidiendo. Compártele electrificarte.com: puede comparar modelos, calcular su ahorro y leer reseñas de dueños como tú.</p>\n    <table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n      <td style=\"border-radius:8px;background:#ffffff;border:1px solid #cad1d0;\">\n        <a href=\"https://www.electrificarte.com\" style=\"display:inline-block;padding:12px 20px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:14px;font-weight:600;line-height:1.2;color:#0f1716;text-decoration:none;\">Ir a electrificarte.com &rarr;</a>\n      </td>\n    </tr></table>\n  </td></tr>\n</table>\n        </td></tr>\n\n\n        <tr><td style=\"padding:16px 0 0;\">\n          <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#0f1716;border-radius:12px;\">\n            <tr><td style=\"padding:28px 32px;\">\n              <img src=\"https://www.electrificarte.com/brand/email-wordmark-niebla.png\" alt=\"Electrificarte\" width=\"190\" height=\"14\" style=\"display:block;border:0;width:190px;height:14px;\">\n              <p style=\"margin:12px 0 20px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:14px;line-height:1.5;color:#b4bdbc;\">El marketplace de autos electrificados de Chile. Conéctate a una nueva movilidad.</p>\n              <table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n                <td style=\"padding:0 16px 8px 0;\"><a href=\"https://www.electrificarte.com/marcas\" style=\"font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;font-weight:600;color:#caefea;text-decoration:none;\">Catálogo</a></td><td style=\"padding:0 16px 8px 0;\"><a href=\"https://www.electrificarte.com/comparador\" style=\"font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;font-weight:600;color:#caefea;text-decoration:none;\">Comparador</a></td><td style=\"padding:0 16px 8px 0;\"><a href=\"https://www.electrificarte.com/calculadora\" style=\"font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;font-weight:600;color:#caefea;text-decoration:none;\">Calculadora</a></td><td style=\"padding:0 16px 8px 0;\"><a href=\"https://www.electrificarte.com/asesoria\" style=\"font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;font-weight:600;color:#caefea;text-decoration:none;\">Asesoría</a></td><td style=\"padding:0 16px 8px 0;\"><a href=\"https://www.electrificarte.com/blog\" style=\"font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;font-weight:600;color:#caefea;text-decoration:none;\">Blog</a></td>\n              </tr></table>\n              <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-top:12px;border-top:1px solid #27302f;\"><tr>\n                <td style=\"padding-top:16px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;line-height:1.6;color:#b4bdbc;\">\n                  <a href=\"https://www.instagram.com/autos.electricos.con.francisco\" style=\"color:#b4bdbc;text-decoration:underline;\">Instagram</a>&nbsp;&nbsp;&nbsp;\n                  <a href=\"https://www.tiktok.com/@autos_electricos_con_fco\" style=\"color:#b4bdbc;text-decoration:underline;\">TikTok</a>&nbsp;&nbsp;&nbsp;\n                  <a href=\"mailto:contacto@electrificarte.com\" style=\"color:#b4bdbc;text-decoration:underline;\">contacto@electrificarte.com</a><br>\n                  Recibes este correo porque dejaste una reseña en electrificarte.com.\n                </td>\n              </tr></table>\n            </td></tr>\n          </table>\n        </td></tr>\n      </table>\n    </td></tr>\n  </table>\n</body>\n</html>\n"
             }
           ]
         },
         "options": {}
       },
       "id": "rv-mail-autor",
-      "name": "Correo agradecimiento (autor)",
+      "name": "Correo reseña en revisión (autor)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        540,
-        420
+        920,
+        300
       ],
       "credentials": {
         "httpHeaderAuth": {
@@ -209,7 +355,110 @@
           "name": "Resend (Authorization Bearer)"
         }
       },
-      "notes": "Asigná la credencial Resend. El html va en modo expresión (empieza con '=')."
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 2000,
+      "notes": "Asigná la credencial Resend. El html va en modo expresión (empieza con '='). Reintenta 5 veces cada 2 s: Resend limita a 10 envíos por segundo."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "keypair",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "from",
+              "value": "Electrificarte <no-reply@electrificarte.com>"
+            },
+            {
+              "name": "to",
+              "value": "francisco@electrificarte.com"
+            },
+            {
+              "name": "subject",
+              "value": "Se publicó una reseña nueva"
+            },
+            {
+              "name": "html",
+              "value": "=<!DOCTYPE html>\n<html lang=\"es\">\n<head>\n  <meta charset=\"utf-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n  <meta name=\"color-scheme\" content=\"light dark\">\n  <meta name=\"supported-color-schemes\" content=\"light dark\">\n  <title>Electrificarte</title>\n</head>\n<!--\n  RESEÑAS (sin fotos): aviso interno a Francisco. Ya está publicada; no requiere acción.\n\n  GENERADO por scripts/gen-emails.mjs (sistema de diseño v1). No editar a mano: cambiá el\n  generador y corré  node scripts/gen-emails.mjs && node scripts/gen-waitlist-reviews-workflows.mjs\n  Todo dato que escribe el usuario va escapado para HTML.\n-->\n<body style=\"margin:0;padding:0;background:#f2f7f6;-webkit-font-smoothing:antialiased;\">\n  <div style=\"display:none;max-height:0;overflow:hidden;opacity:0;\">Se publicó una reseña nueva (sin fotos).</div>\n  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#f2f7f6;\">\n    <tr><td align=\"center\" style=\"padding:32px 12px;\">\n      <table role=\"presentation\" width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:100%;max-width:600px;\">\n\n        <tr><td style=\"padding:0 4px 20px;\">\n          <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n            <td><picture><source srcset=\"https://www.electrificarte.com/brand/email-wordmark-niebla.png\" media=\"(prefers-color-scheme: dark)\"><img src=\"https://www.electrificarte.com/brand/email-wordmark-tinta.png\" alt=\"Electrificarte\" width=\"218\" height=\"16\" style=\"display:block;border:0;width:218px;height:16px;\"></picture></td>\n            <td align=\"right\"><span style=\"display:inline-block;padding:4px 8px;border-radius:4px;background:#0f1716;color:#ffffff;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;font-weight:600;line-height:1.2;\">Uso interno</span></td>\n          </tr></table>\n        </td></tr>\n\n        <tr><td style=\"background:#ffffff;border:1px solid #dfe4e4;border-radius:12px;padding:36px 32px 32px;\">\n<h1 style=\"margin:0 0 16px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:28px;font-weight:700;line-height:1.1;letter-spacing:-0.02em;color:#0f1716;\">Se publicó una reseña nueva</h1>\n<p style=\"margin:0 0 16px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.55;color:#495251;\">Llegó una reseña sin fotos, así que se publicó sola. No tienes que hacer nada; queda en el dashboard junto a las demás.</p>\n\n<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin:8px 0 24px;background:#caefea;border-radius:12px;\">\n  <tr><td style=\"padding:20px;\">\n    <p style=\"margin:0;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#0f1716;\">{{ String(([$('Webhook reseñas').item.json.body.carBrand, $('Webhook reseñas').item.json.body.carModel, $('Webhook reseñas').item.json.body.carYear].filter(Boolean).join(' ')) ?? '').trim().replace(/[&<>\"']/g, c => '&#' + c.charCodeAt(0) + ';') || 'Auto sin indicar' }}</p>\n    <p style=\"margin:4px 0 0;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:20px;line-height:1.25;font-weight:700;letter-spacing:-0.01em;color:#0f1716;\">{{ '★'.repeat(Math.max(0, Math.min(5, Number($('Webhook reseñas').item.json.body.rating) || 0))) + '☆'.repeat(5 - Math.max(0, Math.min(5, Number($('Webhook reseñas').item.json.body.rating) || 0))) }} <span style=\"font-size:15px;font-weight:600;\">{{ String(($('Webhook reseñas').item.json.body.rating) ?? '').trim().replace(/[&<>\"']/g, c => '&#' + c.charCodeAt(0) + ';') }}/5</span></p>\n  </td></tr>\n</table>\n\n<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin:0 0 24px;\">\n  <tr><td style=\"padding:4px 0 4px 16px;border-left:2px solid #1d605b;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.6;color:#0f1716;white-space:pre-line;\">{{ String(($('Webhook reseñas').item.json.body.body) ?? '').trim().replace(/[&<>\"']/g, c => '&#' + c.charCodeAt(0) + ';') }}</td></tr>\n</table>\n\n<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin:8px 0 24px;border-top:1px solid #dfe4e4;\">\n  <tr>\n    <td style=\"padding:12px 16px 12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#495251;vertical-align:top;width:34%;\">Quién la dejó</td>\n    <td style=\"padding:12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;font-weight:600;color:#0f1716;vertical-align:top;\">{{ String(($('Webhook reseñas').item.json.body.firstName) ?? '').trim().replace(/[&<>\"']/g, c => '&#' + c.charCodeAt(0) + ';') }} {{ String(($('Webhook reseñas').item.json.body.lastName) ?? '').trim().replace(/[&<>\"']/g, c => '&#' + c.charCodeAt(0) + ';') }}</td>\n  </tr>\n  <tr>\n    <td style=\"padding:12px 16px 12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#495251;vertical-align:top;width:34%;\">Email</td>\n    <td style=\"padding:12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;font-weight:600;color:#0f1716;vertical-align:top;\">{{ String(($('Webhook reseñas').item.json.body.email) ?? '').trim().replace(/[&<>\"']/g, c => '&#' + c.charCodeAt(0) + ';') }}</td>\n  </tr>\n  <tr>\n    <td style=\"padding:12px 16px 12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#495251;vertical-align:top;width:34%;\">Teléfono</td>\n    <td style=\"padding:12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;font-weight:600;color:#0f1716;vertical-align:top;\">{{ String(($('Webhook reseñas').item.json.body.phone) ?? '').trim().replace(/[&<>\"']/g, c => '&#' + c.charCodeAt(0) + ';') || 'No indicó' }}</td>\n  </tr>\n  <tr>\n    <td style=\"padding:12px 16px 12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#495251;vertical-align:top;width:34%;\">Fotos</td>\n    <td style=\"padding:12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;font-weight:600;color:#0f1716;vertical-align:top;\">{{ Math.floor((($('Webhook reseñas').item.json.body.photos) || []).length / 2) }}</td>\n  </tr>\n</table>\n\n<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin:8px 0 0;\"><tr>\n  <td style=\"border-radius:8px;background:#1d605b;\">\n    <a href=\"https://dashboard.electrificarte.com/admin/resenas\" style=\"display:inline-block;padding:14px 24px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;font-weight:600;line-height:1.2;color:#ffffff;text-decoration:none;border-radius:8px;\">Ver en el dashboard &rarr;</a>\n  </td>\n</tr></table>\n        </td></tr>\n\n        <tr><td style=\"padding:20px 4px 0;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;line-height:1.6;color:#687170;\">Aviso interno generado automáticamente por n8n.</td></tr>\n\n      </table>\n    </td></tr>\n  </table>\n</body>\n</html>\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "rv-mail-francisco-pub",
+      "name": "Correo reseña publicada (Francisco)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        920,
+        460
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Resend (Authorization Bearer)"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 2000,
+      "notes": "Asigná la credencial Resend. El html va en modo expresión (empieza con '='). Reintenta 5 veces cada 2 s: Resend limita a 10 envíos por segundo."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "keypair",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "from",
+              "value": "Electrificarte <no-reply@electrificarte.com>"
+            },
+            {
+              "name": "to",
+              "value": "={{ $('Webhook reseñas').item.json.body.email }}"
+            },
+            {
+              "name": "subject",
+              "value": "Tu reseña ya está publicada"
+            },
+            {
+              "name": "html",
+              "value": "=<!DOCTYPE html>\n<html lang=\"es\">\n<head>\n  <meta charset=\"utf-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n  <meta name=\"color-scheme\" content=\"light dark\">\n  <meta name=\"supported-color-schemes\" content=\"light dark\">\n  <title>Electrificarte</title>\n</head>\n<!--\n  RESEÑAS (sin fotos): se publican solas. Agradecimiento con el link a la ficha del auto.\n  Lee del nodo \"Webhook reseñas\": firstName, carBrand, carModel, carSlug, rating, body.\n\n  GENERADO por scripts/gen-emails.mjs (sistema de diseño v1). No editar a mano: cambiá el\n  generador y corré  node scripts/gen-emails.mjs && node scripts/gen-waitlist-reviews-workflows.mjs\n  Todo dato que escribe el usuario va escapado para HTML.\n-->\n<body style=\"margin:0;padding:0;background:#f2f7f6;-webkit-font-smoothing:antialiased;\">\n  <div style=\"display:none;max-height:0;overflow:hidden;opacity:0;\">Tu reseña ya está publicada.</div>\n  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#f2f7f6;\">\n    <tr><td align=\"center\" style=\"padding:32px 12px;\">\n      <table role=\"presentation\" width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:100%;max-width:600px;\">\n\n        <tr><td style=\"padding:0 4px 20px;\">\n          <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n            <td><picture><source srcset=\"https://www.electrificarte.com/brand/email-wordmark-niebla.png\" media=\"(prefers-color-scheme: dark)\"><img src=\"https://www.electrificarte.com/brand/email-wordmark-tinta.png\" alt=\"Electrificarte\" width=\"218\" height=\"16\" style=\"display:block;border:0;width:218px;height:16px;\"></picture></td>\n            \n          </tr></table>\n        </td></tr>\n\n        <tr><td style=\"background:#ffffff;border:1px solid #dfe4e4;border-radius:12px;padding:36px 32px 32px;\">\n<h1 style=\"margin:0 0 16px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:28px;font-weight:700;line-height:1.1;letter-spacing:-0.02em;color:#0f1716;\">Tu reseña ya está publicada</h1>\n<p style=\"margin:0 0 16px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.55;color:#495251;\">Hola <strong style=\"font-weight:600;color:#0f1716;\">{{ String(($('Webhook reseñas').item.json.body.firstName) ?? '').trim().replace(/[&<>\"']/g, c => '&#' + c.charCodeAt(0) + ';') }}</strong>, gracias por tomarte el tiempo. Tu opinión ya aparece en la ficha del auto y va a ayudar a la próxima persona a elegir bien.</p>\n\n<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin:8px 0 24px;background:#caefea;border-radius:12px;\">\n  <tr><td style=\"padding:20px;\">\n    <p style=\"margin:0;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#0f1716;\">Tu reseña del {{ String(([$('Webhook reseñas').item.json.body.carBrand, $('Webhook reseñas').item.json.body.carModel].filter(Boolean).join(' ')) ?? '').trim().replace(/[&<>\"']/g, c => '&#' + c.charCodeAt(0) + ';') || 'auto' }}</p>\n    <p style=\"margin:4px 0 0;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:20px;line-height:1.25;font-weight:700;letter-spacing:-0.01em;color:#0f1716;\">{{ '★'.repeat(Math.max(0, Math.min(5, Number($('Webhook reseñas').item.json.body.rating) || 0))) + '☆'.repeat(5 - Math.max(0, Math.min(5, Number($('Webhook reseñas').item.json.body.rating) || 0))) }} <span style=\"font-size:15px;font-weight:600;\">{{ String(($('Webhook reseñas').item.json.body.rating) ?? '').trim().replace(/[&<>\"']/g, c => '&#' + c.charCodeAt(0) + ';') }}/5</span></p>\n  </td></tr>\n</table>\n\n<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin:0 0 24px;\">\n  <tr><td style=\"padding:4px 0 4px 16px;border-left:2px solid #1d605b;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.6;color:#0f1716;white-space:pre-line;\">{{ String(($('Webhook reseñas').item.json.body.body) ?? '').trim().replace(/[&<>\"']/g, c => '&#' + c.charCodeAt(0) + ';') }}</td></tr>\n</table>\n\n<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin:8px 0 0;\"><tr>\n  <td style=\"border-radius:8px;background:#1d605b;\">\n    <a href=\"{{ $('Webhook reseñas').item.json.body.carSlug ? 'https://www.electrificarte.com/auto/' + String($('Webhook reseñas').item.json.body.carSlug).replace(/[^a-z0-9-]/gi, '') : 'https://www.electrificarte.com/marcas' }}\" style=\"display:inline-block;padding:14px 24px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;font-weight:600;line-height:1.2;color:#ffffff;text-decoration:none;border-radius:8px;\">Ver mi reseña &rarr;</a>\n  </td>\n</tr></table>\n<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin:32px 0 28px;\"><tr><td style=\"border-top:1px solid #dfe4e4;font-size:0;line-height:0;\">&nbsp;</td></tr></table>\n\n<p style=\"margin:0 0 12px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:18px;font-weight:700;line-height:1.3;letter-spacing:-0.01em;color:#0f1716;\">Sigue explorando</p>\n<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"border-top:1px solid #dfe4e4;\">\n  <tr><td style=\"border-bottom:1px solid #dfe4e4;\">\n    <a href=\"https://www.electrificarte.com/electrico/ev\" style=\"display:block;padding:14px 0;text-decoration:none;\">\n      <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n        <td style=\"font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;\">\n          <span style=\"display:block;font-size:15px;font-weight:600;line-height:1.3;color:#0f1716;\">Autos 100% eléctricos</span>\n          <span style=\"display:block;margin-top:2px;font-size:13px;line-height:1.4;color:#495251;\">Autonomía, batería y precio de cada modelo</span>\n        </td>\n        <td align=\"right\" style=\"width:24px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:18px;color:#1d605b;\">&rarr;</td>\n      </tr></table>\n    </a>\n  </td></tr>\n  <tr><td style=\"border-bottom:1px solid #dfe4e4;\">\n    <a href=\"https://www.electrificarte.com/electrico/phev\" style=\"display:block;padding:14px 0;text-decoration:none;\">\n      <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n        <td style=\"font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;\">\n          <span style=\"display:block;font-size:15px;font-weight:600;line-height:1.3;color:#0f1716;\">Híbridos enchufables</span>\n          <span style=\"display:block;margin-top:2px;font-size:13px;line-height:1.4;color:#495251;\">Andan en eléctrico en la ciudad y a bencina en ruta</span>\n        </td>\n        <td align=\"right\" style=\"width:24px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:18px;color:#1d605b;\">&rarr;</td>\n      </tr></table>\n    </a>\n  </td></tr>\n  <tr><td style=\"border-bottom:1px solid #dfe4e4;\">\n    <a href=\"https://www.electrificarte.com/tipo/suv\" style=\"display:block;padding:14px 0;text-decoration:none;\">\n      <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n        <td style=\"font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;\">\n          <span style=\"display:block;font-size:15px;font-weight:600;line-height:1.3;color:#0f1716;\">SUV electrificados</span>\n          <span style=\"display:block;margin-top:2px;font-size:13px;line-height:1.4;color:#495251;\">El segmento con más modelos en Chile</span>\n        </td>\n        <td align=\"right\" style=\"width:24px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:18px;color:#1d605b;\">&rarr;</td>\n      </tr></table>\n    </a>\n  </td></tr>\n  <tr><td style=\"border-bottom:1px solid #dfe4e4;\">\n    <a href=\"https://www.electrificarte.com/comparador\" style=\"display:block;padding:14px 0;text-decoration:none;\">\n      <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n        <td style=\"font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;\">\n          <span style=\"display:block;font-size:15px;font-weight:600;line-height:1.3;color:#0f1716;\">Compara modelos lado a lado</span>\n          <span style=\"display:block;margin-top:2px;font-size:13px;line-height:1.4;color:#495251;\">Hasta 3 autos, spec por spec</span>\n        </td>\n        <td align=\"right\" style=\"width:24px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:18px;color:#1d605b;\">&rarr;</td>\n      </tr></table>\n    </a>\n  </td></tr>\n  <tr><td style=\"border-bottom:1px solid #dfe4e4;\">\n    <a href=\"https://www.electrificarte.com/calculadora\" style=\"display:block;padding:14px 0;text-decoration:none;\">\n      <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n        <td style=\"font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;\">\n          <span style=\"display:block;font-size:15px;font-weight:600;line-height:1.3;color:#0f1716;\">Calcula cuánto ahorras</span>\n          <span style=\"display:block;margin-top:2px;font-size:13px;line-height:1.4;color:#495251;\">Tu gasto en bencina frente a un electrificado</span>\n        </td>\n        <td align=\"right\" style=\"width:24px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:18px;color:#1d605b;\">&rarr;</td>\n      </tr></table>\n    </a>\n  </td></tr>\n</table>\n\n<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin:28px 0 0;background:#f2f7f6;border:1px solid #dfe4e4;border-radius:12px;\">\n  <tr><td style=\"padding:24px;\">\n    <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n      <td style=\"font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:18px;font-weight:700;line-height:1.3;letter-spacing:-0.01em;color:#0f1716;\">¿Alguien cerca está pensando en cambiarse?</td>\n      \n    </tr></table>\n    <p style=\"margin:8px 0 16px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.55;color:#495251;\">Tu experiencia vale mucho para quien está decidiendo. Compártele electrificarte.com: puede comparar modelos, calcular su ahorro y leer reseñas de dueños como tú.</p>\n    <table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n      <td style=\"border-radius:8px;background:#ffffff;border:1px solid #cad1d0;\">\n        <a href=\"https://www.electrificarte.com\" style=\"display:inline-block;padding:12px 20px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:14px;font-weight:600;line-height:1.2;color:#0f1716;text-decoration:none;\">Ir a electrificarte.com &rarr;</a>\n      </td>\n    </tr></table>\n  </td></tr>\n</table>\n        </td></tr>\n\n\n        <tr><td style=\"padding:16px 0 0;\">\n          <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#0f1716;border-radius:12px;\">\n            <tr><td style=\"padding:28px 32px;\">\n              <img src=\"https://www.electrificarte.com/brand/email-wordmark-niebla.png\" alt=\"Electrificarte\" width=\"190\" height=\"14\" style=\"display:block;border:0;width:190px;height:14px;\">\n              <p style=\"margin:12px 0 20px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:14px;line-height:1.5;color:#b4bdbc;\">El marketplace de autos electrificados de Chile. Conéctate a una nueva movilidad.</p>\n              <table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n                <td style=\"padding:0 16px 8px 0;\"><a href=\"https://www.electrificarte.com/marcas\" style=\"font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;font-weight:600;color:#caefea;text-decoration:none;\">Catálogo</a></td><td style=\"padding:0 16px 8px 0;\"><a href=\"https://www.electrificarte.com/comparador\" style=\"font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;font-weight:600;color:#caefea;text-decoration:none;\">Comparador</a></td><td style=\"padding:0 16px 8px 0;\"><a href=\"https://www.electrificarte.com/calculadora\" style=\"font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;font-weight:600;color:#caefea;text-decoration:none;\">Calculadora</a></td><td style=\"padding:0 16px 8px 0;\"><a href=\"https://www.electrificarte.com/asesoria\" style=\"font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;font-weight:600;color:#caefea;text-decoration:none;\">Asesoría</a></td><td style=\"padding:0 16px 8px 0;\"><a href=\"https://www.electrificarte.com/blog\" style=\"font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;font-weight:600;color:#caefea;text-decoration:none;\">Blog</a></td>\n              </tr></table>\n              <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-top:12px;border-top:1px solid #27302f;\"><tr>\n                <td style=\"padding-top:16px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;line-height:1.6;color:#b4bdbc;\">\n                  <a href=\"https://www.instagram.com/autos.electricos.con.francisco\" style=\"color:#b4bdbc;text-decoration:underline;\">Instagram</a>&nbsp;&nbsp;&nbsp;\n                  <a href=\"https://www.tiktok.com/@autos_electricos_con_fco\" style=\"color:#b4bdbc;text-decoration:underline;\">TikTok</a>&nbsp;&nbsp;&nbsp;\n                  <a href=\"mailto:contacto@electrificarte.com\" style=\"color:#b4bdbc;text-decoration:underline;\">contacto@electrificarte.com</a><br>\n                  Recibes este correo porque dejaste una reseña en electrificarte.com.\n                </td>\n              </tr></table>\n            </td></tr>\n          </table>\n        </td></tr>\n      </table>\n    </td></tr>\n  </table>\n</body>\n</html>\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "rv-mail-autor-pub",
+      "name": "Correo reseña publicada (autor)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        920,
+        620
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Resend (Authorization Bearer)"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 2000,
+      "notes": "Asigná la credencial Resend. El html va en modo expresión (empieza con '='). Reintenta 5 veces cada 2 s: Resend limita a 10 envíos por segundo."
     }
   ],
   "connections": {
@@ -217,14 +466,48 @@
       "main": [
         [
           {
-            "node": "Guardar reseña (pendiente)",
+            "node": "¿Datos válidos? (reseña)",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Guardar reseña (pendiente)": {
+    "¿Datos válidos? (reseña)": {
+      "main": [
+        [
+          {
+            "node": "Guardar reseña",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder 422 (reseña)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardar reseña": {
+      "main": [
+        [
+          {
+            "node": "Responder OK (reseña)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "¿Trae fotos?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Trae fotos?": {
       "main": [
         [
           {
@@ -233,7 +516,19 @@
             "index": 0
           },
           {
-            "node": "Correo agradecimiento (autor)",
+            "node": "Correo reseña en revisión (autor)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Correo reseña publicada (Francisco)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Correo reseña publicada (autor)",
             "type": "main",
             "index": 0
           }

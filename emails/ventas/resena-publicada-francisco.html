@@ -8,16 +8,14 @@
   <title>Electrificarte</title>
 </head>
 <!--
-  RESEÑAS (con fotos): aviso interno a Francisco para moderar.
-  Lee del nodo "Webhook reseñas": rating, body, carBrand, carModel, carYear, firstName,
-  lastName, email, phone, photos.
+  RESEÑAS (sin fotos): aviso interno a Francisco. Ya está publicada; no requiere acción.
 
   GENERADO por scripts/gen-emails.mjs (sistema de diseño v1). No editar a mano: cambiá el
   generador y corré  node scripts/gen-emails.mjs && node scripts/gen-waitlist-reviews-workflows.mjs
   Todo dato que escribe el usuario va escapado para HTML.
 -->
 <body style="margin:0;padding:0;background:#f2f7f6;-webkit-font-smoothing:antialiased;">
-  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">Hay una reseña con fotos esperando tu revisión.</div>
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">Se publicó una reseña nueva (sin fotos).</div>
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f2f7f6;">
     <tr><td align="center" style="padding:32px 12px;">
       <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;">
@@ -30,8 +28,8 @@
         </td></tr>
 
         <tr><td style="background:#ffffff;border:1px solid #dfe4e4;border-radius:12px;padding:36px 32px 32px;">
-<h1 style="margin:0 0 16px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:28px;font-weight:700;line-height:1.1;letter-spacing:-0.02em;color:#0f1716;">Nueva reseña con fotos por revisar</h1>
-<p style="margin:0 0 16px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.55;color:#495251;">Llegó una reseña con fotos. <strong style="font-weight:600;color:#0f1716;">No está publicada</strong>: aparece en el sitio solo cuando la apruebes en el dashboard. Revisa que las fotos sean del auto y que sean apropiadas.</p>
+<h1 style="margin:0 0 16px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:28px;font-weight:700;line-height:1.1;letter-spacing:-0.02em;color:#0f1716;">Se publicó una reseña nueva</h1>
+<p style="margin:0 0 16px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.55;color:#495251;">Llegó una reseña sin fotos, así que se publicó sola. No tienes que hacer nada; queda en el dashboard junto a las demás.</p>
 
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:8px 0 24px;background:#caefea;border-radius:12px;">
   <tr><td style="padding:20px;">
@@ -65,7 +63,7 @@
 
 <table role="presentation" cellpadding="0" cellspacing="0" style="margin:8px 0 0;"><tr>
   <td style="border-radius:8px;background:#1d605b;">
-    <a href="https://dashboard.electrificarte.com/admin/resenas" style="display:inline-block;padding:14px 24px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;font-weight:600;line-height:1.2;color:#ffffff;text-decoration:none;border-radius:8px;">Moderar en el dashboard &rarr;</a>
+    <a href="https://dashboard.electrificarte.com/admin/resenas" style="display:inline-block;padding:14px 24px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;font-weight:600;line-height:1.2;color:#ffffff;text-decoration:none;border-radius:8px;">Ver en el dashboard &rarr;</a>
   </td>
 </tr></table>
         </td></tr>

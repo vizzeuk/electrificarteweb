@@ -57,7 +57,9 @@ export async function POST(request: Request) {
         source: parsed.data.source || "web",
         timestamp: new Date().toISOString(),
       }),
-      signal: AbortSignal.timeout(5_000),
+      // n8n responde después de guardar la fila; bajo ráfagas tarda ~2-3 s. Con 5 s de margen
+      // la persona veía error aunque el registro sí quedó guardado (y al reintentar, duplicado).
+      signal: AbortSignal.timeout(10_000),
     });
 
     if (!res.ok) throw new Error(`Webhook respondió ${res.status}`);

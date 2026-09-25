@@ -303,6 +303,9 @@ Más n8n (VPS de Matías) y Supabase. Un cambio en el modelo de leads toca a los
 - `docs/FLUJOS-PARA-FRANCISCO.md` — diagramas simples de los flujos de reseñas y waitlist.
 - `docs/DASHBOARD_REVIEWS_MODERACION.md` — contrato de la pantalla de moderación (otro repo).
 - `docs/PROMPT-DASHBOARD-RESENAS.md` — prompt autocontenido para arrancar esa pantalla.
+- `scripts/n8n-sync-central.mjs` + `scripts/qa/n8n-evals.mts` — el repo es la fuente de verdad de
+  los tramos waitlist/reseñas del workflow central de n8n (API key en `.env.local`, nunca en el
+  repo); los evals mandan correos reales a quien los corre. Ver `emails/ventas/README.md`.
 - `docs/QA-FLUJOS-MANUAL.md` — cómo testear los flujos (`npm test`, simulador n8n, webhooks de
   ventas) y los hallazgos de idempotencia.
 - `docs/HANDOFF-CONDUCTOR.md` — 🟡 **STANDBY** — estado y fase del marketplace de ofertas de
@@ -327,6 +330,12 @@ Bloqueantes de lanzamiento (detalle en `docs/HANDOFF-CONDUCTOR.md` §8):
 - Decidir www vs no-www (canonical usa no-www, Reveniu retorna a www)
 
 Otros:
+- 📝 **Verificar el flujo de VENTAS antiguo en n8n** (pedido de Vicente, sep-2026): el webhook
+  `electrificarte-pago` (Reveniu) → `External id not null` → `Switch` venía de cuando había tres
+  planes; hoy solo quedan **Asesoría** y **vendedores** (la Oferta está en standby). Revisar cada
+  rama del Switch contra Reveniu, cablear ahí los correos de asesoría (`n8n/asesoria-correos.json`,
+  ya probados 5/5 en un workflow temporal) y corregir "Correo pago confirmado (cliente)", que tiene
+  el destinatario fijo en `vicentecossio.dev@gmail.com`.
 - **Header Auth en n8n** (`docs/N8N-SEGURIDAD.md`): la web ya manda el secreto; falta activarlo
   en cada nodo Webhook de n8n **después** de desplegar la web.
 - **Plantilla WhatsApp `asesoria_ultimo_dia`** (idioma `es_CL`): ⏳ pendiente de aprobación de

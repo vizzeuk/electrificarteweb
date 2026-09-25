@@ -73,3 +73,6 @@ app/fonts/material-symbols-outlined-full.woff2
 # PDFs de las maquetas del sistema de diseño (para compartir, ~12 MB): se generan fuera del
 # repo. Los HTML de docs/design/ son la referencia versionada.
 /docs/design/*.pdf
+
+# Respaldos del workflow central de n8n (contienen secretos de nodos, p. ej. Reveniu)
+n8n/.backups/

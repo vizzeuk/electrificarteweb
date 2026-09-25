@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { REVIEW_MAX_CHARS, REVIEW_MIN_CHARS } from "@/lib/reviews/config";
@@ -7,13 +8,16 @@ import { n8nHeaders } from "@/lib/n8n";
 /**
  * Alta de una RESEÑA de vehículo (UGC). Ver `docs/REVIEWS-UGC-PLAN.md`.
  *
- * Valida, limita y reenvía a n8n, que escribe la fila en `reviews` con
- * `status='pendiente'`. Mismo patrón que `waitlist` / `newsletter` / `contact`:
- * el sitio nunca escribe directo en Supabase.
+ * Valida, limita y reenvía a n8n, que escribe la fila en `reviews`. Mismo patrón que
+ * `waitlist` / `newsletter` / `contact`: el sitio nunca escribe directo en Supabase.
  *
- * ⚠️ NADA se publica automáticamente: la fila nace `pendiente` y solo aparece en
- * el sitio cuando Francisco la aprueba. Ese es el filtro real mientras el gating
- * por invitación siga en standby (`REVIEWS_REQUIRE_INVITE`).
+ * Moderación (sep-2026, Vicente + Matías): solo se moderan las reseñas CON fotos, porque lo
+ * que puede ser inapropiado es la imagen.
+ *   - Con fotos → `pendiente`: aparece cuando Francisco la aprueba en el dashboard.
+ *   - Sin fotos → `aprobada`: se publica sola.
+ * El estado lo decide n8n a partir de `photos` (no confía en el `status` del payload, que va
+ * solo como referencia). n8n responde recién después de guardar la fila, así que un 2xx
+ * significa "guardada": ahí se revalida la ficha para que la reseña sin fotos aparezca ya.
  */
 
 const schema = z.object({
@@ -61,22 +65,32 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Webhook no configurado" }, { status: 500 });
   }
 
+  const hasPhotos = (parsed.data.photos?.length ?? 0) > 0;
+
   try {
     const res = await fetch(webhookUrl, {
       method: "POST",
       headers: n8nHeaders(),
       body: JSON.stringify({
         ...parsed.data,
-        status: "pendiente",
+        status: hasPhotos ? "pendiente" : "aprobada",
         source: parsed.data.source || "web",
         timestamp: new Date().toISOString(),
       }),
-      signal: AbortSignal.timeout(5_000),
+      // n8n responde después de guardar la fila; bajo ráfagas tarda ~2-3 s. Con 5 s de margen
+      // la persona veía error aunque el registro sí quedó guardado (y al reintentar, duplicado).
+      signal: AbortSignal.timeout(10_000),
     });
     if (!res.ok) throw new Error(`Webhook respondió ${res.status}`);
   } catch {
     return NextResponse.json({ error: "Error al enviar tu reseña" }, { status: 502 });
   }
 
-  return NextResponse.json({ success: true });
+  // Sin fotos = publicada: se refresca la ficha (ISR) para que aparezca de inmediato.
+  if (!hasPhotos) {
+    if (parsed.data.carSlug) revalidatePath(`/auto/${parsed.data.carSlug}`);
+    revalidatePath("/");
+  }
+
+  return NextResponse.json({ success: true, published: !hasPhotos });
 }

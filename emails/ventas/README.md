@@ -26,16 +26,29 @@ sobre fondo oscuro. Ambos PNG viven en `public/` y se sirven desde `www`.
 |---|---|---|---|
 | `waitlist-confirmacion.html` | Alguien se registra en la waitlist | La persona | `n8n/waitlist.json` |
 | `waitlist-francisco.html` | (mismo evento) | **Francisco** (interno) | `n8n/waitlist.json` |
-| `nueva-resena-francisco.html` | Alguien envía una reseña | **Francisco** (interno) | `n8n/reviews.json` |
-| `resena-recibida.html` | (mismo evento) | Quien dejó la reseña | `n8n/reviews.json` |
+| `nueva-resena-francisco.html` | Reseña **con fotos** (queda pendiente) | **Francisco** (interno) | `n8n/reviews.json` |
+| `resena-en-revision.html` | (mismo evento) | Quien dejó la reseña | `n8n/reviews.json` |
+| `resena-publicada-francisco.html` | Reseña **sin fotos** (se publica sola) | **Francisco** (interno) | `n8n/reviews.json` |
+| `resena-publicada.html` | (mismo evento) | Quien dejó la reseña | `n8n/reviews.json` |
 | `asesoria-confirmada.html` | Reveniu confirma el pago de la Asesoría | La persona | `n8n/asesoria-correos.json` |
 | `asesoria-francisco.html` | (mismo evento) | **Francisco** (interno) | `n8n/asesoria-correos.json` |
 
-**Estos 6 se generan con `scripts/gen-emails.mjs` (sistema de diseño v1): no se editan a mano.**
+**Estos 8 se generan con `scripts/gen-emails.mjs` (sistema de diseño v1): no se editan a mano.**
 Todo dato que escribe el usuario va escapado para HTML (una reseña con `<a href>` llega como
 texto, no como link). Flujo de edición:
 ```bash
 node scripts/gen-emails.mjs && node scripts/gen-waitlist-reviews-workflows.mjs
+node --env-file=.env.local scripts/n8n-sync-central.mjs          # sube waitlist + reseñas al n8n vivo
+```
+Los correos a clientes llevan "Sigue explorando", un bloque de producto (Asesoría o compartir)
+y un mini footer oscuro con links y redes. Los nodos de correo reintentan 5 veces cada 2 s:
+**Resend acepta 10 envíos por segundo** y una ráfaga de 10 registros (20 correos) los superaba.
+
+**Evals con correos reales** (a tu inbox, avisos a Francisco redirigidos mientras dura):
+```bash
+node --env-file=.env.local scripts/n8n-sync-central.mjs --francisco-to=tu@correo.com
+npx tsx --env-file=.env.local scripts/qa/n8n-evals.mts --to tu@correo.com --burst 10
+node --env-file=.env.local scripts/n8n-sync-central.mjs          # ¡volver a Francisco!
 ```
 Los de asesoría leen de un nodo Set **"Datos correo asesoría"** (nombre, email, telefono,
 orderId) que se agrega en el workflow de pagos justo antes de los correos: así la plantilla no

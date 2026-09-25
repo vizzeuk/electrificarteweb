@@ -42,10 +42,10 @@ const chip = (t) =>
   `<span style="display:inline-block;padding:4px 8px;border-radius:4px;background:${C.tinta};color:${C.papel};font-family:${FONT};font-size:12px;font-weight:600;line-height:1.2;">${t}</span>`;
 
 /** Filas etiqueta / valor separadas por hairlines (el `<dl class="specs">` del sitio). */
-const specs = (rows) => `
+const specs = (rows, labelW = "34%") => `
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:8px 0 24px;border-top:1px solid ${C.linea};">
 ${rows.map(([label, value]) => `  <tr>
-    <td style="padding:12px 16px 12px 0;border-bottom:1px solid ${C.linea};font-family:${FONT};font-size:13px;line-height:1.4;color:${C.grafito};vertical-align:top;width:34%;">${label}</td>
+    <td style="padding:12px 16px 12px 0;border-bottom:1px solid ${C.linea};font-family:${FONT};font-size:13px;line-height:1.4;color:${C.grafito};vertical-align:top;width:${labelW};">${label}</td>
     <td style="padding:12px 0;border-bottom:1px solid ${C.linea};font-family:${FONT};font-size:15px;line-height:1.45;font-weight:600;color:${C.tinta};vertical-align:top;">${value}</td>
   </tr>`).join("\n")}
 </table>`;
@@ -75,7 +75,86 @@ const button = (href, label, kind = "primary") => {
 </tr></table>`;
 };
 
-const layout = ({ preheader, doc, internal = false, body }) => `<!DOCTYPE html>
+
+/** Subtítulo de bloque dentro de la card (18 px, como .t-h4). */
+const h3 = (t) =>
+  `<p style="margin:0 0 12px;font-family:${FONT};font-size:18px;font-weight:700;line-height:1.3;letter-spacing:-0.01em;color:${C.tinta};">${t}</p>`;
+
+const divider = () => `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:32px 0 28px;"><tr><td style="border-top:1px solid ${C.linea};font-size:0;line-height:0;">&nbsp;</td></tr></table>`;
+
+/** "Sigue explorando": filas enlazadas con hairline, título + bajada + flecha (como .type-links). */
+const EXPLORE = [
+  ["Autos 100% eléctricos", "Autonomía, batería y precio de cada modelo", "/electrico/ev"],
+  ["Híbridos enchufables", "Andan en eléctrico en la ciudad y a bencina en ruta", "/electrico/phev"],
+  ["SUV electrificados", "El segmento con más modelos en Chile", "/tipo/suv"],
+  ["Compara modelos lado a lado", "Hasta 3 autos, spec por spec", "/comparador"],
+  ["Calcula cuánto ahorras", "Tu gasto en bencina frente a un electrificado", "/calculadora"],
+];
+const explore = (title = "Sigue explorando", rows = EXPLORE) => `
+${h3(title)}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid ${C.linea};">
+${rows.map(([t, d, href]) => `  <tr><td style="border-bottom:1px solid ${C.linea};">
+    <a href="${SITE}${href}" style="display:block;padding:14px 0;text-decoration:none;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+        <td style="font-family:${FONT};">
+          <span style="display:block;font-size:15px;font-weight:600;line-height:1.3;color:${C.tinta};">${t}</span>
+          <span style="display:block;margin-top:2px;font-size:13px;line-height:1.4;color:${C.grafito};">${d}</span>
+        </td>
+        <td align="right" style="width:24px;font-family:${FONT};font-size:18px;color:${C.laguna};">&rarr;</td>
+      </tr></table>
+    </a>
+  </td></tr>`).join("\n")}
+</table>`;
+
+/** Bloque de producto sobre Niebla (no Glaciar: el Glaciar del correo ya se usó arriba). */
+const promo = ({ title, text, price, href, cta }) => `
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:28px 0 0;background:${C.niebla};border:1px solid ${C.linea};border-radius:12px;">
+  <tr><td style="padding:24px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+      <td style="font-family:${FONT};font-size:18px;font-weight:700;line-height:1.3;letter-spacing:-0.01em;color:${C.tinta};">${title}</td>
+      ${price ? `<td align="right" style="font-family:${FONT};font-size:18px;font-weight:600;color:${C.tinta};white-space:nowrap;">${price}</td>` : ""}
+    </tr></table>
+    <p style="margin:8px 0 16px;font-family:${FONT};font-size:15px;line-height:1.55;color:${C.grafito};">${text}</p>
+    <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+      <td style="border-radius:8px;background:${C.papel};border:1px solid ${C.lineaFuerte};">
+        <a href="${href}" style="display:inline-block;padding:12px 20px;font-family:${FONT};font-size:14px;font-weight:600;line-height:1.2;color:${C.tinta};text-decoration:none;">${cta} &rarr;</a>
+      </td>
+    </tr></table>
+  </td></tr>
+</table>`;
+
+const ASESORIA_PROMO = promo({
+  title: "¿No sabes cuál te conviene?",
+  price: "$4.990",
+  text: "Un asesor experto te acompaña por WhatsApp durante 10 días: entiende cómo usas el auto, te recomienda hasta 3 modelos del catálogo y te explica cómo cotizarlos con vendedores oficiales.",
+  href: `${SITE}/asesoria`,
+  cta: "Conocer la asesoría",
+});
+
+/** Mini footer: banda oscura (Tinta), como el footer del sitio. Es la última pieza del correo. */
+const footerBand = (reason) => `
+        <tr><td style="padding:16px 0 0;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${C.tinta};border-radius:12px;">
+            <tr><td style="padding:28px 32px;">
+              <img src="${SITE}/brand/email-wordmark-niebla.png" alt="Electrificarte" width="190" height="14" style="display:block;border:0;width:190px;height:14px;">
+              <p style="margin:12px 0 20px;font-family:${FONT};font-size:14px;line-height:1.5;color:${C.nocheTexto2};">El marketplace de autos electrificados de Chile. Conéctate a una nueva movilidad.</p>
+              <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+                ${[["Catálogo", "/marcas"], ["Comparador", "/comparador"], ["Calculadora", "/calculadora"], ["Asesoría", "/asesoria"], ["Blog", "/blog"]]
+                  .map(([t, h]) => `<td style="padding:0 16px 8px 0;"><a href="${SITE}${h}" style="font-family:${FONT};font-size:13px;font-weight:600;color:${C.glaciar};text-decoration:none;">${t}</a></td>`).join("")}
+              </tr></table>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px;border-top:1px solid ${C.nocheLinea};"><tr>
+                <td style="padding-top:16px;font-family:${FONT};font-size:12px;line-height:1.6;color:${C.nocheTexto2};">
+                  <a href="https://www.instagram.com/autos.electricos.con.francisco" style="color:${C.nocheTexto2};text-decoration:underline;">Instagram</a>&nbsp;&nbsp;&nbsp;
+                  <a href="https://www.tiktok.com/@autos_electricos_con_fco" style="color:${C.nocheTexto2};text-decoration:underline;">TikTok</a>&nbsp;&nbsp;&nbsp;
+                  <a href="mailto:contacto@electrificarte.com" style="color:${C.nocheTexto2};text-decoration:underline;">contacto@electrificarte.com</a><br>
+                  ${reason}
+                </td>
+              </tr></table>
+            </td></tr>
+          </table>
+        </td></tr>`;
+
+const layout = ({ preheader, doc, internal = false, reason = "", body }) => `<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="utf-8">
@@ -108,13 +187,9 @@ ${doc}
 ${body}
         </td></tr>
 
-        <tr><td style="padding:24px 4px 0;font-family:${FONT};font-size:12px;line-height:1.6;color:${C.piedra};">
-          ${internal
-            ? "Aviso interno generado automáticamente por n8n."
-            : `Electrificarte, marketplace de autos electrificados en Chile.<br>
-          <a href="${SITE}" style="color:${C.laguna};text-decoration:underline;">electrificarte.com</a> y <a href="mailto:contacto@electrificarte.com" style="color:${C.laguna};text-decoration:underline;">contacto@electrificarte.com</a>`}
-        </td></tr>
-
+${internal
+        ? `        <tr><td style="padding:20px 4px 0;font-family:${FONT};font-size:12px;line-height:1.6;color:${C.piedra};">Aviso interno generado automáticamente por n8n.</td></tr>\n`
+        : footerBand(reason)}
       </table>
     </td></tr>
   </table>
@@ -127,6 +202,7 @@ const WL = (k) => field("Webhook waitlist", `body.${k}`);
 
 const waitlistConfirmacion = layout({
   preheader: "Quedaste registrado en la waitlist de Electrificarte.",
+  reason: "Recibes este correo porque te registraste en la waitlist de electrificarte.com.",
   doc: `  WAITLIST: confirmación a la persona que se registró. Va al nodo Resend de n8n.
   Lee del nodo "Webhook waitlist": body.firstName, body.model (opcional).
   ⚠️ La waitlist SOLO registra interesados: no prometer una oferta, no dar plazos y no decir
@@ -135,8 +211,15 @@ const waitlistConfirmacion = layout({
     title("Ya estás en la lista"),
     p(`Hola ${strong(esc(WL("firstName")))}, registramos tus datos. Te contactaremos cuando abramos el acceso y tengamos novedades para ti.`),
     highlight("Auto que te interesa", esc(WL("model"), "Aún no lo definiste")),
-    p(`Mientras tanto puedes seguir explorando el catálogo. Si todavía no tienes claro qué auto te conviene, la ${strong("Asesoría")} te ayuda a decidir según tu uso, tu presupuesto y dónde vas a cargar.`),
-    button(`${SITE}/marcas`, "Ver el catálogo"),
+    h3("Qué pasa ahora"),
+    specs([
+      ["1", "Quedas en la lista con el modelo que te interesa."],
+      ["2", "Te escribimos cuando abramos el acceso o haya novedades para ese modelo."],
+      ["3", `Sin compromiso: si quieres salir de la lista, escríbenos a <a href="mailto:contacto@electrificarte.com" style="color:${C.laguna};">contacto@electrificarte.com</a>.`],
+    ], "8%"),
+    divider(),
+    explore(),
+    ASESORIA_PROMO,
   ].join("\n"),
 });
 
@@ -160,43 +243,97 @@ const waitlistFrancisco = layout({
 });
 
 // ─── RESEÑAS ─────────────────────────────────────────────────────────────────
+// Regla (sep-2026, Vicente + Matías): solo se moderan las reseñas CON fotos. Las que vienen
+// solo con texto se publican solas. n8n enruta con el IF "¿Trae fotos?" a uno de dos pares
+// de correos: "en revisión" (con fotos) o "publicada" (sin fotos).
 const RV = (k) => field("Webhook reseñas", `body.${k}`);
 const carName = `[${RV("carBrand")}, ${RV("carModel")}].filter(Boolean).join(' ')`;
 const carFull = `[${RV("carBrand")}, ${RV("carModel")}, ${RV("carYear")}].filter(Boolean).join(' ')`;
-const stars = `{{ '★'.repeat(Math.max(0, Math.min(5, Number(${RV("rating")}) || 0))) + '☆'.repeat(5 - Math.max(0, Math.min(5, Number(${RV("rating")}) || 0))) }}`;
+const ratingN = `Math.max(0, Math.min(5, Number(${RV("rating")}) || 0))`;
+const stars = `{{ '★'.repeat(${ratingN}) + '☆'.repeat(5 - ${ratingN}) }}`;
+const pdpUrl = `{{ ${RV("carSlug")} ? '${SITE}/auto/' + String(${RV("carSlug")}).replace(/[^a-z0-9-]/gi, '') : '${SITE}/marcas' }}`;
 
-const resenaRecibida = layout({
-  preheader: "Recibimos tu reseña y la estamos revisando.",
-  doc: `  RESEÑAS: agradecimiento a quien dejó la reseña.
-  Lee del nodo "Webhook reseñas": body.firstName, carBrand, carModel (opcionales).`,
+const SHARE = promo({
+  title: "¿Alguien cerca está pensando en cambiarse?",
+  text: "Tu experiencia vale mucho para quien está decidiendo. Compártele electrificarte.com: puede comparar modelos, calcular su ahorro y leer reseñas de dueños como tú.",
+  href: SITE,
+  cta: "Ir a electrificarte.com",
+});
+
+/** Lo que escribió la persona, citado: su calificación y su texto. */
+const suResena = () => [
+  highlight(`Tu reseña del ${esc(carName, "auto")}`, `${stars} <span style="font-size:15px;font-weight:600;">${esc(RV("rating"))}/5</span>`),
+  quote(esc(RV("body"))),
+].join("\n");
+
+const resenaEnRevision = layout({
+  preheader: "Recibimos tu reseña y sus fotos. La revisamos antes de publicarla.",
+  reason: "Recibes este correo porque dejaste una reseña en electrificarte.com.",
+  doc: `  RESEÑAS (con fotos): agradecimiento a quien la dejó. Queda en revisión hasta que Francisco
+  la apruebe en el dashboard. Lee del nodo "Webhook reseñas": firstName, carBrand, carModel,
+  rating, body.`,
   body: [
     title("Gracias por compartir tu experiencia"),
-    p(`Hola ${strong(esc(RV("firstName")))}, recibimos tu reseña del ${strong(esc(carName, "auto"))}. La revisamos antes de publicarla, para asegurarnos de que todo esté en orden.`),
-    p("Opiniones como la tuya ayudan a que la próxima persona elija bien su auto electrificado. Gracias por tomarte el tiempo."),
-    button(`${SITE}/marcas`, "Ver el catálogo"),
+    p(`Hola ${strong(esc(RV("firstName")))}, recibimos tu reseña y tus fotos. Como trae imágenes, la revisamos antes de publicarla: te avisaremos si hay algo que ajustar.`),
+    suResena(),
+    divider(),
+    explore("Mientras tanto"),
+    SHARE,
   ].join("\n"),
 });
 
+const resenaPublicada = layout({
+  preheader: "Tu reseña ya está publicada.",
+  reason: "Recibes este correo porque dejaste una reseña en electrificarte.com.",
+  doc: `  RESEÑAS (sin fotos): se publican solas. Agradecimiento con el link a la ficha del auto.
+  Lee del nodo "Webhook reseñas": firstName, carBrand, carModel, carSlug, rating, body.`,
+  body: [
+    title("Tu reseña ya está publicada"),
+    p(`Hola ${strong(esc(RV("firstName")))}, gracias por tomarte el tiempo. Tu opinión ya aparece en la ficha del auto y va a ayudar a la próxima persona a elegir bien.`),
+    suResena(),
+    button(pdpUrl, "Ver mi reseña"),
+    divider(),
+    explore(),
+    SHARE,
+  ].join("\n"),
+});
+
+const francisco = ({ titulo, intro, cta }) => [
+  title(titulo),
+  p(intro),
+  highlight(esc(carFull, "Auto sin indicar"), `${stars} <span style="font-size:15px;font-weight:600;">${esc(RV("rating"))}/5</span>`),
+  quote(esc(RV("body"))),
+  specs([
+    ["Quién la dejó", `${esc(RV("firstName"))} ${esc(RV("lastName"))}`],
+    ["Email", esc(RV("email"))],
+    ["Teléfono", esc(RV("phone"), "No indicó")],
+    ["Fotos", `{{ Math.floor(((${RV("photos")}) || []).length / 2) }}`],
+  ]),
+  button(DASHBOARD, cta),
+].join("\n");
+
 const nuevaResenaFrancisco = layout({
   internal: true,
-  preheader: "Hay una reseña esperando tu revisión.",
-  doc: `  RESEÑAS: aviso interno a Francisco para moderar.
-  Lee del nodo "Webhook reseñas": body.rating, body, carBrand, carModel, carYear, firstName,
+  preheader: "Hay una reseña con fotos esperando tu revisión.",
+  doc: `  RESEÑAS (con fotos): aviso interno a Francisco para moderar.
+  Lee del nodo "Webhook reseñas": rating, body, carBrand, carModel, carYear, firstName,
   lastName, email, phone, photos.`,
-  body: [
-    title("Nueva reseña por revisar"),
-    p(`Llegó una reseña nueva. ${strong("No está publicada")}: aparece en el sitio solo cuando la apruebes en el dashboard.`),
-    highlight(esc(carFull, "Auto sin indicar"), `${stars} <span style="font-size:15px;font-weight:600;">${esc(RV("rating"))}/5</span>`),
-    quote(esc(RV("body"))),
-    specs([
-      ["Quién la dejó", `${esc(RV("firstName"))} ${esc(RV("lastName"))}`],
-      ["Email", esc(RV("email"))],
-      ["Teléfono", esc(RV("phone"), "No indicó")],
-      ["Fotos", `{{ Math.floor(((${RV("photos")}) || []).length / 2) }}`],
-    ]),
-    p("Revisa que el contenido sea sobre el auto y que sea apropiado antes de publicarla.", "font-size:14px;"),
-    button(DASHBOARD, "Moderar en el dashboard"),
-  ].join("\n"),
+  body: francisco({
+    titulo: "Nueva reseña con fotos por revisar",
+    intro: `Llegó una reseña con fotos. ${strong("No está publicada")}: aparece en el sitio solo cuando la apruebes en el dashboard. Revisa que las fotos sean del auto y que sean apropiadas.`,
+    cta: "Moderar en el dashboard",
+  }),
+});
+
+const resenaPublicadaFrancisco = layout({
+  internal: true,
+  preheader: "Se publicó una reseña nueva (sin fotos).",
+  doc: `  RESEÑAS (sin fotos): aviso interno a Francisco. Ya está publicada; no requiere acción.`,
+  body: francisco({
+    titulo: "Se publicó una reseña nueva",
+    intro: "Llegó una reseña sin fotos, así que se publicó sola. No tienes que hacer nada; queda en el dashboard junto a las demás.",
+    cta: "Ver en el dashboard",
+  }),
 });
 
 // ─── ASESORÍA ────────────────────────────────────────────────────────────────
@@ -208,6 +345,7 @@ const AS = (k) => field("Datos correo asesoría", k);
 
 const asesoriaConfirmada = layout({
   preheader: "Tu asesoría está confirmada. Te escribimos por WhatsApp.",
+  reason: "Recibes este correo porque contrataste la asesoría de electrificarte.com.",
   doc: `  ASESORÍA: confirmación de pago a la persona.
   Lee del nodo Set "Datos correo asesoría": nombre, telefono.
   ⚠️ Copy del giro: la asesoría NO negocia ni consigue ofertas. No mencionar $19.990.`,
@@ -215,13 +353,17 @@ const asesoriaConfirmada = layout({
     title("Tu asesoría está confirmada"),
     p(`Hola ${strong(esc(AS("nombre")))}, recibimos tu pago. Durante los próximos 10 días tienes un asesor experto por WhatsApp para ayudarte a elegir tu auto electrificado según tu uso, tu presupuesto y dónde vas a cargar.`),
     highlight("Te escribimos a este WhatsApp", esc(AS("telefono"))),
+    h3("Cómo va a ser"),
     specs([
       ["1. Diagnóstico", "Cómo usas el auto, cuántos km haces y con qué presupuesto."],
       ["2. Recomendación", "Hasta 3 modelos del catálogo, con datos reales de cada ficha."],
       ["3. Compra", "Cómo cotizar con vendedores oficiales y qué revisar antes de firmar."],
     ]),
+    h3("Para aprovecharla al máximo"),
+    p("Ten a mano tu presupuesto aproximado, cuántos kilómetros haces al día y si tienes dónde cargar (casa, trabajo o solo carga pública). Con eso la primera respuesta ya es útil."),
     p(`Si el número no es el correcto, escríbenos a <a href="mailto:contacto@electrificarte.com" style="color:${C.laguna};">contacto@electrificarte.com</a> y lo corregimos.`, "font-size:14px;"),
-    button(`${SITE}/marcas`, "Explorar el catálogo", "secondary"),
+    divider(),
+    explore("Mientras tanto, mira el catálogo"),
   ].join("\n"),
 });
 
@@ -246,8 +388,10 @@ const asesoriaFrancisco = layout({
 const out = {
   "waitlist-confirmacion.html": waitlistConfirmacion,
   "waitlist-francisco.html": waitlistFrancisco,
-  "resena-recibida.html": resenaRecibida,
+  "resena-en-revision.html": resenaEnRevision,
+  "resena-publicada.html": resenaPublicada,
   "nueva-resena-francisco.html": nuevaResenaFrancisco,
+  "resena-publicada-francisco.html": resenaPublicadaFrancisco,
   "asesoria-confirmada.html": asesoriaConfirmada,
   "asesoria-francisco.html": asesoriaFrancisco,
 };

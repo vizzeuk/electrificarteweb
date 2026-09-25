@@ -8,17 +8,16 @@
   <title>Electrificarte</title>
 </head>
 <!--
-  WAITLIST: confirmación a la persona que se registró. Va al nodo Resend de n8n.
-  Lee del nodo "Webhook waitlist": body.firstName, body.model (opcional).
-  ⚠️ La waitlist SOLO registra interesados: no prometer una oferta, no dar plazos y no decir
-  que el servicio de negociación es o será gratis.
+  RESEÑAS (con fotos): agradecimiento a quien la dejó. Queda en revisión hasta que Francisco
+  la apruebe en el dashboard. Lee del nodo "Webhook reseñas": firstName, carBrand, carModel,
+  rating, body.
 
   GENERADO por scripts/gen-emails.mjs (sistema de diseño v1). No editar a mano: cambiá el
   generador y corré  node scripts/gen-emails.mjs && node scripts/gen-waitlist-reviews-workflows.mjs
   Todo dato que escribe el usuario va escapado para HTML.
 -->
 <body style="margin:0;padding:0;background:#f2f7f6;-webkit-font-smoothing:antialiased;">
-  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">Quedaste registrado en la waitlist de Electrificarte.</div>
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">Recibimos tu reseña y sus fotos. La revisamos antes de publicarla.</div>
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f2f7f6;">
     <tr><td align="center" style="padding:32px 12px;">
       <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;">
@@ -31,34 +30,22 @@
         </td></tr>
 
         <tr><td style="background:#ffffff;border:1px solid #dfe4e4;border-radius:12px;padding:36px 32px 32px;">
-<h1 style="margin:0 0 16px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:28px;font-weight:700;line-height:1.1;letter-spacing:-0.02em;color:#0f1716;">Ya estás en la lista</h1>
-<p style="margin:0 0 16px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.55;color:#495251;">Hola <strong style="font-weight:600;color:#0f1716;">{{ String(($('Webhook waitlist').item.json.body.firstName) ?? '').trim().replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';') }}</strong>, registramos tus datos. Te contactaremos cuando abramos el acceso y tengamos novedades para ti.</p>
+<h1 style="margin:0 0 16px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:28px;font-weight:700;line-height:1.1;letter-spacing:-0.02em;color:#0f1716;">Gracias por compartir tu experiencia</h1>
+<p style="margin:0 0 16px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.55;color:#495251;">Hola <strong style="font-weight:600;color:#0f1716;">{{ String(($('Webhook reseñas').item.json.body.firstName) ?? '').trim().replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';') }}</strong>, recibimos tu reseña y tus fotos. Como trae imágenes, la revisamos antes de publicarla: te avisaremos si hay algo que ajustar.</p>
 
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:8px 0 24px;background:#caefea;border-radius:12px;">
   <tr><td style="padding:20px;">
-    <p style="margin:0;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#0f1716;">Auto que te interesa</p>
-    <p style="margin:4px 0 0;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:20px;line-height:1.25;font-weight:700;letter-spacing:-0.01em;color:#0f1716;">{{ String(($('Webhook waitlist').item.json.body.model) ?? '').trim().replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';') || 'Aún no lo definiste' }}</p>
+    <p style="margin:0;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#0f1716;">Tu reseña del {{ String(([$('Webhook reseñas').item.json.body.carBrand, $('Webhook reseñas').item.json.body.carModel].filter(Boolean).join(' ')) ?? '').trim().replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';') || 'auto' }}</p>
+    <p style="margin:4px 0 0;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:20px;line-height:1.25;font-weight:700;letter-spacing:-0.01em;color:#0f1716;">{{ '★'.repeat(Math.max(0, Math.min(5, Number($('Webhook reseñas').item.json.body.rating) || 0))) + '☆'.repeat(5 - Math.max(0, Math.min(5, Number($('Webhook reseñas').item.json.body.rating) || 0))) }} <span style="font-size:15px;font-weight:600;">{{ String(($('Webhook reseñas').item.json.body.rating) ?? '').trim().replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';') }}/5</span></p>
   </td></tr>
 </table>
-<p style="margin:0 0 12px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:18px;font-weight:700;line-height:1.3;letter-spacing:-0.01em;color:#0f1716;">Qué pasa ahora</p>
 
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:8px 0 24px;border-top:1px solid #dfe4e4;">
-  <tr>
-    <td style="padding:12px 16px 12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#495251;vertical-align:top;width:8%;">1</td>
-    <td style="padding:12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;font-weight:600;color:#0f1716;vertical-align:top;">Quedas en la lista con el modelo que te interesa.</td>
-  </tr>
-  <tr>
-    <td style="padding:12px 16px 12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#495251;vertical-align:top;width:8%;">2</td>
-    <td style="padding:12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;font-weight:600;color:#0f1716;vertical-align:top;">Te escribimos cuando abramos el acceso o haya novedades para ese modelo.</td>
-  </tr>
-  <tr>
-    <td style="padding:12px 16px 12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#495251;vertical-align:top;width:8%;">3</td>
-    <td style="padding:12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;font-weight:600;color:#0f1716;vertical-align:top;">Sin compromiso: si quieres salir de la lista, escríbenos a <a href="mailto:contacto@electrificarte.com" style="color:#1d605b;">contacto@electrificarte.com</a>.</td>
-  </tr>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+  <tr><td style="padding:4px 0 4px 16px;border-left:2px solid #1d605b;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.6;color:#0f1716;white-space:pre-line;">{{ String(($('Webhook reseñas').item.json.body.body) ?? '').trim().replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';') }}</td></tr>
 </table>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:32px 0 28px;"><tr><td style="border-top:1px solid #dfe4e4;font-size:0;line-height:0;">&nbsp;</td></tr></table>
 
-<p style="margin:0 0 12px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:18px;font-weight:700;line-height:1.3;letter-spacing:-0.01em;color:#0f1716;">Sigue explorando</p>
+<p style="margin:0 0 12px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:18px;font-weight:700;line-height:1.3;letter-spacing:-0.01em;color:#0f1716;">Mientras tanto</p>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #dfe4e4;">
   <tr><td style="border-bottom:1px solid #dfe4e4;">
     <a href="https://www.electrificarte.com/electrico/ev" style="display:block;padding:14px 0;text-decoration:none;">
@@ -120,13 +107,13 @@
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:28px 0 0;background:#f2f7f6;border:1px solid #dfe4e4;border-radius:12px;">
   <tr><td style="padding:24px;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
-      <td style="font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:18px;font-weight:700;line-height:1.3;letter-spacing:-0.01em;color:#0f1716;">¿No sabes cuál te conviene?</td>
-      <td align="right" style="font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:18px;font-weight:600;color:#0f1716;white-space:nowrap;">$4.990</td>
+      <td style="font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:18px;font-weight:700;line-height:1.3;letter-spacing:-0.01em;color:#0f1716;">¿Alguien cerca está pensando en cambiarse?</td>
+      
     </tr></table>
-    <p style="margin:8px 0 16px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.55;color:#495251;">Un asesor experto te acompaña por WhatsApp durante 10 días: entiende cómo usas el auto, te recomienda hasta 3 modelos del catálogo y te explica cómo cotizarlos con vendedores oficiales.</p>
+    <p style="margin:8px 0 16px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.55;color:#495251;">Tu experiencia vale mucho para quien está decidiendo. Compártele electrificarte.com: puede comparar modelos, calcular su ahorro y leer reseñas de dueños como tú.</p>
     <table role="presentation" cellpadding="0" cellspacing="0"><tr>
       <td style="border-radius:8px;background:#ffffff;border:1px solid #cad1d0;">
-        <a href="https://www.electrificarte.com/asesoria" style="display:inline-block;padding:12px 20px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:14px;font-weight:600;line-height:1.2;color:#0f1716;text-decoration:none;">Conocer la asesoría &rarr;</a>
+        <a href="https://www.electrificarte.com" style="display:inline-block;padding:12px 20px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:14px;font-weight:600;line-height:1.2;color:#0f1716;text-decoration:none;">Ir a electrificarte.com &rarr;</a>
       </td>
     </tr></table>
   </td></tr>
@@ -147,7 +134,7 @@
                   <a href="https://www.instagram.com/autos.electricos.con.francisco" style="color:#b4bdbc;text-decoration:underline;">Instagram</a>&nbsp;&nbsp;&nbsp;
                   <a href="https://www.tiktok.com/@autos_electricos_con_fco" style="color:#b4bdbc;text-decoration:underline;">TikTok</a>&nbsp;&nbsp;&nbsp;
                   <a href="mailto:contacto@electrificarte.com" style="color:#b4bdbc;text-decoration:underline;">contacto@electrificarte.com</a><br>
-                  Recibes este correo porque te registraste en la waitlist de electrificarte.com.
+                  Recibes este correo porque dejaste una reseña en electrificarte.com.
                 </td>
               </tr></table>
             </td></tr>
