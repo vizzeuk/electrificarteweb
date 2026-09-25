@@ -76,3 +76,6 @@ app/fonts/material-symbols-outlined-full.woff2
 
 # Respaldos del workflow central de n8n (contienen secretos de nodos, p. ej. Reveniu)
 n8n/.backups/
+
+# Guía visual generada (8 MB, se regenera con node scripts/gen-guia-diseno.mjs)
+docs/design/guia-diseno.html

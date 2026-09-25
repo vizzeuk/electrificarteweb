@@ -1,0 +1,272 @@
+[
+  {
+    "site": "web",
+    "page": "Home",
+    "file": "web-home-01.jpg"
+  },
+  {
+    "site": "web",
+    "page": "Home",
+    "file": "web-home-02.jpg"
+  },
+  {
+    "site": "web",
+    "page": "Home",
+    "file": "web-home-03.jpg"
+  },
+  {
+    "site": "web",
+    "page": "Home",
+    "file": "web-home-04.jpg"
+  },
+  {
+    "site": "web",
+    "page": "Home",
+    "file": "web-home-05.jpg"
+  },
+  {
+    "site": "web",
+    "page": "Home",
+    "file": "web-home-06.jpg"
+  },
+  {
+    "site": "web",
+    "page": "Home",
+    "file": "web-home-07.jpg"
+  },
+  {
+    "site": "web",
+    "page": "Home",
+    "file": "web-home-08.jpg"
+  },
+  {
+    "site": "web",
+    "page": "Home",
+    "file": "web-home-09.jpg"
+  },
+  {
+    "site": "web",
+    "page": "Home",
+    "file": "web-home-10.jpg"
+  },
+  {
+    "site": "web",
+    "page": "Home",
+    "file": "web-home-11.jpg"
+  },
+  {
+    "site": "web",
+    "page": "Home",
+    "file": "web-home-12.jpg"
+  },
+  {
+    "site": "web",
+    "page": "Home",
+    "file": "web-home-13.jpg"
+  },
+  {
+    "site": "web",
+    "page": "Asesoría",
+    "file": "web-asesoria-01.jpg"
+  },
+  {
+    "site": "web",
+    "page": "Asesoría",
+    "file": "web-asesoria-02.jpg"
+  },
+  {
+    "site": "web",
+    "page": "Asesoría",
+    "file": "web-asesoria-03.jpg"
+  },
+  {
+    "site": "web",
+    "page": "Asesoría",
+    "file": "web-asesoria-04.jpg"
+  },
+  {
+    "site": "web",
+    "page": "Asesoría",
+    "file": "web-asesoria-05.jpg"
+  },
+  {
+    "site": "web",
+    "page": "Asesoría",
+    "file": "web-asesoria-06.jpg"
+  },
+  {
+    "site": "web",
+    "page": "Categoría: eléctrico puro",
+    "file": "web-electrico-01.jpg"
+  },
+  {
+    "site": "web",
+    "page": "Categoría: eléctrico puro",
+    "file": "web-electrico-02.jpg"
+  },
+  {
+    "site": "web",
+    "page": "Categoría: eléctrico puro",
+    "file": "web-electrico-03.jpg"
+  },
+  {
+    "site": "web",
+    "page": "Categoría: eléctrico puro",
+    "file": "web-electrico-04.jpg"
+  },
+  {
+    "site": "web",
+    "page": "Categoría: eléctrico puro",
+    "file": "web-electrico-05.jpg"
+  },
+  {
+    "site": "web",
+    "page": "Ficha: Hyundai IONIQ 5",
+    "file": "web-pdp-01.jpg"
+  },
+  {
+    "site": "web",
+    "page": "Ficha: Hyundai IONIQ 5",
+    "file": "web-pdp-02.jpg"
+  },
+  {
+    "site": "web",
+    "page": "Ficha: Hyundai IONIQ 5",
+    "file": "web-pdp-03.jpg"
+  },
+  {
+    "site": "web",
+    "page": "Ficha: Hyundai IONIQ 5",
+    "file": "web-pdp-04.jpg"
+  },
+  {
+    "site": "web",
+    "page": "Ficha: Hyundai IONIQ 5",
+    "file": "web-pdp-05.jpg"
+  },
+  {
+    "site": "web",
+    "page": "Ficha: Hyundai IONIQ 5",
+    "file": "web-pdp-06.jpg"
+  },
+  {
+    "site": "web",
+    "page": "Ficha: Hyundai IONIQ 5",
+    "file": "web-pdp-07.jpg"
+  },
+  {
+    "site": "web",
+    "page": "Comparador",
+    "file": "web-comparador-01.jpg"
+  },
+  {
+    "site": "web",
+    "page": "Comparador",
+    "file": "web-comparador-02.jpg"
+  },
+  {
+    "site": "web",
+    "page": "Calculadora de ahorro",
+    "file": "web-calculadora-01.jpg"
+  },
+  {
+    "site": "web",
+    "page": "Calculadora de ahorro",
+    "file": "web-calculadora-02.jpg"
+  },
+  {
+    "site": "web",
+    "page": "Calculadora de ahorro",
+    "file": "web-calculadora-03.jpg"
+  },
+  {
+    "site": "ven",
+    "page": "Home",
+    "file": "ven-home-01.jpg"
+  },
+  {
+    "site": "ven",
+    "page": "Home",
+    "file": "ven-home-02.jpg"
+  },
+  {
+    "site": "ven",
+    "page": "Home",
+    "file": "ven-home-03.jpg"
+  },
+  {
+    "site": "ven",
+    "page": "Home",
+    "file": "ven-home-04.jpg"
+  },
+  {
+    "site": "ven",
+    "page": "Home",
+    "file": "ven-home-05.jpg"
+  },
+  {
+    "site": "ven",
+    "page": "Home",
+    "file": "ven-home-06.jpg"
+  },
+  {
+    "site": "ven",
+    "page": "Home",
+    "file": "ven-home-07.jpg"
+  },
+  {
+    "site": "ven",
+    "page": "Cómo funciona",
+    "file": "ven-como-funciona-01.jpg"
+  },
+  {
+    "site": "ven",
+    "page": "Cómo funciona",
+    "file": "ven-como-funciona-02.jpg"
+  },
+  {
+    "site": "ven",
+    "page": "Cómo funciona",
+    "file": "ven-como-funciona-03.jpg"
+  },
+  {
+    "site": "ven",
+    "page": "Cómo funciona",
+    "file": "ven-como-funciona-04.jpg"
+  },
+  {
+    "site": "ven",
+    "page": "Cómo funciona",
+    "file": "ven-como-funciona-05.jpg"
+  },
+  {
+    "site": "ven",
+    "page": "Ventajas",
+    "file": "ven-ventajas-01.jpg"
+  },
+  {
+    "site": "ven",
+    "page": "Ventajas",
+    "file": "ven-ventajas-02.jpg"
+  },
+  {
+    "site": "ven",
+    "page": "Ventajas",
+    "file": "ven-ventajas-03.jpg"
+  },
+  {
+    "site": "ven",
+    "page": "Ventajas",
+    "file": "ven-ventajas-04.jpg"
+  },
+  {
+    "site": "ven",
+    "page": "Registro",
+    "file": "ven-unirse-01.jpg"
+  },
+  {
+    "site": "ven",
+    "page": "Registro",
+    "file": "ven-unirse-02.jpg"
+  }
+]
