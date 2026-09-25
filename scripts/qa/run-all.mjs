@@ -4,11 +4,12 @@
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 
-const PURE = new Set(["auction-score.test.ts", "auction-routing.test.ts", "recheck-diff.test.ts", "pdp-contrato.test.ts", "sheet-sync.test.ts"]);
+const PURE = new Set(["auction-score.test.ts", "auction-routing.test.ts", "recheck-diff.test.ts", "pdp-contrato.test.ts", "sheet-sync.test.ts", "asesoria-vigencia.test.ts"]);
 const TESTS = [
   "recheck-diff.test.ts",
   "pdp-contrato.test.ts",
   "sheet-sync.test.ts",
+  "asesoria-vigencia.test.ts",
   "auction-score.test.ts",
   "auction-routing.test.ts",
   "auction-sin-ofertas.test.ts",
