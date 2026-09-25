@@ -14,13 +14,17 @@
  */
 
 import { createClient } from "@sanity/client";
-import { writeFileSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
+import { describir, sheetSyncConfigured, sincronizar } from "@/lib/sheet-sync";
 
 const soloCheck = process.argv.includes("--check")
   ? process.argv[process.argv.indexOf("--check") + 1]
   : null;
-/** Escribe .context/sheet/REVISAR.tsv para pegarlo como hoja del Sheet. */
-const comoTsv = process.argv.includes("--tsv");
+/**
+ * --sheet: sube los hallazgos a la hoja REVISAR del Sheet (y deja copia en
+ * .context/sheet/REVISAR.tsv). --tsv es el nombre viejo del mismo flag.
+ */
+const alSheet = process.argv.includes("--sheet") || process.argv.includes("--tsv");
 
 const sanity = createClient({
   projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID!,
@@ -387,7 +391,7 @@ async function main(): Promise<void> {
     }
   }
 
-  if (comoTsv) {
+  if (alSheet) {
     // Ordenado por gravedad y luego por check, que es el orden en que conviene
     // trabajarlos: primero lo que está mal en el sitio ahora.
     const peso = { alta: 0, media: 1, baja: 2 };
@@ -395,12 +399,38 @@ async function main(): Promise<void> {
       (a, b) => peso[a.gravedad] - peso[b.gravedad] || a.check.localeCompare(b.check) || a.auto.localeCompare(b.auto),
     );
     const celda = (v: string) => (v ?? "").replace(/[\t\r\n]+/g, " ").trim();
-    const tsv = [
-      ["gravedad", "tipo", "auto", "detalle", "resuelto", "nota"].join("\t"),
-      ...filas.map((h) => [h.gravedad, h.check, h.auto, celda(h.detalle), "", ""].join("\t")),
-    ].join("\n");
-    writeFileSync(".context/sheet/REVISAR.tsv", tsv + "\n");
-    console.log(`  → .context/sheet/REVISAR.tsv (${filas.length} filas)\n`);
+    const COLUMNAS = ["gravedad", "tipo", "auto", "detalle", "resuelto", "nota", "vigente"];
+    const registros = filas.map((h) => ({
+      gravedad: h.gravedad, tipo: h.check, auto: h.auto, detalle: celda(h.detalle),
+      resuelto: "", nota: "", vigente: "si",
+    }));
+    mkdirSync(".context/sheet", { recursive: true });
+    writeFileSync(
+      ".context/sheet/REVISAR.tsv",
+      [COLUMNAS, ...registros.map((r) => COLUMNAS.map((c) => r[c as keyof typeof r]))]
+        .map((f) => f.join("\t")).join("\n") + "\n",
+    );
+    console.log(`  → .context/sheet/REVISAR.tsv (${filas.length} filas)`);
+
+    // Con --check la corrida ve un solo tipo de hallazgo: subirla marcaría todos
+    // los demás como "ya no aparece".
+    if (soloCheck) {
+      console.log("  (con --check no se sube al Sheet: marcaría el resto como resuelto)\n");
+    } else if (!sheetSyncConfigured()) {
+      console.log("  \x1b[33mSin N8N_SHEET_SYNC_URL/SECRET: el Sheet no se tocó.\x1b[0m\n");
+    } else {
+      // Clave = qué se encontró y dónde. `resuelto` y `nota` son de quien revisa
+      // y nunca se vacían; lo que ya no aparece se marca, no se borra, para que
+      // no se pierda la nota de por qué se resolvió.
+      const r = await sincronizar("REVISAR", {
+        columnas: COLUMNAS,
+        filas: registros,
+        clave: (f) => (f.tipo && f.auto ? `${f.tipo}|${f.auto}|${f.detalle}` : ""),
+        noVaciar: ["resuelto", "nota"],
+        ausentes: { columna: "vigente", valor: `no — ya no aparece (${new Date().toISOString().slice(0, 10)})` },
+      });
+      console.log(describir("REVISAR", r) + "\n");
+    }
   }
 
   console.log(`── ${hallazgos.length} hallazgos ──`);

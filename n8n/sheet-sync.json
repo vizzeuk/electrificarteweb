@@ -1,0 +1,218 @@
+{
+  "id": "ecSheetSync00001",
+  "name": "Electrificarte — Sheet sync (proxy de scripts a Google Sheets)",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Sheet sync — proxy a Google Sheets\n\nLo usan los scripts de `scripts/` vía `lib/sheet-sync.ts`.\nNo tiene lógica: valida, reenvía con **Sheets Cadre** y devuelve.\n\nSi deja de andar, casi siempre es el OAuth de **Sheets Cadre** vencido o revocado.",
+        "height": 220,
+        "width": 420
+      },
+      "id": "nota",
+      "name": "Nota",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -460,
+        -60
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "electrificarte-sheet-sync",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        200
+      ],
+      "webhookId": "3f1c7a52-5e0b-4d1a-9d0e-ec5eee7a5c01",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ecSheetSyncCred1",
+          "name": "Electrificarte Sheet Sync"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const PERMITIDOS = [\"1QYqaKy3pRkGhAe4K4VnV0uUa5G1sOWNMvkyWQxTiGd8\"];\nconst b = $json.body ?? {};\nconst metodo = String(b.metodo ?? \"\").toUpperCase();\nconst ruta = String(b.ruta ?? \"\");\nconst error = (msg) => [{ json: { ok: false, error: msg } }];\n\nif (![\"GET\", \"POST\", \"PUT\"].includes(metodo)) return error(\"metodo debe ser GET, POST o PUT\");\n// ruta = \"/<spreadsheetId>...\" — el resto (/values/..., :batchUpdate) queda libre.\nconst m = ruta.match(/^\\/([A-Za-z0-9_-]+)([/:?].*)?$/);\nif (!m) return error(\"ruta inválida\");\nif (!PERMITIDOS.includes(m[1])) return error(\"spreadsheet no permitido: \" + m[1]);\n\nreturn [{ json: {\n  ok: true,\n  metodo,\n  url: \"https://sheets.googleapis.com/v4/spreadsheets\" + ruta,\n  conCuerpo: metodo !== \"GET\",\n  cuerpo: JSON.stringify(b.cuerpo ?? {}),\n} }];"
+      },
+      "id": "validar",
+      "name": "Validar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ok",
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "si-ok",
+      "name": "¿Válido?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        440,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "={{ $json.metodo }}",
+        "url": "={{ $json.url }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": "={{ $json.conCuerpo }}",
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.cuerpo }}",
+        "options": {
+          "timeout": 50000,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "sheets",
+      "name": "Google Sheets API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        680,
+        100
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "rwCyQeH6TnQJDJkS",
+          "name": "Sheets Cadre"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json.body ?? {}) }}",
+        "options": {
+          "responseCode": "={{ $json.statusCode }}"
+        }
+      },
+      "id": "responder",
+      "name": "Responder",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        900,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ error: $json.error }) }}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "id": "rechazar",
+      "name": "Rechazar",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        680,
+        320
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar": {
+      "main": [
+        [
+          {
+            "node": "¿Válido?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Válido?": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets API",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Rechazar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets API": {
+      "main": [
+        [
+          {
+            "node": "Responder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Santiago"
+  },
+  "active": false
+}
