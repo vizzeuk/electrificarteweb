@@ -11,8 +11,16 @@
  *   Anthropic        → respuestas guionadas (o `--llm-real` para usar la API)
  *   Sanity           → REAL (solo lectura): las tools consultan el catálogo
  *
- *   npx tsx --env-file=.env.local scripts/qa/whatsapp-sim.mts
- *   npx tsx --env-file=.env.local scripts/qa/whatsapp-sim.mts --llm-real   # cuando haya créditos
+ * El paquete `chat` es solo-ESM y tsx carga los .ts del proyecto como CJS, así
+ * que se empaqueta con esbuild antes de correr:
+ *
+ *   npx esbuild scripts/qa/whatsapp-sim.mts --bundle --platform=node --format=esm \
+ *     --packages=external --outfile=.context/whatsapp-sim.mjs --log-level=warning
+ *   node --env-file=.env.local .context/whatsapp-sim.mjs
+ *   node --env-file=.env.local .context/whatsapp-sim.mjs --llm-real   # cuando haya créditos
+ *
+ * No escribe en ninguna base real ni manda WhatsApps. Lo único real es la
+ * lectura del catálogo en Sanity (y Anthropic con --llm-real).
  *
  * Con `--llm-real` los escenarios que dependen de una respuesta guionada del
  * modelo (los de guardrails de salida) se saltan: no se puede forzar al modelo
@@ -22,6 +30,14 @@
 import { createHmac } from "node:crypto";
 
 const LLM_REAL = process.argv.includes("--llm-real");
+
+// El rate limiter usa scripts Lua que el Redis simulado no emula: falla abierto
+// (a propósito, ver CLAUDE.md) y deja un stack trace por mensaje. Se silencia.
+const errorOriginal = console.error;
+console.error = (...args: unknown[]) => {
+  if (String(args[0]).includes("[chat rate-limit]")) return;
+  errorOriginal(...args);
+};
 
 // ─── Entorno aislado (antes de importar el bot) ──────────────────────────────
 
