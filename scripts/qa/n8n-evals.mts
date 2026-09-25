@@ -2,7 +2,7 @@
 /**
  * Evals de los flujos web → n8n → Supabase → correos (waitlist y reseñas), contra el n8n real.
  *
- *   npx tsx --env-file=.env.local scripts/qa/n8n-evals.mts --to tu@gmail.com [--base http://localhost:3100] [--burst 10] [--solo waitlist|reviews|carga]
+ *   npx tsx --env-file=.env.local scripts/qa/n8n-evals.mts --to tu@gmail.com [--base http://localhost:3100] [--burst 10] [--solo waitlist|reviews|carga] [--casos 4,5]
  *
  * ⚠️ MANDA CORREOS REALES. Cada caso usa `--to` tal cual como email de la persona (sin
  * plus-addressing: no todos los servidores lo aceptan y un rebote daña la reputación del dominio
@@ -22,6 +22,9 @@ const BASE = arg("base") ?? "http://localhost:3100";
 const TO = arg("to");
 const BURST = Number(arg("burst") ?? 0);
 const SOLO = arg("solo");
+// --casos 4,5 → corre solo esos casos (1-based). Útil en producción: el rate limit de reseñas es 3/min por IP.
+const CASOS = arg("casos")?.split(",").map((n) => Number(n) - 1);
+const pick = (i: number) => !CASOS || CASOS.includes(i);
 if (!TO || !TO.includes("@")) { console.error("Falta --to tu@correo.com"); process.exit(1); }
 const RUN = Date.now().toString(36);
 const mark = (tag: string) => `QA-${RUN}-${tag}`;
@@ -191,8 +194,8 @@ async function limpiar() {
 
 try {
   console.log(`\nEvals n8n — corrida ${RUN} — correos a ${TO}\n`);
-  if (!SOLO || SOLO === "waitlist") for (const [i, c] of WL_CASES.entries()) await waitlistCase(c, i);
-  if (!SOLO || SOLO === "reviews") for (const [i, c] of RV_CASES.entries()) await reviewCase(c, i);
+  if (!SOLO || SOLO === "waitlist") for (const [i, c] of WL_CASES.entries()) if (pick(i)) await waitlistCase(c, i);
+  if (!SOLO || SOLO === "reviews") for (const [i, c] of RV_CASES.entries()) if (pick(i)) await reviewCase(c, i);
   if (!SOLO || SOLO === "carga") await negativos();
   if (BURST > 0) await burst(BURST);
 } finally {

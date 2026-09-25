@@ -18,7 +18,17 @@ correcto responde **403** y el flujo no corre.
 Estado:
 - ✅ Web mandando el header (`N8N_WEBHOOK_SECRET` en Vercel production + preview y `.env.local`).
 - ✅ `n8n/waitlist.json` y `n8n/reviews.json` generados con `authentication: headerAuth`.
-- ⏳ Activarlo en los workflows vivos de n8n (pasos abajo).
+- ✅ **Activo desde el 25-sep-2026** en `waitlist`, `reviews`, `electrificarte-asesoria` y
+  `newsletter` (credencial n8n "Web Electrificarte (x-electrificarte-secret)", id en
+  `N8N_HEADER_AUTH_CRED` de `.env.local`). Verificado: sin la clave o con una falsa → 403;
+  el sitio en producción → waitlist 5/5 y reseñas 5/5. `electrificarte-customers` (Oferta, 🟡
+  standby) está desactivado; al reactivarlo, correr el sync para que tome la clave.
+- ⏳ Contacto y feedback (`N8N_CONTACT_URL`, `N8N_FEEDBACK_URL`): la web ya manda la clave, pero
+  sus URLs están marcadas como sensibles en Vercel y no se pudo confirmar a qué webhook apuntan.
+  Activarla a mano en ese nodo Webhook (paso 2 de abajo).
+
+`scripts/n8n-sync-central.mjs` mantiene la clave activa por defecto (lee `N8N_HEADER_AUTH_CRED`);
+desactivarla exige `--sin-header-auth`.
 
 ## Orden: primero la web, después n8n
 

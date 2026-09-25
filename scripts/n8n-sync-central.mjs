@@ -3,7 +3,11 @@
 //
 //   node --env-file=.env.local scripts/n8n-sync-central.mjs [--dry-run]
 //        [--francisco-to=correo@x.com]   redirige los avisos internos (para evals)
-//        [--header-auth=<credentialId>]  activa Header Auth en los dos webhooks
+//        [--sin-header-auth]             DESACTIVA el Header Auth (solo para diagnosticar)
+//
+// Header Auth: por defecto se activa con la credencial N8N_HEADER_AUTH_CRED de .env.local
+// (credencial "Web Electrificarte (x-electrificarte-secret)" en n8n). Así correr el script sin
+// flags nunca deja los webhooks abiertos por olvido.
 //
 // Qué hace: respalda el workflow en n8n/.backups/ (gitignored: trae secretos de otros nodos),
 // saca los nodos viejos de esos dos tramos, mete los generados en la misma posición del
@@ -15,10 +19,15 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 
 const CENTRAL = "80ByudGuUOy5EkJzQga6g"; // hoy se llama "Reseñas UGC (captura + correos)" pero tiene todos los webhooks
 const FRANCISCO = "francisco@electrificarte.com";
+// Webhooks del workflow central que SOLO llama esta web (mandan x-electrificarte-secret): con
+// --header-auth se les activa también. NO van acá: electrificarte-pago (lo llama Reveniu, se
+// protege con su propio reveniu-secret-key) ni electrificarte-vendors (página de vendedores).
+const EXTRA_AUTH_PATHS = ["electrificarte-asesoria", "newsletter", "electrificarte-customers"];
 const arg = (k) => process.argv.find((a) => a.startsWith(`--${k}`))?.split("=")[1] ?? (process.argv.includes(`--${k}`) ? true : undefined);
 const DRY = !!arg("dry-run");
 const FRANCISCO_TO = arg("francisco-to");
-const HEADER_AUTH = arg("header-auth");
+const HEADER_AUTH = arg("sin-header-auth") ? undefined : (arg("header-auth") ?? process.env.N8N_HEADER_AUTH_CRED);
+if (!HEADER_AUTH && !arg("sin-header-auth")) throw new Error("Falta N8N_HEADER_AUTH_CRED en .env.local (o --sin-header-auth para desactivarlo a propósito)");
 
 const { N8N_API_URL, N8N_API_KEY } = process.env;
 if (!N8N_API_URL || !N8N_API_KEY) throw new Error("Faltan N8N_API_URL / N8N_API_KEY en .env.local");
@@ -78,6 +87,13 @@ for (const t of tramos) {
     nodes.push(n);
   }
   Object.assign(connections, gen.connections);
+}
+
+if (HEADER_AUTH) for (const n of nodes) {
+  if (n.type.endsWith(".webhook") && EXTRA_AUTH_PATHS.includes(n.parameters.path)) {
+    n.parameters = { ...n.parameters, authentication: "headerAuth" };
+    n.credentials = { httpHeaderAuth: { id: HEADER_AUTH, name: "Web Electrificarte (x-electrificarte-secret)" } };
+  }
 }
 
 // Validaciones antes de subir.
