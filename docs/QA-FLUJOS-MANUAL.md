@@ -203,6 +203,22 @@ Simula el recorrido real completo y **limpia lo que crea, aunque falle**:
 11. 🔒 Confirma que `/api/reviews/publish` responde **401 sin `x-admin-secret`**
 12. Confirma que aparece en el sitio como "QA A." y que **la vista no expone email, teléfono ni apellido**
 
+### Demo para mostrarle a Francisco
+
+Siembra reseñas **ya aprobadas** en PDPs reales, para que la sección se vea con contenido:
+
+```bash
+npx tsx --env-file=.env.local scripts/qa/seed-reviews-demo.ts            # sembrar
+npx tsx --env-file=.env.local scripts/qa/seed-reviews-demo.ts --cleanup  # borrar
+```
+
+No es UI falsa: pasan por la tabla y la vista reales. Quedan marcadas con
+`source='demo'`, así que se borran de una sin tocar reseñas de verdad.
+
+Autos sembrados: `hyundai-ioniq-5` · `byd-dolphin-mini` · `byd-song-plus-dm-i` ·
+`kia-ev6` · `hyundai-tucson-hibrido`. Alimentan también la sección de la home
+(`getTopReviews` toma las de 4★ o más).
+
 ### Correos
 El e2e no manda correos (los manda n8n). Para verlos:
 ```bash
