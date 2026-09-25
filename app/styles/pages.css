@@ -101,6 +101,31 @@
 @media (max-width: 899px) { .faq-2 { grid-template-columns: minmax(0, 1fr); } }
 
 /* ==================================================================== PLP */
+/* Auto destacado del encabezado de las PLP (components/car/FeaturedCar.tsx): foto grande con
+   una ficha maciza que flota sobre su borde inferior. La sombra se justifica porque flota. */
+.feature { display: block; position: relative; color: inherit; }
+.feature__media { position: relative; aspect-ratio: 4 / 3; border-radius: var(--radius-card); overflow: hidden; background: var(--canvas-2); }
+.feature__media img { width: 100%; height: 100%; object-fit: cover; transition: transform var(--duration-slow) var(--ease); }
+.feature:hover .feature__media img { transform: scale(1.03); }
+.feature__chips { position: absolute; top: var(--space-4); left: var(--space-4); right: var(--space-4); display: flex; justify-content: space-between; gap: var(--space-2); }
+.feature__panel { position: relative; margin: calc(var(--space-16) * -1) var(--space-6) 0; padding: var(--space-5) var(--space-6) var(--space-6); display: grid; gap: var(--space-4); background: var(--surface); border: var(--border-hairline) solid var(--line); border-radius: var(--radius-card); box-shadow: var(--shadow-overlay); }
+.feature__name { margin-top: 2px; font-family: var(--font-display); font-weight: 700; font-size: var(--text-h3); line-height: var(--lh-title); letter-spacing: var(--ls-title); }
+.feature__specs { display: grid; grid-template-columns: repeat(var(--n, 3), minmax(0, 1fr)); margin: 0; border-block: var(--border-hairline) solid var(--line); }
+.feature__specs > div { padding: var(--space-3) var(--space-3) var(--space-3) 0; }
+.feature__specs > div + div { padding-left: var(--space-3); border-left: var(--border-hairline) solid var(--line); }
+.feature__specs dt { font-size: var(--text-label); color: var(--ink-2); }
+.feature__specs dd { margin: 2px 0 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+.feature__foot { display: flex; justify-content: space-between; align-items: flex-end; gap: var(--space-4); flex-wrap: wrap; }
+.feature:hover .feature__foot .btn { border-color: var(--ink); }
+@media (max-width: 599px) {
+  .feature__panel { margin-inline: var(--space-3); margin-top: calc(var(--space-10) * -1); padding: var(--space-4); }
+  .feature__specs { grid-template-columns: minmax(0, 1fr); }
+  .feature__specs > div, .feature__specs > div + div { display: flex; justify-content: space-between; padding: var(--space-2) 0; border-left: 0; }
+  .feature__specs > div + div { border-top: var(--border-hairline) solid var(--line); }
+}
+/* Con auto destacado el encabezado se reparte en mitades: la foto gana el peso que le faltaba. */
+@media (min-width: 900px) { .page-head__grid--feature { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+
 .ad-card { display: block; }
 .ad-card__label { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-3); }
 .ad-card .card__media { position: relative; aspect-ratio: 16 / 10; background: var(--canvas-2); overflow: hidden; }

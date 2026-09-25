@@ -8,6 +8,7 @@ import { PlpFilters, LoadMore } from "@/components/filters/PlpFilters";
 import { useCarFilters } from "@/hooks/useCarFilters";
 import type { FacetCar } from "@/lib/filters/types";
 import { CarCard } from "@/components/car/CarCard";
+import { FeaturedCar } from "@/components/car/FeaturedCar";
 import { electricTypeLabel } from "@/components/car/ElectricTypeBadge";
 import { Icon } from "@/components/ui/Icon";
 import { OfferCta } from "@/components/waitlist/OfferCta";
@@ -92,6 +93,8 @@ export interface AdCarData {
   basePrice: number;
   discountPrice?: number;
   range?: number;
+  /** true = lo eligió Sanity (heroFeaturedCar): espacio pagado, se rotula "Publicidad". */
+  sponsored?: boolean;
 }
 
 export interface PlpBannerData {
@@ -183,7 +186,12 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
     discounted > 0 && { num: String(discounted), label: discounted === 1 ? "modelo con descuento" : "modelos con descuento" },
   ].filter(Boolean) as { num: string; label: string }[];
 
-  const adHasDiscount = !!adCar?.discountPrice && adCar.discountPrice < adCar.basePrice;
+  // Specs del destacado: salen del mismo listado (si el auto elegido en Sanity no está en él, va sin specs).
+  const adFull = adCar ? cars.find((c) => c.slug === adCar.slug) : undefined;
+  const adCarBrand = adCar?.brand ?? "";
+  const adCarSpecs = adFull
+    ? { battery: adFull.battery, range: adFull.range, maxVersionRange: adFull.maxVersionRange, electricRangeKm: adFull.electricRangeKm, fuelConsumption: adFull.fuelConsumption, rendimientoElectrico: adFull.rendimientoElectrico, electricTypeTag: adFull.electricTypeTag, power: adFull.power }
+    : null;
   const others = otherTypes.filter((t) => t.slug !== slug);
   const ctaTitle = n > 1 ? `¿No sabes cuál de los ${n} te conviene?` : n === 1 ? "¿No sabes si te conviene?" : "¿No sabes qué auto te conviene?";
 
@@ -200,7 +208,7 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
             <span aria-current="page">{meta.label}</span>
           </nav>
 
-          <div className={cn("page-head__grid", !adCar && "grid-cols-1")}>
+          <div className={cn("page-head__grid", adCar ? "page-head__grid--feature" : "grid-cols-1")}>
             <div>
               <div className="head-chips">
                 <span className="chip">{tagLabel}</span>
@@ -222,49 +230,17 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
             </div>
 
             {adCar && (
-              <div>
-                <div className="ad-card__label">
-                  <span className="t-label">Publicidad</span>
-                </div>
-                <Link href={`/auto/${adCar.slug}`} className="card ad-card">
-                  <div className="card__media">
-                    {adCar.imageUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={sanityImg(baseUrl(adCar.imageUrl), { w: 960 })} alt="" decoding="async" />
-                    ) : (
-                      <span className="flex h-full items-center justify-center">
-                        <Icon name="electric_car" className="text-[48px] text-line-2" />
-                      </span>
-                    )}
-                  </div>
-                  <div className="ad-card__body">
-                    <div>
-                      <p className="car__brand">{adCar.brand}</p>
-                      <p className="car__name">{cleanSeparators(adCar.name)}</p>
-                    </div>
-                    <div className="ad-card__row">
-                      <div>
-                        {adHasDiscount ? (
-                          <>
-                            <p className="price-was">{formatCLP(adCar.basePrice)}</p>
-                            <p className="price">{formatCLP(adCar.discountPrice)}</p>
-                            <p className="price-save">Ahorras {formatCLP(adCar.basePrice - (adCar.discountPrice ?? adCar.basePrice))}</p>
-                          </>
-                        ) : (
-                          <>
-                            <p className="car__price-label">Precio de lista</p>
-                            <p className="price">{formatCLP(adCar.basePrice)}</p>
-                          </>
-                        )}
-                      </div>
-                      <span className="btn btn--secondary btn--sm">
-                        Ver auto
-                        <Icon name="arrow_forward" size="none" className="arrow" />
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-              </div>
+              <FeaturedCar
+                slug={adCar.slug}
+                name={adCar.name}
+                brand={adCarBrand}
+                imageUrl={adCar.imageUrl}
+                basePrice={adCar.basePrice}
+                discountPrice={adCar.discountPrice}
+                specs={adCarSpecs}
+                sponsored={adCar.sponsored}
+                priority={true}
+              />
             )}
           </div>
 

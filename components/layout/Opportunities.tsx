@@ -180,7 +180,7 @@ export function Opportunities({ title = "Destacados Electrificarte", cars }: Opp
         </div>
       </div>
 
-      {/* La primera card se alinea con el contenedor; el resto sale por la derecha. */}
+      {/* Móvil: la primera card se alinea con el título y el resto sale por la derecha. Escritorio: contenido en el ancho de la página (ver .rail en home.css). */}
       <div
         ref={trackRef}
         id="rail-opportunities"

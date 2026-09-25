@@ -99,6 +99,12 @@
 .rail::-webkit-scrollbar { display: none; }
 .rail > * { scroll-snap-align: start; }
 @media (max-width: 767px) { .rail { --rail-w: min(80vw, 300px); } }
+/* En escritorio el riel no sangra: en pantallas anchas (27") el padding de alineación dejaba
+   cientos de px en blanco a la izquierda y las cards pegadas al borde derecho. Queda contenido
+   en el ancho de .wrap, alineado con el título, con --rail-cols cards completas a la vista. */
+@media (min-width: 1280px) {
+  .rail { --rail-pad: 0px; --rail-cols: 4; width: min(var(--page-max), 100% - 2 * var(--gutter)); margin-inline: auto; grid-auto-columns: calc((100% - (var(--rail-cols) - 1) * var(--grid-gap)) / var(--rail-cols)); }
+}
 
 /* ---------------------------------------------------- TIPOS ELÉCTRICOS ---- */
 .types { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--grid-gap); }

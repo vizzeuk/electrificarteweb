@@ -94,6 +94,7 @@ export default async function TipoPage({ params }: PageProps) {
     basePrice:     rawAdCar.basePrice,
     discountPrice: rawAdCar.discountPrice,
     range:         rawAdCar.range,
+    sponsored:     !!sanityMeta.heroFeaturedCar,
   } : null;
   const adText = sanityMeta.heroAdText ?? "El mejor precio del mercado garantizado";
 

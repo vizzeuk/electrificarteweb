@@ -8,6 +8,7 @@ import { PlpFilters, LoadMore } from "@/components/filters/PlpFilters";
 import { useCarFilters } from "@/hooks/useCarFilters";
 import type { FacetCar } from "@/lib/filters/types";
 import { CarCard } from "@/components/car/CarCard";
+import { FeaturedCar } from "@/components/car/FeaturedCar";
 import { electricTypeLabel } from "@/components/car/ElectricTypeBadge";
 import { Icon } from "@/components/ui/Icon";
 import { OfferCta } from "@/components/waitlist/OfferCta";
@@ -207,7 +208,11 @@ export default function BrandPageContent({ slug, brand, hotDealUrgencyLabel }: B
   ].filter(Boolean) as { num: string; label: string }[];
 
   const featured = featuredCarForHero;
-  const featuredHasDiscount = !!featured && featured.discountPrice < featured.basePrice;
+  // Specs del destacado: salen del listado de la marca (si no está en él, va sin specs).
+  const featuredFull = featured ? cars.find((c) => c.slug === featured.slug) : undefined;
+  const featuredSpecs = featuredFull
+    ? { battery: featuredFull.batteryCapacity, range: featuredFull.range, maxVersionRange: featuredFull.maxVersionRange, electricRangeKm: featuredFull.electricRangeKm, fuelConsumption: featuredFull.fuelConsumption, rendimientoElectrico: featuredFull.rendimientoElectrico, electricTypeTag: featuredFull.electricTypeTag, power: featuredFull.powerCv }
+    : null;
   const tagline = noDash(brand.heroTagline);
   const stats = brand.stats.slice(0, 4);
   const hasVideos = brand.videos.length > 0;
@@ -226,7 +231,7 @@ export default function BrandPageContent({ slug, brand, hotDealUrgencyLabel }: B
             <span aria-current="page">{brand.name}</span>
           </nav>
 
-          <div className={cn("page-head__grid", !featured && "grid-cols-1")}>
+          <div className={cn("page-head__grid", featured ? "page-head__grid--feature" : "grid-cols-1")}>
             <div>
               {(brand.logoUrl || brand.country) && (
                 <div className="head-chips items-center">
@@ -260,53 +265,17 @@ export default function BrandPageContent({ slug, brand, hotDealUrgencyLabel }: B
             </div>
 
             {featured && (
-              <div>
-                {/* "Publicidad" solo cuando el auto lo eligió Sanity (heroFeaturedCar). */}
-                {featured.isSponsored && (
-                  <div className="ad-card__label">
-                    <span className="t-label">Publicidad</span>
-                  </div>
-                )}
-                <Link href={`/auto/${featured.slug}`} className="card ad-card">
-                  <div className="card__media">
-                    {featured.imageUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={sanityImg(baseUrl(featured.imageUrl), { w: 960 })} alt="" fetchPriority="high" decoding="async" />
-                    ) : (
-                      <span className="flex h-full items-center justify-center">
-                        <Icon name="electric_car" className="text-[48px] text-line-2" />
-                      </span>
-                    )}
-                    {HOT_DEALS_ENABLED && featured.isHotDeal && <span className="chip chip--soft">Oferta</span>}
-                  </div>
-                  <div className="ad-card__body">
-                    <div>
-                      <p className="car__brand">{brand.name}</p>
-                      <p className="car__name">{cleanSeparators(featured.name)}</p>
-                    </div>
-                    <div className="ad-card__row">
-                      <div>
-                        {featuredHasDiscount ? (
-                          <>
-                            <p className="price-was">{formatCLP(featured.basePrice)}</p>
-                            <p className="price">{formatCLP(featured.discountPrice)}</p>
-                            <p className="price-save">Ahorras {formatCLP(featured.basePrice - featured.discountPrice)}</p>
-                          </>
-                        ) : (
-                          <>
-                            <p className="car__price-label">Precio de lista</p>
-                            <p className="price">{formatCLP(featured.basePrice)}</p>
-                          </>
-                        )}
-                      </div>
-                      <span className="btn btn--secondary btn--sm">
-                        Ver auto
-                        <Icon name="arrow_forward" size="none" className="arrow" />
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-              </div>
+              <FeaturedCar
+                slug={featured.slug}
+                name={featured.name}
+                brand={brand.name}
+                imageUrl={featured.imageUrl}
+                basePrice={featured.basePrice}
+                discountPrice={featured.discountPrice}
+                specs={featuredSpecs}
+                sponsored={featured.isSponsored}
+                priority
+              />
             )}
           </div>
 
