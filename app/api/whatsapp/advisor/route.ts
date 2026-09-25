@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { checkChatRateLimit } from "@/lib/chat/rate-limit-redis";
-import { detectInjection, INJECTION_RESPONSE } from "@/lib/chat/guards";
-import { getSubscriptionTier, normalizePhone } from "@/lib/whatsapp/subscription";
+import { detectInjection, INJECTION_RESPONSE, isOffTopic, OFFTOPIC_RESPONSE } from "@/lib/chat/guards";
+import { asesoriaVencidaEl, getSubscriptionTier, normalizePhone } from "@/lib/whatsapp/subscription";
+import { mensajeAsesoriaVencida, mensajeBienvenida } from "@/lib/whatsapp/mensajes";
 import { runAdvisor, type ChatMessage } from "@/lib/whatsapp/advisor";
 import { fetchKapsoHistory } from "@/lib/whatsapp/kapso";
 import { loadContext, saveContext } from "@/lib/whatsapp/context";
@@ -74,15 +75,6 @@ async function resolveConversation(
   return null;
 }
 
-function subscribeMessage(): string {
-  const url = process.env.ADVISOR_SUBSCRIBE_URL;
-  const base =
-    "¡Hola! 👋 Soy *Francisco IA*, el asesor IA de electrificarte.com. La asesoría 1:1 por WhatsApp es un servicio para suscriptores.";
-  return url
-    ? `${base}\n\nActiva tu asesoría acá y te ayudo a encontrar tu auto ideal:\n${url}`
-    : `${base}\n\nEscríbenos para activar tu asesoría.`;
-}
-
 // ─── Route ────────────────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
@@ -122,7 +114,8 @@ export async function POST(req: NextRequest) {
     }
 
     if (!tier) {
-      return NextResponse.json({ message: subscribeMessage(), subscribed: false });
+      const vencio = await asesoriaVencidaEl(phone);
+      return NextResponse.json({ message: vencio ? mensajeAsesoriaVencida(vencio) : mensajeBienvenida(), subscribed: false });
     }
 
     // 4. Merge Kapso messages with persistent Redis context
@@ -144,6 +137,10 @@ export async function POST(req: NextRequest) {
     if (detectInjection(last)) {
       return NextResponse.json({ message: INJECTION_RESPONSE, subscribed: true });
     }
+    // Mismo filtro que el bot de Kapso: antes esta ruta no lo tenía.
+    if (isOffTopic(last)) {
+      return NextResponse.json({ message: OFFTOPIC_RESPONSE, subscribed: true });
+    }
 
     // 6. Cuota diaria por número (control de costo; solo suscriptores consumen)
     if (await exceedsDailyQuota(normPhone)) {
@@ -151,7 +148,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 7. Motor advisor (tier-aware prompt)
-    const message = await runAdvisor(mergedMessages, tier);
+    const message = await runAdvisor(mergedMessages, tier, normPhone);
 
     // 8. Persist updated context
     await saveContext(normPhone, [...mergedMessages, { role: "assistant", content: message }]);

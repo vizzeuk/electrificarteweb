@@ -208,6 +208,43 @@ export function algunaAsesoriaVigente(rows: Record<string, unknown>[], now = new
   return rows.some((r) => asesoriaVigente(r, now));
 }
 
+/**
+ * Si el número tuvo una asesoría pagada que ya venció, cuándo venció la última.
+ * null si nunca pagó, o si tiene una vigente. Puro: recibe las filas.
+ */
+export function vencimientoDeUltimaAsesoria(rows: Record<string, unknown>[], now = new Date()): Date | null {
+  if (algunaAsesoriaVigente(rows, now)) return null;
+  const inicios = rows
+    .filter((r) => isRowActive(r))
+    .map((r) => inicioAsesoria(r))
+    .filter((d): d is Date => d !== null);
+  if (!inicios.length) return null;
+  const ultimo = Math.max(...inicios.map((d) => d.getTime()));
+  return new Date(ultimo + ASESORIA_WINDOW_DAYS * DAY_MS);
+}
+
+/**
+ * Para el mensaje de "tu asesoría terminó": solo se consulta cuando el número no
+ * tiene tier, así que no agrega una query al camino de los clientes activos.
+ * Fail-silent: ante un error, null (y el cliente recibe la bienvenida normal).
+ */
+export async function asesoriaVencidaEl(rawPhone: string): Promise<Date | null> {
+  const phone = normalizePhone(rawPhone);
+  const supabase = getSupabase();
+  if (!phone || !supabase) return null;
+  try {
+    const { data, error } = await supabase
+      .from(TABLE)
+      .select("*")
+      .in(PHONE_COLUMN, phoneCandidates(phone))
+      .limit(50);
+    if (error) return null;
+    return vencimientoDeUltimaAsesoria(data ?? []);
+  } catch {
+    return null;
+  }
+}
+
 // ─── Tier de suscripción ──────────────────────────────────────────────────────
 
 /**
@@ -217,8 +254,8 @@ export function algunaAsesoriaVigente(rows: Record<string, unknown>[], now = new
  *                 qué auto quiere y espera precio de la red de vendedores.
  *                 El advisor le da soporte técnico sin venderle nada más.
  * - "asesoria"  → contrató la Asesoría IA ($4.990): aún decide qué auto comprar.
- *                 El advisor le ayuda a elegir y puede recomendarle el $19.990
- *                 como siguiente paso una vez que tenga claro el modelo.
+ *                 El advisor le ayuda a elegir y a conseguirlo (giro sep-2026:
+ *                 nunca le ofrece la Oferta, que está en STANDBY).
  * - null        → sin suscripción activa → mostrar mensaje de suscripción
  *
  * Si alguien tiene ambos → "oferta" (ya pasó la etapa de decisión).

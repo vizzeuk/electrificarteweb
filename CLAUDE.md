@@ -36,8 +36,10 @@ una waitlist gratis maximiza el volumen de leads interesados.
 - El interruptor es `OFERTA_STANDBY` en `lib/products.ts`. Los CTAs de oferta preguntan por
   él: en standby abren la waitlist; al apagarlo vuelven a `/solicitar` sin re-editar archivos.
 - `/solicitar` queda **oculta** (sin CTAs que apunten ahí) para no confundir al usuario.
-- Los chatbots (WhatsApp y web) **no promocionan el $19.990**: promocionan **waitlist** +
-  **Asesoría $4.990**.
+- Los chatbots (WhatsApp y web) **nunca mencionan el $19.990** ni que "negociamos". El de
+  **WhatsApp** (sep-2026, pedido de Francisco): a quien no pagó le ofrece **solo la Asesoría
+  $4.990**; a quien pagó lo atiende como **experto** hasta que consiga su auto. El web sigue
+  con waitlist + Asesoría.
 
 **Plan completo, fases y estado:** `docs/PIVOT-WAITLIST-PLAN.md`.
 
@@ -77,7 +79,11 @@ asesor ("Francisco IA", ver `lib/whatsapp/advisor.ts`) que ayuda a decidir en ba
 kilometraje, presupuesto y perfil.
 
 > **Cambio por el giro:** antes recomendaba la Oferta Exclusiva ($19.990) como paso siguiente.
-> Ahora **no la menciona**: el paso siguiente que ofrece es **unirse a la waitlist**.
+> Ahora **no la menciona** ni habla de negociar: es un experto que guía a la persona hasta
+> conseguir su auto. Si no puede resolver algo, lo deriva a una persona (tool
+> `derivar_a_humano` → aviso por WhatsApp a `ADMIN_PHONE_NUMBERS`) y manda
+> https://www.electrificarte.com/contacto. Guardrails en `lib/whatsapp/output-guard.ts`;
+> simulador en `scripts/qa/whatsapp-sim.mts`.
 
 ### 3. Suscripción de vendedores — $12.990/mes (plataforma separada, NO vive en este repo)
 Los vendedores oficiales pagan $12.990 para acceder a los leads generados por los flujos 1 y 2
@@ -193,10 +199,10 @@ Tres tiers, cada uno con su propio comportamiento. La tabla Supabase determina e
 
 | Tier | Tabla Supabase | Servicio | Comportamiento del bot |
 |---|---|---|---|
-| `asesoria` | `advisory_payments` | Asesoría IA $4.990 | Ayuda a decidir qué auto comprar. 🔴 **Con el giro:** ya **NO** recomienda el $19.990 — el paso siguiente que ofrece es **unirse a la waitlist**. |
+| `asesoria` | `advisory_payments` | Asesoría IA $4.990 | 🔴 **Experto** que guía a la persona hasta conseguir su nuevo auto: diagnóstico, recomendación con fichas reales, cómo cotizar con vendedores oficiales, prueba de manejo. **No negocia ni ofrece ofertas**; la waitlist solo si la persona pregunta cómo recibir ofertas. Vence a los 10 días. |
 | `oferta` | `leads` (status=`pagado`) | Oferta Exclusiva $19.990 — 🟡 STANDBY | Solo aplica a clientes que **ya pagaron** antes del standby (no entran nuevos). El bot resuelve dudas técnicas del modelo elegido. ❌ No menciona $4.990 ni $19.990. |
 | `vendedor` | `leads_vendors` | Plataforma vendedores | Canal incorrecto. Responde con mensaje de redirección a vendedores@electrificarte.com. ❌ Ninguna oferta de compra. |
-| `null` | — | Sin suscripción | 🔴 **Con el giro:** invita a la **waitlist** y a contratar la **Asesoría $4.990**. |
+| `null` | — | Sin suscripción | 🔴 Mensaje fijo (sin modelo) que invita **solo** a la **Asesoría $4.990** vía `/asesoria/contratar`. Si tuvo una asesoría que venció, se lo dice con la fecha y cómo renovarla. |
 
 **Prioridad de resolución**: `vendedor` > `oferta` > `asesoria` (si alguien tiene ambas, prevalece la etapa más avanzada).
 
