@@ -133,9 +133,24 @@ export function asesoriaConfirmadaText(nombre: string): string {
   return `${saludo} Soy *Francisco IA*, tu asesor de electrificarte.com. Tu asesoría está confirmada: durante 10 días te ayudo a elegir tu auto electrificado. Cuéntame para qué lo usarías y cuál es tu presupuesto aproximado 🔋`;
 }
 
+// Meta identifica una plantilla por nombre + idioma exacto (#132001 si el par no existe). No
+// sabemos con certeza en qué variante de español se aprobó, así que se prueban en orden; un idioma
+// equivocado no envía nada, por lo que no hay riesgo de mensaje doble. El log dice cuál funcionó
+// para fijarlo en ASESORIA_CONFIRM_TEMPLATE_LANG.
+const CONFIRM_LANGS = [...new Set([CONFIRM_TEMPLATE_LANG, "es_CL", "es", "es_AR", "es_ES", "es_MX"])];
+
 /** Plantilla de confirmación; si falla, texto libre (solo llega dentro de la ventana de 24 h). */
-export async function sendAsesoriaConfirmada(phone: string, nombre: string): Promise<"plantilla" | "texto" | null> {
-  if (await sendTemplate(phone, CONFIRM_TEMPLATE, CONFIRM_TEMPLATE_LANG, { customer_name: nombre || "cliente" })) return "plantilla";
-  console.warn(`[outbound] la plantilla "${CONFIRM_TEMPLATE}" (${CONFIRM_TEMPLATE_LANG}) falló — cayendo a texto libre`);
+export async function sendAsesoriaConfirmada(phone: string, nombre: string): Promise<string | null> {
+  const name = nombre || "cliente";
+  for (const lang of CONFIRM_LANGS) {
+    // Con nombre ({{customer_name}}) y, por si se aprobó con posicionales, {{1}}.
+    for (const params of [{ customer_name: name }, [name]] as const) {
+      if (await sendTemplate(phone, CONFIRM_TEMPLATE, lang, params as Record<string, string> | string[])) {
+        console.info(`[outbound] "${CONFIRM_TEMPLATE}" enviada en ${lang} con parámetros ${Array.isArray(params) ? "posicionales" : "con nombre"}`);
+        return `plantilla:${lang}`;
+      }
+    }
+  }
+  console.warn(`[outbound] la plantilla "${CONFIRM_TEMPLATE}" no salió en ${CONFIRM_LANGS.join(", ")} — cayendo a texto libre`);
   return (await sendProactiveText(phone, asesoriaConfirmadaText(nombre))) ? "texto" : null;
 }
