@@ -1,4 +1,5 @@
 import { getSupabase } from "@/lib/whatsapp/subscription";
+import { storage } from "@/lib/storage";
 
 /**
  * Lectura de reseñas APROBADAS para el sitio público.
@@ -24,6 +25,9 @@ export interface PublicReview {
   carColor: string | null;
   carVersion: string | null;
   photos: string[];
+  /** URLs públicas ya resueltas. Se calculan acá (servidor) porque `storage` usa el
+   *  service_role y no puede vivir en un componente cliente como el carrusel. */
+  photoUrls: string[];
   videoPlaybackId: string | null;
   compraVerificada: boolean;
 }
@@ -63,6 +67,8 @@ const toReview = (r: Row): PublicReview => ({
   carColor: r.car_color,
   carVersion: r.car_version,
   photos: r.photos ?? [],
+  // Solo las miniaturas: servir las 'full' en la grilla multiplicaría el egress ~5×.
+  photoUrls: (r.photos ?? []).filter((k) => k.endsWith("-card.jpg")).map((k) => storage.publicUrl(k)),
   videoPlaybackId: r.video_playback_id,
   compraVerificada: r.compra_verificada,
 });
