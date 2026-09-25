@@ -681,7 +681,8 @@ scripts (lib/sheet-sync.ts) ──POST──▶ n8n "Sheet sync" ──▶ Googl
 | `INSTRUCCIONES` | `gen-sheet-autos.ts` | Se reescribe entera — pero aborta si alguien le agregó columnas. |
 
 Las columnas se ubican **por nombre**: si alguien reordena o agrega columnas en el Sheet, se
-respeta. Tests contra un Sheet simulado: `scripts/qa/sheet-sync.test.ts` (en `npm test`).
+respeta. `gen-sheet-autos.ts --en-seco` muestra qué celdas cambiaría sin escribir nada;
+`--solo-tsv` no toca el Sheet. Tests contra un Sheet simulado: `scripts/qa/sheet-sync.test.ts` (en `npm test`).
 
 **Si deja de andar:** HTTP 404 "webhook not registered" = el workflow está inactivo en n8n.
 401/403 = el secreto no calza o venció el OAuth de "Sheets Cadre" (reconectarlo en n8n). El
