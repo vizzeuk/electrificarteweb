@@ -1,85 +1,128 @@
-# Design System: Electrificarte Homepage Redesign
-**Project ID:** 1523707350124800741
-**Stitch Source:** [Electrificarte Homepage Redesign](https://stitch.withgoogle.com/projects/1523707350124800741)
+# Sistema de diseño v1 — Electrificarte
 
-## 1. Visual Theme & Atmosphere
+Vigente desde septiembre de 2026. Reemplaza al sistema anterior (Space Grotesk / Inter, cyan
+`#00E5E5`). Fuente de verdad visual: `docs/design/electrificarte-brand-kit.html`. Maquetas de
+referencia: `docs/design/electrificarte-home.html`, `electrificarte-asesoria.html`,
+`electrificarte-plp-electricos.html` y `electrificarte-pdp-ioniq-5.html`.
 
-Premium, minimal, and kinetic. The design channels an Apple-meets-automotive editorial aesthetic: generous whitespace, high-contrast hero photography with cinematic gradients, and a single electric-cyan accent that pulses through every interactive element. Dark sections (hero, hot deal, footer) create dramatic contrast against crisp white content areas. The overall feel is confident, modern, and data-driven — showcasing vehicles as aspirational objects while keeping the UI functionally clean.
+En código:
+- Tokens: `app/globals.css` (`@theme` con primitivos, `@theme inline` con la capa semántica,
+  `.theme-dark` para bandas oscuras).
+- Clases de marca: `app/styles/brand.css` (tipografía, botón, chip, campo, card, precio),
+  `app/styles/home.css` (navegación, hero, secciones del home, footer, modal) y
+  `app/styles/pages.css` (páginas laterales, PLP, PDP). Todo dentro de `@layer components`,
+  así una utilidad de Tailwind siempre puede ajustar una clase de marca.
 
-**Density:** Spacious — sections breathe with `py-24` (~96px) vertical rhythm.
-**Motion philosophy:** Subtle, purposeful — hover scale transforms on images, smooth color transitions on buttons, backdrop-blur on glass surfaces.
+## Principios
 
-## 2. Color Palette & Roles
+1. **Dos colores de marca, no más.** Laguna para actuar, Glaciar para destacar. El resto son
+   neutros fríos.
+2. **Hairlines en vez de sombras.** Las cards y paneles se separan con una línea de 1 px.
+   La sombra (`shadow-overlay`) es solo para lo que flota: menús, buscador, modales, chat.
+3. **Macizo, nunca translúcido.** Nada de `bg-white/10`, `border-white/20`, `backdrop-blur`
+   ni glow. Única excepción: el velo sobre video o foto con texto encima y el fondo de un modal.
+4. **El título abre la sección.** Sin eyebrows, sin mayúsculas con tracking, sentence case
+   siempre.
+5. **Datos reales.** Cifras del hero y de las cards salen del catálogo; nunca se escriben a mano.
 
-### Primary Accent
-- **Electric Cyan** (`#00E5E5`) — Primary brand accent. Used for CTAs, highlights, badges, price callouts, and interactive hover states.
-- **Deep Cyan** (`#00C2C2`) — Hover/active state of primary. Used for pressed buttons and secondary emphasis.
-- **Teal Foundation** (`#006A61`) — Used sparingly for text links and deep contrast against light surfaces.
-- **Cyan Glow Container** (`#00E5D1`) — Softer teal for badge backgrounds, tag pills, and container highlights.
+## Color
 
-### Neutrals
-- **Pure White** (`#FFFFFF`) — Primary background for content sections and cards.
-- **Snow Surface** (`#F9FAFB` / `#F8F9FC`) — Section alternate background (latest launches, FAQ, features).
-- **Whisper Border** (`#E5E7EB`) — Card borders and dividers at rest.
-- **Fog Gray** (`#F3F4F6`) — Module labels, input backgrounds, subtle fills.
+### Primitivos (utilidades `bg-laguna`, `text-tinta`, `border-linea`…)
 
-### Text
-- **Ink Black** (`#111827` / `#191C1E`) — Primary headings and body text.
-- **Slate Muted** (`#4B5563`) — Secondary text, descriptions, data labels.
-- **Ghost Gray** (`#9CA3AF`) — Placeholder text, disabled states, module annotations.
+| Token | Hex | Uso |
+|---|---|---|
+| Laguna | `#1d605b` | Acento en claro: botón primario, enlaces, foco |
+| Laguna hover | `#144e49` | Hover del primario |
+| Glaciar | `#caefea` | Acento en oscuro, chip destacado, bloque destacado (uno por página) |
+| Glaciar hover | `#b3e5de` | Hover de Glaciar |
+| Tinta | `#0f1716` | Texto principal, bandas oscuras |
+| Tinta 2 | `#161f1e` | Superficie dentro de una banda oscura |
+| Grafito | `#495251` | Texto secundario |
+| Piedra | `#687170` | Texto terciario, placeholders |
+| Línea fuerte | `#cad1d0` | Bordes de controles |
+| Línea | `#dfe4e4` | Hairlines de cards y separadores |
+| Niebla | `#f2f7f6` | Fondo de sección alterna |
+| Papel | `#ffffff` | Fondo base |
+| Alerta | `#ba362b` (oscuro: `#ed8c7f`) | Errores de formulario |
 
-### Contextual
-- **Obsidian Black** (`#000000`) — Hero overlay, hot deal section, footer background.
-- **White with opacity** (`white/10`, `white/20`, `white/60`, `white/80`) — Layered text and glassmorphism elements on dark backgrounds.
-- **Error Red** (`#BA1A1A`) — Form validation errors.
-- **Amber Tertiary** (`#7C5800` / `#FFC349`) — Reserved for urgency badges ("HOT DEAL"), countdown timers.
+### Semánticos (lo que se usa en componentes)
 
-## 3. Typography Rules
+`bg-canvas`, `bg-canvas-2`, `bg-surface`, `text-ink`, `text-ink-2`, `text-ink-3`,
+`border-line`, `border-line-2`, `bg-accent`, `bg-accent-hover`, `text-on-accent`,
+`bg-accent-soft`, `text-on-accent-soft`, `text-link`, `outline-focus`, `text-danger`.
 
-### Font Families
-- **Headlines:** `Space Grotesk` — Bold, geometric, tracks tight. Used for all section titles, hero headlines, navbar brand, and CTAs. Weights: 500 (medium), 600 (semibold), 700 (bold).
-- **Body & Labels:** `Inter` — Clean sans-serif for readability. Used for descriptions, form labels, data values, and navigation links. Weights: 300 (light), 400 (regular), 500 (medium), 600 (semibold), 700 (bold), 800 (extrabold).
-- **Icons:** `Material Symbols Outlined` — Variable weight (100-700), used throughout for UI iconography.
+Dentro de un elemento con `.theme-dark` estos mismos nombres se invierten solos: el lienzo pasa
+a Tinta, el texto a Niebla y el acento de Laguna a Glaciar (el `.btn--primary` queda Glaciar con
+texto Tinta). Por eso los componentes no llevan colores fijos.
 
-### Scale & Behavior
-- **Hero headline:** `text-5xl` to `text-7xl` (3rem-4.5rem), `font-extrabold`, `leading-[1.1]`.
-- **Section headers:** `text-3xl` to `text-4xl` (1.875rem-2.25rem), `font-black`, `uppercase`, `tracking-tight`.
-- **Card titles:** `text-xl` (1.25rem), `font-bold`.
-- **Data labels:** `0.7rem`, `uppercase`, `letter-spacing: 0.05em`, `font-weight: 600`, muted color.
-- **Body text:** `text-sm` to `text-lg` (0.875rem-1.125rem).
-- **Micro text:** `text-[10px]` to `text-xs`, `uppercase`, `tracking-widest`.
+Reglas:
+- Nunca dos bandas oscuras seguidas. El footer ya es oscuro: la última sección de una página
+  no puede serlo.
+- Nunca dos secciones Niebla seguidas: si comparten fondo, se separan con `section--rule`.
+- Un solo bloque Glaciar por página (la llamada principal).
 
-## 4. Component Stylings
+### Transparencias permitidas
 
-### Buttons
-- **Primary CTA:** `bg-[#00E5E5]` text black, `font-bold`, `px-10 py-5`, `rounded-xl` (12px). Hover darkens to `#00C2C2`.
-- **Secondary CTA:** `bg-gray-100` hover to `bg-[#00E5E5]`, `py-3`, `rounded-lg` (8px).
-- **Card Action:** `bg-[#00E5E5]`, `py-2`, `rounded-lg`, `uppercase tracking-widest text-xs`. Hover inverts to `bg-black text-white`.
-- **Pill Button (WhatsApp):** `bg-black text-white`, `rounded-full`, `px-6 py-2.5`.
-- **Form Submit:** `rounded-full`, `py-5`, full-width, cyan glow on hover.
+`--veil-media` (degradado sobre video o foto con texto), `--veil-modal` (fondo detrás de un
+modal), `--line-on-media` y `--line-2-on-media` (líneas sobre media). Nada más.
 
-### Cards / Containers
-- **Vehicle Card (PLP):** `rounded-2xl` (16px), white bg, `border 1px solid #E5E7EB`. Hover border shifts to cyan. Image `aspect-[16/10]`.
-- **Opportunity Card:** `rounded-xl` (12px), compact, image `aspect-[4/3]`.
-- **Category Banner:** `rounded-3xl` (24px), `bg-gray-50`, `p-10`, image scales 110% on hover.
-- **Glass Card (Hero):** `bg-white/10`, `backdrop-blur-md`, `border border-white/20`, `rounded-xl`.
+## Tipografía
 
-### Inputs / Forms
-- **Input fields:** `bg-[#E7E8EB]`, no visible border, `border-b-2` reveals cyan on focus. `rounded-lg`, `py-3 px-4`.
-- **Labels:** `text-xs`, `font-bold`, `uppercase`, `tracking-wider`, muted color.
+| Rol | Fuente | Clase |
+|---|---|---|
+| Display (solo hero) | Cabinet Grotesk 800 | `.t-display` |
+| Títulos (20 px o más) | Cabinet Grotesk 700 | `.t-h1`, `.t-h2`, `.t-h3`, `font-display` |
+| Todo lo demás | Switzer 400–700 | por defecto (`font-sans`) |
+| Cifras y precios | Switzer 600, tabulares | `.price`, `.price--lg`, `.price-was`, `.price-save` |
 
-### Navigation
-- **Navbar:** `sticky top-0 z-50`, `bg-white/90 backdrop-blur-md`, `border-b border-gray-100`, height 80px.
-- **Nav links:** `text-sm font-medium`, hover to cyan.
+Escala: `text-display`, `text-h1`, `text-h2`, `text-h3`, `text-h4`, `text-lead`, `text-body`,
+`text-small`, `text-label` (13 px), `text-micro` (12 px, el mínimo). Nada bajo 12 px.
 
-### Footer
-- **Background:** `bg-black`, white text. 5-column grid (Brand, Nosotros, Legal, Vendedores, Newsletter). Brand bolt icon gets cyan bg.
+Las fuentes son de Fontshare (ITF Free Font License). La licencia permite usarlas en el sitio,
+pero **no redistribuirlas en un repositorio público**, así que no se versionan:
+`scripts/fetch-fonts.mjs` las descarga a `app/fonts/fontshare/` antes de `dev` y `build`
+(`predev` / `prebuild` en `package.json`).
 
-## 5. Layout Principles
+Íconos: Material Symbols Outlined, peso 300, subset propio (`<Icon>`; al sumar un ícono hay que
+regenerar el subset, ver CLAUDE.md). Nunca dentro de cuadrados o círculos de color.
 
-- **Max width:** `max-w-7xl` (1280px).
-- **Horizontal padding:** `px-4` (mobile) to `px-8` (desktop).
-- **Section rhythm:** `py-24` (96px) vertical padding.
-- **Grid gaps:** `gap-6` (compact), `gap-8` (standard), `gap-12` (spacious).
-- **Responsive:** 1-col mobile, 2-col tablet, 3-4 col desktop.
-- **Effects:** Hero gradient `from-black/90 via-black/40 to-transparent`, glassmorphism navbar, cyan glow CTAs, blurred ambient orbs.
+## Forma
+
+- Radios: `rounded-chip` (4 px), `rounded-control` (8 px, botones e inputs), `rounded-card`
+  (12 px). `rounded-full` solo para fotos de personas.
+- Controles: 40 / 48 / 56 px de alto (`--control-sm|md|lg`). Inputs de 48 px con texto de 16 px.
+- Foco: contorno sólido de 2 px en `--focus`.
+
+## Espaciado
+
+| Token | Valor | Uso |
+|---|---|---|
+| `--page-max` | 1200 px | Ancho del contenido (`.wrap`) |
+| `--gutter` | 20–48 px | Margen lateral |
+| `--section-y` | 72–120 px | Alto de sección (`.section`) |
+| `--section-y-sm` | 40–64 px | Franjas (`.section--tight`) |
+| `--header-gap` | 32–48 px | Título de sección → contenido |
+| `--grid-gap` | 16–24 px | Separación de grillas |
+| `--card-pad` | 20 px | Relleno de card |
+
+## Componentes
+
+- **Botón** `.btn` + `--primary | --secondary | --soft | --quiet`, tamaños `--sm | --lg`,
+  `--block`, `--icon`. Un solo primario por bloque. Flecha que se desplaza al hover
+  (`<Icon name="arrow_forward" size="none" className="arrow" />`). Sin `hover:scale`.
+- **Chip** `.chip` + `--soft` (Glaciar), `--solid` (Tinta), `--media` (sobre foto). Macizo,
+  12 px, radio 4.
+- **Campo** `.field` > `.field__label` + `.input`; error `.field__error`; prefijo
+  `.input-group` + `.input-group__prefix`.
+- **Card** `.card` (hairline, radio 12, sin sombra). La card de auto es `.card.car`:
+  foto 16:10 con chips encima, marca y modelo debajo, specs en `<dl class="specs">`, precio.
+- **Sección** `<section class="section">` (+ `--subtle` Niebla, `--rule` hairline arriba,
+  `--tight` franja) con `.wrap` y `.section-head` (h2 `.t-h2` + bajada `.t-lead`).
+
+## Copy
+
+- Sentence case siempre. Sin `·` (coma o preposición) ni `—` como separador. Para strings de
+  Sanity: `cleanSeparators()` y `sentenceCase()` de `lib/utils.ts`.
+- Cifras en formato chileno: coma decimal y punto de miles (`formatNumber`, `formatCLP`).
+- Terminología y copy prohibido: ver CLAUDE.md ("vendedores oficiales", nada de "$19.990"
+  mientras dure el standby).

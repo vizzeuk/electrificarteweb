@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!col) return { title: "Colección no encontrada" };
   return {
     title:       stripBrandSuffix(col.metaTitle ?? col.title),
-    description: col.metaDescription ?? col.description ?? `Encuentra los mejores precios en ${col.title} en Chile. Negociamos por ti.`,
+    description: col.metaDescription ?? col.description ?? `${col.title}: autos eléctricos e híbridos disponibles en Chile.`,
     alternates:  { canonical: `/coleccion/${slug}` },
   };
 }

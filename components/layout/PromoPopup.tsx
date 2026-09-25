@@ -34,7 +34,6 @@ export function PromoPopup({ car, urgencyLabel }: PromoPopupProps) {
   const brandName = c.brand?.name ?? c.name.split(" ")[0];
   const modelName = c.brand ? c.name : c.name.split(" ").slice(1).join(" ");
   const savings   = c.basePrice - c.discountPrice;
-  const pct       = Math.round((savings / c.basePrice) * 100);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -67,116 +66,63 @@ export function PromoPopup({ car, urgencyLabel }: PromoPopupProps) {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.25 }}
           onClick={close}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 sm:p-6"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6"
+          style={{ background: "var(--veil-modal)" }}
           role="dialog"
           aria-modal="true"
           aria-labelledby="promo-title"
         >
           <m.div
             key="promo-modal"
-            initial={{ opacity: 0, scale: 0.94, y: 12 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.96, y: 8 }}
-            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 8 }}
+            transition={{ duration: 0.3, ease: [0.2, 0.7, 0.2, 1] }}
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-md overflow-hidden rounded-2xl border border-white/10 bg-black shadow-[0_40px_120px_-20px_rgba(0,0,0,0.8),0_0_80px_rgba(0,229,229,0.08)]"
+            className="relative w-full max-w-md overflow-hidden rounded-card bg-papel text-tinta shadow-overlay"
           >
-            {/* Grid decorativo */}
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-0"
-              style={{
-                backgroundImage:
-                  "linear-gradient(to right, rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.025) 1px, transparent 1px)",
-                backgroundSize: "32px 32px",
-              }}
-            />
-            {/* Glow cyan */}
-            <div aria-hidden className="pointer-events-none absolute -top-20 -left-16 h-72 w-72 rounded-full bg-primary/15 blur-[90px]" />
-
-            {/* Botón cerrar */}
             <button
               type="button"
               onClick={close}
               aria-label="Cerrar"
-              className="absolute top-3 right-3 z-10 flex h-9 w-9 items-center justify-center rounded-lg bg-black/40 backdrop-blur-sm text-white/60 transition-colors hover:text-white"
+              className="btn btn--secondary btn--icon btn--sm absolute right-3 top-3 z-10 !bg-papel"
             >
-              <Icon name="close" className="text-xl" />
+              <Icon name="close" size="none" />
             </button>
 
-            {/* Foto del auto */}
             {c.imageUrl && (
-              <div className="relative h-48 w-full overflow-hidden">
-                <img
-                  src={c.imageUrl}
-                  alt={`${brandName} ${modelName}`}
-                  className="h-full w-full object-cover object-center"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
-                <div className="absolute bottom-3 left-4">
-                  <div className="inline-flex items-center gap-1.5 rounded-md bg-amber px-2.5 py-1 text-[11px] font-black uppercase tracking-[0.16em] text-black">
-                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-black" />
-                    HOT DEAL
-                  </div>
-                </div>
+              <div className="relative aspect-[16/10] w-full overflow-hidden bg-niebla">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={c.imageUrl} alt={`${brandName} ${modelName}`} className="h-full w-full object-cover" />
+                <span className="chip chip--soft absolute left-4 top-4">Oferta destacada</span>
               </div>
             )}
 
-            <div className="relative z-[2] px-8 pt-6 pb-7">
-              {/* Badge — solo cuando no hay foto (si hay foto el badge va sobre la imagen) */}
-              {!c.imageUrl && (
-                <div className="mb-5 flex items-center gap-2.5">
-                  <div className="inline-flex items-center gap-1.5 rounded-md bg-amber px-2.5 py-1 text-[11px] font-black uppercase tracking-[0.16em] text-black">
-                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-black" />
-                    HOT DEAL
-                  </div>
-                  <span className="text-white/40 text-xs">{label}</span>
-                </div>
-              )}
-
-              {/* Nombre del auto */}
-              <h2
-                id="promo-title"
-                className="font-headline text-2xl font-black text-white leading-tight uppercase mb-1"
-              >
-                {brandName}{" "}
-                <span className="text-primary">{modelName}</span>
+            <div className="p-6 sm:p-8">
+              <p className="t-label">{label}</p>
+              <h2 id="promo-title" className="mt-2 font-display text-[1.75rem] font-bold leading-[1.08] tracking-[-0.02em]">
+                {brandName} {modelName}
               </h2>
-              <p className="text-white/50 text-sm mb-5">
-                Mejor precio negociado disponible ahora
-              </p>
 
-              {/* Tarjeta de precio */}
-              <div className="mb-5 rounded-xl border border-white/10 bg-white/5 px-5 py-4 space-y-2">
-                <div className="flex justify-between items-baseline">
-                  <span className="text-white/40 text-xs">Precio lista</span>
-                  <span className="text-white/40 text-sm line-through">{formatCLP(c.basePrice)}</span>
+              <dl className="deal__prices !mt-5">
+                <div>
+                  <dt>Precio de lista</dt>
+                  <dd className="price-was">{formatCLP(c.basePrice)}</dd>
                 </div>
-                <div className="flex justify-between items-baseline">
-                  <span className="text-white text-sm font-medium">Con bono Electrificarte</span>
-                  <span className="text-primary font-headline text-2xl font-black">{formatCLP(c.discountPrice)}</span>
+                <div>
+                  <dt>Con bonos</dt>
+                  <dd className="price price--lg">{formatCLP(c.discountPrice)}</dd>
                 </div>
-                <p className="text-white/30 text-xs pt-2 border-t border-white/10">
-                  Ahorra {pct}% · {formatCLP(savings)} menos que el precio de lista
-                </p>
-              </div>
+                <div>
+                  <dt>Ahorras</dt>
+                  <dd className="save">{formatCLP(savings)}</dd>
+                </div>
+              </dl>
 
-              {/* Specs */}
               {(c.range || c.power) && (
-                <div className="mb-5 grid grid-cols-2 gap-2">
-                  {c.range && (
-                    <div className="bg-white/5 rounded-lg p-3 text-center">
-                      <p className="text-primary font-headline font-bold">{c.range} km</p>
-                      <p className="text-white/40 text-xs">Autonomía</p>
-                    </div>
-                  )}
-                  {c.power && (
-                    <div className="bg-white/5 rounded-lg p-3 text-center">
-                      <p className="text-primary font-headline font-bold">{c.power} CV</p>
-                      <p className="text-white/40 text-xs">Potencia</p>
-                    </div>
-                  )}
-                </div>
+                <p className="mt-4 text-small text-grafito">
+                  {[c.range ? `${c.range} km de autonomía` : null, c.power ? `${c.power} CV` : null].filter(Boolean).join(", ")}
+                </p>
               )}
 
               {/* CTA — `onClick` cierra este promo antes de abrir el popup de waitlist. */}
@@ -185,16 +131,12 @@ export function PromoPopup({ car, urgencyLabel }: PromoPopupProps) {
                 model={`${brandName} ${modelName}`}
                 source="promopopup"
                 onClick={close}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3.5 text-sm font-bold text-black shadow-[0_4px_20px_rgba(0,229,229,0.22)] transition-all hover:bg-primary-dark hover:scale-[1.02] active:scale-[0.99]"
+                className="btn btn--primary btn--lg btn--block mt-6"
               >
                 Quiero esta oferta
               </OfferCta>
 
-              <button
-                type="button"
-                onClick={close}
-                className="mt-3 block w-full text-center text-xs text-white/30 transition-colors hover:text-white/50"
-              >
+              <button type="button" onClick={close} className="btn btn--quiet btn--block mt-2">
                 No gracias, seguir viendo
               </button>
             </div>

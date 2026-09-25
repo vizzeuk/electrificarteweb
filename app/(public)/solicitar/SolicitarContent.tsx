@@ -8,139 +8,100 @@ import { LeadForm } from "@/components/forms/LeadForm";
 import { Icon } from "@/components/ui/Icon";
 import { TrustBadges } from "@/components/layout/TrustBadges";
 
+// 🟡 STANDBY (giro sep-2026): esta vista solo se muestra si OFERTA_STANDBY = false (hoy la
+// página devuelve 404). El copy es el del flujo pagado a propósito: al reactivarlo hay que
+// revisarlo con Francisco (docs/PIVOT-WAITLIST-PLAN.md, "Cómo reactivar la oferta").
+
 interface SolicitarContentProps {
   carOptions: string[];
   servicePrice?: string;
 }
+
+const INCLUYE = [
+  "Búsqueda en red exclusiva de vendedores oficiales",
+  "Negociación de bonos y descuentos",
+  "Opciones de financiamiento preaprobadas",
+  "Comparativa de precios del mercado",
+  "Acompañamiento hasta la entrega",
+  "Garantía de devolución si no hay ahorro",
+];
+
+const METODOS = ["WebPay", "Tarjeta de crédito", "Tarjeta de débito", "Transferencia"];
 
 function SolicitarInner({ carOptions, servicePrice = "$19.990" }: SolicitarContentProps) {
   const searchParams = useSearchParams();
   const autoSlug   = searchParams.get("auto")    || undefined;
   const autoNombre = searchParams.get("nombre")  || undefined;
 
+  const pasos = [
+    { title: "Completa tu solicitud",       desc: "Cuéntanos qué auto te interesa y tu presupuesto." },
+    { title: "Activa tu búsqueda",          desc: `Un pago único de ${servicePrice} por WebPay activa la búsqueda exclusiva.` },
+    { title: "Recibe tu oferta en 48 a 96 h", desc: "La mejor oferta con bonos y financiamiento incluido." },
+  ];
+
   return (
-    <>
-      {/* ── Compact header ────────────────────────────────────────────── */}
-      <section className="bg-black pt-24 pb-0 overflow-hidden relative">
-        {/* Subtle grid */}
-        <div
-          className="absolute inset-0 opacity-[0.025] pointer-events-none"
-          style={{
-            backgroundImage:
-              "linear-gradient(rgba(255,255,255,.15) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.15) 1px, transparent 1px)",
-            backgroundSize: "48px 48px",
-          }}
-        />
-        {/* Glow */}
-        <div className="absolute top-0 right-0 w-[500px] h-[300px] bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
+    <div className="page">
+      {/* ── Encabezado claro ── */}
+      <section className="page-head">
+        <div className="wrap">
+          <nav className="crumbs" aria-label="Migas de pan">
+            <Link href="/">Inicio</Link>
+            <span aria-hidden="true">/</span>
+            <span aria-current="page">Solicitar oferta</span>
+          </nav>
 
-        <div className="max-w-7xl mx-auto px-4 md:px-8 relative z-10">
-          {/* Title block — full width */}
-          <div className="pb-7">
-            <p className="text-primary text-[10px] uppercase tracking-widest font-bold mb-3">
-              Último paso
-            </p>
-            <h1 className="text-3xl sm:text-4xl font-headline font-black text-white leading-tight tracking-tighter mb-5">
-              Conseguimos el mejor precio{" "}
-              <span className="text-primary">o te devolvemos el dinero</span>
-            </h1>
-            <div className="flex flex-wrap gap-2">
-              {[
-                { icon: "schedule", label: "Respuesta en 48-96 h" },
-                { icon: "verified", label: "Garantía de devolución" },
-                { icon: "lock",     label: "Sin costos ocultos" },
-              ].map((item) => (
-                <div
-                  key={item.label}
-                  className="flex items-center gap-1.5 bg-white/5 border border-white/10 text-white/60 text-xs px-3 py-1.5 rounded-full"
-                >
-                  <Icon name={item.icon} className="text-primary text-[14px]" />
-                  {item.label}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Steps strip — inline, bottom of header */}
-          <div className="border-t border-white/10 py-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {[
-              { n: "01", icon: "edit_note",        title: "Completa tu solicitud",      desc: "Cuéntanos qué auto te interesa y tu presupuesto." },
-              { n: "02", icon: "payments",          title: "Activa tu búsqueda",         desc: `Un pago único de ${servicePrice} por WebPay activa la búsqueda exclusiva.` },
-              { n: "03", icon: "mark_email_read",   title: "Recibe tu oferta en 48-96h",   desc: "La mejor oferta con bonos y financiamiento incluido." },
-            ].map((s) => (
-              <div
-                key={s.n}
-                className="flex items-start gap-3 rounded-2xl bg-white/[0.03] border border-white/10 p-3.5 hover:bg-white/[0.06] hover:border-primary/25 transition-colors"
-              >
-                <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
-                  <Icon name={s.icon} className="text-primary text-[16px]" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-white/30 text-[9px] font-bold tracking-widest mb-0.5">{s.n}</p>
-                  <h3 className="text-white text-sm font-bold leading-snug mb-0.5">{s.title}</h3>
-                  <p className="text-white/40 text-xs leading-relaxed">{s.desc}</p>
-                </div>
-              </div>
+          <h1 className="t-h1 mt-header max-w-[20ch]">
+            Conseguimos el mejor precio <span className="tone">o te devolvemos el dinero</span>
+          </h1>
+          <div className="mt-6 flex flex-wrap gap-2">
+            {["Respuesta en 48 a 96 h", "Garantía de devolución", "Sin costos ocultos"].map((label) => (
+              <span key={label} className="chip">{label}</span>
             ))}
           </div>
+
+          <ol className="steps-row mt-header">
+            {pasos.map((s, i) => (
+              <li key={s.title}>
+                <span className="step__n">{String(i + 1).padStart(2, "0")}</span>
+                <p className="step__title">{s.title}</p>
+                <p className="step__text">{s.desc}</p>
+              </li>
+            ))}
+          </ol>
         </div>
       </section>
 
-      {/* Form + Sidebar */}
-      <section className="py-16 md:py-20">
-        <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <div className="grid lg:grid-cols-12 gap-12 lg:gap-16 lg:items-start">
-            {/* Sidebar */}
-            <div className="lg:col-span-4">
-              <div className="space-y-6 lg:sticky lg:top-28">
-              <div className="bg-surface rounded-2xl p-6 border border-gray-100">
-                <h3 className="font-headline font-bold mb-4 flex items-center gap-2">
-                  <Icon name="verified" className="text-primary" size="sm" />
-                  Qué incluye tu solicitud
-                </h3>
-                <ul className="space-y-3">
-                  {[
-                    "Búsqueda en red exclusiva de vendedores oficiales",
-                    "Negociación de bonos y descuentos",
-                    "Opciones de financiamiento pre-aprobadas",
-                    "Comparativa de precios del mercado",
-                    "Acompañamiento hasta la entrega",
-                    "Garantía de devolución si no hay ahorro",
-                  ].map((item) => (
-                    <li key={item} className="flex items-start gap-2">
-                      <Icon name="check_circle" className="text-primary flex-shrink-0 mt-0.5" size="sm" />
-                      <span className="text-sm text-text-muted">{item}</span>
+      {/* ── Resumen (bloque Glaciar) + formulario ── */}
+      <section className="section">
+        <div className="wrap">
+          <div className="grid gap-10 lg:grid-cols-12 lg:items-start lg:gap-16">
+            <aside className="lg:col-span-4 lg:sticky lg:top-24" aria-labelledby="solicitud-t">
+              <div className="soft-block">
+                <p className="t-label">Precio del servicio</p>
+                <p className="price-was mt-3">$29.990</p>
+                <p className="price-block__amount mt-1">{servicePrice}</p>
+                <p className="price-block__per">Pago único</p>
+                <p className="t-micro mt-2">33% dcto por Electric Sale</p>
+
+                <h2 className="t-h3 mt-8 mb-5" id="solicitud-t">Qué incluye tu solicitud</h2>
+                <ul className="checklist">
+                  {INCLUYE.map((item) => (
+                    <li key={item}>
+                      <Icon name="check" size="none" />
+                      <span>{item}</span>
                     </li>
                   ))}
                 </ul>
-              </div>
 
-              <div className="bg-primary/5 rounded-2xl p-6 border border-primary/10">
-                <div className="flex items-baseline justify-between mb-2">
-                  <span className="text-text-muted text-sm">Precio del servicio</span>
-                  <span className="text-text-ghost text-sm line-through">$29.990</span>
-                </div>
-                <div className="flex items-baseline justify-between">
-                  <span className="font-headline font-bold">Pago único</span>
-                  <span className="text-3xl font-headline font-black text-primary-deep">{servicePrice}</span>
-                </div>
-                <p className="text-[10px] text-text-ghost mt-2 uppercase tracking-wide">33% dcto por Electric Sale</p>
-              </div>
-
-              <div className="bg-white rounded-2xl p-6 border border-gray-100">
-                <h3 className="font-headline font-bold text-sm mb-3">Métodos de pago</h3>
+                <p className="t-label mt-8 mb-3">Métodos de pago</p>
                 <div className="flex flex-wrap gap-2">
-                  {["WebPay", "Tarjeta crédito", "Tarjeta débito", "Transferencia"].map((method) => (
-                    <span key={method} className="text-xs bg-gray-100 px-3 py-1.5 rounded-full text-text-muted font-medium">
-                      {method}
-                    </span>
+                  {METODOS.map((method) => (
+                    <span key={method} className="chip">{method}</span>
                   ))}
                 </div>
               </div>
-              </div>
-            </div>
+            </aside>
 
-            {/* Form */}
             <div className="lg:col-span-8">
               <LeadForm carOptions={carOptions} carSlug={autoSlug} carName={autoNombre} />
             </div>
@@ -149,13 +110,19 @@ function SolicitarInner({ carOptions, servicePrice = "$19.990" }: SolicitarConte
       </section>
 
       <TrustBadges />
-    </>
+    </div>
   );
 }
 
 export function SolicitarContent({ carOptions, servicePrice }: SolicitarContentProps) {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><p className="text-text-muted">Cargando...</p></div>}>
+    <Suspense
+      fallback={
+        <div className="page flex min-h-screen items-center justify-center">
+          <p className="t-body">Cargando...</p>
+        </div>
+      }
+    >
       <SolicitarInner carOptions={carOptions} servicePrice={servicePrice} />
     </Suspense>
   );

@@ -1,9 +1,7 @@
-"use client";
-
-import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import { sanityImg } from "@/lib/sanityImage";
 import { Icon } from "@/components/ui/Icon";
+import { cleanSeparators, sentenceCase } from "@/lib/utils";
 
 export interface CollectionCardData {
   _id:           string;
@@ -22,17 +20,17 @@ interface CollectionsSlideshowProps {
 const FALLBACK: CollectionCardData[] = [
   {
     _id:      "f1",
-    title:    "Autos electrificados desde $20M",
+    title:    "Autos electrificados desde $20 millones",
     slug:     "desde-20-millones",
-    badge:    "ACCESIBLES",
+    badge:    "Accesibles",
     subtitle: "Los mejores precios del mercado electrificado en Chile",
     ctaText:  "Ver colección",
   },
   {
     _id:      "f2",
-    title:    "SUV Familiares de 7 Asientos",
+    title:    "SUV familiares de 7 asientos",
     slug:     "suv-7-asientos",
-    badge:    "7 ASIENTOS",
+    badge:    "7 asientos",
     subtitle: "3 corridas de asientos, espacio para toda la familia",
     ctaText:  "Ver colección",
   },
@@ -46,234 +44,51 @@ const FALLBACK: CollectionCardData[] = [
   },
 ];
 
-const CARD_W = 380;
-const GAP    = 20;
-
-const GRADIENTS = [
-  "from-[#002a2a] via-[#004040] to-[#00595a]",
-  "from-[#1a1a2e] via-[#16213e] to-[#0f3460]",
-  "from-[#1c0a2c] via-[#2d1144] to-[#3b1d5a]",
-  "from-[#0a1628] via-[#112240] to-[#1b3a6b]",
-];
-
+/**
+ * "Encuentra tu auto ideal": grilla de colecciones (foto 3:2 arriba; chip, título, bajada y
+ * enlace debajo). Sin texto ni velo sobre la foto. En móvil se apilan en una columna.
+ */
 export function CollectionsSlideshow({ collections }: CollectionsSlideshowProps) {
-  const items        = collections && collections.length > 0 ? collections : FALLBACK;
-  const trackRef     = useRef<HTMLDivElement>(null);
-  const mobileRef    = useRef<HTMLDivElement>(null);
-  const [canLeft,  setCanLeft]  = useState(false);
-  const [canRight, setCanRight] = useState(true);
-  const [activeIdx, setActiveIdx] = useState(0);
-
-  // Desktop scroll state
-  useEffect(() => {
-    const el = trackRef.current;
-    if (!el) return;
-    function upd() {
-      setCanLeft(el!.scrollLeft > 8);
-      setCanRight(el!.scrollLeft < el!.scrollWidth - el!.clientWidth - 8);
-    }
-    upd();
-    el.addEventListener("scroll", upd, { passive: true });
-    return () => el.removeEventListener("scroll", upd);
-  }, [items]);
-
-  // Mobile active dot
-  useEffect(() => {
-    const el = mobileRef.current;
-    if (!el) return;
-    function upd() {
-      const idx = Math.round(el!.scrollLeft / el!.clientWidth);
-      setActiveIdx(idx);
-    }
-    el.addEventListener("scroll", upd, { passive: true });
-    return () => el.removeEventListener("scroll", upd);
-  }, [items]);
-
-  function scroll(dir: "left" | "right") {
-    trackRef.current?.scrollBy({
-      left: dir === "right" ? (CARD_W + GAP) * 1.5 : -(CARD_W + GAP) * 1.5,
-      behavior: "smooth",
-    });
-  }
+  const items = collections && collections.length > 0 ? collections : FALLBACK;
 
   return (
-    <section className="pb-20 md:pb-24" aria-label="Colecciones destacadas">
-      {/* Header */}
-      <div className="max-w-7xl mx-auto px-4 md:px-8 mb-8">
-        <div className="flex items-end justify-between gap-4">
-          <div>
-            <p className="text-[11px] uppercase tracking-widest text-primary-deep font-bold mb-2">
-              Colecciones
-            </p>
-            <h2 className="text-3xl md:text-4xl font-headline font-black uppercase tracking-tighter">
-              Encuentra tu auto ideal
-            </h2>
-          </div>
-          {/* Desktop arrows */}
-          <div className="hidden md:flex gap-2 shrink-0">
-            <button
-              onClick={() => scroll("left")}
-              disabled={!canLeft}
-              aria-label="Anterior"
-              className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-text-muted hover:border-primary hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-            >
-              <Icon name="chevron_left" className="text-[20px]" />
-            </button>
-            <button
-              onClick={() => scroll("right")}
-              disabled={!canRight}
-              aria-label="Siguiente"
-              className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-text-muted hover:border-primary hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-            >
-              <Icon name="chevron_right" className="text-[20px]" />
-            </button>
+    <section className="section section--rule" aria-labelledby="collections-title">
+      <div className="wrap">
+        <div className="section-head">
+          <div className="section-head__text">
+            <h2 id="collections-title" className="t-h2">Encuentra tu auto ideal</h2>
+            <p className="t-lead">Colecciones armadas por presupuesto, espacio o marca.</p>
           </div>
         </div>
-      </div>
 
-      {/* ── MOBILE carousel (md:hidden) ── */}
-      <div className="md:hidden">
-        <div
-          ref={mobileRef}
-          className="flex overflow-x-auto"
-          style={{
-            scrollSnapType: "x mandatory",
-            WebkitOverflowScrolling: "touch",
-            scrollbarWidth: "none",
-            msOverflowStyle: "none",
-          }}
-        >
-          {items.map((col, i) => (
-            <Link
-              key={col._id}
-              href={`/coleccion/${col.slug}`}
-              style={{ flex: "0 0 100%", scrollSnapAlign: "start" }}
-              className="px-4"
-              aria-label={col.title}
-            >
-              <div className="relative rounded-2xl overflow-hidden h-52">
-                {col.heroImageUrl ? (
-                  <img
-                    src={sanityImg(col.heroImageUrl, { w: 800, q: 75 })}
-                    alt={col.title}
-                    className="absolute inset-0 w-full h-full object-cover"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                ) : (
-                  <div className={`absolute inset-0 bg-gradient-to-br ${GRADIENTS[i % GRADIENTS.length]}`} />
-                )}
-                <div className="absolute inset-0 bg-black/50" />
-                <div className="relative z-10 p-5 h-full flex flex-col justify-between">
-                  <div>
-                    {col.badge && (
-                      <span className="inline-block bg-primary text-black text-[9px] font-extrabold uppercase tracking-widest px-2.5 py-1 rounded-full">
-                        {col.badge}
-                      </span>
-                    )}
-                  </div>
-                  <div>
-                    <h3 className="text-white font-headline font-bold text-lg leading-snug mb-1">
-                      {col.title}
-                    </h3>
-                    {col.subtitle && (
-                      <p className="text-white/60 text-xs leading-snug mb-3">{col.subtitle}</p>
-                    )}
-                    <span className="inline-flex items-center gap-1.5 text-primary font-bold text-sm">
-                      {col.ctaText ?? "Ver colección"}
-                    </span>
-                  </div>
+        <div className="collections">
+          {items.map((col) => {
+            const title = sentenceCase(col.title);
+            return (
+              <Link key={col._id} href={`/coleccion/${col.slug}`} className="collection" aria-label={title}>
+                <div className="collection__media">
+                  {col.heroImageUrl && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={sanityImg(col.heroImageUrl, { w: 800, h: 533, fit: "crop" })}
+                      alt=""
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  )}
                 </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-
-        {/* Dot indicators */}
-        <div className="flex justify-center gap-2 mt-4">
-          {items.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => mobileRef.current?.scrollTo({ left: mobileRef.current.clientWidth * i, behavior: "smooth" })}
-              className="transition-all duration-300"
-              style={{
-                width:  i === activeIdx ? 20 : 6,
-                height: 6,
-                borderRadius: 9999,
-                backgroundColor: i === activeIdx ? "var(--color-primary, #00E5E5)" : "#d1d5db",
-              }}
-              aria-label={`Ir a colección ${i + 1}`}
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* ── DESKTOP carousel (hidden md:block) ── */}
-      <div className="hidden md:block relative">
-        <div
-          className="pointer-events-none absolute left-0 top-0 bottom-0 w-20 z-10 transition-opacity duration-200"
-          style={{ background: "linear-gradient(to right, white, transparent)", opacity: canLeft ? 1 : 0 }}
-        />
-        <div
-          className="pointer-events-none absolute right-0 top-0 bottom-0 w-20 z-10 transition-opacity duration-200"
-          style={{ background: "linear-gradient(to left, white, transparent)", opacity: canRight ? 1 : 0 }}
-        />
-        <div
-          ref={trackRef}
-          className="flex gap-5 overflow-x-auto pb-3"
-          style={{
-            scrollSnapType: "x mandatory",
-            WebkitOverflowScrolling: "touch",
-            paddingLeft:  "max(1rem, calc((100vw - 1280px) / 2 + 2rem))",
-            paddingRight: "max(1rem, calc((100vw - 1280px) / 2 + 2rem))",
-            msOverflowStyle: "none",
-            scrollbarWidth: "none",
-          }}
-        >
-          {items.map((col, i) => (
-            <Link
-              key={col._id}
-              href={`/coleccion/${col.slug}`}
-              style={{ minWidth: CARD_W, scrollSnapAlign: "start" }}
-              className="relative rounded-2xl overflow-hidden flex flex-col justify-end group cursor-pointer"
-              aria-label={col.title}
-            >
-              <div className="relative h-[220px] w-full">
-                {col.heroImageUrl ? (
-                  <img
-                    src={sanityImg(col.heroImageUrl, { w: 720, q: 75 })}
-                    alt={col.title}
-                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                ) : (
-                  <div className={`absolute inset-0 bg-gradient-to-br ${GRADIENTS[i % GRADIENTS.length]}`} />
-                )}
-                <div className="absolute inset-0 bg-black/50 group-hover:bg-black/40 transition-colors duration-300" />
-                <div className="relative z-10 p-6 h-full flex flex-col justify-between">
-                  <div>
-                    {col.badge && (
-                      <span className="inline-block bg-primary text-black text-[9px] font-extrabold uppercase tracking-widest px-2.5 py-1 rounded-full">
-                        {col.badge}
-                      </span>
-                    )}
-                  </div>
-                  <div>
-                    <h3 className="text-white font-headline font-bold text-xl leading-snug mb-1 group-hover:text-primary transition-colors duration-200">
-                      {col.title}
-                    </h3>
-                    {col.subtitle && (
-                      <p className="text-white/60 text-sm leading-snug mb-3">{col.subtitle}</p>
-                    )}
-                    <span className="inline-flex items-center gap-1.5 text-primary font-bold text-sm group-hover:gap-2.5 transition-all duration-200">
-                      {col.ctaText ?? "Ver colección"}
-                    </span>
-                  </div>
+                <div className="collection__body">
+                  {col.badge && <span className="chip">{sentenceCase(cleanSeparators(col.badge))}</span>}
+                  <h3 className="collection__title">{title}</h3>
+                  {col.subtitle && <p className="collection__text">{cleanSeparators(col.subtitle)}</p>}
+                  <span className="link-arrow">
+                    {col.ctaText ?? "Ver colección"}
+                    <Icon name="arrow_forward" size="none" />
+                  </span>
                 </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            );
+          })}
         </div>
       </div>
     </section>

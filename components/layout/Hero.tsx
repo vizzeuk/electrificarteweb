@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { Badge } from "@/components/ui/Badge";
 import { Icon } from "@/components/ui/Icon";
 import { HeroBgVideo } from "@/components/layout/HeroBgVideo";
 import { OfferCta } from "@/components/waitlist/OfferCta";
+import { OFERTA_STANDBY } from "@/lib/products";
 
 export interface HeroData {
   badge?: string;
@@ -30,160 +30,92 @@ export interface HeroData {
   videoUrl?: string;
 }
 
-interface HeroProps {
-  data?: HeroData;
+/** Cifras del hero. Se calculan desde el catálogo (page.tsx), nunca se escriben a mano. */
+export interface HeroFacts {
+  models: number;
+  brands: number;
+  /** Siglas de los tipos eléctricos del catálogo, en el orden del sitio (EV, PHEV...). */
+  technologies: string[];
 }
 
-export function Hero({ data }: HeroProps) {
-  const badge     = data?.badge          ?? "El mejor precio en autos electrificados de Chile";
-  const title     = data?.title          ?? "Ahorra millones en tu próximo";
-  const highlight = data?.titleHighlight ?? "auto electrificado";
+interface HeroProps {
+  data?: HeroData;
+  facts?: HeroFacts;
+}
 
+function joinList(items: string[]): string {
+  if (items.length <= 1) return items.join("");
+  return `${items.slice(0, -1).join(", ")} y ${items[items.length - 1]}`;
+}
+
+/**
+ * Hero del home, sistema de diseño v1: video de fondo con un solo velo (el único
+ * degradado permitido), titular en Cabinet, bajada, dos caminos y una fila de cifras
+ * reales con hairlines. Sin badge, sin glow y sin palabra destacada en color.
+ */
+export function Hero({ data, facts }: HeroProps) {
   // Giro sep-2026 (ver docs/PIVOT-WAITLIST-PLAN.md): el hero ya NO vende la Oferta
   // ($19.990, en standby). La acción principal es la **Asesoría $4.990** y la
-  // secundaria abre el popup de **waitlist**. Por eso el subtítulo de Sanity —que
-  // describe el flujo pagado— se ignora mientras dure el standby.
+  // secundaria abre el popup de **waitlist**. Por eso el título y el subtítulo de
+  // Sanity (que describen el flujo pagado: "Ahorra millones...") se ignoran mientras
+  // dure el standby; al apagar OFERTA_STANDBY vuelven los de Sanity.
   // OJO con el wording: la waitlist NO promete una oferta ni implica que el servicio
-  // sea gratis — solo registra a los interesados. No usar "gratis" / "sin costo" ni
-  // "te conseguimos la mejor oferta" acá.
-  const heroSubtitle = "¿No sabes cuál te conviene? Te asesoramos para elegir el auto electrificado ideal para ti. Y si ya lo tienes claro, déjanos tus datos y te avisamos cuando haya novedades.";
+  // sea gratis — solo registra a los interesados.
+  const sanityTitle = [data?.title, data?.titleHighlight].filter(Boolean).join(" ");
+  const title = OFERTA_STANDBY || !sanityTitle ? "Elige bien tu próximo auto electrificado." : sanityTitle;
+  const subtitle = OFERTA_STANDBY || !data?.subtitle
+    ? "¿No sabes cuál te conviene? Te asesoramos por WhatsApp según tu uso, tus kilómetros y tu presupuesto."
+    : data.subtitle;
 
   // Flujo principal — Asesoría ($4.990)
-  const advCtaHref  = data?.advisoryCtaHref  ?? "/asesoria";
-  const advPrice    = data?.advisoryPrice    ?? "$4.990";
+  const advCtaHref = data?.advisoryCtaHref ?? "/asesoria";
+  const advPrice   = data?.advisoryPrice   ?? "$4.990";
 
-  // Prueba social. `statSavings` de Sanity ya no se usa: vendía el ahorro de la
-  // Oferta ($19.990, en standby). Ver docs/PIVOT-WAITLIST-PLAN.md.
-  const avatars = [
-    "/images/testimonial-person-1.jpg",
-    "/images/testimonial-person-2.jpg",
-    "/images/testimonial-person-3.jpg",
-  ];
+  const cells = facts
+    ? [
+        { num: String(facts.models), label: "modelos electrificados en el catálogo" },
+        { num: String(facts.brands), label: "marcas en un solo lugar" },
+        { num: String(facts.technologies.length), label: `tecnologías: ${joinList(facts.technologies)}` },
+        { num: "10 días", label: "de asesoría por WhatsApp" },
+      ].filter((c) => c.num !== "0")
+    : [];
 
   return (
-    <section
-      className="relative min-h-[90vh] flex items-center overflow-hidden bg-black pt-16 md:pt-20"
-      aria-label="Bienvenida"
-    >
-      {/* Fondo — video con poster para pintado instantáneo */}
-      <div className="absolute inset-0 z-0">
-        <HeroBgVideo
-          poster="/images/video-fondo-hero-poster.jpg"
-          srcMp4="/images/video-fondo-hero.mp4"
-        />
-        {/* Overlay base + degradado a la izquierda para legibilidad del texto */}
-        <div className="absolute inset-0 bg-black/72" />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/55 to-black/30" />
-        <div
-          className="absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage:
-              "linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)",
-            backgroundSize: "60px 60px",
-          }}
-        />
-        <div className="absolute bottom-0 left-0 w-[500px] h-[400px] bg-primary/10 rounded-full blur-[140px]" />
-        <div className="absolute top-0 right-0 w-[500px] h-[400px] bg-amber/5 rounded-full blur-[140px]" />
+    <section className="hero theme-dark" aria-label="Bienvenida">
+      {/* Fondo — video con poster para pintado instantáneo. Un solo velo para leer el texto. */}
+      <div className="hero__media">
+        <HeroBgVideo poster="/images/video-fondo-hero-poster.jpg" srcMp4="/images/video-fondo-hero.mp4" />
       </div>
+      <div className="hero__veil" />
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 py-14 md:py-20 lg:py-24 w-full">
-        {/* Bloque editorial — alineado a la izquierda, con jerarquía clara */}
-        <div className="hero-fade-in max-w-3xl text-center md:text-left">
-          <Badge variant="primary" className="mb-5">{badge}</Badge>
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-[4.25rem] font-headline font-extrabold text-white leading-[1.03] mb-5">
-            {title}{" "}
-            <span className="text-primary">{highlight}</span>
-          </h1>
-          <p className="text-base md:text-lg text-white/70 leading-relaxed max-w-xl mx-auto md:mx-0 mb-8">
-            {heroSubtitle}
-          </p>
+      <div className="wrap hero__in hero-fade-in">
+        <h1 className="t-display hero__title">{title}</h1>
+        <p className="hero__lead">{subtitle}</p>
 
-          {/* CTA principal (Asesoría $4.990) + camino secundario (waitlist).
-              Ambos comparten estructura ícono + dos líneas; el principal va
-              relleno (teal) para marcar jerarquía. El orden se invirtió con el
-              giro: antes el relleno era la Oferta $19.990, hoy en standby. */}
-          <div className="flex flex-col sm:flex-row sm:items-stretch justify-center md:justify-start gap-3 sm:gap-4">
-            <Link
-              href={advCtaHref}
-              className="group inline-flex items-center gap-3 rounded-xl bg-primary hover:bg-primary-dark text-black px-5 py-4 transition-all shadow-[0_6px_32px_rgba(0,229,229,0.30)] hover:shadow-[0_10px_44px_rgba(0,229,229,0.50)] hover:scale-[1.02] active:scale-[0.99]"
-            >
-              <span className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-black/15 shrink-0">
-                <Icon name="forum" className="text-[20px]" />
-              </span>
-              <span className="text-center sm:text-left leading-tight">
-                <span className="block text-base md:text-lg font-extrabold">Te ayudamos a elegir</span>
-                <span className="block text-xs font-semibold text-black/70">Asesoría personalizada por {advPrice}</span>
-              </span>
-              <Icon name="chevron_right" className="text-[20px] transition-transform group-hover:translate-x-0.5" />
-            </Link>
-
-            <OfferCta
-              source="hero"
-              className="group inline-flex items-center gap-3 rounded-xl border border-white/15 hover:border-primary/50 bg-white/[0.02] hover:bg-white/[0.05] px-5 py-4 transition-all"
-            >
-              <span className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-primary/15 text-primary shrink-0">
-                <Icon name="sell" className="text-[20px]" />
-              </span>
-              <span className="text-center sm:text-left leading-tight">
-                <span className="block text-base md:text-lg font-extrabold text-white">Consigue la mejor oferta</span>
-                <span className="block text-xs font-semibold text-white/55">Únete a la waitlist</span>
-              </span>
-              <Icon name="chevron_right" className="text-[20px] text-white/40 transition-transform group-hover:translate-x-0.5" />
-            </OfferCta>
-          </div>
-
-          {/* Microcopy */}
-          <p className="text-xs text-white/45 mt-5">
-            Súmate a la waitlist y sé de los primeros en enterarte cuando abramos el acceso.
-          </p>
-        </div>
-
-        {/* Prueba social + propuesta de valor de la asesoría */}
-        <div className="hero-fade-in mt-11 md:mt-14 flex flex-col items-center md:items-start sm:flex-row sm:items-center md:justify-start justify-center gap-6 sm:gap-8 text-center md:text-left">
-          {/* Red de vendedores — el mecanismo real que consigue el descuento */}
-          <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-3.5">
-            <div className="flex -space-x-3">
-              {avatars.map((src) => (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  key={src}
-                  src={src}
-                  alt=""
-                  aria-hidden
-                  className="w-10 h-10 rounded-full border-2 border-black object-cover"
-                  loading="lazy"
-                  decoding="async"
-                />
-              ))}
-            </div>
-            <div className="leading-tight">
-              <p className="text-white text-sm font-bold">Asesoría 1 a 1 por WhatsApp</p>
-              <p className="text-xs text-white/55 mt-0.5">con un experto en autos electrificados</p>
-            </div>
-          </div>
-
-          <div className="hidden sm:block w-px h-11 bg-white/15" />
-
-          {/* Contraste de valor de la asesoría: el costo de equivocarse vs. el de acertar.
-              Reemplaza al ancla de ahorro, que vendía la Oferta ($19.990, en standby). */}
-          <div className="leading-tight">
-            <p className="text-xs text-white/55">Elegir el auto equivocado cuesta millones</p>
-            <p className="font-headline font-extrabold text-white text-xl md:text-2xl mt-0.5">
-              Acertar, <span className="text-primary">{advPrice}</span>
-            </p>
-          </div>
-        </div>
-
-        {/* Enlace secundario a "Cómo funciona" */}
-        <div className="mt-8 text-center md:text-left">
-          <a
-            href="#como-funciona"
-            className="inline-flex items-center gap-1.5 text-white/50 hover:text-white text-sm font-medium transition-colors"
-          >
-            ¿Cómo funciona cada camino?
-            <Icon name="expand_more" size="sm" />
+        <div className="hero__actions">
+          <Link href={advCtaHref} className="btn btn--primary btn--lg">
+            Quiero asesoría por {advPrice}
+            <Icon name="arrow_forward" size="none" className="arrow" />
+          </Link>
+          <OfferCta source="hero" className="btn btn--secondary btn--lg">
+            Únete a la waitlist
+          </OfferCta>
+          <a className="hero__how" href="#como-funciona">
+            Cómo funciona
+            <Icon name="expand_more" size="none" />
           </a>
         </div>
+
+        {cells.length > 0 && (
+          <div className="facts">
+            {cells.map((c) => (
+              <div className="fact" key={c.label}>
+                <p className="fact__num">{c.num}</p>
+                <p className="fact__label">{c.label}</p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

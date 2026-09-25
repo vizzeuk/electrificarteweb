@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-type BadgeVariant = "primary" | "hot" | "new" | "category";
+type BadgeVariant = "primary" | "hot" | "new" | "category" | "outline" | "solid";
 
 interface BadgeProps {
   variant?: BadgeVariant;
@@ -8,25 +8,23 @@ interface BadgeProps {
   className?: string;
 }
 
+/**
+ * Chip del sistema de diseño v1 (app/styles/brand.css → .chip). Siempre macizo, radio 4,
+ * 12 px, sentence case. Nunca translúcido ni píldora.
+ *   primary / hot → chip suave (Glaciar)
+ *   new / category → chip sobre foto (Papel)
+ *   outline → chip con borde sobre fondo liso
+ *   solid → chip Tinta (precio o dato destacado)
+ */
 const variantStyles: Record<BadgeVariant, string> = {
-  primary:
-    "bg-primary text-black",
-  hot: "bg-amber-400 text-black",
-  new: "bg-white/90 text-black",
-  category:
-    "bg-white/90 text-black",
+  primary: "chip--soft",
+  hot: "chip--soft",
+  new: "chip--media",
+  category: "chip--media",
+  outline: "",
+  solid: "chip--solid",
 };
 
-export function Badge({ variant = "primary", children, className }: BadgeProps) {
-  return (
-    <span
-      className={cn(
-        "inline-block px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded",
-        variantStyles[variant],
-        className
-      )}
-    >
-      {children}
-    </span>
-  );
+export function Badge({ variant = "outline", children, className }: BadgeProps) {
+  return <span className={cn("chip", variantStyles[variant], className)}>{children}</span>;
 }

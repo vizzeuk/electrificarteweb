@@ -1,4 +1,6 @@
 import Image from "next/image";
+import { Icon } from "@/components/ui/Icon";
+import { cleanSeparators, sentenceCase } from "@/lib/utils";
 
 interface ServicioExtra {
   badge?:       string;
@@ -16,8 +18,8 @@ interface ServiciosExtrasProps {
 const DEFAULTS: ServicioExtra[] = [
   {
     badge:       "Domicilio",
-    title:       "Adquiere tu Wallbox domiciliario con descuento",
-    description: "Cotiza e instala tu cargador en casa con los mejores precios del mercado y técnicos certificados.",
+    title:       "Adquiere tu wallbox domiciliario con descuento",
+    description: "Cotiza e instala tu cargador en casa con buenos precios y técnicos certificados.",
     ctaText:     "Ver cargadores",
     ctaHref:     "https://copecvoltex.cl/collections/cargadores-y-cables",
     imageUrl:    "/images/cargadores.webp",
@@ -25,89 +27,65 @@ const DEFAULTS: ServicioExtra[] = [
   {
     badge:       "Preferencial",
     title:       "Contrata el seguro de tu auto electrificado a valores preferenciales",
-    description: "Seguros especializados para vehículos electrificados con coberturas exclusivas y precios únicos en Chile.",
+    description: "Seguros especializados para vehículos electrificados, con coberturas pensadas para ellos.",
     ctaText:     "Cotizar seguro",
     ctaHref:     "https://seguro-auto.comparaonline.cl/quote",
     imageUrl:    "/images/seguros.webp",
   },
 ];
 
-// Gradient fallbacks when no image is uploaded
-const GRADIENTS = [
-  "from-[#003d3d] via-[#005555] to-[#007070]",
-  "from-[#1a1a2e] via-[#16213e] to-[#0f3460]",
-];
-
+/**
+ * Servicios de terceros (cargador y seguro): card con foto a la izquierda y texto a la
+ * derecha; en móvil la foto va arriba. Sin velo ni texto sobre la foto.
+ */
 export function ServiciosExtras({ items }: ServiciosExtrasProps) {
   const cards = (items && items.length > 0 ? items : DEFAULTS).slice(0, 2);
 
   return (
-    <section className="bg-white py-16 px-4 md:px-8" aria-label="Servicios adicionales">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-10">
-          <p className="text-xs font-bold uppercase tracking-widest text-primary mb-2">
-            Servicios adicionales
-          </p>
-          <h2 className="text-2xl md:text-3xl font-headline font-extrabold text-text-main">
-            Todo lo que necesitas para tu auto electrificado
-          </h2>
+    <section className="section section--subtle" aria-labelledby="servicios-title">
+      <div className="wrap">
+        <div className="section-head">
+          <div className="section-head__text">
+            <h2 id="servicios-title" className="t-h2">Todo lo que necesitas para tu auto electrificado</h2>
+          </div>
         </div>
 
-        {/* Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {cards.map((card, i) => (
-            <div
-              key={i}
-              className="relative rounded-2xl overflow-hidden min-h-[280px] flex flex-col justify-between group"
-            >
-              {/* Background image or gradient */}
-              {card.imageUrl ? (
-                <Image
-                  src={card.imageUrl}
-                  alt={card.title}
-                  fill
-                  className="object-cover transition-transform duration-500 group-hover:scale-105"
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                />
-              ) : (
-                <div
-                  className={`absolute inset-0 bg-gradient-to-br ${GRADIENTS[i % GRADIENTS.length]}`}
-                />
-              )}
-
-              {/* Dark overlay */}
-              <div className="absolute inset-0 bg-black/50 group-hover:bg-black/40 transition-colors duration-300" />
-
-              {/* Content */}
-              <div className="relative z-10 p-8 flex flex-col h-full justify-between">
-                <div>
-                  {card.badge && (
-                    <span className="inline-block bg-primary text-black text-[10px] font-extrabold uppercase tracking-widest px-3 py-1 rounded-full mb-4">
-                      {card.badge}
-                    </span>
+        <div className="services">
+          {cards.map((card, i) => {
+            const external = !!card.ctaHref?.startsWith("http");
+            return (
+              <article key={i} className="card service">
+                <div className="service__media">
+                  {card.imageUrl && (
+                    <Image
+                      src={card.imageUrl}
+                      alt=""
+                      fill
+                      sizes="(max-width: 559px) 100vw, (max-width: 1023px) 40vw, 240px"
+                    />
                   )}
-                  <h3 className="text-white font-headline font-bold text-xl md:text-2xl leading-tight mb-3">
-                    {card.title}
-                  </h3>
-                  <p className="text-white/70 text-sm leading-relaxed max-w-sm">
-                    {card.description}
-                  </p>
                 </div>
-
-                <div className="mt-8">
+                <div className="service__body">
+                  {card.badge && <span className="chip">{sentenceCase(cleanSeparators(card.badge))}</span>}
+                  <h3 className="service__title">{card.title}</h3>
+                  <p className="service__text">{card.description}</p>
                   <a
                     href={card.ctaHref}
-                    target={card.ctaHref?.startsWith("http") ? "_blank" : undefined}
-                    rel={card.ctaHref?.startsWith("http") ? "noopener noreferrer" : undefined}
-                    className="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold text-sm px-6 py-3 rounded-xl transition-colors duration-200"
+                    target={external ? "_blank" : undefined}
+                    rel={external ? "noopener noreferrer" : undefined}
+                    className="btn btn--secondary btn--sm"
                   >
                     {card.ctaText}
+                    {external ? (
+                      <Icon name="north_east" size="none" />
+                    ) : (
+                      <Icon name="arrow_forward" size="none" className="arrow" />
+                    )}
                   </a>
                 </div>
-              </div>
-            </div>
-          ))}
+              </article>
+            );
+          })}
         </div>
       </div>
     </section>

@@ -11,21 +11,24 @@ import type { PublicReview, ReviewSummary } from "@/lib/reviews/queries";
  * Es cliente (necesita las flechas y el estado del scroll), así que NO puede importar
  * `storage`: las URLs de las fotos vienen ya resueltas desde el servidor en `photoUrls`.
  *
- * Mismo patrón que `LatestLaunches`: scroll horizontal con snap + `hide-scrollbar`,
- * flechas solo en desktop (en móvil se desliza con el dedo). Sin autoplay a propósito:
- * las reseñas se leen, no conviene que se muevan solas.
+ * Scroll horizontal con snap; flechas solo en desktop (en móvil se desliza con el dedo y
+ * la fila sangra hasta el borde, como las reseñas del home). Sin autoplay a propósito:
+ * las reseñas se leen, no conviene que se muevan solas. Piel del sistema v1: cards con
+ * hairline sobre Niebla, estrellas en Tinta, chips macizos.
  */
 
 const CARD_W = 340;
-const GAP = 20;
 
+const MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+
+/** "marzo de 2025". Determinista (partes UTC): mismo texto en el servidor y en el cliente. */
 function fecha(iso: string): string {
-  try {
-    return new Date(iso).toLocaleDateString("es-CL", { year: "numeric", month: "long" });
-  } catch {
-    return "";
-  }
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return `${MESES[d.getUTCMonth()]} de ${d.getUTCFullYear()}`;
 }
+
+const promedioFmt = new Intl.NumberFormat("es-CL", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 
 export function ReviewList({
   reviews,
@@ -61,104 +64,104 @@ export function ReviewList({
 
   if (reviews.length === 0) return null;
 
-  const mover = (dir: "left" | "right") =>
-    trackRef.current?.scrollBy({ left: (dir === "left" ? -1 : 1) * (CARD_W + GAP), behavior: "smooth" });
+  const mover = (dir: -1 | 1) => {
+    const el = trackRef.current;
+    if (!el) return;
+    const card = el.firstElementChild as HTMLElement | null;
+    const gap = parseFloat(getComputedStyle(el).columnGap) || 0;
+    el.scrollBy({ left: dir * ((card?.offsetWidth ?? CARD_W) + gap), behavior: "smooth" });
+  };
+
+  const showArrows = canLeft || canRight;
 
   return (
-    <section className="py-12 md:py-14 bg-white overflow-hidden" aria-labelledby="reviews-title">
-      <div className="max-w-7xl mx-auto px-4 md:px-8">
-
-        <div className="mb-7 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-5">
-          <div>
-            <p className="text-[11px] uppercase tracking-widest text-primary-deep font-bold mb-2">Opiniones reales</p>
-            <h2 id="reviews-title" className="text-2xl md:text-3xl font-headline font-black uppercase tracking-tight">
-              Lo que dicen del {carName}
-            </h2>
+    <section className="section section--subtle section--rule" aria-labelledby="reviews-title">
+      <div className="wrap">
+        <div className="section-head">
+          <div className="section-head__text">
+            <h2 id="reviews-title" className="t-h2">Lo que dicen del {carName}</h2>
           </div>
-          {summary && (
-            <div className="flex items-center gap-3 rounded-full border border-gray-200 bg-surface px-5 py-2.5 self-start sm:self-auto">
-              <StarRating value={Math.round(summary.promedio)} size={18} />
-              <span className="font-headline text-lg font-black leading-none">{summary.promedio.toFixed(1)}</span>
-              <span className="h-4 w-px bg-gray-200" />
-              <span className="text-sm text-text-muted whitespace-nowrap">
-                {summary.total} {summary.total === 1 ? "reseña" : "reseñas"}
-              </span>
+          {(summary || showArrows) && (
+            <div className="section-head__side">
+              {summary && (
+                <div className="rating">
+                  <StarRating value={Math.round(summary.promedio)} size={16} />
+                  <span className="rating__num">{promedioFmt.format(summary.promedio)}</span>
+                  <span className="rating__count">
+                    {summary.total} {summary.total === 1 ? "reseña" : "reseñas"}
+                  </span>
+                </div>
+              )}
+              {showArrows && (
+                <div className="hidden gap-2 md:flex">
+                  <button
+                    type="button"
+                    onClick={() => mover(-1)}
+                    disabled={!canLeft}
+                    aria-label="Reseña anterior"
+                    className="btn btn--secondary btn--icon btn--sm"
+                  >
+                    <Icon name="chevron_left" size="none" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => mover(1)}
+                    disabled={!canRight}
+                    aria-label="Reseña siguiente"
+                    className="btn btn--secondary btn--icon btn--sm"
+                  >
+                    <Icon name="chevron_right" size="none" />
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
 
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => mover("left")}
-            disabled={!canLeft}
-            aria-label="Reseña anterior"
-            className="hidden sm:flex flex-shrink-0 w-11 h-11 rounded-full bg-black hover:bg-primary text-white hover:text-black items-center justify-center shadow-[0_4px_20px_rgba(0,0,0,0.35)] transition-all duration-200 disabled:opacity-0 disabled:pointer-events-none"
-          >
-            <Icon name="chevron_left" className="text-[22px]" />
-          </button>
-
-          <div className="flex-1 overflow-hidden">
-            <div
-              ref={trackRef}
-              className="flex gap-5 overflow-x-auto pb-2 hide-scrollbar"
-              style={{ scrollSnapType: "x mandatory" }}
-            >
-              {reviews.map((r) => (
-                <article
-                  key={r.id}
-                  style={{ width: CARD_W, scrollSnapAlign: "start" }}
-                  className="flex-shrink-0 rounded-2xl border border-gray-100 p-5 md:p-6 transition-colors hover:border-primary/30"
-                >
-                  <div className="flex items-start justify-between gap-3 mb-3">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-headline font-bold leading-tight truncate">{r.autor}</p>
-                        {r.compraVerificada && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary-deep">
-                            <Icon name="verified" className="text-[12px]" />
-                            Verificada
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-text-ghost text-xs mt-0.5 truncate">
-                        {[r.carVersion, r.carYear, r.carColor].filter(Boolean).join(" · ") || fecha(r.createdAt)}
-                      </p>
-                    </div>
-                    <StarRating value={r.rating} size={14} className="flex-shrink-0 mt-1" />
-                  </div>
-
-                  <p className="text-text-main text-sm leading-relaxed line-clamp-6">{r.body}</p>
+        <div
+          ref={trackRef}
+          className="hide-scrollbar -mx-[var(--gutter)] flex snap-x snap-mandatory scroll-px-[var(--gutter)] gap-[var(--grid-gap)] overflow-x-auto px-[var(--gutter)] md:mx-0 md:scroll-px-0 md:px-0"
+        >
+          {reviews.map((r) => {
+            const detalle = [r.carVersion, r.carYear, r.carColor].filter(Boolean).join(", ") || fecha(r.createdAt);
+            return (
+              <article key={r.id} className="card review w-[min(84vw,340px)] flex-none snap-start">
+                <div className="review__body">
+                  <StarRating value={r.rating} size={16} />
+                  <blockquote className="review__quote line-clamp-6">{r.body}</blockquote>
 
                   {r.photoUrls.length > 0 && (
-                    <div className="mt-4 flex gap-2">
+                    <div className="flex gap-2">
                       {r.photoUrls.slice(0, 3).map((url) => (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
                           key={url}
                           src={url}
                           alt={`Foto de ${r.autor}`}
-                          className="h-20 w-20 flex-shrink-0 rounded-lg border border-gray-100 object-cover"
+                          className="h-[72px] w-[72px] flex-none rounded-control border border-line object-cover"
                           loading="lazy"
                           decoding="async"
                         />
                       ))}
                     </div>
                   )}
-                </article>
-              ))}
-            </div>
-          </div>
 
-          <button
-            type="button"
-            onClick={() => mover("right")}
-            disabled={!canRight}
-            aria-label="Reseña siguiente"
-            className="hidden sm:flex flex-shrink-0 w-11 h-11 rounded-full bg-black hover:bg-primary text-white hover:text-black items-center justify-center shadow-[0_4px_20px_rgba(0,0,0,0.35)] transition-all duration-200 disabled:opacity-0 disabled:pointer-events-none"
-          >
-            <Icon name="chevron_right" className="text-[22px]" />
-          </button>
+                  <div className="review__foot">
+                    <div className="min-w-0">
+                      <p className="person__name truncate">{r.autor}</p>
+                      {detalle && <p className="t-label truncate">{detalle}</p>}
+                    </div>
+                    {r.compraVerificada && (
+                      <span className="chip chip--soft flex-none">
+                        <Icon name="verified" className="text-[14px]" />
+                        Verificada
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </article>
+            );
+          })}
         </div>
       </div>
     </section>

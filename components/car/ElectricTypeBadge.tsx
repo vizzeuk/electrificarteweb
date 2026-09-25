@@ -1,57 +1,37 @@
-/**
- * Pildora chica que muestra el tipo eléctrico (EV / PHEV / HEV / MHEV / REEV)
- * en una card. Colores consistentes con el branding del sitio.
- */
-
-interface Config {
-  label: string;
-  className: string;
-}
-
-const TYPE_CONFIG: Record<string, Config> = {
-  EV:   { label: "EV",   className: "bg-primary text-black" },
-  BEV:  { label: "EV",   className: "bg-primary text-black" },
-  PHEV: { label: "PHEV", className: "bg-primary-deep text-white" },
-  HEV:  { label: "HEV",  className: "bg-amber text-black" },
-  MHEV: { label: "MHEV", className: "bg-gray-700 text-white" },
-  EREV: { label: "REEV", className: "bg-purple-600 text-white" },
-  REEV: { label: "REEV", className: "bg-purple-600 text-white" },
-};
+import { cn } from "@/lib/utils";
 
 /**
- * Color de acento (hex) por tipo eléctrico — equivalente a las clases Tailwind
- * de TYPE_CONFIG. Fuente única de verdad para que otras secciones (ej. la grilla
- * de "¿Qué tipo de electrificado buscas?") usen el mismo color que los ribbons.
+ * Chip con la sigla del tipo eléctrico (EV / PHEV / HEV / MHEV / REEV).
+ * Sistema de diseño v1: un solo chip macizo para todos los tipos. La sigla es la que
+ * diferencia; ya no hay un color por tecnología. Sobre foto usa la variante media (Papel).
  */
-export const ELECTRIC_TYPE_COLORS: Record<string, string> = {
-  EV:   "#00E5E5", // bg-primary
-  BEV:  "#00E5E5",
-  PHEV: "#006A61", // bg-primary-deep
-  HEV:  "#F59E0B", // bg-amber
-  MHEV: "#374151", // bg-gray-700
-  EREV: "#9333EA", // bg-purple-600
-  REEV: "#9333EA",
+
+const TYPE_LABEL: Record<string, string> = {
+  EV: "EV",
+  BEV: "EV",
+  PHEV: "PHEV",
+  HEV: "HEV",
+  MHEV: "MHEV",
+  EREV: "REEV",
+  REEV: "REEV",
 };
 
-export function electricTypeColor(tag?: string | null): string | undefined {
-  return ELECTRIC_TYPE_COLORS[(tag ?? "").toUpperCase()];
+/** Sigla normalizada del tipo eléctrico, o null si el tag no es conocido. */
+export function electricTypeLabel(tag?: string | null): string | null {
+  return TYPE_LABEL[(tag ?? "").toUpperCase()] ?? null;
 }
 
 export function ElectricTypeBadge({
   tag,
   className = "",
+  onMedia = true,
 }: {
   tag?: string | null;
   className?: string;
+  /** true (defecto) = sobre una foto: chip en Papel. false = sobre fondo liso: chip con borde. */
+  onMedia?: boolean;
 }) {
-  const t = (tag ?? "").toUpperCase();
-  const cfg = TYPE_CONFIG[t];
-  if (!cfg) return null;
-  return (
-    <span
-      className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wide leading-none ${cfg.className} ${className}`}
-    >
-      {cfg.label}
-    </span>
-  );
+  const label = electricTypeLabel(tag);
+  if (!label) return null;
+  return <span className={cn("chip", onMedia && "chip--media", className)}>{label}</span>;
 }

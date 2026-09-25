@@ -1,19 +1,26 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { groq } from "next-sanity";
 import { Icon } from "@/components/ui/Icon";
 import { OfferCta } from "@/components/waitlist/OfferCta";
+import { client } from "@/lib/sanity/client";
+import { productPricesQuery } from "@/lib/queries/pages";
+import { ASESORIA_PRICE } from "@/lib/products";
 
 export const revalidate = 60;
 
+// Giro sep-2026 (docs/PIVOT-WAITLIST-PLAN.md): sin "negociamos por ti" ni promesas de
+// "el mejor precio". La Asesoría es el producto principal y la waitlist solo registra
+// interesados.
 export const metadata: Metadata = {
   title: "Quiénes somos",
   description:
-    "Electrificarte negocia por ti el mejor precio en autos electrificados de Chile. Conectamos a compradores con nuestra red de vendedores oficiales para conseguir el mejor precio del mercado, sin vueltas ni presión de venta.",
+    "Te ayudamos a elegir y comprar tu auto electrificado en Chile. Conectamos a compradores con nuestra red de vendedores oficiales, sin vueltas ni presión de venta.",
   alternates: { canonical: "/nosotros" },
   openGraph: {
     title: "Quiénes somos | Electrificarte",
     description:
-      "Negociamos por ti el mejor precio en autos electrificados de Chile, con nuestra red de vendedores oficiales, para que ahorres de verdad.",
+      "Te ayudamos a elegir y comprar tu auto electrificado en Chile, con una red de vendedores oficiales.",
     url: "/nosotros",
     type: "website",
   },
@@ -30,7 +37,7 @@ const VALORES = [
     icon: "handshake",
     title: "Estamos de tu lado",
     description:
-      "No revendemos autos ni cobramos comisión sobre la venta. Trabajamos para el comprador: nuestra única misión es conseguirte el mejor precio posible.",
+      "No revendemos autos ni cobramos comisión sobre la venta. Trabajamos para el comprador.",
   },
   {
     icon: "shield",
@@ -40,175 +47,168 @@ const VALORES = [
   },
 ];
 
-const STATS = [
-  { value: "+500", label: "compras ya negociadas en Chile" },
-  { value: "53+", label: "marcas en el catálogo" },
-  { value: "+15", label: "vendedores oficiales en la red" },
-  { value: "100%", label: "vendedores verificados" },
-];
+// Las marcas se cuentan en Sanity (nunca a mano). Las otras tres cifras son datos del
+// negocio que no están en el catálogo.
+const brandCountQuery = groq`count(*[_type == "brand"])`;
 
-const CAMINOS = [
-  {
-    tag: "Aún no sé qué auto quiero",
-    tagClass: "text-amber",
-    title: "Asesoría IA · $4.990",
-    description:
-      "Francisco, nuestro asesor con inteligencia artificial, analiza tu uso, presupuesto y necesidades por WhatsApp y te ayuda a decidir. Es una conversación, no una venta.",
-    href: "/asesoria",
-    cta: "Conocer la asesoría",
-  },
-  {
-    tag: "Ya sé qué auto quiero",
-    tagClass: "text-primary",
-    title: "Waitlist de ofertas",
-    description:
-      "Elige tu modelo y déjanos tus datos. Negociamos con nuestra red de vendedores oficiales para conseguir la mejor oferta, y te avisamos cuando abramos el acceso.",
-    href: "/negociacion",
-    cta: "Cómo conseguimos el precio",
-  },
-];
+export default async function NosotrosPage() {
+  const [prices, brandCount] = await Promise.all([
+    client.fetch(productPricesQuery, {}, { next: { tags: ["siteSettings"] } }).catch(() => null),
+    client.fetch<number>(brandCountQuery, {}, { next: { tags: ["brand"] } }).catch(() => 0),
+  ]);
+  const price: string = prices?.advisoryPrice ?? ASESORIA_PRICE;
 
-export default function NosotrosPage() {
+  const stats = [
+    { value: "+500", label: "compras ya negociadas en Chile" },
+    ...(brandCount > 0 ? [{ value: String(brandCount), label: "marcas en el catálogo" }] : []),
+    { value: "+15", label: "vendedores oficiales en la red" },
+    { value: "100%", label: "vendedores verificados" },
+  ];
+
   return (
-    <>
-      {/* ── Hero ── */}
-      <section className="relative bg-black pt-24 pb-16 md:pt-28 md:pb-20 overflow-hidden">
-        <div className="absolute top-0 right-0 w-[500px] h-[400px] bg-primary/10 rounded-full blur-[140px]" />
-        <div className="relative max-w-3xl mx-auto px-4 md:px-8">
-          <nav className="flex items-center gap-2 text-white/30 text-xs mb-8">
-            <Link href="/" className="hover:text-white/60 transition-colors">Inicio</Link>
-            <span>/</span>
-            <span className="text-white/60">Quiénes somos</span>
+    <div className="page">
+      {/* ── Encabezado claro ── */}
+      <section className="page-head">
+        <div className="wrap">
+          <nav className="crumbs" aria-label="Migas de pan">
+            <Link href="/">Inicio</Link>
+            <span aria-hidden="true">/</span>
+            <span aria-current="page">Quiénes somos</span>
           </nav>
-          <p className="text-primary text-[11px] uppercase tracking-widest font-bold mb-4">
-            Quiénes somos
-          </p>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-headline font-black text-white tracking-tight leading-[1.05] mb-5">
-            Compramos mejor,<br />
-            <span className="text-primary">para que estrenes electrificado</span>
-          </h1>
-          <p className="text-lg text-white/60 leading-relaxed mb-8 max-w-2xl">
-            Electrificarte negocia por ti el mejor precio en autos electrificados
-            de Chile. Ponemos de tu lado el poder de negociación que un comprador
-            solo no tiene: concentramos la demanda y negociamos por ti con una red de
-            vendedores oficiales para que consigas el mejor precio del mercado.
-          </p>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            <OfferCta
-              source="nosotros"
-              className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-8 py-4 rounded-xl transition-all text-lg shadow-[0_6px_32px_rgba(0,229,229,0.30)] hover:shadow-[0_8px_40px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]"
-            >
-              Conseguir mi oferta
-            </OfferCta>
-            <Link href="/marcas" className="text-white/50 hover:text-white transition-colors text-sm">
-              Explorar el catálogo →
-            </Link>
+
+          <div className="mt-header">
+            <h1 className="t-h1 max-w-[20ch]">
+              Compramos mejor, <span className="tone">para que estrenes electrificado</span>
+            </h1>
+            <p className="t-lead">
+              Te ayudamos a elegir y comprar tu auto electrificado en Chile. Ponemos de tu lado el poder de
+              negociación que un comprador solo no tiene: concentramos la demanda y trabajamos con una red de
+              vendedores oficiales.
+            </p>
+            <div className="page-head__actions">
+              <Link href="/asesoria" className="btn btn--primary btn--lg">
+                Quiero asesoría por {price}
+                <Icon name="arrow_forward" size="none" className="arrow" />
+              </Link>
+              <OfferCta source="nosotros" className="btn btn--secondary btn--lg">
+                Únete a la waitlist
+              </OfferCta>
+              <Link href="/marcas" className="btn btn--quiet">
+                Explorar el catálogo
+              </Link>
+            </div>
+          </div>
+
+          <div className="kpis" style={{ "--kpis": stats.length } as React.CSSProperties}>
+            {stats.map((st) => (
+              <div className="kpi" key={st.label}>
+                <p className="kpi__num">{st.value}</p>
+                <p className="kpi__label">{st.label}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* ── Misión ── */}
-      <section className="py-16 md:py-20 bg-white">
-        <div className="max-w-3xl mx-auto px-4 md:px-8 text-center">
-          <p className="text-primary-deep text-[11px] uppercase tracking-widest font-bold mb-4">
-            Nuestra misión
-          </p>
-          <h2 className="text-2xl md:text-3xl font-headline font-black tracking-tight mb-6">
-            Que la movilidad eléctrica sea para todos
-          </h2>
-          <p className="text-text-muted leading-relaxed text-lg">
-            Comprar un auto electrificado debería ser transparente y justo. Pero
-            los precios de lista, la falta de información y la presión de venta lo
-            hacen difícil. Nacimos para cambiar eso: acompañarte a elegir con
-            claridad y negociar en tu nombre, para que el ahorro que conseguimos
-            valga mucho más de lo que pagas por el servicio.
+      <section className="section" aria-labelledby="mision-t">
+        <div className="wrap grid gap-6 lg:grid-cols-12 lg:gap-16">
+          <h2 className="t-h2 lg:col-span-5" id="mision-t">Que la movilidad eléctrica sea para todos</h2>
+          <p className="t-lead lg:col-span-7">
+            Comprar un auto electrificado debería ser transparente y justo. Pero los precios de lista, la falta
+            de información y la presión de venta lo hacen difícil. Nacimos para cambiar eso: acompañarte a
+            elegir con claridad.
           </p>
         </div>
       </section>
 
-      {/* ── Valores ── */}
-      <section className="py-16 md:py-20 bg-surface">
-        <div className="max-w-5xl mx-auto px-4 md:px-8">
-          <h2 className="text-2xl md:text-3xl font-headline font-black uppercase tracking-tight text-center mb-12">
-            Cómo trabajamos
-          </h2>
-          <div className="grid gap-6 md:grid-cols-3">
+      {/* ── Cómo trabajamos ── */}
+      <section className="section section--subtle" aria-labelledby="valores-t">
+        <div className="wrap">
+          <div className="section-head">
+            <div className="section-head__text">
+              <h2 className="t-h2" id="valores-t">Cómo trabajamos</h2>
+            </div>
+          </div>
+          <div className="trust lg:grid-cols-3">
             {VALORES.map((v) => (
-              <div key={v.title} className="rounded-2xl bg-white border border-gray-100 p-6">
-                <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary-deep flex items-center justify-center mb-4">
-                  <Icon name={v.icon} />
-                </div>
-                <h3 className="font-headline font-bold text-lg mb-2">{v.title}</h3>
-                <p className="text-sm text-text-muted leading-relaxed">{v.description}</p>
+              <div className="trust__item" key={v.title}>
+                <Icon name={v.icon} size="none" />
+                <h3 className="trust__title">{v.title}</h3>
+                <p className="trust__text">{v.description}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── Dos caminos ── */}
-      <section className="py-16 md:py-20 bg-white">
-        <div className="max-w-5xl mx-auto px-4 md:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-2xl md:text-3xl font-headline font-black uppercase tracking-tight mb-4">
-              Dos formas de llegar a tu auto
-            </h2>
-            <p className="text-text-muted max-w-2xl mx-auto leading-relaxed">
-              No importa dónde estés hoy en tu decisión: tenemos un camino para ti.
-            </p>
+      {/* ── Dos caminos: el bloque Glaciar de la página es el de la Asesoría ── */}
+      <section className="section" aria-labelledby="caminos-t">
+        <div className="wrap">
+          <div className="section-head">
+            <div className="section-head__text">
+              <h2 className="t-h2" id="caminos-t">Dos formas de llegar a tu auto</h2>
+              <p className="t-lead">No importa dónde estés hoy en tu decisión: tenemos un camino para ti.</p>
+            </div>
           </div>
-          <div className="grid gap-6 md:grid-cols-2">
-            {CAMINOS.map((c) => (
-              <div key={c.title} className="rounded-2xl border border-gray-100 p-7 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 transition-all flex flex-col">
-                <p className={`text-[11px] uppercase tracking-widest font-bold mb-2 ${c.tagClass}`}>{c.tag}</p>
-                <h3 className="font-headline font-bold text-xl mb-3">{c.title}</h3>
-                <p className="text-sm text-text-muted leading-relaxed mb-6 flex-1">{c.description}</p>
-                <Link href={c.href} className="inline-flex items-center gap-2 text-primary-deep font-bold text-sm hover:gap-3 transition-all">
-                  {c.cta}
+          <div className="paths">
+            <div className="path path--primary">
+              <div className="path__label">
+                <span className="t-label">Asesoría IA</span>
+                <span className="chip chip--solid">{price}</span>
+              </div>
+              <h3 className="path__title">Aún no sé qué auto quiero</h3>
+              <p className="path__text">
+                Francisco, nuestro asesor con inteligencia artificial, analiza tu uso, presupuesto y necesidades
+                por WhatsApp y te ayuda a decidir. Es una conversación, no una venta.
+              </p>
+              <div className="path__cta">
+                <Link href="/asesoria" className="btn btn--primary btn--lg">
+                  Conocer la asesoría
+                  <Icon name="arrow_forward" size="none" className="arrow" />
                 </Link>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Stats ── */}
-      <section className="py-16 md:py-20 bg-surface">
-        <div className="max-w-5xl mx-auto px-4 md:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 rounded-2xl bg-black px-6 py-8">
-            {STATS.map((st) => (
-              <div key={st.label} className="text-center">
-                <p className="text-primary font-headline font-black text-2xl md:text-3xl leading-none">{st.value}</p>
-                <p className="text-white/50 text-xs mt-1.5 leading-snug">{st.label}</p>
+            </div>
+            <div className="path path--secondary">
+              <div className="path__label">
+                <span className="t-label">Waitlist de ofertas</span>
               </div>
-            ))}
+              <h3 className="path__title">Ya sé qué auto quiero</h3>
+              <p className="path__text">
+                Elige tu modelo y déjanos tus datos. Te avisamos cuando abramos el acceso.
+              </p>
+              <div className="path__cta">
+                <OfferCta source="nosotros" className="btn btn--secondary btn--lg">
+                  Únete a la waitlist
+                </OfferCta>
+                <Link href="/negociacion" className="btn btn--quiet">
+                  Cómo negociamos
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ── CTA final ── */}
-      <section className="py-16 md:py-20 bg-black">
-        <div className="max-w-2xl mx-auto px-4 md:px-8 text-center">
-          <h2 className="text-2xl md:text-3xl font-headline font-black uppercase tracking-tight text-white mb-4">
-            ¿Listo para estrenar?
-          </h2>
-          <p className="text-white/50 mb-8">
-            Ya sea que necesites ayuda para decidir o que ya sepas qué quieres,
-            estamos para conseguirte el mejor precio de Chile.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <OfferCta
-              source="nosotros"
-              className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-8 py-4 rounded-xl transition-all text-lg shadow-[0_6px_32px_rgba(0,229,229,0.30)] hover:shadow-[0_8px_40px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]"
-            >
-              Conseguir mi oferta
+      {/* ── Cierre claro, con hairline arriba ── */}
+      <section className="band section--rule" aria-labelledby="band-t">
+        <div className="wrap band__in">
+          <div>
+            <h2 className="t-h2" id="band-t">¿Listo para estrenar?</h2>
+            <p>
+              Ya sea que necesites ayuda para decidir o que ya sepas qué quieres, estamos para ayudarte.
+            </p>
+          </div>
+          <div className="band__actions">
+            <OfferCta source="nosotros" className="btn btn--primary btn--lg">
+              Únete a la waitlist
             </OfferCta>
-            <Link href="/contacto" className="text-white/50 hover:text-white transition-colors text-sm">
-              Hablar con el equipo →
+            <Link href="/contacto" className="link">
+              Hablar con el equipo
             </Link>
           </div>
         </div>
       </section>
-    </>
+    </div>
   );
 }

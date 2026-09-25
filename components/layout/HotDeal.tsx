@@ -2,9 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { Badge } from "@/components/ui/Badge";
 import { Icon } from "@/components/ui/Icon";
-import { formatCLP, DEFAULT_HOT_DEAL_LABEL } from "@/lib/utils";
+import { formatCLP, formatNumber, DEFAULT_HOT_DEAL_LABEL } from "@/lib/utils";
 import { sanityImg } from "@/lib/sanityImage";
 import { useInViewport } from "@/lib/useInViewport";
 import { OfferCta } from "@/components/waitlist/OfferCta";
@@ -42,313 +41,201 @@ const FALLBACK: HotDealCarData = {
   acceleration: 4.9,
 };
 
-/* ─── Mobile card — completamente estático, sin motion, sin fragmentos ─── */
-function HotDealMobile({ c, brandDisplay, modelDisplay, bonusAmt, savingsPct, urgencyLabel }: {
+const AUTO_MS = 7000;
+
+const pad2 = (n: number) => String(n).padStart(2, "0");
+
+/* ─── Una diapositiva: copy y precios a la izquierda, foto y specs a la derecha ─── */
+function DealSlide({ c, index, total, active }: {
   c: HotDealCarData;
-  brandDisplay: string;
-  modelDisplay: string;
-  bonusAmt: number;
-  savingsPct: number;
-  urgencyLabel: string;
+  index: number;
+  total: number;
+  active: boolean;
 }) {
-  return (
-    <div className="px-4 w-full">
-      <div className="rounded-2xl overflow-hidden border border-white/10 bg-white/5">
-        {/* Imagen */}
-        {c.imageUrl ? (
-          <img
-            src={sanityImg(c.imageUrl, { w: 720, q: 75 })}
-            alt={`${brandDisplay} ${modelDisplay}`}
-            className="w-full h-40 object-cover"
-            loading="lazy"
-            decoding="async"
-          />
-        ) : (
-          <div className="w-full h-40 flex items-center justify-center">
-            <Icon name="electric_car" className="text-primary/30" size="xl" />
-          </div>
-        )}
-
-        <div className="p-4 space-y-3">
-          {/* Badge + título */}
-          <div>
-            <div className="flex items-center gap-2 mb-1.5">
-              <Badge variant="hot">HOT DEAL</Badge>
-              <span className="text-white/40 text-xs">{urgencyLabel}</span>
-            </div>
-            <p className="text-white font-headline font-black text-base uppercase leading-tight">
-              {brandDisplay} {modelDisplay}
-            </p>
-            <p className="text-white/50 text-xs mt-0.5">
-              Bonos de hasta{" "}
-              <span className="text-primary font-bold">{formatCLP(bonusAmt)}</span>
-            </p>
-          </div>
-
-          {/* Precio */}
-          <div className="flex items-center justify-between bg-white/5 rounded-xl px-3 py-2.5">
-            <div>
-              <p className="text-white/40 text-[10px] line-through">{formatCLP(c.basePrice)}</p>
-              <p className="text-primary font-headline font-black text-xl leading-none">{formatCLP(c.discountPrice)}</p>
-            </div>
-            <p className="text-white/30 text-[10px] text-right leading-snug">
-              Ahorra {savingsPct}%<br />bono Electrificarte
-            </p>
-          </div>
-
-          {/* Specs — solo autonomía + traction/power */}
-          <div className="grid grid-cols-2 gap-2">
-            {c.range && (
-              <div className="bg-white/5 rounded-lg px-3 py-2">
-                <p className="text-primary text-sm font-headline font-bold">{c.range} km</p>
-                <p className="text-white/40 text-[10px]">Autonomía</p>
-              </div>
-            )}
-            {c.traction ? (
-              <div className="bg-white/5 rounded-lg px-3 py-2">
-                <p className="text-primary text-sm font-headline font-bold">{c.traction}</p>
-                <p className="text-white/40 text-[10px]">Tracción</p>
-              </div>
-            ) : c.power ? (
-              <div className="bg-white/5 rounded-lg px-3 py-2">
-                <p className="text-primary text-sm font-headline font-bold">{c.power} CV</p>
-                <p className="text-white/40 text-[10px]">Potencia</p>
-              </div>
-            ) : null}
-          </div>
-
-          {/* CTA */}
-          <OfferCta
-            carSlug={c.slug}
-            model={`${brandDisplay} ${modelDisplay}`}
-            source="hotdeal"
-            className="flex items-center justify-center gap-2 w-full bg-primary hover:bg-primary-dark text-black font-bold py-3 rounded-xl text-sm transition-colors"
-          >
-            Quiero esta oferta
-          </OfferCta>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ─── Desktop card — sin whileInView (items off-screen en carrusel nunca disparan IntersectionObserver) ─── */
-function HotDealDesktop({ c, brandDisplay, modelDisplay, bonusAmt, savingsPct, urgencyLabel }: {
-  c: HotDealCarData;
-  brandDisplay: string;
-  modelDisplay: string;
-  bonusAmt: number;
-  savingsPct: number;
-  urgencyLabel: string;
-}) {
-  return (
-    <div className="max-w-7xl mx-auto px-8 py-4">
-      <div className="grid grid-cols-2 gap-12 items-center">
-        {/* Columna izquierda — copy */}
-        <div>
-          <div className="flex items-center gap-3 mb-5">
-            <Badge variant="hot">HOT DEAL</Badge>
-            <span className="text-white/50 text-sm">{urgencyLabel}</span>
-          </div>
-          <h2 className="text-3xl xl:text-4xl font-headline font-black text-white mb-5 uppercase leading-tight">
-            {brandDisplay} {modelDisplay} con bonos de hasta{" "}
-            <span className="text-primary">{formatCLP(bonusAmt)}</span>
-          </h2>
-          <div className="bg-white/5 border border-white/10 rounded-xl p-5 mb-6 space-y-3">
-            <div className="flex justify-between items-baseline">
-              <span className="text-white/40 text-sm">Precio lista</span>
-              <span className="text-white/40 line-through text-sm">{formatCLP(c.basePrice)}</span>
-            </div>
-            <div className="flex justify-between items-baseline">
-              <span className="text-white text-sm font-medium">Con bono Electrificarte</span>
-              <span className="text-primary text-3xl font-headline font-black">{formatCLP(c.discountPrice)}</span>
-            </div>
-            <p className="text-white/30 text-xs pt-2 border-t border-white/10">
-              Ahorra {savingsPct}% · Incluye bono vendedor + Electrificarte
-            </p>
-          </div>
-          <div className="flex gap-3">
-            <OfferCta
-              carSlug={c.slug}
-              model={`${brandDisplay} ${modelDisplay}`}
-              source="hotdeal"
-              className="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-6 py-3 rounded-xl transition-all text-sm shadow-[0_4px_20px_rgba(0,229,229,0.25)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.38)] hover:scale-[1.02] active:scale-[0.99]"
-            >
-              Quiero esta oferta
-            </OfferCta>
-            <Link
-              href={`/auto/${c.slug}`}
-              className="inline-flex items-center gap-2 border border-white/20 hover:border-white/40 text-white font-medium px-6 py-3 rounded-xl transition-all text-sm"
-            >
-              Ver especificaciones
-            </Link>
-          </div>
-        </div>
-
-        {/* Columna derecha — imagen + specs */}
-        <div>
-          <div className="bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 rounded-2xl overflow-hidden">
-            {c.imageUrl ? (
-              <img
-                src={sanityImg(c.imageUrl, { w: 960, q: 78 })}
-                alt={`${brandDisplay} ${modelDisplay}`}
-                className="w-full aspect-[16/9] object-cover"
-                loading="lazy"
-                decoding="async"
-              />
-            ) : (
-              <div className="w-full aspect-[16/9] flex items-center justify-center flex-col gap-3">
-                <Icon name="electric_car" className="text-primary/30" size="xl" />
-                <p className="text-white/30 text-sm">{brandDisplay} {modelDisplay}</p>
-              </div>
-            )}
-            <div className="p-4">
-              <div className="grid grid-cols-2 gap-2">
-                {c.range       && <div className="bg-white/5 rounded-lg p-3"><p className="text-primary text-base font-headline font-bold">{c.range} km</p><p className="text-white/40 text-xs">Autonomía</p></div>}
-                {c.power       && <div className="bg-white/5 rounded-lg p-3"><p className="text-primary text-base font-headline font-bold">{c.power} CV</p><p className="text-white/40 text-xs">Potencia</p></div>}
-                {c.traction    && <div className="bg-white/5 rounded-lg p-3"><p className="text-primary text-base font-headline font-bold">{c.traction}</p><p className="text-white/40 text-xs">Tracción</p></div>}
-                {c.acceleration && <div className="bg-white/5 rounded-lg p-3"><p className="text-primary text-base font-headline font-bold">{c.acceleration}s</p><p className="text-white/40 text-xs">0-100 km/h</p></div>}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ─── Card wrapper: decide mobile vs desktop ─── */
-function HotDealCard({ c, urgencyLabel }: { c: HotDealCarData; urgencyLabel: string }) {
   const brandDisplay = c.brandName ?? c.brand?.name ?? c.name.split(" ")[0];
   const modelDisplay = c.brandName
     ? c.name
     : c.brand
     ? c.name
     : c.name.split(" ").slice(1).join(" ");
-  const bonus      = c.hotDealBonusAmount ?? 0;
-  const savings    = c.basePrice - c.discountPrice;
-  const savingsPct = Math.round((savings / c.basePrice) * 100);
-  const bonusAmt   = bonus > 0 ? bonus : savings;
+  const model       = `${brandDisplay} ${modelDisplay}`;
+  const bonus       = c.hotDealBonusAmount ?? 0;
+  const hasDiscount = !!c.discountPrice && c.discountPrice < c.basePrice;
 
-  const shared = { c, brandDisplay, modelDisplay, bonusAmt, savingsPct, urgencyLabel };
+  const sub = hasDiscount
+    ? `Ahorras ${formatCLP(c.basePrice - c.discountPrice)} sobre el precio de lista.`
+    : bonus > 0
+    ? `Bonos de hasta ${formatCLP(bonus)} sobre el precio de lista.`
+    : null;
+
+  const specs = [
+    c.range        ? { label: "Autonomía",    value: `${formatNumber(c.range)} km` } : null,
+    c.power        ? { label: "Potencia",     value: `${c.power} CV` } : null,
+    c.traction     ? { label: "Tracción",     value: c.traction } : null,
+    c.acceleration ? { label: "0 a 100 km/h", value: `${formatNumber(c.acceleration)} s` } : null,
+  ].filter((s): s is { label: string; value: string } => s !== null);
 
   return (
-    <>
-      <div className="lg:hidden"><HotDealMobile {...shared} /></div>
-      <div className="hidden lg:block"><HotDealDesktop {...shared} /></div>
-    </>
+    <article
+      className={`deal__slide${active ? " is-active" : ""}`}
+      aria-roledescription="diapositiva"
+      aria-label={`${index + 1} de ${total}`}
+    >
+      <div>
+        <p className="deal__brand">{brandDisplay}</p>
+        <h3 className="t-h2 deal__title">{modelDisplay}</h3>
+        {sub && <p className="deal__sub">{sub}</p>}
+        <dl className="deal__prices">
+          {hasDiscount ? (
+            <>
+              <div><dt>Precio de lista</dt><dd className="price-was">{formatCLP(c.basePrice)}</dd></div>
+              <div><dt>Con bonos</dt><dd className="price price--lg">{formatCLP(c.discountPrice)}</dd></div>
+              {bonus > 0 && (
+                <div><dt>Incluye bono Electrificarte</dt><dd className="save">{formatCLP(bonus)}</dd></div>
+              )}
+            </>
+          ) : (
+            <>
+              <div><dt>Precio de lista</dt><dd className="price price--lg">{formatCLP(c.basePrice)}</dd></div>
+              {bonus > 0 && (
+                <div><dt>Bonos de hasta</dt><dd className="save">{formatCLP(bonus)}</dd></div>
+              )}
+            </>
+          )}
+        </dl>
+        <div className="deal__actions">
+          <OfferCta carSlug={c.slug} model={model} source="hotdeal" className="btn btn--primary btn--lg">
+            Quiero esta oferta
+            <Icon name="arrow_forward" size="none" className="arrow" />
+          </OfferCta>
+          <Link href={`/auto/${c.slug}`} className="btn btn--secondary btn--lg">
+            Ver especificaciones
+          </Link>
+        </div>
+      </div>
+
+      <div className="deal__visual">
+        <div className="deal__media">
+          {c.imageUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={sanityImg(c.imageUrl, { w: 1200, h: 750, fit: "crop" })}
+              alt={model}
+              loading="lazy"
+              decoding="async"
+            />
+          ) : (
+            <span className="grid h-full w-full place-items-center">
+              <Icon name="electric_car" className="text-[48px] text-ink-3" />
+            </span>
+          )}
+        </div>
+        {specs.length > 0 && (
+          <dl className="deal__specs">
+            {specs.map((s) => (
+              <div key={s.label}>
+                <dt>{s.label}</dt>
+                <dd>{s.value}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
+      </div>
+    </article>
   );
 }
 
-/* ─── Exported section with carousel ─── */
+/* ─── Sección: banda oscura con diapositivas que se funden (CSS .deal__slide.is-active) ─── */
 export function HotDeal({ car, cars, urgencyLabel }: HotDealProps) {
   const list = cars?.length ? cars : car ? [car] : [FALLBACK];
   const label = urgencyLabel ?? DEFAULT_HOT_DEAL_LABEL;
+  const total = list.length;
 
   const sectionRef = useRef<HTMLElement>(null);
-  const trackRef   = useRef<HTMLDivElement>(null);
   const pausedRef  = useRef(false);
+  const touchRef   = useRef<{ x: number; y: number } | null>(null);
   const [activeIdx, setActiveIdx] = useState(0);
   const inView = useInViewport(sectionRef);
 
-  useEffect(() => {
-    const el = trackRef.current;
-    if (!el) return;
-    function upd() {
-      setActiveIdx(Math.round(el!.scrollLeft / el!.clientWidth));
-    }
-    upd();
-    el.addEventListener("scroll", upd, { passive: true });
-    return () => el.removeEventListener("scroll", upd);
-  }, [list]);
+  // Si cambia la lista, que el índice no quede fuera de rango.
+  const current = activeIdx < total ? activeIdx : 0;
 
   // Auto-avance — pausa al hover y cuando la sección está fuera del viewport
   // (gating crítico en mobile: 4 carruseles corriendo intervals en paralelo
   // monopolizan el main thread de iOS Safari).
   useEffect(() => {
-    if (list.length < 2) return;
+    if (total < 2) return;
     if (!inView) return;
     const id = setInterval(() => {
       if (pausedRef.current) return;
-      const el = trackRef.current;
-      if (!el) return;
-      const next = Math.round(el.scrollLeft / el.clientWidth) + 1;
-      el.scrollTo({ left: el.clientWidth * (next >= list.length ? 0 : next), behavior: "smooth" });
-    }, 7000);
+      setActiveIdx((i) => (i + 1) % total);
+    }, AUTO_MS);
     return () => clearInterval(id);
-  }, [list.length, inView]);
+  }, [total, inView]);
 
-  function goTo(i: number) {
-    trackRef.current?.scrollTo({ left: (trackRef.current?.clientWidth ?? 0) * i, behavior: "smooth" });
+  function go(delta: number) {
+    setActiveIdx((i) => (((i + delta) % total) + total) % total);
   }
-
-  const dots = list.length > 1 && (
-    <div className="flex items-center justify-center gap-3 mt-5">
-      {/* Prev — desktop only */}
-      <button
-        onClick={() => goTo(activeIdx > 0 ? activeIdx - 1 : list.length - 1)}
-        aria-label="Anterior"
-        className="hidden lg:flex items-center justify-center w-6 h-6 rounded-full border border-white/20 hover:border-primary hover:bg-primary/10 transition-all"
-      >
-        <Icon name="chevron_left" className="text-white/50 hover:text-primary text-[14px]" />
-      </button>
-
-      {/* Dots */}
-      <div className="flex items-center gap-2">
-        {list.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => goTo(i)}
-            aria-label={`Ir al hot deal ${i + 1}`}
-            style={{
-              width: i === activeIdx ? 20 : 6,
-              height: 6,
-              borderRadius: 9999,
-              backgroundColor: i === activeIdx ? "#00E5E5" : "rgba(255,255,255,0.2)",
-              transition: "all 0.3s",
-            }}
-          />
-        ))}
-      </div>
-
-      {/* Next — desktop only */}
-      <button
-        onClick={() => goTo(activeIdx < list.length - 1 ? activeIdx + 1 : 0)}
-        aria-label="Siguiente"
-        className="hidden lg:flex items-center justify-center w-6 h-6 rounded-full border border-white/20 hover:border-primary hover:bg-primary/10 transition-all"
-      >
-        <Icon name="chevron_right" className="text-white/50 hover:text-primary text-[14px]" />
-      </button>
-    </div>
-  );
 
   return (
     <section
       ref={sectionRef}
-      className="bg-black py-6 sm:py-10 md:py-14"
-      aria-label="Hot Deals"
+      className="section theme-dark"
+      aria-labelledby="deal-title"
       onMouseEnter={() => { pausedRef.current = true; }}
       onMouseLeave={() => { pausedRef.current = false; }}
     >
-      <div
-        ref={trackRef}
-        className="flex overflow-x-auto"
-        style={{
-          scrollSnapType: "x mandatory",
-          WebkitOverflowScrolling: "touch",
-          scrollbarWidth: "none",
-          msOverflowStyle: "none",
-        }}
-      >
-        {list.map((c) => (
-          <div key={c.slug} style={{ flex: "0 0 100%", scrollSnapAlign: "start" }}>
-            <HotDealCard c={c} urgencyLabel={label} />
+      <div className="wrap">
+        <div className="deal__head">
+          <div className="deal__eyebrow">
+            <h2 id="deal-title" className="chip chip--soft">Oferta destacada</h2>
+            <p className="deal__urgency">{label}</p>
           </div>
-        ))}
-      </div>
+          {total > 1 && (
+            <div className="deal__pager">
+              <button
+                type="button"
+                onClick={() => go(-1)}
+                aria-label="Oferta anterior"
+                className="btn btn--secondary btn--icon btn--sm"
+              >
+                <Icon name="chevron_left" size="none" />
+              </button>
+              <span className="deal__count">{pad2(current + 1)} / {pad2(total)}</span>
+              <button
+                type="button"
+                onClick={() => go(1)}
+                aria-label="Oferta siguiente"
+                className="btn btn--secondary btn--icon btn--sm"
+              >
+                <Icon name="chevron_right" size="none" />
+              </button>
+            </div>
+          )}
+        </div>
 
-      {/* Dots — mobile y desktop, solo si hay más de 1 */}
-      {dots}
+        {/* Deslizar con el dedo también cambia de oferta (solo gestos horizontales). */}
+        <div
+          className="deal__slides"
+          onTouchStart={(e) => {
+            const t = e.touches[0];
+            touchRef.current = { x: t.clientX, y: t.clientY };
+          }}
+          onTouchEnd={(e) => {
+            const start = touchRef.current;
+            touchRef.current = null;
+            if (!start || total < 2) return;
+            const t = e.changedTouches[0];
+            const dx = t.clientX - start.x;
+            const dy = t.clientY - start.y;
+            if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy)) go(dx < 0 ? 1 : -1);
+          }}
+        >
+          {list.map((c, i) => (
+            <DealSlide key={c.slug} c={c} index={i} total={total} active={i === current} />
+          ))}
+        </div>
+      </div>
     </section>
   );
 }

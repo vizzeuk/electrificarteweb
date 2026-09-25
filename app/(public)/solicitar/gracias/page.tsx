@@ -10,15 +10,6 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-// Íconos en SVG inline — no dependen de la fuente Material Symbols, así
-// renderizan al instante incluso en la primera pintura tras volver del pago.
-const IconCheck = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}
-    strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
-    <path d="M20 6 9 17l-5-5" />
-  </svg>
-);
-
 export default async function GraciasPage() {
   // Gate: solo quien pasó por el checkout (y por tanto pagó) tiene la cookie
   // firmada. Sin cookie válida → 404. No es accesible para cualquiera.
@@ -32,6 +23,7 @@ export default async function GraciasPage() {
   // necesita escribir a soporte. No expone datos personales (es un UUID).
   const orderRef = orderId.slice(0, 8).toUpperCase();
 
+  // La rama de la Oferta ($19.990) solo la ven quienes pagaron antes del standby.
   const content = isAdvisory
     ? {
         badge:       "Asesoría confirmada",
@@ -42,7 +34,7 @@ export default async function GraciasPage() {
           "El asesor revisará tus necesidades y te presentará las mejores opciones.",
           "Sin presión: es una conversación personalizada, no una venta.",
         ],
-        secondaryCta: null as { href: string; label: string } | null,
+        secondaryCta: { href: "/marcas", label: "Explorar el catálogo" },
       }
     : {
         badge:       "Pago confirmado",
@@ -50,75 +42,60 @@ export default async function GraciasPage() {
         body:        "Tu solicitud quedó activa. Nuestro equipo ya está negociando con la red de vendedores oficiales para conseguirte el mejor precio de Chile.",
         pasos: [
           "En 48 a 96 horas te enviamos la mejor oferta.",
-          "Revisa tu email y WhatsApp — ahí te contactamos.",
+          "Revisa tu email y WhatsApp: ahí te contactamos.",
           "No necesitas hacer nada más: nosotros te contactamos.",
         ],
         secondaryCta: { href: "/marcas", label: "Ver otros modelos" },
       };
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-4 py-24 bg-surface">
-      <div className="max-w-lg w-full bg-white rounded-3xl border border-gray-100 shadow-xl p-8 md:p-12 text-center">
-        <div className="w-20 h-20 bg-primary/15 text-primary-deep rounded-full flex items-center justify-center mx-auto mb-7">
-          <IconCheck className="w-10 h-10" />
-        </div>
-        <p className="text-[11px] uppercase tracking-widest text-primary-deep font-bold mb-3">
-          {content.badge}
-        </p>
-        <h1 className="font-headline font-black text-3xl md:text-4xl tracking-tight uppercase leading-tight">
-          {content.heading}
-        </h1>
-        <p className="text-text-muted mt-4 leading-relaxed">
-          {content.body}
-        </p>
+    <div className="page">
+      <section className="section">
+        <div className="wrap">
+          <div className="max-w-[40rem]">
+            <div className="head-chips">
+              <span className="chip chip--soft">{content.badge}</span>
+            </div>
+            <h1 className="t-h1">{content.heading}</h1>
+            <p className="t-lead mt-6">{content.body}</p>
 
-        <div className="mt-7 rounded-2xl bg-surface border border-gray-100 p-5 text-left">
-          <p className="font-bold text-sm mb-3">Qué sigue ahora</p>
-          <ul className="space-y-2.5 text-sm text-text-muted">
-            {content.pasos.map((paso) => (
-              <li key={paso} className="flex gap-2.5">
-                <span className="w-5 h-5 rounded-full bg-primary/15 text-primary-deep flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <IconCheck className="w-3 h-3" />
-                </span>
-                {paso}
-              </li>
-            ))}
-          </ul>
-        </div>
+            <h2 className="t-h4 mt-10">Qué sigue ahora</h2>
+            <ol className="mt-4 border-b border-line">
+              {content.pasos.map((paso, i) => (
+                <li key={paso} className="step">
+                  <span className="step__n">{String(i + 1).padStart(2, "0")}</span>
+                  <p className="t-body">{paso}</p>
+                </li>
+              ))}
+            </ol>
 
-        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-          <Link
-            href="/"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-7 py-3 rounded-xl transition-colors"
-          >
-            Volver al inicio
-          </Link>
-          {content.secondaryCta && (
-            <Link
-              href={content.secondaryCta.href}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 border border-gray-200 hover:border-gray-300 text-text-muted hover:text-black font-bold px-7 py-3 rounded-xl transition-colors"
-            >
-              {content.secondaryCta.label}
-            </Link>
-          )}
-        </div>
+            <div className="mt-10 flex flex-wrap gap-3">
+              <Link href="/" className="btn btn--primary btn--lg">
+                Volver al inicio
+              </Link>
+              <Link href={content.secondaryCta.href} className="btn btn--secondary btn--lg">
+                {content.secondaryCta.label}
+              </Link>
+            </div>
 
-        <div className="mt-8 pt-6 border-t border-gray-100 text-sm text-text-muted">
-          <p>
-            Referencia de tu pedido:{" "}
-            <span className="font-mono font-bold text-black tracking-wide">#{orderRef}</span>
-          </p>
-          <p className="mt-2">
-            ¿Problemas con tu compra? Escríbenos a{" "}
-            <a
-              href={`mailto:contacto@electrificarte.com?subject=${encodeURIComponent(`Problema con mi compra (Ref #${orderRef})`)}`}
-              className="text-primary-deep font-bold hover:underline"
-            >
-              contacto@electrificarte.com
-            </a>
-          </p>
+            <div className="t-small mt-10 grid gap-2 border-t border-line pt-6">
+              <p>
+                Referencia de tu pedido:{" "}
+                <span className="num font-semibold text-ink">#{orderRef}</span>
+              </p>
+              <p>
+                ¿Problemas con tu compra? Escríbenos a{" "}
+                <a
+                  href={`mailto:contacto@electrificarte.com?subject=${encodeURIComponent(`Problema con mi compra (Ref #${orderRef})`)}`}
+                  className="link"
+                >
+                  contacto@electrificarte.com
+                </a>
+              </p>
+            </div>
+          </div>
         </div>
-      </div>
-    </main>
+      </section>
+    </div>
   );
 }

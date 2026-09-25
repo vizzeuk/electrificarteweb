@@ -8,11 +8,12 @@ import { useReview } from "./ReviewProvider";
 /**
  * Franja de la PDP que invita a reseñar ESTE auto.
  *
- * Va justo debajo del hero, así que es deliberadamente BAJA: una sola línea en
- * desktop. Tiene que estar presente sin robarle protagonismo a la ficha.
+ * Va justo debajo del bloque de compra, así que es deliberadamente BAJA: una sola línea
+ * en desktop. Tiene que estar presente sin robarle protagonismo a la ficha. Sistema v1:
+ * franja Niebla (`section--tight section--subtle`), estrellas en Tinta, botón secundario.
  *
  * Truco de conversión: las estrellas son el disparador. Al elegir una, el popup
- * abre ya con esa calificación puesta — la persona siente que "ya empezó".
+ * abre ya con esa calificación puesta: la persona siente que "ya empezó".
  */
 
 interface PdpReviewPromptProps {
@@ -31,16 +32,21 @@ export function PdpReviewPrompt({ carSlug, carSanityId, carBrand, carModel, carN
   const prefill = { carSlug, carSanityId, carBrand, carModel, source: "pdp" };
 
   return (
-    <section className="border-y border-gray-100 bg-surface" aria-labelledby="pdp-review-title">
-      <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 px-4 py-5 text-center sm:flex-row sm:justify-between sm:gap-6 sm:py-4 sm:text-left md:px-8">
-
-        <p id="pdp-review-title" className="text-sm leading-snug text-text-main">
-          <span className="font-headline font-bold">¿Tienes un {carName}?</span>{" "}
-          <span className="text-text-muted">Cuéntanos tu experiencia y ayuda al próximo comprador.</span>
+    <section className="section section--tight section--subtle" aria-labelledby="pdp-review-title">
+      <div className="wrap flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between md:gap-8">
+        <p id="pdp-review-title" className="t-body">
+          <strong className="font-semibold text-ink">¿Tienes un {carName}?</strong>{" "}
+          Cuéntanos tu experiencia y ayuda al próximo comprador.
         </p>
 
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1" onMouseLeave={() => setHovered(0)}>
+        <div className="flex flex-wrap items-center gap-4">
+          <div
+            className="flex items-center gap-1 text-ink"
+            onMouseLeave={() => setHovered(0)}
+            onBlur={(e) => {
+              if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setHovered(0);
+            }}
+          >
             {Array.from({ length: 5 }).map((_, i) => {
               const n = i + 1;
               return (
@@ -51,21 +57,17 @@ export function PdpReviewPrompt({ carSlug, carSanityId, carBrand, carModel, carN
                   onMouseEnter={() => setHovered(n)}
                   onFocus={() => setHovered(n)}
                   onClick={() => open({ ...prefill, rating: n })}
-                  className="rounded transition-transform hover:scale-110 active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary/40"
+                  className="rounded-chip p-0.5"
                 >
-                  <StarIcon filled={n <= hovered} size={22} />
+                  <StarIcon filled={n <= hovered} size={24} />
                 </button>
               );
             })}
           </div>
 
-          <button
-            type="button"
-            onClick={() => open(prefill)}
-            className="inline-flex flex-shrink-0 items-center gap-1 whitespace-nowrap text-sm font-semibold text-primary-deep transition-colors hover:text-primary"
-          >
-            Escribir reseña
-            <Icon name="chevron_right" className="text-[16px]" />
+          <button type="button" onClick={() => open(prefill)} className="btn btn--secondary">
+            <Icon name="star" size="none" filled />
+            Escribir una reseña
           </button>
         </div>
       </div>

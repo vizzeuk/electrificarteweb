@@ -1,54 +1,43 @@
 import React from "react";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { Icon } from "@/components/ui/Icon";
 import { OfferCta } from "@/components/waitlist/OfferCta";
 
 export const metadata: Metadata = {
   title: "Página no encontrada",
 };
 
+// 404 dentro del grupo (public): se muestra cuando una página llama a notFound() (una ficha
+// que no existe, /solicitar mientras dura el standby, etc.), con Navbar y Footer.
 export default function NotFound() {
   return (
-    <main className="min-h-[70vh] flex flex-col items-center justify-center gap-8 px-4 text-center bg-white">
-      <div className="relative">
-        <p className="text-[120px] md:text-[160px] font-headline font-black text-gray-100 leading-none select-none">
-          404
-        </p>
-        <Icon name="electric_car" className="absolute inset-0 m-auto w-fit h-fit text-[56px] text-primary" />
-      </div>
-
-      <div className="max-w-md">
-        <h1 className="font-headline font-black text-2xl md:text-3xl text-text-main mb-3">
-          Esta página no existe
-        </h1>
-        <p className="text-text-muted text-base">
-          Es posible que la URL esté incorrecta o que el contenido haya sido movido.
-          Explora el catálogo o solicita una oferta directamente.
-        </p>
-      </div>
-
-      <div className="flex flex-col sm:flex-row gap-3">
-        <Link
-          href="/"
-          className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-8 py-3.5 rounded-xl transition-colors text-sm"
-        >
-          <Icon name="home" className="text-[18px]" />
-          Ir al inicio
-        </Link>
-        <Link
-          href="/marcas"
-          className="inline-flex items-center justify-center gap-2 border border-gray-200 hover:border-primary/50 text-text-main font-semibold px-8 py-3.5 rounded-xl transition-colors text-sm"
-        >
-          Ver marcas
-        </Link>
-        <OfferCta
-          source="404"
-          className="inline-flex items-center justify-center gap-2 border border-gray-200 hover:border-primary/50 text-text-main font-semibold px-8 py-3.5 rounded-xl transition-colors text-sm"
-        >
-          Quiero mi oferta
-        </OfferCta>
-      </div>
-    </main>
+    <div className="page">
+      <section className="section">
+        <div className="wrap">
+          <div className="max-w-[40rem]">
+            <div className="head-chips">
+              <span className="chip">Error 404</span>
+            </div>
+            <h1 className="t-h1">Esta página no existe</h1>
+            <p className="t-lead mt-6">
+              Es posible que la URL esté incorrecta o que el contenido haya sido movido. Explora el
+              catálogo o{" "}
+              <OfferCta source="404" className="link cursor-pointer">
+                súmate a la waitlist
+              </OfferCta>
+              .
+            </p>
+            <div className="mt-10 flex flex-wrap gap-3">
+              <Link href="/" className="btn btn--primary btn--lg">
+                Ir al inicio
+              </Link>
+              <Link href="/marcas" className="btn btn--secondary btn--lg">
+                Ver marcas
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
   );
 }

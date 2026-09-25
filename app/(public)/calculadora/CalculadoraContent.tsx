@@ -4,10 +4,12 @@ import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { m, AnimatePresence } from "framer-motion";
-import { formatCLP } from "@/lib/utils";
+import { formatCLP, formatNumber } from "@/lib/utils";
 import type { CalcCar, CalcVersion } from "./types";
 import { Icon } from "@/components/ui/Icon";
+import { ElectricTypeBadge } from "@/components/car/ElectricTypeBadge";
 import { OfferCta } from "@/components/waitlist/OfferCta";
+import { ASESORIA_PRICE, OFERTA_STANDBY } from "@/lib/products";
 
 // ─── Constantes Chile ────────────────────────────────────────────────────────
 const ELECTRICITY_CLP_KWH  = 200;   // CLP/kWh tarifa residencial promedio
@@ -78,23 +80,27 @@ function calcCarMonthlyCost(car: CalcCar, kmPerMonth: number, ver: CalcVersion |
 
 function carSpecLabel(car: CalcCar): string {
   const type = getCarType(car.electricTypeTag);
-  if (type === "BEV")  return car.range > 0 ? `${car.range} km autonomía · ${car.batteryCapacity} kWh` : `${car.batteryCapacity} kWh`;
-  if (type === "PHEV") return car.electricRangeKm ? `${car.electricRangeKm} km eléctrico · ${car.batteryCapacity} kWh` : `${car.batteryCapacity} kWh PHEV`;
-  return car.fuelConsumption ? `${car.fuelConsumption} km/L híbrido` : "HEV";
-}
-
-function carTypeBadge(tag: string) {
-  const type = getCarType(tag);
-  if (type === "PHEV") return { label: "PHEV", color: "text-blue-600 bg-blue-50" };
-  if (type === "HEV")  return { label: "HEV",  color: "text-green-700 bg-green-50" };
-  return { label: "EV", color: "text-primary-deep bg-primary/10" };
+  if (type === "BEV")  return car.range > 0 ? `${formatNumber(car.range)} km de autonomía, ${formatNumber(car.batteryCapacity)} kWh` : `${formatNumber(car.batteryCapacity)} kWh`;
+  if (type === "PHEV") return car.electricRangeKm ? `${formatNumber(car.electricRangeKm)} km de autonomía eléctrica, ${formatNumber(car.batteryCapacity)} kWh` : `${formatNumber(car.batteryCapacity)} kWh PHEV`;
+  return car.fuelConsumption ? `${formatNumber(car.fuelConsumption)} km/L híbrido` : "HEV";
 }
 
 // ─── Slider ──────────────────────────────────────────────────────────────────
+// Riel de 4 px en Laguna sobre Línea fuerte; el control ocupa 28 px de alto para que sea fácil de tomar.
+const RANGE_CLASS = [
+  "h-7 w-full cursor-pointer appearance-none bg-transparent bg-center bg-no-repeat disabled:cursor-default",
+  "[&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:appearance-none",
+  "[&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-canvas [&::-webkit-slider-thumb]:bg-accent",
+  "[&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:rounded-full",
+  "[&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-canvas [&::-moz-range-thumb]:bg-accent",
+  "[&::-moz-range-track]:bg-transparent",
+  "disabled:[&::-webkit-slider-thumb]:bg-line-2 disabled:[&::-moz-range-thumb]:bg-line-2",
+].join(" ");
+
 function Slider({
-  label, icon, value, min, max, step, format, onChange, editable = false, disabled = false,
+  id, label, value, min, max, step, format, onChange, editable = false, disabled = false,
 }: {
-  label: string; icon: string; value: number;
+  id: string; label: string; value: number;
   min: number; max: number; step: number;
   format: (v: number) => string;
   onChange: (v: number) => void;
@@ -111,14 +117,11 @@ function Slider({
   }
 
   return (
-    <div className={disabled ? "opacity-40 pointer-events-none" : ""}>
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <Icon name={icon} className="text-primary text-[18px]" />
-          <span className="text-white/80 text-sm font-semibold">{label}</span>
-        </div>
+    <div className="field">
+      <div className="flex min-h-12 items-center justify-between gap-4">
+        <label htmlFor={id} className={`field__label ${disabled ? "text-ink-3" : ""}`}>{label}</label>
         {editable ? (
-          <div className="flex items-baseline gap-1">
+          <div className="relative w-[7.5rem] flex-none">
             <input
               type="text"
               inputMode="numeric"
@@ -126,62 +129,33 @@ function Slider({
               onChange={e => setDraft(e.target.value)}
               onBlur={e => commitDraft(e.target.value)}
               onKeyDown={e => e.key === "Enter" && commitDraft((e.target as HTMLInputElement).value)}
-              className="font-headline font-black text-white text-lg bg-white/10 border border-white/20 rounded-lg px-2 py-0.5 focus:border-primary focus:bg-white/15 outline-none text-right transition-colors"
-              style={{ width: "6ch" }}
+              aria-label={`${label}, valor exacto`}
+              className="input pr-11 text-right font-semibold tabular-nums"
             />
-            <span className="text-white/50 text-sm">km</span>
+            <span aria-hidden="true" className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-ink-3">km</span>
           </div>
         ) : (
-          <span className="font-headline font-black text-white text-lg">{format(value)}</span>
+          <output htmlFor={id} className={`font-semibold tabular-nums ${disabled ? "text-ink-3" : "text-ink"}`}>
+            {format(value)}
+          </output>
         )}
       </div>
       <input
+        id={id}
         type="range" min={min} max={max} step={step} value={value}
         onChange={e => onChange(Number(e.target.value))}
-        className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
+        disabled={disabled}
+        className={RANGE_CLASS}
         style={{
-          background: `linear-gradient(to right, #00E5E5 ${pct}%, rgba(255,255,255,0.1) ${pct}%)`,
+          backgroundImage: `linear-gradient(to right, ${disabled ? "var(--line-2)" : "var(--accent)"} ${pct}%, var(--line-2) ${pct}%)`,
+          backgroundSize: "100% 4px",
         }}
       />
-      <div className="flex justify-between text-white/30 text-[11px] mt-1.5">
+      <div className="t-micro flex justify-between">
         <span>{format(min)}</span>
         <span>{format(max)}</span>
       </div>
     </div>
-  );
-}
-
-// ─── StatCard ────────────────────────────────────────────────────────────────
-function StatCard({
-  icon, label, value, sub, highlight = false, delay = 0,
-}: {
-  icon: string; label: string; value: string; sub?: string;
-  highlight?: boolean; delay?: number;
-}) {
-  return (
-    <m.div
-      key={value}
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay }}
-      className={[
-        "rounded-2xl p-6 flex flex-col gap-1",
-        highlight
-          ? "bg-primary/10 border border-primary/30"
-          : "bg-white border border-gray-100 shadow-sm",
-      ].join(" ")}
-    >
-      <div className={["w-10 h-10 rounded-xl flex items-center justify-center mb-2",
-        highlight ? "bg-primary/20" : "bg-gray-50"].join(" ")}>
-        <Icon name={icon} className={["text-[22px]",
-          highlight ? "text-primary" : "text-primary-deep"].join(" ")} />
-      </div>
-      <p className={["text-xs font-bold uppercase tracking-widest",
-        highlight ? "text-primary/70" : "text-text-ghost"].join(" ")}>{label}</p>
-      <p className={["font-headline font-black text-2xl leading-tight",
-        highlight ? "text-primary" : "text-text-main"].join(" ")}>{value}</p>
-      {sub && <p className="text-text-ghost text-xs mt-0.5">{sub}</p>}
-    </m.div>
   );
 }
 
@@ -216,102 +190,116 @@ function CarPickerModal({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+        className="fixed inset-0 z-[100] flex items-end justify-center p-0 sm:items-center sm:p-4"
         onClick={onClose}
       >
-        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+        <div className="absolute inset-0 bg-[var(--veil-modal)]" />
         <m.div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="calc-picker-title"
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 40 }}
           transition={{ type: "spring", damping: 28, stiffness: 320 }}
-          className="relative w-full sm:max-w-2xl bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl flex flex-col"
+          className="relative flex w-full flex-col overflow-hidden rounded-t-card bg-canvas text-ink shadow-overlay sm:max-w-xl sm:rounded-card"
           style={{ maxHeight: "90dvh" }}
           onClick={e => e.stopPropagation()}
         >
-          <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-gray-100 flex-shrink-0">
+          <div className="flex flex-none items-start justify-between gap-4 border-b border-line px-5 py-4 sm:px-6 sm:py-5">
             <div>
-              <h2 className="font-headline font-black text-lg text-text-main">Elige el auto que te interesa</h2>
-              <p className="text-text-ghost text-xs mt-0.5">{cars.length} modelos disponibles</p>
+              <h2 id="calc-picker-title" className="font-display text-[1.375rem] font-bold leading-tight tracking-[-0.012em]">
+                Elige el auto que te interesa
+              </h2>
+              <p className="t-small mt-1">{cars.length} modelos disponibles</p>
             </div>
-            <button onClick={onClose} className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors">
-              <Icon name="close" className="text-[18px] text-text-muted" />
+            <button type="button" onClick={onClose} aria-label="Cerrar" className="btn btn--secondary btn--icon btn--sm flex-none">
+              <Icon name="close" size="none" />
             </button>
           </div>
 
-          <div className="px-5 py-3 border-b border-gray-100 flex-shrink-0">
-            <div className="flex items-center gap-2.5 bg-gray-50 rounded-xl px-3 py-2.5">
-              <Icon name="search" className="text-[18px] text-text-ghost" />
+          <div className="flex-none border-b border-line px-5 py-4 sm:px-6">
+            <div className="relative">
+              <Icon
+                name="search"
+                size="none"
+                className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[20px] text-ink-3"
+              />
               <input
                 ref={inputRef}
                 type="text"
                 placeholder="Buscar por marca o modelo…"
+                aria-label="Buscar por marca o modelo"
                 value={query}
                 onChange={e => setQuery(e.target.value)}
-                className="flex-1 bg-transparent text-sm text-text-main placeholder-text-ghost outline-none"
+                className="input pl-11 pr-12"
               />
               {query && (
-                <button onClick={() => setQuery("")}>
-                  <Icon name="close" className="text-[16px] text-text-ghost hover:text-text-main" />
+                <button
+                  type="button"
+                  onClick={() => setQuery("")}
+                  aria-label="Limpiar búsqueda"
+                  className="btn btn--quiet btn--icon btn--sm absolute right-1 top-1/2 -translate-y-1/2"
+                >
+                  <Icon name="close" size="none" />
                 </button>
               )}
             </div>
           </div>
 
-          <div className="overflow-y-auto flex-1 p-4">
+          <div className="min-h-0 flex-1 overflow-y-auto">
             {filtered.length === 0 ? (
-              <div className="text-center py-12">
-                <Icon name="search_off" className="text-[48px] text-gray-200" />
-                <p className="text-text-muted text-sm mt-3">No se encontraron resultados para "{query}"</p>
-              </div>
+              <p className="px-6 py-16 text-center text-ink-2">
+                No se encontraron resultados para “{query}”
+              </p>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <ul className="divide-y divide-line">
                 {filtered.map(car => {
                   const isSelected = selected?._id === car._id;
                   const price      = car.discountPrice ?? car.basePrice;
-                  const badge      = carTypeBadge(car.electricTypeTag);
                   return (
-                    <button
-                      key={car._id}
-                      onClick={() => { onSelect(car); onClose(); }}
-                      className={[
-                        "flex items-center gap-3 rounded-xl p-3 text-left border transition-all duration-200",
-                        isSelected
-                          ? "border-primary bg-primary/5 shadow-[0_0_0_2px_rgba(0,229,229,0.3)]"
-                          : "border-gray-100 hover:border-primary/40 hover:bg-gray-50",
-                      ].join(" ")}
-                    >
-                      <div className="flex-shrink-0 w-16 h-12 bg-gray-100 rounded-lg overflow-hidden">
-                        {car.imageUrl ? (
-                          <Image src={car.imageUrl} alt={car.name} width={64} height={48}
-                            className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Icon name="electric_car" className="text-[24px] text-gray-300" />
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5 mb-0.5">
-                          <p className="text-[11px] font-bold text-text-ghost uppercase tracking-wide truncate">{car.brand}</p>
-                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${badge.color}`}>{badge.label}</span>
-                        </div>
-                        <p className="font-headline font-bold text-sm text-text-main leading-tight truncate">{car.name}</p>
-                        <p className="text-[11px] text-text-ghost mt-0.5 truncate">{carSpecLabel(car)}</p>
-                      </div>
-                      <div className="flex-shrink-0 text-right">
-                        {isSelected ? (
-                          <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
-                            <Icon name="check" className="text-[14px] text-black" />
-                          </div>
-                        ) : (
-                          <p className="text-xs font-bold text-text-main">{formatCLP(price)}</p>
-                        )}
-                      </div>
-                    </button>
+                    <li key={car._id}>
+                      <button
+                        type="button"
+                        aria-pressed={isSelected}
+                        onClick={() => { onSelect(car); onClose(); }}
+                        className={`flex w-full items-center gap-3 px-5 py-3 text-left transition-colors sm:px-6 ${
+                          isSelected ? "bg-canvas-2" : "hover:bg-canvas-2"
+                        }`}
+                      >
+                        <span className="relative h-10 w-16 flex-none overflow-hidden rounded-chip bg-canvas-2">
+                          {car.imageUrl ? (
+                            <Image src={car.imageUrl} alt={car.name} width={64} height={40}
+                              className="h-full w-full object-cover" />
+                          ) : (
+                            <span className="flex h-full w-full items-center justify-center">
+                              <Icon name="electric_car" className="text-[20px] text-line-2" />
+                            </span>
+                          )}
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="flex items-center gap-2">
+                            <span className="truncate text-label font-semibold text-ink-3">{car.brand}</span>
+                            <ElectricTypeBadge tag={car.electricTypeTag} onMedia={false} />
+                          </span>
+                          <span className="mt-0.5 block truncate font-semibold text-ink">{car.name}</span>
+                          <span className="block truncate text-label text-ink-2">{carSpecLabel(car)}</span>
+                        </span>
+                        <span className="flex-none text-right">
+                          {isSelected ? (
+                            <>
+                              <Icon name="check" className="text-[20px] text-link" />
+                              <span className="sr-only">Seleccionado</span>
+                            </>
+                          ) : (
+                            <span className="font-semibold tabular-nums text-ink">{formatCLP(price)}</span>
+                          )}
+                        </span>
+                      </button>
+                    </li>
                   );
                 })}
-              </div>
+              </ul>
             )}
           </div>
         </m.div>
@@ -370,7 +358,10 @@ export default function CalculadoraContent({ cars }: Props) {
     setSelectedVersionIdx(null);
   }, []);
 
-  const activeVersions = selectedCar?.versions?.filter(v => v.name && v.price > 0) ?? [];
+  const activeVersions = useMemo(
+    () => selectedCar?.versions?.filter(v => v.name && v.price > 0) ?? [],
+    [selectedCar],
+  );
   const activeVersion  = activeVersions.length > 0 && selectedVersionIdx !== null
     ? activeVersions[selectedVersionIdx] ?? null
     : null;
@@ -423,10 +414,16 @@ export default function CalculadoraContent({ cars }: Props) {
 
     return { newCarMonth, savingMonth, savingYear, saving5yr, savingPct,
              co2SavedKgYear, treesEquiv, comparisonList, isEstimate };
-  }, [kmPerMonth, gasCostMonth, efectiveRend, selectedCar, topCars, similarCars]);
+  // activeVersion faltaba en las dependencias: elegir una versión no recalculaba el ahorro.
+  }, [kmPerMonth, gasCostMonth, efectiveRend, selectedCar, activeVersion, topCars, similarCars]);
+
+  const saves = results.savingMonth > 0;
+  const ctaTitle = selectedCar
+    ? `¿No sabes si el ${selectedCar.name} es para ti?`
+    : "¿No sabes cuál te conviene?";
 
   return (
-    <>
+    <div className="page">
       {pickerOpen && (
         <CarPickerModal
           cars={validCars}
@@ -436,93 +433,77 @@ export default function CalculadoraContent({ cars }: Props) {
         />
       )}
 
-      {/* ─── Hero ─────────────────────────────────────────────────────── */}
-      <section className="bg-black pt-20 pb-16 md:pt-28 md:pb-20 overflow-hidden relative">
-        <div
-          className="absolute inset-0 opacity-[0.03] pointer-events-none"
-          style={{
-            backgroundImage:
-              "linear-gradient(rgba(255,255,255,.1) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.1) 1px,transparent 1px)",
-            backgroundSize: "60px 60px",
-          }}
-        />
-        <div className="absolute bottom-0 left-0 w-[500px] h-[300px] rounded-full blur-[120px] opacity-10 pointer-events-none bg-primary" />
-
-        <div className="max-w-7xl mx-auto px-4 md:px-8 relative z-10">
-          <nav className="flex items-center gap-2 text-white/30 text-xs mb-10">
-            <Link href="/" className="hover:text-white/60 transition-colors">Inicio</Link>
-            <span>/</span>
-            <span className="text-white/60">Calculadora de ahorro</span>
+      {/* ─── Encabezado, formulario y resultado ─────────────────────── */}
+      <section className="page-head">
+        <div className="wrap">
+          <nav className="crumbs" aria-label="Migas de pan">
+            <Link href="/">Inicio</Link>
+            <span aria-hidden="true">/</span>
+            <span aria-current="page">Calculadora de ahorro</span>
           </nav>
 
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            {/* Left – inputs */}
-            <div>
-              <div className="inline-flex items-center gap-1.5 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full mb-5">
-                <Icon name="calculate" className="text-primary text-[14px]" />
-                <span className="text-white/60 text-xs font-semibold">Calculadora gratuita</span>
-              </div>
+          <div className="mt-[clamp(32px,4vw,48px)]">
+            <h1 className="t-h1">¿Cuánto puedes ahorrar con un electrificado?</h1>
+            <p className="t-lead">
+              Ingresa tu uso mensual y tu consumo actual, elige el auto que te interesa y calcula tu ahorro real.
+            </p>
+          </div>
 
-              <h1 className="text-5xl md:text-6xl font-headline font-black text-white tracking-tighter leading-[0.92] mb-4">
-                ¿Cuánto puedes<br /><span className="text-primary">ahorrar con un electrificado?</span>
-              </h1>
-              <p className="text-white/60 text-base leading-relaxed max-w-md mb-8">
-                Ingresa tu uso mensual y tu consumo actual, elige el auto que te interesa y calcula tu ahorro real.
-              </p>
-
-              {/* Car picker trigger */}
-              <div className="mb-8">
-                <p className="text-white/40 text-xs uppercase tracking-widest font-bold mb-2">Auto que te interesa</p>
+          <div className="page-head__grid page-head__grid--top">
+            {/* Formulario */}
+            <div className="grid gap-8">
+              {/* Auto que te interesa */}
+              <div className="field">
+                <p className="field__label">Auto que te interesa</p>
                 {selectedCar ? (
-                  <div className="flex items-center gap-3 bg-white/5 border border-primary/30 rounded-xl px-4 py-3">
-                    <div className="flex-shrink-0 w-14 h-10 bg-white/5 rounded-lg overflow-hidden">
+                  <div className="flex items-center gap-3 rounded-control border border-line-2 bg-canvas py-3 pl-3 pr-2">
+                    <div className="relative h-10 w-16 flex-none overflow-hidden rounded-chip bg-canvas-2">
                       {selectedCar.imageUrl ? (
-                        <Image src={selectedCar.imageUrl} alt={selectedCar.name} width={56} height={40}
-                          className="w-full h-full object-cover" />
+                        <Image src={selectedCar.imageUrl} alt={selectedCar.name} width={64} height={40}
+                          className="h-full w-full object-cover" />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Icon name="electric_car" className="text-[20px] text-white/20" />
-                        </div>
+                        <span className="flex h-full w-full items-center justify-center">
+                          <Icon name="electric_car" className="text-[20px] text-line-2" />
+                        </span>
                       )}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white/50 text-[11px] font-bold uppercase tracking-wide">{selectedCar.brand}</p>
-                      <p className="text-white font-headline font-bold text-sm leading-tight truncate">{selectedCar.name}</p>
-                      <p className="text-primary/70 text-[11px]">{carSpecLabel(selectedCar)}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-label font-semibold text-ink-3">{selectedCar.brand}</p>
+                      <p className="truncate font-semibold text-ink">{selectedCar.name}</p>
+                      <p className="truncate text-label text-ink-2">{carSpecLabel(selectedCar)}</p>
                     </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <button onClick={() => setPickerOpen(true)} className="text-white/50 hover:text-white text-[11px] font-semibold transition-colors">
-                        Cambiar
-                      </button>
-                      <button
-                        onClick={() => setSelectedCar(null)}
-                        className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
-                      >
-                        <Icon name="close" className="text-[14px] text-white/50" />
-                      </button>
-                    </div>
+                    <button type="button" onClick={() => setPickerOpen(true)} className="btn btn--quiet btn--sm flex-none">
+                      Cambiar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCar(null)}
+                      aria-label="Quitar auto"
+                      className="btn btn--secondary btn--icon btn--sm flex-none"
+                    >
+                      <Icon name="close" size="none" />
+                    </button>
                   </div>
                 ) : (
                   <button
+                    type="button"
                     onClick={() => setPickerOpen(true)}
-                    className="w-full flex items-center gap-3 border border-dashed border-white/20 hover:border-primary/50 hover:bg-white/[0.03] rounded-xl px-4 py-3.5 transition-all group"
+                    className="flex w-full items-center gap-3 rounded-control border border-line-2 bg-canvas px-4 py-3 text-left transition-colors hover:border-ink-3"
                   >
-                    <div className="w-10 h-10 rounded-lg bg-white/5 group-hover:bg-primary/10 flex items-center justify-center transition-colors">
-                      <Icon name="search" className="text-[20px] text-white/30 group-hover:text-primary transition-colors" />
-                    </div>
-                    <div className="text-left">
-                      <p className="text-white/60 text-sm font-semibold group-hover:text-white transition-colors">Seleccionar un auto</p>
-                      <p className="text-white/30 text-xs">Elige el modelo que te interesa para un cálculo exacto</p>
-                    </div>
-                    <Icon name="arrow_forward_ios" className="text-[18px] text-white/20 ml-auto group-hover:text-primary/60 transition-colors" />
+                    <Icon name="search" size="none" className="flex-none text-[20px] text-ink-3" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block font-semibold text-ink">Seleccionar un auto</span>
+                      <span className="t-small block">Elige el modelo que te interesa para un cálculo exacto</span>
+                    </span>
+                    <Icon name="chevron_right" size="none" className="flex-none text-[20px] text-ink-3" />
                   </button>
                 )}
               </div>
 
-              {/* Version selector — only shows when car has multiple versions */}
+              {/* Versión: solo si el auto tiene varias */}
               {selectedCar && activeVersions.length > 1 && (
-                <div className="mb-2">
-                  <p className="text-white/40 text-xs uppercase tracking-widest font-bold mb-2">Versión</p>
+                <div className="field">
+                  <p className="field__label">Versión</p>
                   <div className="flex flex-wrap gap-2">
                     {activeVersions.map((v, i) => {
                       const isActive = selectedVersionIdx === i;
@@ -530,126 +511,106 @@ export default function CalculadoraContent({ cars }: Props) {
                       return (
                         <button
                           key={v._key}
+                          type="button"
+                          aria-pressed={isActive}
                           onClick={() => setSelectedVersionIdx(isActive ? null : i)}
-                          className="flex flex-col items-start px-3 py-2 rounded-xl border text-left transition-all duration-200"
-                          style={isActive
-                            ? { borderColor: "#00E5E5", backgroundColor: "rgba(0,229,229,0.10)" }
-                            : { borderColor: "rgba(255,255,255,0.12)", backgroundColor: "rgba(255,255,255,0.03)" }}
+                          className="pill"
                         >
-                          <span className="text-[11px] font-bold leading-tight" style={{ color: isActive ? "#00E5E5" : "rgba(255,255,255,0.75)" }}>
-                            {v.name}
-                          </span>
-                          <span className="text-[10px] mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>
-                            {formatCLP(price)}
-                          </span>
+                          {v.name}
+                          <span className="n">{formatCLP(price)}</span>
                         </button>
                       );
                     })}
                   </div>
                   {selectedVersionIdx === null && (
-                    <p className="text-white/25 text-[11px] mt-1.5">Selecciona una versión para calcular con sus specs exactas</p>
+                    <p className="t-micro">Selecciona una versión para calcular con sus specs exactas</p>
                   )}
                 </div>
               )}
 
-              <div className="space-y-8">
-                <Slider
-                  label="Kilómetros por mes"
-                  icon="route"
-                  value={kmPerMonth}
-                  min={50} max={2000} step={50}
-                  format={v => `${formatNum(v)} km`}
-                  onChange={setKmPerMonth}
-                  editable
-                />
+              <Slider
+                id="calc-km"
+                label="Kilómetros por mes"
+                value={kmPerMonth}
+                min={50} max={2000} step={50}
+                format={v => `${formatNum(v)} km`}
+                onChange={setKmPerMonth}
+                editable
+              />
 
-                {/* Rendimiento actual */}
-                <div>
-                  <Slider
-                    label="Rendimiento de tu auto actual"
-                    icon="local_gas_station"
-                    value={rendimientoKmL}
-                    min={5} max={25} step={1}
-                    format={v => `${v} km/L`}
-                    onChange={setRendimientoKmL}
-                    disabled={useDefaultRend}
+              {/* Rendimiento actual */}
+              <div className="grid gap-3">
+                <Slider
+                  id="calc-rend"
+                  label="Rendimiento de tu auto actual"
+                  value={rendimientoKmL}
+                  min={5} max={25} step={1}
+                  format={v => `${v} km/L`}
+                  onChange={setRendimientoKmL}
+                  disabled={useDefaultRend}
+                />
+                <label className="fopt relative w-fit select-none">
+                  <input
+                    type="checkbox"
+                    checked={useDefaultRend}
+                    onChange={e => setUseDefaultRend(e.target.checked)}
                   />
-                  <label className="flex items-center gap-2 mt-3 cursor-pointer group w-fit select-none">
-                    <input
-                      type="checkbox"
-                      className="sr-only"
-                      checked={useDefaultRend}
-                      onChange={e => setUseDefaultRend(e.target.checked)}
-                    />
-                    <div
-                      className="relative w-4 h-4 rounded flex-shrink-0 border transition-colors"
-                      style={{
-                        backgroundColor: useDefaultRend ? "#00E5E5" : "transparent",
-                        borderColor: useDefaultRend ? "#00E5E5" : "rgba(255,255,255,0.25)",
-                      }}
-                    >
-                      {useDefaultRend && (
-                        <Icon name="check" className="text-black absolute inset-0 flex items-center justify-center leading-none" style={{ fontSize: 11 }} />
-                      )}
-                    </div>
-                    <span className="text-white/40 text-xs group-hover:text-white/60 transition-colors">
-                      No sé mi rendimiento — usar estándar de {DEFAULT_RENDIMIENTO} km/L
-                    </span>
-                  </label>
-                </div>
+                  <span className="box"><Icon name="check" size="none" /></span>
+                  <span className="lbl">No sé mi rendimiento, usar estándar de {DEFAULT_RENDIMIENTO} km/L</span>
+                </label>
               </div>
 
-              <p className="text-white/20 text-xs mt-6">
-                * Tarifa eléctrica $200/kWh · Bencina $1.600/L · PHEVs asumen carga diaria
-                {results.isEstimate && " · Promedio de los primeros modelos disponibles"}
+              <p className="t-micro">
+                * Tarifa eléctrica $200/kWh, bencina $1.600/L, PHEVs asumen carga diaria
+                {results.isEstimate && ", promedio de los primeros modelos disponibles"}.
               </p>
             </div>
 
-            {/* Right – live summary */}
-            <div className="relative">
-              <div className="rounded-2xl p-8 space-y-6" style={{ backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)" }}>
-                {selectedCar && (
-                  <div className="pb-2" style={{ borderBottom: "1px solid rgba(255,255,255,0.10)" }}>
-                    <div className="flex items-center gap-2">
-                      {selectedCar.brandLogoUrl ? (
-                        <img src={selectedCar.brandLogoUrl} alt={selectedCar.brand}
-                          className="h-5 w-auto max-w-[40px] object-contain opacity-70 flex-shrink-0" loading="lazy" decoding="async" />
-                      ) : (
-                        <Icon name="electric_car" className="text-primary text-[16px] flex-shrink-0" />
-                      )}
-                      <p className="text-primary text-sm font-bold truncate">{selectedCar.brand} {selectedCar.name}</p>
-                    </div>
-                    {activeVersion && (
-                      <p className="text-white/40 text-[11px] mt-1 ml-0.5">{activeVersion.name}</p>
-                    )}
+            {/* Resultado en vivo */}
+            <div className="rounded-card border border-line bg-canvas-2 p-6 md:p-8">
+              {selectedCar && (
+                <div className="mb-5 flex items-center gap-3 border-b border-line pb-5">
+                  {selectedCar.brandLogoUrl && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={selectedCar.brandLogoUrl}
+                      alt={selectedCar.brand}
+                      className="h-6 w-auto max-w-[48px] flex-none object-contain opacity-70 grayscale"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  )}
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold text-ink">{selectedCar.brand} {selectedCar.name}</p>
+                    {activeVersion && <p className="t-small truncate">{activeVersion.name}</p>}
                   </div>
-                )}
+                </div>
+              )}
 
+              <dl>
                 <div>
-                  <p className="text-white/40 text-xs uppercase tracking-widest font-bold mb-1">Tu gasto actual en combustible</p>
-                  <p className="text-white font-headline font-black text-3xl">
-                    {formatCLP(gasCostMonth)}
-                    <span className="text-white/40 text-base font-normal">/mes</span>
-                  </p>
-                  <p className="text-white/25 text-xs mt-0.5">
+                  <dt className="t-small">Tu gasto actual en combustible</dt>
+                  <dd className="mt-1">
+                    <span className="price">{formatCLP(gasCostMonth)}</span>
+                    <span className="t-small">/mes</span>
+                  </dd>
+                  <dd className="t-micro mt-1">
                     {formatNum(kmPerMonth)} km ÷ {efectiveRend} km/L × $1.600/L
-                  </p>
+                  </dd>
                 </div>
 
-                <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.10)" }} />
-
-                <div>
-                  <p className="text-white/40 text-xs uppercase tracking-widest font-bold mb-1">
+                <div className="mt-5 border-t border-line pt-5">
+                  <dt className="t-small">
                     {selectedCar
                       ? `Costo estimado con el ${selectedCar.name}`
                       : "Con un auto electrificado pagarías (promedio)"}
-                  </p>
-                  <p className="text-primary font-headline font-black text-3xl">
-                    {formatCLP(results.newCarMonth)}
-                    <span className="text-primary/60 text-base font-normal">/mes</span>
-                  </p>
+                  </dt>
+                  <dd className="mt-1">
+                    <span className="price">{formatCLP(results.newCarMonth)}</span>
+                    <span className="t-small">/mes</span>
+                  </dd>
                   {selectedCar && (
-                    <p className="text-white/30 text-xs mt-1">
+                    <dd className="t-micro mt-1">
                       {activeVersion
                         ? carSpecLabel({ ...selectedCar,
                             batteryCapacity: activeVersion.batteryCapacity ?? selectedCar.batteryCapacity,
@@ -658,216 +619,190 @@ export default function CalculadoraContent({ cars }: Props) {
                             fuelConsumption: activeVersion.fuelConsumption  ?? selectedCar.fuelConsumption,
                           })
                         : carSpecLabel(selectedCar)}
-                    </p>
+                    </dd>
                   )}
                 </div>
 
-                <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.10)" }} />
-
-                <div
-                  className="rounded-xl p-5"
-                  style={results.savingMonth > 0
-                    ? { backgroundColor: "rgba(0,229,229,0.10)", border: "1px solid rgba(0,229,229,0.20)" }
-                    : { backgroundColor: "rgba(255,255,255,0.05)" }}
-                >
-                  <p className="text-white/40 text-xs uppercase tracking-widest font-bold mb-2">
-                    {results.savingMonth > 0 ? "Tu ahorro estimado" : "Diferencia estimada"}
-                  </p>
-                  <div className="flex items-baseline gap-3">
-                    <p className={["font-headline font-black text-4xl", results.savingMonth > 0 ? "text-primary" : "text-white/60"].join(" ")}>
-                      {results.savingMonth > 0 ? "+" : ""}{formatCLP(Math.abs(results.savingMonth))}
-                    </p>
-                    <p className="text-white/40 text-sm">al mes</p>
-                  </div>
-                  {results.savingMonth > 0 && (
-                    <>
-                      <p className="text-primary/70 text-sm mt-1 font-semibold">
-                        {formatCLP(results.savingYear)} al año · {formatCLP(results.saving5yr)} en 5 años
-                      </p>
-                      <p className="text-primary/50 text-xs mt-0.5">{results.savingPct}% menos que en combustible</p>
-                    </>
+                {/* El ahorro es el único dato destacado de la página */}
+                <div className="mt-5 border-t border-line pt-5">
+                  <dt className="t-label">{saves ? "Tu ahorro estimado" : "Diferencia estimada"}</dt>
+                  <dd className="mt-1 flex flex-wrap items-baseline gap-x-2">
+                    <span className={`price price--lg ${saves ? "text-link" : "text-ink-3"}`}>
+                      {saves ? "+" : ""}{formatCLP(Math.abs(results.savingMonth))}
+                    </span>
+                    <span className="t-small">al mes</span>
+                  </dd>
+                  {saves && (
+                    <dd className="t-small mt-1">{results.savingPct}% menos que en combustible</dd>
                   )}
                 </div>
-              </div>
-              <div className="absolute -bottom-4 -right-4 w-32 h-32 rounded-full blur-3xl pointer-events-none opacity-20 bg-primary" />
+              </dl>
+
+              {results.isEstimate && (
+                <p className="t-small mt-5 border-t border-line pt-5">
+                  Ahorro promedio calculado con los modelos más accesibles:{" "}
+                  <button type="button" onClick={() => setPickerOpen(true)} className="link">
+                    elige tu auto para un resultado exacto
+                  </button>
+                  .
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Cifras a largo plazo */}
+          <div className="kpis">
+            <div className="kpi">
+              <p className="kpi__num">{formatCLP(Math.max(0, results.savingYear))}</p>
+              <p className="kpi__label">Ahorro anual</p>
+            </div>
+            <div className="kpi">
+              <p className="kpi__num">{formatCLP(Math.max(0, results.saving5yr))}</p>
+              <p className="kpi__label">Ahorro en 5 años</p>
+            </div>
+            <div className="kpi">
+              <p className="kpi__num">{formatNum(Math.round(Math.max(0, results.co2SavedKgYear)))} kg</p>
+              <p className="kpi__label">CO₂ ahorrado por año</p>
+            </div>
+            <div className="kpi">
+              <p className="kpi__num">{formatNum(results.treesEquiv)}</p>
+              <p className="kpi__label">Árboles equivalentes por año</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ─── Stats ────────────────────────────────────────────────────── */}
-      <section className="py-12 bg-surface border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 md:px-8">
-          {results.isEstimate && (
-            <p className="text-center text-text-ghost text-xs mb-4">
-              Ahorro promedio calculado con los modelos más accesibles —{" "}
-              <button onClick={() => setPickerOpen(true)} className="text-primary-deep font-semibold underline underline-offset-2">
-                elige tu auto para un resultado exacto
-              </button>
-            </p>
-          )}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <StatCard icon="savings"        label="Ahorro mensual"  value={formatCLP(Math.max(0, results.savingMonth))}  highlight={results.savingMonth > 0} delay={0} />
-            <StatCard icon="calendar_month" label="Ahorro anual"    value={formatCLP(Math.max(0, results.savingYear))}  delay={0.07} />
-            <StatCard icon="eco"            label="CO₂ ahorrado"    value={`${formatNum(Math.round(Math.max(0, results.co2SavedKgYear)))} kg`} sub="por año" delay={0.14} />
-            <StatCard icon="forest"         label="Árboles equiv."  value={`${formatNum(results.treesEquiv)}`} sub="por año" delay={0.21} />
-          </div>
-        </div>
-      </section>
-
-      {/* ─── Comparison list ──────────────────────────────────────────── */}
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <div className="mb-10">
-            <p className="text-xs font-bold uppercase tracking-widest text-primary-deep mb-2">
-              Tu perfil: {formatNum(kmPerMonth)} km/mes · {efectiveRend} km/L actual
-            </p>
-            <h2 className="text-2xl md:text-3xl font-headline font-extrabold text-text-main">
-              {selectedCar ? "Tu selección y alternativas similares" : "Los modelos más convenientes para ti"}
-            </h2>
-            <p className="text-text-muted text-sm mt-1">
-              Costo mensual estimado con tu perfil de conducción · eléctrico, híbrido enchufable e híbrido
-            </p>
+      {/* ─── Comparación con tu perfil ──────────────────────────────── */}
+      <section className="section" aria-labelledby="calc-list-t">
+        <div className="wrap">
+          <div className="section-head">
+            <div className="section-head__text">
+              <h2 className="t-h2" id="calc-list-t">
+                {selectedCar ? "Tu selección y alternativas similares" : "Los modelos más convenientes para ti"}
+              </h2>
+              <p className="t-lead">
+                Costo mensual estimado con tu perfil de conducción ({formatNum(kmPerMonth)} km/mes, {efectiveRend} km/L actual), en eléctricos, híbridos enchufables e híbridos.
+              </p>
+            </div>
           </div>
 
-          <div className="flex flex-col gap-4">
+          <ol className="divide-y divide-line overflow-hidden rounded-card border border-line bg-surface">
             {results.comparisonList.map((car, i) => {
               const price      = car.discountPrice ?? car.basePrice;
               const isSelected = selectedCar?._id === car._id;
-              const badge      = carTypeBadge(car.electricTypeTag);
+              const carSaves   = car.savingMonth > 0;
               return (
-                <m.div
+                <li
                   key={car._id}
-                  initial={{ opacity: 0, x: -12 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.35, delay: i * 0.06 }}
-                  className={[
-                    "group relative flex flex-row items-center gap-3 sm:gap-5 rounded-2xl p-4 sm:p-5 transition-all duration-300",
-                    isSelected
-                      ? "border-2 border-primary bg-primary/[0.03] shadow-[0_0_0_4px_rgba(0,229,229,0.08)]"
-                      : "border border-gray-100 bg-white hover:border-primary/30 hover:shadow-md",
-                  ].join(" ")}
+                  className={`relative flex items-center gap-3 px-4 py-4 transition-colors sm:gap-5 sm:px-5 ${
+                    isSelected ? "bg-canvas-2" : "hover:bg-canvas-2"
+                  }`}
                 >
-                  <div className="hidden sm:flex flex-shrink-0 w-8 h-8 rounded-full items-center justify-center"
-                    style={{ background: isSelected ? "rgba(0,229,229,0.15)" : "#f9fafb" }}>
-                    {isSelected ? (
-                      <Icon name="star" className="text-[16px] text-primary" />
-                    ) : (
-                      <span className="font-headline font-black text-sm text-text-ghost">{i + 1}</span>
-                    )}
-                  </div>
+                  <span className="hidden w-6 flex-none text-center font-semibold tabular-nums text-ink-3 lg:block">
+                    {isSelected ? <Icon name="star" className="text-[18px] text-link" /> : i + 1}
+                  </span>
 
-                  <div className="flex-shrink-0 w-16 h-12 sm:w-28 sm:h-20 bg-gray-50 rounded-xl overflow-hidden">
+                  <div className="relative h-10 w-16 flex-none overflow-hidden rounded-chip bg-canvas-2 sm:h-[70px] sm:w-28 sm:rounded-control">
                     {car.imageUrl ? (
-                      <Image src={car.imageUrl} alt={car.name} width={112} height={80}
-                        className="w-full h-full object-cover" />
+                      <Image src={car.imageUrl} alt={car.name} width={112} height={70}
+                        className="h-full w-full object-cover" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <Icon name="electric_car" className="text-[28px] sm:text-[36px] text-gray-200" />
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex-1 min-w-0 text-left">
-                    <div className="flex items-center gap-1.5 mb-0.5">
-                      <p className="text-text-ghost text-xs font-semibold">{car.brand}</p>
-                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${badge.color}`}>{badge.label}</span>
-                    </div>
-                    <h3 className="font-headline font-bold text-text-main text-sm sm:text-base leading-tight">{car.name}</h3>
-                    <p className="text-text-ghost text-xs mt-0.5 hidden sm:block">{carSpecLabel(car)}</p>
-                    {car.savingMonth > 0 && (
-                      <p className="sm:hidden font-headline font-black text-sm text-primary-deep mt-0.5">
-                        +{formatCLP(car.savingMonth)}<span className="text-text-ghost font-normal text-[11px]">/mes</span>
-                      </p>
-                    )}
-                    {isSelected && (
-                      <span className="inline-flex items-center gap-1 mt-1 bg-primary/10 text-primary text-[10px] font-bold px-2 py-0.5 rounded-full">
-                        <Icon name="check_circle" className="text-[11px]" />
-                        Tu selección
+                      <span className="flex h-full w-full items-center justify-center">
+                        <Icon name="electric_car" className="text-[28px] text-line-2" />
                       </span>
                     )}
                   </div>
 
-                  <div className="hidden sm:block text-center flex-shrink-0">
-                    <p className="text-text-ghost text-xs uppercase tracking-wide font-bold">Costo mensual</p>
-                    <p className="font-headline font-black text-lg text-text-main">
-                      {formatCLP(car.newCarMonth)}<span className="text-text-ghost text-xs font-normal">/mes</span>
-                    </p>
-                  </div>
-
-                  <div className={["hidden sm:block text-center flex-shrink-0 px-4 py-2 rounded-xl",
-                    car.savingMonth > 0 ? "bg-primary/10" : "bg-gray-50"].join(" ")}>
-                    <p className="text-text-ghost text-xs uppercase tracking-wide font-bold">Ahorro mensual</p>
-                    <p className={["font-headline font-black text-lg",
-                      car.savingMonth > 0 ? "text-primary-deep" : "text-text-ghost"].join(" ")}>
-                      {car.savingMonth > 0 ? "+" : ""}{formatCLP(car.savingMonth)}
-                    </p>
-                    {car.savingMonth > 0 && (
-                      <p className="text-primary-deep/70 text-[11px] font-bold">{car.savingPct}% menos</p>
+                  <div className="min-w-0 flex-1 text-left">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-label font-semibold text-ink-3">{car.brand}</p>
+                      <ElectricTypeBadge tag={car.electricTypeTag} onMedia={false} />
+                      {isSelected && <span className="chip chip--soft">Tu selección</span>}
+                    </div>
+                    <h3 className="mt-1 text-[1rem] font-semibold leading-tight text-ink sm:font-display sm:text-[1.25rem] sm:font-bold sm:tracking-[-0.01em]">
+                      {car.name}
+                    </h3>
+                    <p className="t-small mt-1 hidden sm:block">{carSpecLabel(car)}</p>
+                    {carSaves && (
+                      <p className="price-save mt-1 lg:hidden">
+                        +{formatCLP(car.savingMonth)}
+                        <span className="font-normal text-ink-3">/mes</span>
+                      </p>
                     )}
                   </div>
 
-                  <div className="text-right sm:text-center flex-shrink-0">
-                    <p className="hidden sm:block text-text-ghost text-xs mb-0.5">Desde</p>
-                    <p className="hidden sm:block font-headline font-bold text-text-main text-base">{formatCLP(price)}</p>
-                    <OfferCta
-                      carSlug={car.slug}
-                      model={car.name}
-                      source="calculadora"
-                      className="relative z-[1] mt-0 sm:mt-2 inline-flex items-center gap-1 bg-primary hover:bg-primary-dark text-black font-bold text-xs px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-all shadow-[0_2px_12px_rgba(0,229,229,0.25)] hover:shadow-[0_4px_18px_rgba(0,229,229,0.40)] hover:scale-[1.02]"
-                    >
-                      Lo quiero
-                    </OfferCta>
+                  {/* Cifras: etiquetas y valores alineados arriba entre columnas */}
+                  <div className="hidden flex-none items-start gap-5 text-right sm:flex">
+                    <div className="hidden w-32 lg:block">
+                      <p className="text-label text-ink-3">Costo mensual</p>
+                      <p className="mt-1 font-semibold tabular-nums text-ink">
+                        {formatCLP(car.newCarMonth)}
+                        <span className="text-label font-normal text-ink-3">/mes</span>
+                      </p>
+                    </div>
+                    <div className="hidden w-32 lg:block">
+                      <p className="text-label text-ink-3">Ahorro mensual</p>
+                      <p className={`mt-1 font-semibold tabular-nums ${carSaves ? "text-link" : "text-ink-3"}`}>
+                        {carSaves ? "+" : ""}{formatCLP(car.savingMonth)}
+                      </p>
+                      {carSaves && <p className="t-micro">{car.savingPct}% menos</p>}
+                    </div>
+                    <div className="w-32">
+                      <p className="text-label text-ink-3">Desde</p>
+                      <p className="mt-1 font-semibold tabular-nums text-ink">{formatCLP(price)}</p>
+                    </div>
                   </div>
 
-                  <Link href={`/auto/${car.slug}`} className="absolute inset-0 rounded-2xl z-0" aria-label={`Ver ${car.brand} ${car.name}`} />
-                </m.div>
+                  <OfferCta
+                    carSlug={car.slug}
+                    model={car.name}
+                    source="calculadora"
+                    className="btn btn--secondary btn--sm relative z-[1] flex-none"
+                  >
+                    Lo quiero
+                  </OfferCta>
+
+                  <Link href={`/auto/${car.slug}`} className="absolute inset-0 z-0" aria-label={`Ver ${car.brand} ${car.name}`} />
+                </li>
               );
             })}
-          </div>
+          </ol>
 
           {!selectedCar && (
-            <div className="mt-10 text-center">
-              <button
-                onClick={() => setPickerOpen(true)}
-                className="inline-flex items-center gap-2 border border-primary/30 hover:border-primary text-primary-deep hover:text-primary font-semibold px-6 py-3 rounded-xl transition-all text-sm"
-              >
-                <Icon name="search" className="text-[18px]" />
+            <div className="mt-10 flex flex-col items-center gap-3 text-center">
+              <button type="button" onClick={() => setPickerOpen(true)} className="btn btn--secondary">
+                <Icon name="search" size="none" />
                 Buscar mi auto ideal
               </button>
-              <p className="text-text-ghost text-xs mt-2">Selecciona el auto que te interesa para ver su ahorro exacto</p>
+              <p className="t-small">Selecciona el auto que te interesa para ver su ahorro exacto</p>
             </div>
           )}
-        </div>
-      </section>
 
-      {/* ─── Bottom CTA ───────────────────────────────────────────────── */}
-      <section className="py-14 bg-surface border-t border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <div className="bg-black rounded-2xl p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-6">
+          {/* ─── CTA final: Asesoría (principal) y waitlist ─────────────── */}
+          <div className="soft-block cta-row mt-section">
             <div>
-              <p className="text-primary text-xs uppercase tracking-widest font-bold mb-2">¿Convencido?</p>
-              <h2 className="text-white font-headline font-black text-2xl md:text-3xl tracking-tight">
-                {selectedCar
-                  ? `Consigue el mejor precio en el ${selectedCar.name}`
-                  : "Solicita tu oferta y empieza a ahorrar"}
-              </h2>
-              <p className="text-white/50 text-sm mt-1">
-                Súmate a la waitlist y te avisamos cuando abramos el acceso.
+              <h2 className="t-h2">{ctaTitle}</h2>
+              <p>
+                Te asesoramos por WhatsApp según tu uso, tus kilómetros y tu presupuesto, y comparamos contigo los modelos que calzan.
               </p>
             </div>
-            <OfferCta
-              carSlug={selectedCar?.slug}
-              model={selectedCar?.name}
-              source="calculadora"
-              className="flex-shrink-0 inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-black px-8 py-4 rounded-xl transition-all text-sm whitespace-nowrap shadow-[0_4px_20px_rgba(0,229,229,0.30)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]"
-            >
-              Quiero mi oferta
-            </OfferCta>
+            <div className="cta-row__actions">
+              <Link href="/asesoria" className="btn btn--primary btn--lg">
+                Quiero asesoría por {ASESORIA_PRICE}
+                <Icon name="arrow_forward" size="none" className="arrow" />
+              </Link>
+              <OfferCta
+                carSlug={selectedCar?.slug}
+                model={selectedCar?.name}
+                source="calculadora"
+                className="btn btn--secondary btn--lg"
+              >
+                {OFERTA_STANDBY ? "Únete a la waitlist" : "Quiero mi oferta"}
+              </OfferCta>
+            </div>
           </div>
         </div>
       </section>
-    </>
+    </div>
   );
 }

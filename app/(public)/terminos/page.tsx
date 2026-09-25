@@ -9,33 +9,37 @@ export const metadata: Metadata = {
 
 const LAST_UPDATED = "08 de abril de 2025";
 
+// Tipografía de lectura: cuerpo de 16 px con interlineado 1,55 y ~70 caracteres por línea.
+// (El repo no tiene el plugin de typography, así que las clases `prose` de antes no hacían nada.)
+const LEGAL_PROSE = [
+  "max-w-[70ch] text-body leading-[1.55] text-ink-2",
+  "[&_h2]:mt-12 [&_h2]:font-display [&_h2]:text-h3 [&_h2]:font-bold [&_h2]:text-balance [&_h2]:text-ink [&_h2:first-child]:mt-0",
+  "[&_p]:mt-4 [&_ul]:mt-4 [&_ul]:grid [&_ul]:list-disc [&_ul]:gap-2 [&_ul]:pl-6 [&_li]:pl-1 [&_li]:marker:text-ink-3",
+  "[&_strong]:font-semibold [&_strong]:text-ink",
+].join(" ");
+
 export default function TerminosPage() {
   return (
-    <>
-      {/* Hero */}
-      <section className="bg-black pt-24 pb-14">
-        <div className="max-w-3xl mx-auto px-4 md:px-8">
-          <nav className="flex items-center gap-2 text-white/30 text-xs mb-8">
-            <Link href="/" className="hover:text-white/60 transition-colors">Inicio</Link>
-            <span>/</span>
-            <span className="text-white/60">Términos y condiciones</span>
+    <div className="page">
+      <section className="page-head">
+        <div className="wrap">
+          <nav className="crumbs" aria-label="Migas de pan">
+            <Link href="/">Inicio</Link>
+            <span aria-hidden="true">/</span>
+            <span aria-current="page">Términos y condiciones</span>
           </nav>
-          <p className="text-primary text-[11px] uppercase tracking-widest font-bold mb-3">Legal</p>
-          <h1 className="text-4xl md:text-5xl font-headline font-black text-white tracking-tighter mb-4">
-            Términos y condiciones
-          </h1>
-          <p className="text-white/40 text-sm">Última actualización: {LAST_UPDATED}</p>
+          <h1 className="t-h1 mt-header">Términos y condiciones</h1>
+          <p className="t-small mt-6">Última actualización: {LAST_UPDATED}</p>
         </div>
       </section>
 
-      {/* Content */}
-      <section className="py-14 bg-white">
-        <div className="max-w-3xl mx-auto px-4 md:px-8">
-          <div className="prose prose-sm md:prose-base prose-gray max-w-none">
+      <section className="section">
+        <div className="wrap">
+          <div className={LEGAL_PROSE}>
 
             <h2>1. Identificación del prestador</h2>
             <p>
-              <strong>Electrificarte S.P.A.</strong> (en adelante "Electrificarte"), RUT pendiente de inscripción, con domicilio en Santiago, Región Metropolitana, Chile, es el titular del sitio web <strong>electrificarte.cl</strong> y de los servicios de asesoría en la adquisición de vehículos eléctricos e híbridos.
+              <strong>Electrificarte S.P.A.</strong> (en adelante &quot;Electrificarte&quot;), RUT pendiente de inscripción, con domicilio en Santiago, Región Metropolitana, Chile, es el titular del sitio web <strong>electrificarte.cl</strong> y de los servicios de asesoría en la adquisición de vehículos eléctricos e híbridos.
             </p>
 
             <h2>2. Objeto del servicio</h2>
@@ -90,13 +94,13 @@ export default function TerminosPage() {
             <h2>9. Contacto</h2>
             <p>
               Para consultas relacionadas con estos términos, puedes contactarnos a través del formulario en{" "}
-              <span className="text-text-muted">electrificarte.cl/solicitar</span>{" "}
+              <span className="text-ink-2">electrificarte.cl/solicitar</span>{" "}
               o escribiéndonos directamente.
             </p>
 
           </div>
         </div>
       </section>
-    </>
+    </div>
   );
 }

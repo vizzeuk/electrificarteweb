@@ -9,7 +9,7 @@ import { REVIEW_MAX_FILE_MB, REVIEW_MAX_PHOTOS } from "@/lib/reviews/config";
  * Selector de fotos del formulario de reseña.
  *
  * Comprime en el browser (2 medidas) y guarda los Blobs en memoria. La SUBIDA real
- * ocurre al enviar el formulario, contra URLs firmadas — así no subimos nada si la
+ * ocurre al enviar el formulario, contra URLs firmadas: así no subimos nada si la
  * persona abandona a mitad de camino (evita basura huérfana en el bucket).
  */
 
@@ -79,16 +79,17 @@ export function PhotoPicker({
       {photos.length > 0 && (
         <div className="mb-3 grid grid-cols-4 gap-2">
           {photos.map((p) => (
-            <div key={p.id} className="group relative aspect-square overflow-hidden rounded-lg border border-white/10">
+            <div key={p.id} className="relative aspect-square overflow-hidden rounded-control border border-line bg-canvas-2">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={p.preview} alt="" className="h-full w-full object-cover" />
+              {/* Botón macizo en la esquina, siempre visible (en móvil no hay hover). */}
               <button
                 type="button"
                 onClick={() => remove(p.id)}
                 aria-label="Quitar foto"
-                className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100"
+                className="absolute right-1 top-1 grid h-7 w-7 place-items-center rounded-chip border border-line-2 bg-canvas text-ink transition-colors hover:border-ink"
               >
-                <Icon name="close" className="text-[20px] text-white" />
+                <Icon name="close" className="text-[16px]" />
               </button>
             </div>
           ))}
@@ -99,7 +100,7 @@ export function PhotoPicker({
         type="button"
         onClick={() => inputRef.current?.click()}
         disabled={disabled || processing || lleno}
-        className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-white/15 bg-white/[0.02] py-3.5 text-sm font-semibold text-white/70 transition-colors hover:border-primary/40 hover:text-white disabled:opacity-50"
+        className="flex h-12 w-full items-center justify-center gap-2 rounded-control border border-dashed border-line-2 bg-canvas text-[0.9375rem] font-semibold text-ink transition-colors hover:border-ink disabled:cursor-default disabled:border-line disabled:text-ink-3"
       >
         {processing ? (
           <>
@@ -110,16 +111,16 @@ export function PhotoPicker({
           `Máximo ${REVIEW_MAX_PHOTOS} fotos`
         ) : (
           <>
-            <Icon name="add_circle" className="text-[18px]" />
+            <Icon name="add_photo_alternate" className="text-[18px]" />
             Agregar fotos de tu auto
           </>
         )}
       </button>
 
-      <p className="mt-1.5 px-1 text-[11px] text-white/35">
-        Opcional, hasta {REVIEW_MAX_PHOTOS} · máx. {REVIEW_MAX_FILE_MB} MB c/u. Se achican en tu dispositivo antes de subirlas.
+      <p className="t-micro mt-1.5">
+        Hasta {REVIEW_MAX_PHOTOS} fotos de máx. {REVIEW_MAX_FILE_MB} MB cada una. Se achican en tu dispositivo antes de subirlas.
       </p>
-      {error && <p className="mt-1 px-1 text-xs text-red-400">{error}</p>}
+      {error && <p className="field__error mt-1">{error}</p>}
 
       <input
         ref={inputRef}

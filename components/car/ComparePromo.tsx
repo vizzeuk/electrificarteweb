@@ -11,9 +11,9 @@ interface Rival {
 }
 
 /**
- * Módulo de comparación de la PDP — reemplaza al botón "Comparador" del navbar.
- * Diseñado como un panel gemelo del acordeón de Equipamiento que tiene al lado:
- * mismo borde, radio, ritmo de filas y tipografía.
+ * Módulo de comparación: el auto frente a sus rivales, con precio y un acceso al comparador.
+ * Sistema de diseño v1: card con hairline, filas separadas por línea, precio en Switzer 600
+ * y acción secundaria (el primario de la vista es siempre la oferta o la asesoría).
  */
 export function ComparePromo({
   carName,
@@ -27,44 +27,34 @@ export function ComparePromo({
   rivals: Rival[];
 }) {
   return (
-    <div className="rounded-2xl border border-gray-100 overflow-hidden bg-white">
-      {/* Cabecera — mismo formato que las filas del acordeón de equipamiento */}
-      <div className="flex items-center gap-3 px-6 py-5 border-b border-gray-100">
-        <div className="w-9 h-9 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0">
-          <Icon name="compare_arrows" className="text-primary-deep text-[18px]" />
-        </div>
+    <div className="card">
+      <div className="flex items-start gap-3 p-5">
+        <Icon name="compare_arrows" className="mt-0.5 text-[20px] text-link" />
         <div>
-          <p className="font-headline font-bold text-sm">Comparador</p>
-          <p className="text-text-ghost text-xs">Enfrentá el {carBrand} {carName} con sus rivales</p>
+          <p className="t-h4">Comparador</p>
+          <p className="t-small mt-1">Enfrenta el {carBrand} {carName} con sus rivales</p>
         </div>
       </div>
 
-      {/* Rivales sugeridos */}
       {rivals.length > 0 && (
-        <div className="divide-y divide-gray-50">
+        <ul className="divide-y divide-line border-y border-line">
           {rivals.map((r) => (
-            <div key={r.slug} className="flex items-center justify-between gap-3 px-6 py-3">
-              <span className="flex items-baseline gap-2 min-w-0">
-                <span className="text-[10px] uppercase tracking-wide text-text-ghost font-semibold flex-shrink-0">
-                  {r.brand}
-                </span>
-                <span className="text-sm font-semibold text-text-main truncate">{r.name}</span>
+            <li key={r.slug} className="flex items-center justify-between gap-3 px-5 py-3">
+              <span className="min-w-0">
+                <span className="car__brand block">{r.brand}</span>
+                <span className="block truncate text-[0.9375rem] font-semibold text-ink">{r.name}</span>
               </span>
-              <span className="text-xs font-headline font-bold text-text-muted flex-shrink-0">
+              <span className="num flex-none text-[0.9375rem] font-semibold text-ink">
                 {formatCLP(r.discountPrice || r.basePrice)}
               </span>
-            </div>
+            </li>
           ))}
-        </div>
+        </ul>
       )}
 
-      {/* CTA */}
-      <div className="px-6 py-5 border-t border-gray-100">
-        <Link
-          href={`/comparador?add=${carSlug}`}
-          className="flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold py-3 rounded-xl text-sm transition-colors"
-        >
-          <Icon name="compare_arrows" className="text-[18px]" />
+      <div className="p-5">
+        <Link href={`/comparador?add=${carSlug}`} className="btn btn--secondary btn--block">
+          <Icon name="compare_arrows" size="none" />
           Comparar el {carName}
         </Link>
       </div>

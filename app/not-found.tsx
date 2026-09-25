@@ -1,7 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { Icon } from "@/components/ui/Icon";
+import { Logo } from "@/components/ui/Logo";
 
 export const metadata: Metadata = {
   title: "Página no encontrada",
@@ -11,61 +11,44 @@ export const metadata: Metadata = {
 // ni Footer. Es autocontenido — incluye una barra de marca mínima y salidas.
 export default function RootNotFound() {
   return (
-    <main className="min-h-screen flex flex-col bg-white">
-      <header className="border-b border-gray-100">
-        <div className="max-w-6xl mx-auto px-4 md:px-8 h-16 flex items-center">
-          <Link
-            href="/"
-            className="font-headline font-black tracking-tight text-text-main text-lg"
-          >
-            ELECTRIFICARTE<span className="text-primary-deep">.COM</span>
+    <main className="flex min-h-screen flex-col bg-canvas text-ink">
+      <header className="border-b border-line">
+        <div className="wrap flex h-18 items-center">
+          <Link href="/" className="inline-flex text-ink">
+            <Logo className="h-[14px] sm:h-[17px]" />
           </Link>
         </div>
       </header>
 
-      <div className="flex-1 flex flex-col items-center justify-center gap-8 px-4 text-center py-16">
-        <div className="relative">
-          <p className="text-[120px] md:text-[160px] font-headline font-black text-gray-100 leading-none select-none">
-            404
-          </p>
-          <Icon name="electric_car" className="absolute inset-0 m-auto w-fit h-fit text-[56px] text-primary" />
+      <section className="section flex-1">
+        <div className="wrap">
+          <div className="max-w-[40rem]">
+            <div className="head-chips">
+              <span className="chip">Error 404</span>
+            </div>
+            <h1 className="t-h1">Esta página no existe</h1>
+            <p className="t-lead mt-6">
+              Es posible que la URL esté incorrecta o que el contenido haya sido movido. Explora el
+              catálogo o{" "}
+              {/* Este 404 vive FUERA del grupo (public), así que no está envuelto por
+                  WaitlistProvider — no puede usar OfferCta. Apunta a la Asesoría, que es
+                  el producto principal tras el giro (ver docs/PIVOT-WAITLIST-PLAN.md). */}
+              <Link href="/asesoria" className="link">
+                conoce la asesoría por WhatsApp
+              </Link>
+              .
+            </p>
+            <div className="mt-10 flex flex-wrap gap-3">
+              <Link href="/" className="btn btn--primary btn--lg">
+                Ir al inicio
+              </Link>
+              <Link href="/marcas" className="btn btn--secondary btn--lg">
+                Ver marcas
+              </Link>
+            </div>
+          </div>
         </div>
-
-        <div className="max-w-md">
-          <h1 className="font-headline font-black text-2xl md:text-3xl text-text-main mb-3">
-            Esta página no existe
-          </h1>
-          <p className="text-text-muted text-base">
-            Es posible que la URL esté incorrecta o que el contenido haya sido movido.
-            Explora el catálogo o solicita una oferta directamente.
-          </p>
-        </div>
-
-        <div className="flex flex-col sm:flex-row gap-3">
-          <Link
-            href="/"
-            className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-8 py-3.5 rounded-xl transition-colors text-sm"
-          >
-            <Icon name="home" className="text-[18px]" />
-            Ir al inicio
-          </Link>
-          <Link
-            href="/marcas"
-            className="inline-flex items-center justify-center gap-2 border border-gray-200 hover:border-primary/50 text-text-main font-semibold px-8 py-3.5 rounded-xl transition-colors text-sm"
-          >
-            Ver marcas
-          </Link>
-          {/* Este 404 vive FUERA del grupo (public), así que no está envuelto por
-              WaitlistProvider — no puede usar OfferCta. Apunta a la Asesoría, que es
-              el producto principal tras el giro (ver docs/PIVOT-WAITLIST-PLAN.md). */}
-          <Link
-            href="/asesoria"
-            className="inline-flex items-center justify-center gap-2 border border-gray-200 hover:border-primary/50 text-text-main font-semibold px-8 py-3.5 rounded-xl transition-colors text-sm"
-          >
-            Quiero asesoría
-          </Link>
-        </div>
-      </div>
+      </section>
     </main>
   );
 }

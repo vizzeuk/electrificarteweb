@@ -1,14 +1,14 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { m, AnimatePresence } from "framer-motion";
-import { formatCLP, heroStats, classifyElectric } from "@/lib/utils";
-import { ComparePromo } from "@/components/car/ComparePromo";
+import { cn, formatCLP, formatNumber, classifyElectric, sentenceCase, cleanSeparators } from "@/lib/utils";
+import { sanityImg } from "@/lib/sanityImage";
 import { Icon } from "@/components/ui/Icon";
+import { ElectricTypeBadge } from "@/components/car/ElectricTypeBadge";
 import { OfferCta } from "@/components/waitlist/OfferCta";
 import { PdpReviewPrompt } from "@/components/reviews/PdpReviewPrompt";
-import { HOT_DEALS_ENABLED } from "@/lib/products";
+import { ASESORIA_PRICE, HOT_DEALS_ENABLED } from "@/lib/products";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export interface VersionData {
@@ -27,6 +27,11 @@ export interface VersionData {
   chargeTimeAC: string;
   fuelConsumption?: number | null;
   rendimientoElectrico?: number | null;
+  maxDCChargingPower?: number | null;
+  maxACChargingPower?: number | null;
+  transmission?: string | null;
+  /** Maletero de la versión (trunkCapacity), con respaldo en el del auto. */
+  cargo?: number | null;
 }
 
 export interface CarData {
@@ -60,6 +65,16 @@ export interface CarData {
   fuelConsumption?: number | null;
   rendimientoElectrico?: number | null;
   warranty?: string;
+  modelYear?: number | null;
+  euroNcap?: number | null;
+  airbags?: number | null;
+  batteryType?: string | null;
+  connectorType?: string | null;
+  maxDCChargingPower?: number | null;
+  maxACChargingPower?: number | null;
+  transmission?: string | null;
+  frunkCapacity?: number | null;
+  groundClearance?: number | null;
   versions: VersionData[];
   gallery?: string[];
   videoUrl?: string;
@@ -91,7 +106,6 @@ export interface SimilarCarData {
   basePrice?: number;
 }
 
-// ─── Component ───────────────────────────────────────────────────────────────
 interface AutoPageClientProps {
   car: CarData;
   similarCars: SimilarCarData[];
@@ -100,921 +114,876 @@ interface AutoPageClientProps {
   reviewsSlot?: React.ReactNode;
 }
 
-const galleryGradients = [
-  "from-slate-800 to-slate-900",
-  "from-gray-800 to-gray-900",
-  "from-zinc-800 to-zinc-900",
-  "from-neutral-800 to-neutral-900",
-  "from-stone-800 to-stone-900",
-  "from-gray-900 to-black",
-];
+type Highlight = NonNullable<CarData["highlights"]>[number];
+type ElectricClass = ReturnType<typeof classifyElectric>;
+type SpecCell = { icon: string; label: string; value: string };
 
-function validCharge(val: string | null | undefined): string | null {
-  if (!val) return null;
-  const v = val.trim().toUpperCase();
-  if (v === "N/D" || v === "N/A" || v === "-" || v === "") return null;
-  return val;
+// ─── Formato de datos ────────────────────────────────────────────────────────
+
+const TRACTION_LABEL: Record<string, string> = {
+  FWD: "Delantera (FWD)",
+  RWD: "Trasera (RWD)",
+  AWD: "Total (AWD)",
+};
+
+/** "RWD" pasa a "Trasera (RWD)". Cualquier otro valor de Sanity se muestra tal cual. */
+function tractionLabel(value?: string | null): string | null {
+  const v = (value ?? "").trim();
+  if (!v) return null;
+  return TRACTION_LABEL[v.toUpperCase()] ?? v;
 }
 
-function buildFallbackHighlights(car: CarData) {
+/** Cifra en formato chileno con su unidad, o null si no hay dato (0 cuenta como vacío). */
+function fmt(n: number | null | undefined, unit: string): string | null {
+  return n != null && n > 0 ? `${formatNumber(n)} ${unit}` : null;
+}
+
+/** Texto libre de Sanity: fuera "N/D", guiones sueltos y el punto medio como separador. */
+function tidyText(value?: string | null): string | null {
+  const v = cleanSeparators(value).replace(/\s+\u2014\s+/g, ", ").trim();
+  if (!v || ["N/D", "N/A", "-", "\u2014"].includes(v.toUpperCase())) return null;
+  return v;
+}
+
+interface ChargeInfo {
+  /** "18 min", "2 h 42 min". */
+  value: string;
+  /** "del 10 al 80 %", o null si el dato no trae el rango de carga. */
+  span: string | null;
+}
+
+/**
+ * Tiempos de carga de Sanity ("18 min (10-80%) a 800V", "2h 42min (0-100%)") a valor y
+ * rango: "18 min" y "del 10 al 80 %". Si el texto no calza con el patrón se devuelve tal
+ * cual (normalizado), nunca se inventa. "N/D" y vacíos devuelven null.
+ */
+function parseCharge(raw?: string | null): ChargeInfo | null {
+  const s = (raw ?? "").trim();
+  if (!s || ["N/D", "N/A", "-"].includes(s.toUpperCase())) return null;
+  const tidy = (t: string) =>
+    t
+      .replace(/(\d+(?:[.,]\d+)?)\s*(min|h|horas?|hrs?)(?![a-záéíóú])/gi, (_m, n: string, u: string) => `${n.replace(".", ",")} ${u.toLowerCase()} `)
+      .replace(/\s+/g, " ")
+      .trim();
+  const m = s.match(/^(.*?)\s*\(\s*(\d+)\s*(?:-|\u2013|a)\s*(\d+)\s*%/);
+  if (m && /\d/.test(m[1])) return { value: tidy(m[1]), span: `del ${m[2]} al ${m[3]} %` };
+  return { value: tidy(s), span: null };
+}
+
+/** Versión corta de un tiempo de carga para los datos clave: sin el paréntesis final. */
+function shortTime(c: ChargeInfo | null): string | null {
+  if (!c) return null;
+  const v = c.value.replace(/\s*\(.*$/, "").trim();
+  return /^[<≤~]?\s*\d/.test(v) && v.length <= 16 ? v : null;
+}
+
+/**
+ * Tiempos de carga de la versión. Si la versión dice "N/D" se usa el dato del auto, igual
+ * que el resto de las specs de versión (que ya vienen con respaldo en el auto desde page.tsx).
+ */
+function chargeTimes(car: CarData, v: VersionData): { dc: ChargeInfo | null; ac: ChargeInfo | null } {
+  return {
+    dc: parseCharge(v.chargeTimeDC) ?? parseCharge(car.chargeTimeDC),
+    ac: parseCharge(v.chargeTimeAC) ?? parseCharge(car.chargeTimeAC),
+  };
+}
+
+/** Carga para los datos clave: DC si hay un tiempo legible; si no, AC. */
+function chargeCell(car: CarData, v: VersionData): { label: string; value: string } | null {
+  const { dc, ac } = chargeTimes(car, v);
+  const options: ["DC" | "AC", ChargeInfo | null][] = [["DC", dc], ["AC", ac]];
+  for (const [kind, c] of options) {
+    const value = shortTime(c);
+    if (c && value) return { label: `Carga ${kind}${c.span ? `, ${c.span}` : ""}`, value };
+  }
+  return null;
+}
+
+// Siglas de 4 letras o más que se quedan en mayúscula dentro del nombre de una versión.
+const VERSION_KEEP_CAPS = new Set(["PHEV", "MHEV", "REEV", "EREV", "TFSI", "IONIQ", "NCAP", "WLTP"]);
+
+function tidyVersionWord(word: string, keep: Set<string>): string {
+  if (word.length < 4 || !/^[A-ZÁÉÍÓÚÑÜ]+$/.test(word) || keep.has(word)) return word;
+  return word.charAt(0) + word.slice(1).toLowerCase();
+}
+
+/**
+ * Nombres de versión legibles, como en la maqueta: se quita el prefijo común que repite
+ * el modelo ("IONIQ 5 NE EV PREMIUM" pasa a "Premium") y se bajan las palabras que llegan
+ * en MAYÚSCULA sostenida desde Sanity. Siglas, códigos con cifras y palabras del nombre del
+ * auto se respetan. El prefijo solo se recorta si parte por el modelo: "LIMITED 4x2" y
+ * "LIMITED AWD" (bZ4X) quedan completos.
+ */
+function versionLabels(names: string[], carName: string): string[] {
+  const keep = new Set([...VERSION_KEEP_CAPS, ...carName.split(/\s+/)]);
+  const words = names.map((n) => (n ?? "").trim().split(/\s+/).filter(Boolean));
+  let common = 0;
+  if (words.length > 1) {
+    const first = words[0];
+    while (
+      common < first.length &&
+      words.every((w) => w.length > common + 1 && w[common].toUpperCase() === first[common].toUpperCase())
+    ) common++;
+    const modelWord = carName.trim().split(/\s+/)[0]?.toUpperCase();
+    if (!modelWord || first[0]?.toUpperCase() !== modelWord) common = 0;
+  }
+  return words.map((w, i) => w.slice(common).map((x) => tidyVersionWord(x, keep)).join(" ") || `Versión ${i + 1}`);
+}
+
+/** Datos clave (6 celdas) de la versión elegida, priorizados por tecnología. Nunca vacíos. */
+function keySpecs(car: CarData, v: VersionData, cls: ElectricClass): SpecCell[] {
+  const out: SpecCell[] = [];
+  const add = (icon: string, label: string, value: string | null | undefined) => {
+    if (value && !out.some((c) => c.label === label)) out.push({ icon, label, value });
+  };
+  const battery = fmt(v.battery, "kWh");
+  const power = fmt(v.power, "CV");
+  const accel = fmt(v.acceleration, "s");
+  const torque = fmt(v.torque, "Nm");
+  const traction = tractionLabel(v.traction);
+
+  if (cls === "HEV") {
+    add("local_gas_station", "Rendimiento", fmt(v.fuelConsumption ?? car.fuelConsumption, "km/L"));
+    add("speed", "Potencia", power);
+    add("schedule", "0 a 100 km/h", accel);
+    add("directions_car", "Tracción", traction);
+    add("settings", "Torque", torque);
+    add("battery_charging_full", "Batería", battery);
+  } else {
+    const isPHEV = cls === "PHEV";
+    add("route", isPHEV ? "Autonomía eléctrica" : "Autonomía", fmt(isPHEV ? v.electricRangeKm ?? car.electricRangeKm : v.range, "km"));
+    add("battery_charging_full", "Batería", battery);
+    const charge = chargeCell(car, v);
+    if (charge) add("bolt", charge.label, charge.value);
+    add("speed", "Potencia", power);
+    add("schedule", "0 a 100 km/h", accel);
+    add("directions_car", "Tracción", traction);
+    add("eco", isPHEV ? "Eficiencia eléctrica" : "Eficiencia", fmt(v.rendimientoElectrico ?? car.rendimientoElectrico, "km/kWh"));
+    add("settings", "Torque", torque);
+  }
+  add("airline_seat_recline_normal", "Plazas", car.seats > 0 ? String(car.seats) : null);
+  add("category", "Segmento", car.category ? sentenceCase(car.category) : null);
+  return out.slice(0, 6);
+}
+
+/** Línea corta bajo el nombre de cada versión: "295 km, 170 CV, RWD". */
+function versionMeta(v: VersionData, cls: ElectricClass): string {
+  const eRange = fmt(v.electricRangeKm, "km");
+  const main =
+    cls === "EV" ? fmt(v.range, "km") :
+    cls === "PHEV" ? (eRange ? `${eRange} eléctricos` : null) :
+    fmt(v.fuelConsumption, "km/L");
+  return [main, fmt(v.power, "CV"), (v.traction ?? "").trim() || null].filter(Boolean).join(", ");
+}
+
+function buildFallbackHighlights(car: CarData): Highlight[] {
   const gallery = car.gallery ?? [];
   const cls = classifyElectric(car);
-  const isBEV  = cls === "EV";
-  const isPHEV = cls === "PHEV";
-  const isHEV  = cls === "HEV";
+  const n = (x?: number | null) => formatNumber(x);
+  const seats = car.seats || 5;
+  const dc = parseCharge(car.chargeTimeDC);
+  const ac = parseCharge(car.chargeTimeAC);
+  const dcTime = shortTime(dc);
+  const acTime = shortTime(ac);
+  const upper = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
-  const comfortDesc = car.comfortFeatures.length > 0
-    ? `El interior del ${car.name} combina materiales premium con tecnología conectada. ${car.comfortFeatures.slice(0, 2).join(", ")} y mucho más para que cada viaje sea placentero.`
-    : `El interior del ${car.name} está pensado para quienes buscan confort y funcionalidad. Con ${car.seats} plazas y ${car.cargo} litros de maletero, tiene espacio para todo lo que necesitas.`;
-
-  const comfortHighlight = {
-    title:         `${car.seats || 5} plazas de puro confort`,
-    description:   comfortDesc,
-    badge:         "Interior",
-    icon:          "airline_seat_recline_extra",
-    imageUrl:      gallery[3] ?? gallery[0] ?? undefined,
-    imagePosition: "right" as const,
+  const comfortFeatures = car.comfortFeatures.map((f) => tidyText(f)).filter((f): f is string => !!f);
+  const comfortHighlight: Highlight = {
+    title:       `${seats} plazas de puro confort`,
+    description: comfortFeatures.length > 0
+      ? `El interior del ${car.name} combina materiales premium con tecnología conectada. ${comfortFeatures.slice(0, 2).join(", ")} y mucho más para que cada viaje sea placentero.`
+      : `El interior del ${car.name} está pensado para quienes buscan confort y funcionalidad. Con ${seats} plazas${car.cargo > 0 ? ` y ${n(car.cargo)} litros de maletero` : ""}, tiene espacio para todo lo que necesitas.`,
+    badge:       "Interior",
+    imageUrl:    gallery[3],
   };
 
-  if (isBEV) {
+  if (cls === "EV") {
     return [
       {
-        title:         car.range ? `Hasta ${car.range} km de autonomía real` : "Autonomía para el día a día",
-        description:   car.range
-          ? `El ${car.brand} ${car.name} está diseñado para ir lejos sin preocupaciones. ${car.battery ? `Con una batería de ${car.battery} kWh, ` : ""}ofrece hasta ${car.range} km de autonomía WLTP para que cada trayecto sea una experiencia sin ansiedad de rango.`
-          : `El ${car.brand} ${car.name} es un vehículo eléctrico de última generación${car.rendimientoElectrico ? ` con una eficiencia de ${car.rendimientoElectrico} km/kWh` : ""}, diseñado para maximizar cada kilómetro recorrido.`,
-        badge:         "Rendimiento",
-        icon:          "electric_car",
-        imageUrl:      gallery[1] ?? gallery[0] ?? undefined,
-        imagePosition: "right" as const,
+        title:       car.range ? `Hasta ${n(car.range)} km de autonomía real` : "Autonomía para el día a día",
+        description: car.range
+          ? `El ${car.brand} ${car.name} está diseñado para ir lejos sin preocupaciones. ${car.battery ? `Con una batería de ${n(car.battery)} kWh, ofrece` : "Ofrece"} hasta ${n(car.range)} km de autonomía WLTP para que cada trayecto sea una experiencia sin ansiedad de rango.`
+          : `El ${car.brand} ${car.name} es un vehículo eléctrico de última generación${car.rendimientoElectrico ? ` con una eficiencia de ${n(car.rendimientoElectrico)} km/kWh` : ""}, diseñado para maximizar cada kilómetro recorrido.`,
+        badge:       "Rendimiento",
+        imageUrl:    gallery[1],
       },
       {
-        title:         validCharge(car.chargeTimeDC) ? `Carga rápida en ${car.chargeTimeDC}` : "Carga inteligente y flexible",
-        description:   `Olvídate de las esperas largas. ${car.chargeType ? `Compatible con ${car.chargeType}, ` : ""}el ${car.name} se adapta tanto a cargadores domésticos como a puntos de carga rápida DC para que siempre estés listo para salir.`,
-        badge:         "Carga",
-        icon:          "bolt",
-        imageUrl:      gallery[2] ?? gallery[0] ?? undefined,
-        imagePosition: "left" as const,
+        title:       dcTime ? (dc?.span ? `${upper(dc.span)} en ${dcTime}` : `Carga rápida en ${dcTime}`) : "Carga inteligente y flexible",
+        description: `Olvídate de las esperas largas. ${car.chargeType ? `Compatible con ${car.chargeType}, el` : "El"} ${car.name} se adapta tanto a cargadores domésticos como a puntos de carga rápida DC para que siempre estés listo para salir.`,
+        badge:       "Carga",
+        imageUrl:    gallery[2],
       },
       comfortHighlight,
     ];
   }
 
-  if (isPHEV) {
+  if (cls === "PHEV") {
+    const chargeText = dcTime
+      ? ` Carga rápida ${dc?.span ? `${dc.span} ` : ""}en ${dcTime}.`
+      : acTime
+        ? (ac?.span ? ` Carga ${ac.span} en ${acTime}.` : ` Carga completa en ${acTime}.`)
+        : "";
     return [
       {
-        title:         car.electricRangeKm ? `${car.electricRangeKm} km en modo 100% eléctrico` : "Lo mejor de dos mundos",
-        description:   `El ${car.brand} ${car.name} combina motor eléctrico y combustión para la máxima versatilidad. ${car.electricRangeKm ? `Recorre hasta ${car.electricRangeKm} km en modo eléctrico puro para trayectos urbanos sin emisiones.` : ""}${car.rendimientoElectrico ? ` Eficiencia eléctrica de ${car.rendimientoElectrico} km/kWh para maximizar cada kWh.` : ""}`,
-        badge:         "Electrificación",
-        icon:          "electric_car",
-        imageUrl:      gallery[1] ?? gallery[0] ?? undefined,
-        imagePosition: "right" as const,
+        title:       car.electricRangeKm ? `${n(car.electricRangeKm)} km en modo 100% eléctrico` : "Lo mejor de dos mundos",
+        description: `El ${car.brand} ${car.name} combina motor eléctrico y combustión para la máxima versatilidad.${car.electricRangeKm ? ` Recorre hasta ${n(car.electricRangeKm)} km en modo eléctrico puro para trayectos urbanos sin emisiones.` : ""}${car.rendimientoElectrico ? ` Eficiencia eléctrica de ${n(car.rendimientoElectrico)} km/kWh para maximizar cada kWh.` : ""}`,
+        badge:       "Electrificación",
+        imageUrl:    gallery[1],
       },
       {
-        title:         car.rendimientoElectrico ? `${car.rendimientoElectrico} km/kWh de eficiencia eléctrica` : "Carga inteligente para ciudad y carretera",
-        description:   `Con su sistema híbrido enchufable, el ${car.name} optimiza automáticamente el uso de energía según tu forma de conducir. ${validCharge(car.chargeTimeDC) ? `Carga rápida en ${car.chargeTimeDC}.` : validCharge(car.chargeTimeAC) ? `Carga completa en ${car.chargeTimeAC}.` : ""}`,
-        badge:         "Eficiencia",
-        icon:          "savings",
-        imageUrl:      gallery[2] ?? gallery[0] ?? undefined,
-        imagePosition: "left" as const,
+        title:       car.rendimientoElectrico ? `${n(car.rendimientoElectrico)} km/kWh de eficiencia eléctrica` : "Carga inteligente para ciudad y carretera",
+        description: `Con su sistema híbrido enchufable, el ${car.name} optimiza automáticamente el uso de energía según tu forma de conducir.${chargeText}`,
+        badge:       "Eficiencia",
+        imageUrl:    gallery[2],
       },
       comfortHighlight,
     ];
   }
 
   // HEV / MHEV
+  const traction = tractionLabel(car.traction);
   return [
     {
-      title:         car.fuelConsumption ? `${car.fuelConsumption} km/L: eficiencia sin enchufes` : "Eficiencia híbrida automática",
-      description:   `El ${car.brand} ${car.name} recupera energía en cada frenada y desaceleración para recargar su batería de forma automática, sin necesidad de enchufarse. ${car.fuelConsumption ? `Esto se traduce en un rendimiento de ${car.fuelConsumption} km/L` : "El resultado es un ahorro real de combustible"} en uso mixto urbano e interurbano.`,
-      badge:         "Eficiencia",
-      icon:          "savings",
-      imageUrl:      gallery[1] ?? gallery[0] ?? undefined,
-      imagePosition: "right" as const,
+      title:       car.fuelConsumption ? `${n(car.fuelConsumption)} km/L: eficiencia sin enchufes` : "Eficiencia híbrida automática",
+      description: `El ${car.brand} ${car.name} recupera energía en cada frenada y desaceleración para recargar su batería de forma automática, sin necesidad de enchufarse. ${car.fuelConsumption ? `Esto se traduce en un rendimiento de ${n(car.fuelConsumption)} km/L` : "El resultado es un ahorro real de combustible"} en uso mixto urbano e interurbano.`,
+      badge:       "Eficiencia",
+      imageUrl:    gallery[1],
     },
     {
-      title:         car.power ? `${car.power} CV con tecnología híbrida` : "Potencia e inteligencia combinadas",
-      description:   `El motor híbrido del ${car.name} combina un motor de combustión con asistencia eléctrica para ofrecer una conducción más suave, potente y eficiente. ${car.traction ? `Tracción ${car.traction} para mayor control en todas las situaciones.` : ""}`,
-      badge:         "Motor",
-      icon:          "settings",
-      imageUrl:      gallery[2] ?? gallery[0] ?? undefined,
-      imagePosition: "left" as const,
+      title:       car.power ? `${n(car.power)} CV con tecnología híbrida` : "Potencia e inteligencia combinadas",
+      description: `El motor híbrido del ${car.name} combina un motor de combustión con asistencia eléctrica para ofrecer una conducción más suave, potente y eficiente.${traction ? ` Tracción ${traction.charAt(0).toLowerCase()}${traction.slice(1)} para mayor control en todas las situaciones.` : ""}`,
+      badge:       "Motor",
+      imageUrl:    gallery[2],
     },
     comfortHighlight,
   ];
 }
 
+// ─── Component ───────────────────────────────────────────────────────────────
 export default function AutoPageClient({ car, similarCars, reviewsSlot }: AutoPageClientProps) {
   const [activeVersion, setActiveVersion] = useState(0);
-  const [versionOpen,   setVersionOpen]   = useState(false);
   const [galleryIndex,  setGalleryIndex]  = useState(0);
   const [stickyVisible, setStickyVisible] = useState(false);
-  const [openEquip,     setOpenEquip]     = useState<Record<string, boolean>>({});
-  const heroRef = useRef<HTMLElement>(null);
+  const buyActionsRef = useRef<HTMLDivElement>(null);
+  const thumbsRef     = useRef<HTMLDivElement>(null);
 
-  function toggleEquip(key: string) {
-    setOpenEquip((prev) => ({ ...prev, [key]: !prev[key] }));
-  }
-
-  useEffect(() => {
-    const obs = new IntersectionObserver(
-      ([entry]) => setStickyVisible(!entry.isIntersecting),
-      { threshold: 0 }
-    );
-    if (heroRef.current) obs.observe(heroRef.current);
-    return () => obs.disconnect();
-  }, []);
+  const model = `${car.brand} ${car.name}`;
+  const cls = classifyElectric(car);
+  const hasVersions = car.versions.length > 0;
+  const labels = useMemo(() => versionLabels(car.versions.map((v) => v.name), car.name), [car.versions, car.name]);
 
   const ver: VersionData = car.versions[activeVersion] ?? {
     name: "Base", price: car.basePrice, discountPrice: car.discountPrice,
     battery: car.battery, range: car.range, power: car.power, torque: car.torque,
     traction: car.traction, acceleration: car.acceleration, topSpeed: car.topSpeed,
     chargeTimeDC: car.chargeTimeDC, chargeTimeAC: car.chargeTimeAC,
+    electricRangeKm: car.electricRangeKm, fuelConsumption: car.fuelConsumption,
+    rendimientoElectrico: car.rendimientoElectrico,
   };
+  const verLabel = hasVersions ? labels[activeVersion] : null;
 
-  const savings    = ver.price - ver.discountPrice;
-  const savingsPct = Math.round((savings / ver.price) * 100);
-  const totalBonus = savings + (car.hotDealBonus ?? 0);
+  // isHotDeal sigue mandando sobre qué precio se muestra (misma regla de siempre):
+  // precio con descuento solo si el auto es hot deal y la versión trae un ahorro real.
+  const priceOf = (v: VersionData) => {
+    const savings = v.price - v.discountPrice;
+    const pct = Math.round((savings / v.price) * 100);
+    const discounted = car.isHotDeal && pct > 0;
+    return { list: v.price, final: discounted ? v.discountPrice : v.price, discounted, savings };
+  };
+  const price = priceOf(ver);
+
   const galleryImages = car.gallery ?? [];
-  const galleryCount  = galleryImages.length > 0 ? galleryImages.length : 6;
+  const photoCount = galleryImages.length;
+  const showPhoto = (i: number) => setGalleryIndex(((i % photoCount) + photoCount) % photoCount);
+  const compareHref = `/comparador?add=${car.slug}`;
 
-  // Convierte una versión (con fallback al auto) al shape que consume el pool de
-  // stats compartido en lib/utils. Así el hero y las tarjetas de catálogo usan la
-  // MISMA lógica "nunca vacía": si falta un dato, entra el siguiente disponible —
-  // jamás se renderiza un "—" en las stats destacadas.
-  const statInputFor = (v: Partial<VersionData>) => ({
-    electricTypeTag:      car.electricTypeTag,
-    range:                v.range ?? car.range,
-    electricRangeKm:      v.electricRangeKm ?? car.electricRangeKm,
-    fuelConsumption:      v.fuelConsumption ?? car.fuelConsumption,
-    rendimientoElectrico: v.rendimientoElectrico ?? car.rendimientoElectrico,
-    battery:              v.battery ?? car.battery,
-    power:                v.power ?? car.power,
-    acceleration:         v.acceleration ?? car.acceleration,
-    topSpeed:             v.topSpeed ?? car.topSpeed,
-    torque:               v.torque ?? car.torque,
-    traction:             v.traction ?? car.traction,
-    seats:                car.seats,
-    category:             car.category,
-  });
+  // Barra fija inferior: aparece cuando los botones de compra quedan arriba del viewport.
+  // El margen inferior enorme extiende la raíz hacia abajo: el único cambio de estado es
+  // cruzar el borde superior, así un salto de scroll (ancla, recarga, fling en móvil) que
+  // pasa de "debajo" a "arriba" sin tocar el viewport también la muestra.
+  useEffect(() => {
+    const el = buyActionsRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(([entry]) => {
+      setStickyVisible(!entry.isIntersecting && entry.boundingClientRect.top < 0);
+    }, { rootMargin: "0px 0px 100000px 0px" });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
 
-  // Stats del hero — calculadas una vez para la versión activa y usadas tanto en
-  // el bloque desktop (dentro del hero) como en la sección mobile.
-  const heroStatCells = heroStats(statInputFor(ver), 4);
+  // Con la barra visible, el lanzador del chat sube para no taparla (mismo trato que StickyCTA).
+  useEffect(() => {
+    const LIFTED = "97px"; // 24 px de margen + 73 px de la barra (12 + 48 + 12 + 1 de hairline)
+    const BASE   = "24px";
+    const root = document.documentElement;
+    root.style.setProperty("--sticky-h",    stickyVisible ? "73px" : "0px");
+    root.style.setProperty("--chat-bottom", stickyVisible ? LIFTED : BASE);
+    try {
+      const widget   = document.querySelector("ev-chat-widget");
+      const launcher = widget?.shadowRoot?.querySelector("#launcher") as HTMLElement | null;
+      const panel    = widget?.shadowRoot?.querySelector("#panel")    as HTMLElement | null;
+      if (launcher) launcher.style.bottom = stickyVisible ? LIFTED : "";
+      if (panel)    panel.style.setProperty("--chat-bottom", stickyVisible ? LIFTED : BASE);
+    } catch { /* no bloquea */ }
+    return () => {
+      root.style.setProperty("--sticky-h",    "0px");
+      root.style.setProperty("--chat-bottom", BASE);
+      try {
+        const widget   = document.querySelector("ev-chat-widget");
+        const launcher = widget?.shadowRoot?.querySelector("#launcher") as HTMLElement | null;
+        if (launcher) launcher.style.bottom = "";
+      } catch { /* no bloquea */ }
+    };
+  }, [stickyVisible]);
 
-  // Stats por versión — usadas tanto en el selector mobile (pill activa) como
-  // en el grid desktop. Mismo pool priorizado, nunca "—".
-  const computeVersionStats = (v: VersionData) => heroStats(statInputFor(v), 4);
+  // Miniaturas con scroll horizontal (móvil, o más de 8 fotos): la activa queda a la vista.
+  useEffect(() => {
+    const box = thumbsRef.current;
+    const thumb = box?.children[galleryIndex] as HTMLElement | undefined;
+    if (!box || !thumb || box.scrollWidth <= box.clientWidth) return;
+    const offset = thumb.getBoundingClientRect().left - box.getBoundingClientRect().left;
+    box.scrollBy({ left: offset - (box.clientWidth - thumb.offsetWidth) / 2, behavior: "smooth" });
+  }, [galleryIndex]);
+
+  // ─── Derivados de la versión elegida ──────────────────────────────────────
+  const specs = keySpecs(car, ver, cls);
+  const tagline = tidyText(car.tagline);
+  const taglineText = tagline && !/[.!?…]$/.test(tagline) ? `${tagline}.` : tagline;
+  const description = tidyText(car.description);
+
+  const mediaChips: string[] = [];
+  if (HOT_DEALS_ENABLED && car.isHotDeal) mediaChips.push("Oferta destacada");
+  if (car.isNew) mediaChips.push("Nuevo");
+  if (car.isTopSeller) mediaChips.push("Más vendido");
+
+  const headChips = [
+    car.category ? sentenceCase(car.category) : null,
+    car.modelYear ? `Modelo ${car.modelYear}` : null,
+    car.euroNcap ? `Euro NCAP ${car.euroNcap} ${car.euroNcap === 1 ? "estrella" : "estrellas"}` : null,
+  ].filter((c): c is string => !!c);
+
+  const highlights = car.highlights && car.highlights.length > 0 ? car.highlights : buildFallbackHighlights(car);
+
+  const allVersionRows: { label: string; get: (v: VersionData) => string | null }[] = [
+    cls === "EV"   ? { label: "Autonomía",           get: (v) => fmt(v.range, "km") } :
+    cls === "PHEV" ? { label: "Autonomía eléctrica", get: (v) => fmt(v.electricRangeKm, "km") } :
+                     { label: "Rendimiento",         get: (v) => fmt(v.fuelConsumption, "km/L") },
+    { label: "Potencia",     get: (v) => fmt(v.power, "CV") },
+    { label: "Torque",       get: (v) => fmt(v.torque, "Nm") },
+    { label: "Tracción",     get: (v) => tractionLabel(v.traction) },
+    { label: "0 a 100 km/h", get: (v) => fmt(v.acceleration, "s") },
+    cls === "HEV"
+      ? { label: "Velocidad máxima", get: (v) => fmt(v.topSpeed, "km/h") }
+      : { label: "Batería",          get: (v) => fmt(v.battery, "kWh") },
+  ];
+  const versionRows = allVersionRows.filter((row) => car.versions.some((v) => row.get(v)));
+  const showVersionTable = car.versions.length > 1 && versionRows.length > 0;
+
+  const equipGroups = [
+    { key: "safety",  label: "Seguridad",  features: car.safetyFeatures },
+    { key: "tech",    label: "Tecnología", features: car.techFeatures },
+    { key: "comfort", label: "Confort",    features: car.comfortFeatures },
+  ]
+    .map((g) => ({ ...g, features: (g.features ?? []).map((f) => tidyText(f)).filter((f): f is string => !!f) }))
+    .filter((g) => g.features.length > 0);
+
+  const { dc, ac } = chargeTimes(car, ver);
+  const batteryType = tidyText(car.batteryType);
+  const fichaGroups = [
+    {
+      title: "Batería y carga",
+      rows: [
+        ["Batería", fmt(ver.battery, "kWh")],
+        ["Química", batteryType && batteryType.toLowerCase() !== "other" ? batteryType : null],
+        ["Autonomía WLTP", fmt(ver.range, "km")],
+        ["Autonomía eléctrica", cls === "PHEV" ? fmt(ver.electricRangeKm, "km") : null],
+        ["Eficiencia", fmt(ver.rendimientoElectrico ?? car.rendimientoElectrico, "km/kWh")],
+        [`Carga rápida DC${dc?.span ? `, ${dc.span}` : ""}`, dc?.value ?? null],
+        ["Potencia máxima DC", fmt(ver.maxDCChargingPower ?? car.maxDCChargingPower, "kW")],
+        [`Carga AC${ac?.span ? `, ${ac.span}` : ""}`, ac?.value ?? null],
+        ["Potencia máxima AC", fmt(ver.maxACChargingPower ?? car.maxACChargingPower, "kW")],
+        ["Conector", tidyText(car.chargeType) ?? tidyText(car.connectorType)],
+      ],
+    },
+    {
+      title: "Motor y rendimiento",
+      rows: [
+        ["Rendimiento", cls === "PHEV" ? null : fmt(ver.fuelConsumption ?? car.fuelConsumption, "km/L")],
+        ["Potencia", ver.power > 0 ? `${formatNumber(ver.power)} CV (${formatNumber(Math.round(ver.power * 0.7355))} kW)` : null],
+        ["Torque", fmt(ver.torque, "Nm")],
+        ["Tracción", tractionLabel(ver.traction)],
+        ["0 a 100 km/h", fmt(ver.acceleration, "s")],
+        ["Velocidad máxima", fmt(ver.topSpeed, "km/h")],
+        ["Transmisión", tidyText(ver.transmission ?? car.transmission)],
+      ],
+    },
+    {
+      title: "Dimensiones y capacidad",
+      rows: [
+        ["Plazas", car.seats > 0 ? String(car.seats) : null],
+        ["Maletero", fmt(ver.cargo ?? car.cargo, "L")],
+        ["Maletero delantero", fmt(car.frunkCapacity, "L")],
+        ["Altura libre al suelo", fmt(car.groundClearance, "mm")],
+      ],
+    },
+    {
+      title: "Seguridad y garantía",
+      rows: [
+        ["Euro NCAP", car.euroNcap ? `${car.euroNcap} ${car.euroNcap === 1 ? "estrella" : "estrellas"}` : null],
+        ["Airbags", car.airbags ? String(car.airbags) : null],
+        ["Garantía", tidyText(car.warranty)],
+      ],
+    },
+  ]
+    .map((g) => ({ ...g, rows: g.rows.filter((r): r is [string, string] => !!r[1]) }))
+    .filter((g) => g.rows.length > 0);
+
+  // Hairline solo entre dos secciones blancas seguidas (regla del sistema).
+  const equipRule = !showVersionTable;
+  const fichaRule = equipGroups.length > 0 || !showVersionTable;
+  const hasSimilar = similarCars.length > 0;
 
   return (
-    <>
-      {/* ─── Sticky offer bar ────────────────────────────────────────── */}
-      <AnimatePresence>
-        {stickyVisible && (
-          <m.div
-            initial={{ y: -60, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: -60, opacity: 0 }}
-            transition={{ duration: 0.25 }}
-            className="fixed top-16 md:top-20 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm"
-          >
-            <div className="max-w-7xl mx-auto px-4 md:px-8 h-14 flex items-center justify-between gap-2 sm:gap-4">
-              <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-                {car.brandLogoUrl ? (
-                  <img src={car.brandLogoUrl} alt={car.brand} className="h-5 sm:h-6 w-auto object-contain flex-shrink-0" loading="lazy" decoding="async" />
-                ) : (
-                  <Icon name="electric_car" className="text-primary text-[18px] flex-shrink-0" />
-                )}
-                <div className="min-w-0">
-                  <p className="font-headline font-bold text-xs sm:text-sm truncate leading-tight">{car.brand} {car.name}</p>
-                  <span className="text-text-ghost text-[10px] hidden sm:block truncate">{ver.name}</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-                <div className="hidden sm:block text-right">
-                  {car.isHotDeal && savingsPct > 0 && (
-                    <p className="text-xs text-text-ghost line-through">{formatCLP(ver.price)}</p>
-                  )}
-                  <p className="font-headline font-black text-primary-deep text-sm sm:text-base leading-none">
-                    {formatCLP(car.isHotDeal && savingsPct > 0 ? ver.discountPrice : ver.price)}
-                  </p>
-                </div>
-                <OfferCta
-                  carSlug={car.slug}
-                  model={`${car.brand} ${car.name}`}
-                  source="pdp"
-                  className="bg-primary hover:bg-primary-dark text-black font-bold px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm transition-colors whitespace-nowrap"
-                >
-                  Quiero mi oferta
-                </OfferCta>
-              </div>
-            </div>
-          </m.div>
-        )}
-      </AnimatePresence>
-
-      {/* ─── Hero (full-image) ──────────────────────────────────────── */}
-      <section
-        ref={heroRef}
-        className="bg-black overflow-hidden relative flex flex-col min-h-[90vh]"
-      >
-        {/* Grid pattern */}
-        <div className="absolute inset-0 pointer-events-none opacity-[0.025]"
-          style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.1) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.1) 1px,transparent 1px)", backgroundSize: "60px 60px" }} />
-
-        {/* Car image — object-cover fills the hero horizontally, gradients protect edges */}
-        <div className="absolute inset-0">
-          {galleryImages[0] ? (
-            <img
-              src={galleryImages[0]}
-              alt={`${car.brand} ${car.name}`}
-              className="w-full h-full object-cover object-center"
-              fetchPriority="high"
-              decoding="async"
-            />
-          ) : (
-            <Icon name="electric_car" className="text-[240px] text-white/5" />
-          )}
-        </div>
-
-        {/* Edge gradients — darken sides so text is readable, car shows in center */}
-        <div className="absolute inset-y-0 left-0 w-[44%] pointer-events-none"
-          style={{ background: "linear-gradient(to right, #000000 0%, rgba(0,0,0,0.65) 60%, transparent 100%)" }} />
-        <div className="absolute inset-y-0 right-0 w-[44%] pointer-events-none"
-          style={{ background: "linear-gradient(to left, #000000 0%, rgba(0,0,0,0.65) 60%, transparent 100%)" }} />
-        <div className="absolute inset-x-0 bottom-0 h-64 pointer-events-none"
-          style={{ background: "linear-gradient(to top, #000000 0%, transparent 100%)" }} />
-        <div className="absolute inset-x-0 top-0 h-48 pointer-events-none"
-          style={{ background: "linear-gradient(to bottom, #000000 0%, transparent 100%)" }} />
-
-        {/* Content */}
-        <div className="relative z-10 flex flex-col flex-1 max-w-7xl mx-auto px-4 md:px-8 w-full pt-20 md:pt-24 pb-12 md:pb-16">
-
-          {/* Breadcrumb */}
-          <nav className="flex items-center gap-2 text-white/30 text-xs mb-6">
-            <Link href="/" className="hover:text-white/60 transition-colors">Inicio</Link>
-            <span>/</span>
-            <Link href={`/marcas/${car.brandSlug}`} className="hover:text-white/60 transition-colors">{car.brand}</Link>
-            <span>/</span>
-            <span className="text-white/60">{car.name}</span>
+    <div className="page">
+      {/* ─── Arriba: galería, datos clave y compra ──────────────────────── */}
+      <section className="section pt-8" aria-label={model}>
+        <div className="wrap">
+          <nav className="crumbs" aria-label="Migas de pan">
+            <Link href="/">Inicio</Link>
+            <span aria-hidden="true">/</span>
+            {car.brandSlug ? <Link href={`/marcas/${car.brandSlug}`}>{car.brand}</Link> : <span>{car.brand}</span>}
+            <span aria-hidden="true">/</span>
+            <span aria-current="page">{car.name}</span>
           </nav>
 
-          {/* Spacer — pushes info to bottom */}
-          <div className="flex-1" />
-
-          {/* Bottom info row */}
-          <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-end">
-
-            {/* Left: brand / name / tagline. CTAs hidden on mobile (shown below stats). */}
-            <m.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
-              <div className="flex flex-wrap items-center gap-2 mb-4">
-                {HOT_DEALS_ENABLED && car.isHotDeal && <span className="bg-amber text-black text-[10px] font-black uppercase tracking-wide px-2.5 py-1 rounded-full">HOT DEAL</span>}
-                {car.isNew && <span className="bg-primary text-black text-[10px] font-black uppercase tracking-wide px-2.5 py-1 rounded-full">NUEVO</span>}
-                {car.isTopSeller && <span className="bg-white text-black text-[10px] font-black uppercase tracking-wide px-2.5 py-1 rounded-full">MÁS VENDIDO</span>}
-                <span className="text-white/30 text-xs uppercase tracking-widest">{car.category}</span>
+          <div className="pdp-top">
+            <div className="gallery">
+              <div className="gallery__main">
+                {photoCount > 0 ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={sanityImg(galleryImages[galleryIndex], { w: 1400, h: 875, fit: "crop", q: 80 })}
+                    srcSet={`${sanityImg(galleryImages[galleryIndex], { w: 800, h: 500, fit: "crop", q: 80 })} 800w, ${sanityImg(galleryImages[galleryIndex], { w: 1400, h: 875, fit: "crop", q: 80 })} 1400w`}
+                    sizes="(max-width: 1023px) 100vw, 700px"
+                    alt={galleryIndex === 0 ? model : `${model}, foto ${galleryIndex + 1} de ${photoCount}`}
+                    fetchPriority={galleryIndex === 0 ? "high" : "auto"}
+                    decoding="async"
+                  />
+                ) : (
+                  <span className="flex h-full w-full items-center justify-center">
+                    <Icon name="electric_car" className="text-[96px] text-line-2" />
+                  </span>
+                )}
+                {(car.electricTypeTag || mediaChips.length > 0) && (
+                  <div className="gallery__chips">
+                    <ElectricTypeBadge tag={car.electricTypeTag} />
+                    {mediaChips.map((c) => (
+                      <span key={c} className="chip chip--soft">{c}</span>
+                    ))}
+                  </div>
+                )}
+                {photoCount > 1 && (
+                  <div className="gallery__nav">
+                    <span className="chip chip--media" aria-live="polite">{galleryIndex + 1} / {photoCount}</span>
+                    <button type="button" className="btn btn--secondary btn--icon btn--sm" onClick={() => showPhoto(galleryIndex - 1)} aria-label="Foto anterior">
+                      <Icon name="chevron_left" size="none" />
+                    </button>
+                    <button type="button" className="btn btn--secondary btn--icon btn--sm" onClick={() => showPhoto(galleryIndex + 1)} aria-label="Foto siguiente">
+                      <Icon name="chevron_right" size="none" />
+                    </button>
+                  </div>
+                )}
               </div>
-              <p className="text-white/40 text-sm font-semibold mb-1">{car.brand}</p>
-              <h1 className="text-4xl sm:text-5xl md:text-7xl font-headline font-black text-white tracking-tighter leading-[0.9] mb-4">
-                {car.name}<span className="text-primary">.</span>
-              </h1>
-              <p className="text-white/60 text-base mb-6 max-w-sm leading-relaxed">{car.tagline}</p>
 
-              {/* CTAs — desktop only (lg+). On mobile they appear below the stats block. */}
-              <div className="hidden lg:flex flex-col sm:flex-row gap-3">
-                <OfferCta
-                  carSlug={car.slug}
-                  model={`${car.brand} ${car.name}`}
-                  source="pdp"
-                  className="flex-1 inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-black font-black px-7 py-4 rounded-xl transition-colors"
+              {photoCount > 1 && (
+                <div
+                  ref={thumbsRef}
+                  className={cn(
+                    // 4 px de aire para que el scroll no recorte el outline de la miniatura activa
+                    // (el margen negativo lo compensa: la fila queda donde la pone .thumbs).
+                    "thumbs -mx-1 -mb-1 mt-2 p-1",
+                    // Más de 8 fotos: una sola fila con scroll en vez de dos filas de miniaturas.
+                    photoCount > 8 && "[grid-template-columns:none] grid-flow-col auto-cols-[calc((100%_-_3.5rem)/8)] max-lg:auto-cols-[88px] overflow-x-auto [scrollbar-width:none]",
+                  )}
                 >
-                  Obtén la mejor oferta
+                  {galleryImages.map((src, i) => (
+                    <button
+                      key={`${src}-${i}`}
+                      type="button"
+                      className="thumb"
+                      aria-label={`Foto ${i + 1}`}
+                      aria-current={i === galleryIndex}
+                      onClick={() => showPhoto(i)}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={sanityImg(src, { w: 240, h: 150, fit: "crop" })} alt="" loading="lazy" decoding="async" />
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {specs.length > 0 && (
+                <dl className="specband specband--in" aria-label="Datos clave">
+                  {specs.map((s) => (
+                    <div key={s.label}>
+                      <dt className="mt-0">
+                        <Icon name={s.icon} size="none" className="mb-3 block h-[22px]" />
+                        {s.label}
+                      </dt>
+                      <dd>{s.value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              )}
+            </div>
+
+            <aside className="buy" aria-label="Precio y versiones">
+              <div className="buy__brand">
+                <p className="car__brand text-[15px]">{car.brand}</p>
+                {car.brandLogoUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={sanityImg(car.brandLogoUrl, { w: 160, q: 85 })} alt="" loading="lazy" decoding="async" />
+                )}
+              </div>
+              <h1 className="t-h1">
+                {/* Las palabras con guion no se cortan ("Plug-in", "e-Hybrid"). */}
+                {car.name.split(" ").map((word, i) => (
+                  <React.Fragment key={i}>
+                    {i > 0 && " "}
+                    {word.includes("-") ? <span className="whitespace-nowrap">{word}</span> : word}
+                  </React.Fragment>
+                ))}
+              </h1>
+              {taglineText && <p className="buy__tagline">{taglineText}</p>}
+              {headChips.length > 0 && (
+                <div className="head-chips">
+                  {headChips.map((c) => (
+                    <span key={c} className="chip">{c}</span>
+                  ))}
+                </div>
+              )}
+
+              {hasVersions && (
+                <>
+                  <p className="buy__label" id="pdp-version-label">
+                    Versión <span>{car.versions.length} {car.versions.length === 1 ? "disponible" : "disponibles"}</span>
+                  </p>
+                  <div className="vers" role="radiogroup" aria-labelledby="pdp-version-label">
+                    {car.versions.map((v, i) => {
+                      const meta = versionMeta(v, cls);
+                      return (
+                        <label key={`${i}-${v.name}`} className="ver">
+                          <input
+                            type="radio"
+                            name="pdp-version"
+                            value={i}
+                            checked={i === activeVersion}
+                            onChange={() => setActiveVersion(i)}
+                          />
+                          <span className="ver__name">{labels[i]}</span>
+                          <span className="ver__price">{formatCLP(priceOf(v).final)}</span>
+                          {meta && <span className="ver__meta">{meta}</span>}
+                        </label>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+
+              <div className="pricebox" aria-live="polite">
+                {price.discounted ? (
+                  <>
+                    <div className="pricebox__row">
+                      <span className="pricebox__label">Precio de lista</span>
+                      <span className="price-was">{formatCLP(price.list)}</span>
+                    </div>
+                    <div className="pricebox__row">
+                      <span className="pricebox__label">Con bonos</span>
+                      <span className="price price--lg">{formatCLP(price.final)}</span>
+                    </div>
+                    <div className="pricebox__foot">
+                      <span className="price-save">Ahorras {formatCLP(price.savings)}</span>
+                      <span className="t-micro">Incluye bonos. Precio referencial.</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="pricebox__row">
+                      <span className="pricebox__label">Precio de lista</span>
+                      <span className="price price--lg">{formatCLP(price.final)}</span>
+                    </div>
+                    <div className="pricebox__foot">
+                      <span className="t-micro">Precio referencial. Consulta por financiamiento y bonos disponibles.</span>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div ref={buyActionsRef} className="buy__actions">
+                <OfferCta carSlug={car.slug} model={model} source="pdp" className="btn btn--primary btn--lg">
+                  Quiero esta oferta
+                  <Icon name="arrow_forward" size="none" className="arrow" />
                 </OfferCta>
-                <Link
-                  href={`/comparador?add=${car.slug}`}
-                  className="inline-flex items-center justify-center gap-2 border border-white/20 hover:border-white/40 text-white font-medium px-5 py-4 rounded-xl transition-colors"
-                >
-                  <Icon name="compare_arrows" className="text-[18px]" />
+                <Link href={compareHref} className="btn btn--secondary btn--lg">
+                  <Icon name="compare_arrows" size="none" />
                   Comparar
                 </Link>
               </div>
-            </m.div>
-
-            {/* Right: stats + price — desktop only. En mobile bajan a su propia
-                sección debajo del hero para que la foto del auto respire. */}
-            <m.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.15 }} className="hidden lg:block">
-              {/* Stats grid — desktop (los 4 dentro del hero) */}
-              <div className="grid grid-cols-4 gap-2 mb-5">
-                {heroStatCells.map((s) => (
-                  <div key={s.label} className="rounded-xl p-3 text-center" style={{ backgroundColor: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.10)", backdropFilter: "blur(8px)" }}>
-                    <p className="text-primary font-headline font-black text-lg leading-none">{s.value}</p>
-                    <p className="text-[10px] mt-1 uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.40)" }}>{s.label}</p>
-                  </div>
-                ))}
-              </div>
-
-              {/* Price box */}
-              <div className="relative rounded-2xl p-4 sm:p-5" style={{ backgroundColor: "rgba(0,0,0,0.65)", backdropFilter: "blur(12px)", border: "1px solid rgba(255,255,255,0.10)" }}>
-                {car.isHotDeal && savingsPct > 0 ? (
-                  <>
-                    <div className="flex justify-between items-baseline mb-1">
-                      <span className="text-white/40 text-sm">Precio lista</span>
-                      <span className="text-white/40 line-through text-sm">{formatCLP(ver.price)}</span>
-                    </div>
-                    <div className="flex justify-between items-end gap-2">
-                      <span className="text-white text-sm font-medium leading-tight">Con bono Electrificarte</span>
-                      <span className="text-primary text-xl sm:text-3xl font-headline font-black flex-shrink-0">{formatCLP(ver.discountPrice)}</span>
-                    </div>
-                    <div className="flex items-center gap-2 mt-3 pt-3" style={{ borderTop: "1px solid rgba(255,255,255,0.10)" }}>
-                      <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
-                      <span className="text-xs" style={{ color: "rgba(255,255,255,0.40)" }}>
-                        Ahorras {formatCLP(savings)} ({savingsPct}%)
-                        {car.hotDealBonus ? ` · Bono ${formatCLP(car.hotDealBonus)}` : ""}
-                      </span>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="mb-1">
-                      <span className="text-white/40 text-sm">Precio Electrificarte</span>
-                    </div>
-                    <div>
-                      <span className="text-primary text-2xl sm:text-3xl font-headline font-black">{formatCLP(ver.price)}</span>
-                    </div>
-                    <p className="text-xs mt-3 pt-3" style={{ color: "rgba(255,255,255,0.30)", borderTop: "1px solid rgba(255,255,255,0.10)" }}>
-                      *Precio referencial. Consulta por financiamiento y bonos disponibles.
-                    </p>
-                  </>
-                )}
-                {car.isHotDeal && savingsPct > 0 && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-black text-xs font-black px-3 py-1.5 rounded-full whitespace-nowrap">
-                    -{savingsPct}% con Electrificarte
-                  </div>
-                )}
-              </div>
-            </m.div>
-
-            {/* CTAs — mobile only (below stats). Hidden on lg+ where they appear in the left column. */}
-            <div className="flex lg:hidden flex-col sm:flex-row gap-3">
-              <OfferCta
-                carSlug={car.slug}
-                model={`${car.brand} ${car.name}`}
-                source="pdp"
-                className="flex-1 inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-black font-black px-7 py-4 rounded-xl transition-colors"
-              >
-                Obtén la mejor oferta
-              </OfferCta>
-              <Link
-                href={`/comparador?add=${car.slug}`}
-                className="inline-flex items-center justify-center gap-2 border border-white/20 hover:border-white/40 text-white font-medium px-5 py-4 rounded-xl transition-colors"
-              >
-                <Icon name="compare_arrows" className="text-[18px]" />
-                Comparar
-              </Link>
-            </div>
+              <p className="buy__help">
+                ¿Dudas si es para ti?{" "}
+                <Link href="/asesoria" className="link">Asesoría por WhatsApp, {ASESORIA_PRICE}</Link>
+              </p>
+            </aside>
           </div>
         </div>
       </section>
 
-      {/* ─── Stats + precio — mobile only ──────────────────────────────
-          En desktop estas dos cosas viven dentro del hero (a la derecha).
-          En mobile las bajamos acá para liberar el hero — la foto del auto
-          se aprecia más y la sección se siente más profesional. */}
-      <section className="lg:hidden bg-white py-8 border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4">
-          {/* Stats 2x2 */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-6">
-            {heroStatCells.map((s) => (
-              <div key={s.label} className="rounded-xl bg-surface border border-gray-100 p-3 text-center">
-                <p className="text-primary-deep font-headline font-black text-lg leading-none">{s.value}</p>
-                <p className="text-[10px] mt-1 uppercase tracking-wide text-text-muted">{s.label}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Price box — light theme */}
-          <div className="relative rounded-2xl border border-gray-200 p-5">
-            {car.isHotDeal && savingsPct > 0 ? (
-              <>
-                <div className="flex justify-between items-baseline mb-1">
-                  <span className="text-text-muted text-sm">Precio lista</span>
-                  <span className="text-text-ghost line-through text-sm">{formatCLP(ver.price)}</span>
-                </div>
-                <div className="flex justify-between items-end gap-2">
-                  <span className="text-text-main text-sm font-medium leading-tight">Con bono Electrificarte</span>
-                  <span className="text-primary-deep text-2xl font-headline font-black flex-shrink-0">{formatCLP(ver.discountPrice)}</span>
-                </div>
-                <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
-                  <span className="text-xs text-text-muted">
-                    Ahorras {formatCLP(savings)} ({savingsPct}%)
-                    {car.hotDealBonus ? ` · Bono ${formatCLP(car.hotDealBonus)}` : ""}
-                  </span>
-                </div>
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-black text-xs font-black px-3 py-1.5 rounded-full whitespace-nowrap">
-                  -{savingsPct}% con Electrificarte
-                </div>
-              </>
-            ) : (
-              <>
-                <span className="text-text-muted text-sm">Precio Electrificarte</span>
-                <p className="text-primary-deep text-2xl font-headline font-black mt-1">{formatCLP(ver.price)}</p>
-                <p className="text-xs mt-3 pt-3 border-t border-gray-100 text-text-muted">
-                  *Precio referencial. Consulta por financiamiento y bonos disponibles.
-                </p>
-              </>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* ─── Version selector ─────────────────────────────────────────── */}
-      {car.versions.length > 1 && (
-        <section className="bg-black py-10" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-          <div className="max-w-7xl mx-auto px-4 md:px-8">
-            <p className="text-white/40 text-xs uppercase tracking-widest font-bold mb-5">Elige tu versión</p>
-
-            {/* ── Mobile (≤lg): dropdown selector + detalle de versión activa ── */}
-            <div className="lg:hidden">
-              {/* Trigger */}
-              <div className="relative mb-4">
-                <button
-                  type="button"
-                  onClick={() => setVersionOpen((o) => !o)}
-                  className="w-full flex items-center justify-between rounded-2xl p-4 transition-colors"
-                  style={{ backgroundColor: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.15)" }}
-                >
-                  <div className="text-left min-w-0">
-                    <p className="text-white/40 text-[10px] uppercase tracking-widest mb-0.5">Versión seleccionada</p>
-                    <p className="text-white font-headline font-bold text-sm truncate">{car.versions[activeVersion].name}</p>
-                  </div>
-                  <div className="flex items-center gap-3 flex-shrink-0 ml-3">
-                    <p className="text-primary font-headline font-black text-base">
-                      {formatCLP(
-                        car.isHotDeal && (car.versions[activeVersion].price - car.versions[activeVersion].discountPrice) > 0
-                          ? car.versions[activeVersion].discountPrice
-                          : car.versions[activeVersion].price
-                      )}
-                    </p>
-                    <Icon name="expand_more" className={`text-white/50 text-[22px] transition-transform duration-200 ${versionOpen ? "rotate-180" : ""}`} />
-                  </div>
-                </button>
-
-                {/* Dropdown */}
-                {versionOpen && (
-                  <>
-                    {/* Backdrop */}
-                    <div className="fixed inset-0 z-10" onClick={() => setVersionOpen(false)} />
-                    <div
-                      className="absolute left-0 right-0 top-full mt-2 z-20 rounded-2xl overflow-hidden"
-                      style={{ backgroundColor: "#111", border: "1px solid rgba(255,255,255,0.12)", boxShadow: "0 24px 60px rgba(0,0,0,0.7)" }}
-                    >
-                      <div className="max-h-72 overflow-y-auto">
-                        {car.versions.map((v, i) => {
-                          const vSavings = v.price - v.discountPrice;
-                          const vPct     = Math.round((vSavings / v.price) * 100);
-                          const isActive = i === activeVersion;
-                          const vStats   = computeVersionStats(v);
-                          return (
-                            <button
-                              key={v.name}
-                              type="button"
-                              onClick={() => { setActiveVersion(i); setVersionOpen(false); }}
-                              className="w-full text-left px-4 py-3.5 transition-colors hover:bg-white/5"
-                              style={{
-                                backgroundColor: isActive ? "rgba(0,229,229,0.10)" : undefined,
-                                borderTop: i > 0 ? "1px solid rgba(255,255,255,0.06)" : "none",
-                              }}
-                            >
-                              <div className="flex items-center justify-between mb-1.5">
-                                <span className={`font-headline font-bold text-sm ${isActive ? "text-primary" : "text-white"}`}>
-                                  {v.name}
-                                </span>
-                                <div className="flex items-center gap-2">
-                                  <span className={`font-headline font-black text-sm ${isActive ? "text-primary" : "text-white/80"}`}>
-                                    {formatCLP(car.isHotDeal && vPct > 0 ? v.discountPrice : v.price)}
-                                  </span>
-                                  {isActive && (
-                                    <span className="w-4 h-4 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
-                                      <Icon name="check" className="text-black text-[10px]" />
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="flex gap-4">
-                                {vStats.slice(0, 2).map((s) => (
-                                  <span key={s.label} className="text-[10px]">
-                                    <span className="text-white/30">{s.label} </span>
-                                    <span className="text-white/60 font-semibold">{s.value}</span>
-                                  </span>
-                                ))}
-                              </div>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-
-              {/* Detalle de la versión activa */}
-              {(() => {
-                const v = car.versions[activeVersion];
-                const vSavings = v.price - v.discountPrice;
-                const vPct     = Math.round((vSavings / v.price) * 100);
-                return (
-                  <div className="rounded-2xl p-5" style={{ backgroundColor: "#000", border: "1px solid rgba(0,229,229,0.40)" }}>
-                    <div className="grid grid-cols-2 gap-3 mb-4">
-                      {computeVersionStats(v).map((s) => (
-                        <div key={s.label}>
-                          <p className="text-sm font-bold text-primary">{s.value}</p>
-                          <p className="text-[10px] text-white/30">{s.label}</p>
-                        </div>
-                      ))}
-                    </div>
-                    <div>
-                      {car.isHotDeal && vPct > 0 && (
-                        <p className="text-white/30 text-xs line-through">{formatCLP(v.price)}</p>
-                      )}
-                      <p className="font-headline font-black text-2xl text-primary">
-                        {formatCLP(car.isHotDeal && vPct > 0 ? v.discountPrice : v.price)}
-                      </p>
-                      {car.isHotDeal && vPct > 0 && (
-                        <p className="text-green-400 text-[10px] font-bold mt-0.5">-{vPct}% ahorro</p>
-                      )}
-                    </div>
-                  </div>
-                );
-              })()}
-            </div>
-
-            {/* ── Desktop (lg+): grid con las 3 (o más) versiones al mismo tiempo ── */}
-            <div className="hidden lg:grid lg:grid-cols-3 gap-4">
-              {car.versions.map((v, i) => {
-                const vSavings = v.price - v.discountPrice;
-                const vPct     = Math.round((vSavings / v.price) * 100);
-                const isActive = i === activeVersion;
-                return (
-                  <button
-                    key={v.name}
-                    onClick={() => setActiveVersion(i)}
-                    className="text-left rounded-2xl p-5 transition-all duration-200"
-                    style={isActive
-                      ? { backgroundColor: "rgba(0,229,229,0.10)", border: "1px solid rgba(0,229,229,0.50)", boxShadow: "0 0 0 1px rgba(0,229,229,0.30)" }
-                      : { backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)" }}
-                  >
-                    <div className="flex items-start justify-between mb-3">
-                      <span className={["font-headline font-bold text-sm", isActive ? "text-primary" : "text-white"].join(" ")}>{v.name}</span>
-                      {isActive && (
-                        <span className="w-5 h-5 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
-                          <Icon name="check" className="text-black text-[12px]" />
-                        </span>
-                      )}
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 mb-4">
-                      {computeVersionStats(v).map((s) => (
-                        <div key={s.label}>
-                          <p className="text-xs font-bold" style={{ color: isActive ? "rgba(0,229,229,0.80)" : "rgba(255,255,255,0.60)" }}>{s.value}</p>
-                          <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.30)" }}>{s.label}</p>
-                        </div>
-                      ))}
-                    </div>
-                    <div>
-                      {car.isHotDeal && vPct > 0 && (
-                        <p className="text-white/30 text-xs line-through">{formatCLP(v.price)}</p>
-                      )}
-                      <p className={["font-headline font-black text-xl", isActive ? "text-primary" : "text-white"].join(" ")}>
-                        {formatCLP(car.isHotDeal && vPct > 0 ? v.discountPrice : v.price)}
-                      </p>
-                      {car.isHotDeal && vPct > 0 && (
-                        <p className="text-green-400 text-[10px] font-bold mt-0.5">-{vPct}% ahorro</p>
-                      )}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ─── Reseñas: después del selector de versión, que va pegado al hero ── */}
+      {/* ─── Reseñas: pegadas al bloque de compra (decisión de master) ──── */}
       <PdpReviewPrompt
         carSlug={car.slug}
         carBrand={car.brand}
         carModel={car.name}
-        carName={`${car.brand} ${car.name}`}
+        carName={model}
       />
 
       {reviewsSlot}
 
-      {/* ─── Highlights (foto + texto) ────────────────────────────────── */}
-      {(car.highlights && car.highlights.length > 0 ? car.highlights : buildFallbackHighlights(car)).map((hl, idx) => {
-        const imgLeft = idx % 2 !== 0;
-        return (
-          <section key={idx} className={idx % 2 === 0 ? "py-16 md:py-24 bg-white" : "py-16 md:py-24 bg-gray-50"}>
-            <div className="max-w-7xl mx-auto px-4 md:px-8">
-              <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-                {/* Text */}
-                <div className={imgLeft ? "lg:order-2" : ""}>
-                  {(hl.badge || hl.icon) && (
-                    <div className="flex items-center gap-2 mb-4">
-                      {hl.icon && <Icon name={hl.icon} className="text-primary text-[18px]" />}
-                      {hl.badge && <span className="text-[11px] uppercase tracking-widest text-primary-deep font-bold">{hl.badge}</span>}
-                    </div>
-                  )}
-                  <h2 className="font-headline font-black text-3xl md:text-4xl tracking-tighter leading-tight mb-5">
-                    {hl.title}
-                  </h2>
-                  {hl.description && (
-                    <p className="text-text-muted leading-relaxed text-base md:text-lg">
-                      {hl.description}
-                    </p>
-                  )}
-                </div>
-                {/* Image */}
-                <div className={imgLeft ? "lg:order-1" : ""}>
-                  <div className="rounded-2xl overflow-hidden aspect-[4/3] bg-gray-100">
-                    {hl.imageUrl ? (
-                      <img src={hl.imageUrl} alt={hl.title} className="w-full h-full object-cover" loading="lazy" decoding="async" />
-                    ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center gap-3">
-                        <Icon name={hl.icon ?? "photo_camera"} className="text-[64px] text-gray-200" />
-                        <span className="text-[10px] uppercase tracking-widest text-gray-300 font-bold">Foto próximamente</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
+      {/* ─── Destacados (foto + texto, alternados) ─────────────────────── */}
+      <section className="section" aria-label={description ? undefined : "Lo destacado"} aria-labelledby={description ? "pdp-about-t" : undefined}>
+        <div className="wrap">
+          {description && (
+            <div className="section-head">
+              <div className="section-head__text">
+                <h2 className="t-h2" id="pdp-about-t">Sobre el {model}</h2>
+                <p className="t-lead">{description}</p>
               </div>
             </div>
-          </section>
-        );
-      })}
-
-      {/* ─── Overview ─────────────────────────────────────────────────── */}
-      <section className="py-16 md:py-20">
-        <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <div className="max-w-3xl">
-            <p className="text-[11px] uppercase tracking-widest text-primary-deep font-bold mb-3">Sobre el vehículo</p>
-            <h2 className="text-3xl md:text-4xl font-headline font-black tracking-tighter uppercase mb-6">{car.brand} {car.name}</h2>
-            <p className="text-text-muted leading-relaxed mb-10">{car.description}</p>
-            <div className="grid sm:grid-cols-2 gap-3">
-              {(() => {
-                const cls = classifyElectric(car);
-                const isBEV  = cls === "EV";
-                const isPHEV = cls === "PHEV";
-                const perf = isBEV
-                  ? { icon: "electric_car", text: ver.range ? `Hasta ${ver.range} km de autonomía` : car.rendimientoElectrico ? `Eficiencia ${car.rendimientoElectrico} km/kWh` : "Vehículo 100% eléctrico" }
-                  : isPHEV
-                  ? { icon: "electric_car", text: [car.electricRangeKm ? `${car.electricRangeKm} km eléctrico` : null, car.rendimientoElectrico ? `${car.rendimientoElectrico} km/kWh eficiencia` : null].filter(Boolean).join(" · ") || "Híbrido enchufable" }
-                  : { icon: "savings",      text: car.fuelConsumption ? `Rendimiento ${car.fuelConsumption} km/L · auto-recarga` : "Híbrido de auto-recarga" };
-                const charge = isBEV || isPHEV
-                  ? { icon: "bolt", text: [car.chargeType, validCharge(car.chargeTimeDC) ? `carga DC en ${car.chargeTimeDC}` : null].filter(Boolean).join(" · ") || "Carga eléctrica compatible" }
-                  : { icon: "bolt", text: "Sin necesidad de enchufarse · auto-recarga" };
-                return [
-                  charge,
-                  perf,
-                  { icon: "airline_seat_recline_extra", text: `${car.seats || 5} plazas · maletero ${car.cargo || "—"} L` },
-                  { icon: "shield", text: car.safetyFeatures[0] ?? "Garantía de precio más bajo del mercado" },
-                ].map((h) => (
-                  <div key={h.icon} className="flex items-center gap-3 bg-surface rounded-xl p-3.5">
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "rgba(0,229,229,0.10)" }}>
-                      <Icon name={h.icon} className="text-primary text-[16px]" />
-                    </div>
-                    <span className="text-text-muted text-sm">{h.text}</span>
-                  </div>
-                ));
-              })()}
+          )}
+          {highlights.map((hl, idx) => (
+            <div key={idx} className={cn("hl", !hl.imageUrl && "grid-cols-1")}>
+              <div className="hl__text">
+                {hl.badge && <span className="t-label">{sentenceCase(hl.badge)}</span>}
+                <h2 className="t-h2">{tidyText(hl.title) ?? hl.title}</h2>
+                {hl.description && <p>{tidyText(hl.description)}</p>}
+              </div>
+              {hl.imageUrl && (
+                <div className={cn("hl__media", idx % 2 === 1 && "min-[900px]:order-first")}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={sanityImg(hl.imageUrl, { w: 1200, q: 75 })} alt="" loading="lazy" decoding="async" />
+                </div>
+              )}
             </div>
-          </div>
+          ))}
         </div>
       </section>
 
-      {/* ─── Equipamiento (accordion) ─────────────────────────────────── */}
-      {(car.safetyFeatures.length > 0 || car.techFeatures.length > 0 || car.comfortFeatures.length > 0) && (
-        <section className="py-16 md:py-20 bg-surface border-y border-gray-100">
-          <div className="max-w-7xl mx-auto px-4 md:px-8">
-            <div className="mb-8">
-              <p className="text-[11px] uppercase tracking-widest text-primary-deep font-bold mb-2">Equipamiento</p>
-              <h2 className="text-3xl md:text-4xl font-headline font-black tracking-tighter uppercase">Seguridad, tecnología y confort</h2>
-            </div>
-            <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start">
-              <div className="divide-y divide-gray-100 border border-gray-100 rounded-2xl overflow-hidden bg-white">
-              {[
-                { key: "safety",  icon: "shield",  label: "Seguridad",  iconCls: "text-red-500",      bgCls: "bg-red-50",      dotCls: "bg-red-400",    features: car.safetyFeatures },
-                { key: "tech",    icon: "memory",  label: "Tecnología", iconCls: "text-primary-deep", bgCls: "bg-primary/10",  dotCls: "bg-primary",    features: car.techFeatures },
-                { key: "comfort", icon: "airline_seat_recline_extra", label: "Confort", iconCls: "text-blue-500", bgCls: "bg-blue-50", dotCls: "bg-blue-400", features: car.comfortFeatures },
-              ].filter((g) => g.features.length > 0).map((group) => (
-                <div key={group.key}>
-                  <button
-                    onClick={() => toggleEquip(group.key)}
-                    className="w-full flex items-center justify-between px-6 py-5 hover:bg-surface transition-colors text-left"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={`w-9 h-9 ${group.bgCls} rounded-xl flex items-center justify-center flex-shrink-0`}>
-                        <Icon name={group.icon} className={`${group.iconCls} text-[18px]`} />
-                      </div>
-                      <div>
-                        <p className="font-headline font-bold text-sm">{group.label}</p>
-                        <p className="text-text-ghost text-xs">{group.features.length} características</p>
-                      </div>
-                    </div>
-                    <Icon name="expand_more" className={`text-[20px] text-text-ghost transition-transform duration-200 ${openEquip[group.key] ? "rotate-180" : ""}`} />
-                  </button>
-                  {openEquip[group.key] && (
-                    <div className="px-6 pb-5 pt-1 border-t border-gray-50">
-                      <ul className="grid sm:grid-cols-2 gap-x-6 gap-y-2.5 mt-3">
-                        {group.features.map((f) => (
-                          <li key={f} className="flex items-start gap-2.5 text-sm text-text-muted">
-                            <span className={`w-1.5 h-1.5 rounded-full ${group.dotCls} flex-shrink-0 mt-1.5`} />
-                            {f}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              ))}
+      {/* ─── Compara las versiones ──────────────────────────────────────── */}
+      {showVersionTable && (
+        <section className="section section--subtle" aria-labelledby="pdp-ver-t">
+          <div className="wrap">
+            <div className="section-head">
+              <div className="section-head__text">
+                <h2 className="t-h2" id="pdp-ver-t">Compara las versiones</h2>
+                <p className="t-lead">La versión marcada es la que elegiste arriba.</p>
               </div>
-
-              <ComparePromo
-                carName={car.name}
-                carBrand={car.brand}
-                carSlug={car.slug}
-                rivals={similarCars.map((s) => ({ slug: s.slug, name: s.name, brand: s.brand, basePrice: s.basePrice, discountPrice: s.discountPrice }))}
-              />
+            </div>
+            {/* relative: contiene los sr-only (absolutos) dentro del scroll de la tabla. */}
+            <div className="vtable-wrap relative">
+              <table className="vtable">
+                <thead>
+                  <tr>
+                    <th scope="col"><span className="sr-only">Especificación</span></th>
+                    {car.versions.map((v, i) => (
+                      <th key={`${i}-${v.name}`} scope="col" className={cn(i === activeVersion && "is-sel")}>
+                        {labels[i]}
+                        {i === activeVersion && <span className="sr-only">, versión elegida</span>}
+                        <span className="t-label">{formatCLP(priceOf(v).final)}</span>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {versionRows.map((row) => (
+                    <tr key={row.label}>
+                      <th scope="row">{row.label}</th>
+                      {car.versions.map((v, i) => (
+                        <td key={`${i}-${v.name}`} className={cn(i === activeVersion && "is-sel")}>
+                          {row.get(v) ?? <span className="text-ink-3">Sin dato</span>}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         </section>
       )}
 
-      {/* ─── Ficha técnica ────────────────────────────────────────────── */}
-      <section className="py-14 bg-surface border-y border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-            <div>
-              <p className="text-[11px] uppercase tracking-widest text-primary-deep font-bold mb-1">Datos técnicos</p>
-              <h2 className="text-2xl md:text-3xl font-headline font-black tracking-tighter uppercase">
-                Ficha técnica — {ver.name}
-              </h2>
+      {/* ─── Equipamiento ───────────────────────────────────────────────── */}
+      {equipGroups.length > 0 && (
+        <section className={cn("section", equipRule && "section--rule")} aria-labelledby="pdp-eq-t">
+          <div className="wrap">
+            <div className="section-head">
+              <div className="section-head__text">
+                <h2 className="t-h2" id="pdp-eq-t">Equipamiento</h2>
+              </div>
+            </div>
+            <div
+              className={cn(
+                "equip",
+                equipGroups.length === 2 && "min-[900px]:grid-cols-2",
+                equipGroups.length === 1 && "min-[900px]:grid-cols-1",
+              )}
+            >
+              {equipGroups.map((g) => (
+                <div key={g.key}>
+                  <h3 className="t-h3">
+                    {g.label} <span>{g.features.length}</span>
+                  </h3>
+                  <ul>
+                    {g.features.map((f, i) => (
+                      <li key={`${i}-${f}`}>{f}</li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ─── Ficha técnica ──────────────────────────────────────────────── */}
+      <section className={cn("section", fichaRule && "section--rule")} aria-labelledby="pdp-ficha-t">
+        <div className="wrap">
+          <div className="section-head">
+            <div className="section-head__text">
+              <h2 className="t-h2" id="pdp-ficha-t">Ficha técnica</h2>
+              {verLabel && <p className="t-lead">Versión {verLabel}</p>}
             </div>
             {car.fichaUrl && car.fichaUrl !== "#" && (
-              <a href={car.fichaUrl} target="_blank" rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 border border-gray-200 hover:border-primary/40 text-text-muted hover:text-primary-deep font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors flex-shrink-0">
-                <Icon name="open_in_new" className="text-[16px]" />
-                Ver ficha oficial {car.brand}
-              </a>
+              <div className="section-head__side">
+                <a href={car.fichaUrl} target="_blank" rel="noopener noreferrer" className="link-arrow">
+                  Ficha oficial {car.brand}
+                  <Icon name="north_east" size="none" />
+                </a>
+              </div>
             )}
           </div>
-          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-            {[
-              { section: "Batería y Autonomía", rows: [
-                { label: "Batería",              value: ver.battery ? `${ver.battery} kWh` : null },
-                { label: "Autonomía WLTP",       value: ver.range   ? `${ver.range} km`    : null },
-                { label: "Eficiencia eléctrica", value: (ver.rendimientoElectrico ?? car.rendimientoElectrico) ? `${ver.rendimientoElectrico ?? car.rendimientoElectrico} km/kWh` : null },
-                { label: "Rendimiento híbrido",  value: classifyElectric(car) === "PHEV" ? null : ((ver.fuelConsumption ?? car.fuelConsumption) ? `${ver.fuelConsumption ?? car.fuelConsumption} km/L` : null) },
-                { label: "Carga rápida DC",      value: validCharge(ver.chargeTimeDC) },
-                { label: "Carga AC",             value: validCharge(ver.chargeTimeAC) },
-                { label: "Tipo de conector",     value: car.chargeType   || null },
-              ]},
-              { section: "Motor y Rendimiento", rows: [
-                { label: "Potencia",          value: ver.power        ? `${ver.power} CV (${Math.round(ver.power * 0.7355)} kW)` : null },
-                { label: "Torque",            value: ver.torque       ? `${ver.torque} Nm`        : null },
-                { label: "Tracción",          value: ver.traction     || null },
-                { label: "Aceleración 0–100", value: ver.acceleration ? `${ver.acceleration} s`   : null },
-                { label: "Velocidad máxima",  value: ver.topSpeed     ? `${ver.topSpeed} km/h`    : null },
-              ]},
-              { section: "Dimensiones y Capacidad", rows: [
-                { label: "Plazas",   value: car.seats ? String(car.seats) : null },
-                { label: "Maletero", value: car.cargo ? `${car.cargo} litros` : null },
-              ]},
-            ].map((group) => {
-              const visibleRows = group.rows.filter(r => r.value);
-              if (!visibleRows.length) return null;
-              return (
-                <div key={group.section}>
-                  <div className="bg-surface px-6 py-3 border-b border-gray-100">
-                    <p className="text-[11px] uppercase tracking-widest font-bold text-primary-deep">{group.section}</p>
-                  </div>
-                  {visibleRows.map((row, ri) => (
-                    <div key={row.label} className={["grid grid-cols-2 px-6 py-3.5 text-sm", ri < visibleRows.length - 1 ? "border-b border-gray-50" : "border-b border-gray-100"].join(" ")}>
-                      <span className="text-text-muted font-medium">{row.label}</span>
-                      <span className="font-semibold text-text-main">{row.value}</span>
+          <div className="ficha">
+            {fichaGroups.map((g) => (
+              <div key={g.title}>
+                <h3>{g.title}</h3>
+                <dl>
+                  {g.rows.map(([label, value]) => (
+                    <div key={label}>
+                      <dt>{label}</dt>
+                      <dd>{value}</dd>
                     </div>
                   ))}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* ─── Gallery ──────────────────────────────────────────────────── */}
-      <section className="py-14 bg-black">
-        <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <p className="text-[11px] uppercase tracking-widest text-primary font-bold mb-1">Galería</p>
-              <h2 className="text-2xl md:text-3xl font-headline font-black text-white tracking-tighter uppercase">{car.brand} {car.name}</h2>
-            </div>
-            <div className="flex gap-2">
-              <button onClick={() => setGalleryIndex((i) => (i === 0 ? galleryCount - 1 : i - 1))} className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors" aria-label="Anterior">
-                <Icon name="chevron_left" className="text-[18px]" />
-              </button>
-              <button onClick={() => setGalleryIndex((i) => (i === galleryCount - 1 ? 0 : i + 1))} className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors" aria-label="Siguiente">
-                <Icon name="chevron_right" className="text-[18px]" />
-              </button>
-            </div>
-          </div>
-
-          <div className="relative aspect-[16/7] rounded-2xl overflow-hidden mb-4">
-            <AnimatePresence mode="wait">
-              <m.div key={galleryIndex} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} className="absolute inset-0">
-                {galleryImages[galleryIndex] ? (
-                  <img src={galleryImages[galleryIndex]} alt={`${car.brand} ${car.name} foto ${galleryIndex + 1}`} className="w-full h-full object-cover" loading="lazy" decoding="async" />
-                ) : (
-                  <div className={`w-full h-full bg-gradient-to-br ${galleryGradients[galleryIndex % galleryGradients.length]} flex items-center justify-center`}>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-60 h-60 bg-primary/8 rounded-full blur-3xl" />
-                    </div>
-                    <Icon name="electric_car" className="text-[100px] text-white/10 relative z-10" />
-                    <span className="absolute bottom-4 right-4 text-white/20 text-xs uppercase tracking-widest font-bold">{galleryIndex + 1} / {galleryCount}</span>
-                  </div>
-                )}
-              </m.div>
-            </AnimatePresence>
-          </div>
-
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-            {Array.from({ length: galleryCount }).map((_, i) => (
-              <button key={i} onClick={() => setGalleryIndex(i)}
-                className={["aspect-video rounded-xl overflow-hidden border-2 transition-all", i === galleryIndex ? "border-primary scale-105" : "border-transparent opacity-50 hover:opacity-80"].join(" ")}>
-                {galleryImages[i] ? (
-                  <img src={galleryImages[i]} alt={`Foto ${i + 1}`} className="w-full h-full object-cover" loading="lazy" decoding="async" />
-                ) : (
-                  <div className={`w-full h-full bg-gradient-to-br ${galleryGradients[i % galleryGradients.length]} flex items-center justify-center`}>
-                    <Icon name="electric_car" className="text-white/20 text-[16px]" />
-                  </div>
-                )}
-              </button>
+                </dl>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ─── Reseñas aprobadas (viene del server) ─────────────────────── */}
-      {/* ─── Vehículos similares ──────────────────────────────────────── */}
-      {similarCars.length > 0 && (
-        <section className="py-16 bg-surface border-t border-gray-100">
-          <div className="max-w-7xl mx-auto px-4 md:px-8">
-            <p className="text-[11px] uppercase tracking-widest text-primary-deep font-bold mb-2">También te puede interesar</p>
-            <h2 className="text-2xl md:text-3xl font-headline font-black tracking-tighter uppercase mb-8">Vehículos similares</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-              {similarCars.map((s) => (
-                <Link key={s.slug} href={`/auto/${s.slug}`} className="group bg-white border border-gray-100 rounded-2xl overflow-hidden hover:border-primary/40 hover:shadow-md transition-all duration-300">
-                  <div className="aspect-[16/9] bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
-                    {s.imageUrl ? (
-                      <img src={s.imageUrl} alt={`${s.brand} ${s.name}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" decoding="async" />
-                    ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center">
-                        <Icon name="electric_car" className="text-[56px] text-gray-200" />
-                        <span className="text-[10px] uppercase tracking-widest text-text-ghost font-bold mt-1">{s.brand}</span>
+      {/* ─── Similares y bloque Glaciar final ──────────────────────────── */}
+      <section className="section section--rule" aria-labelledby={hasSimilar ? "pdp-sim-t" : "pdp-cta-t"}>
+        <div className="wrap">
+          {hasSimilar && (
+            <>
+              <div className="section-head">
+                <div className="section-head__text">
+                  <h2 className="t-h2" id="pdp-sim-t">También te puede interesar</h2>
+                  <p className="t-lead">Autos de precio y tipo parecidos al {car.name}.</p>
+                </div>
+              </div>
+              <div className="sim-grid">
+                {similarCars.map((s) => {
+                  const meta = [s.range > 0 ? `${formatNumber(s.range)} km` : null, s.category ? sentenceCase(s.category) : null]
+                    .filter(Boolean)
+                    .join(", ");
+                  return (
+                    <article key={s.slug} className="card sim">
+                      <Link href={`/auto/${s.slug}`} className="card__media block" tabIndex={-1} aria-hidden>
+                        {s.imageUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={sanityImg(s.imageUrl, { w: 640, q: 75 })} alt="" loading="lazy" decoding="async" />
+                        ) : (
+                          <span className="flex h-full w-full items-center justify-center">
+                            <Icon name="electric_car" className="text-[48px] text-line-2" />
+                          </span>
+                        )}
+                      </Link>
+                      <div className="sim__body">
+                        <div>
+                          <p className="car__brand">{s.brand}</p>
+                          <h3 className="car__name">{s.name}</h3>
+                        </div>
+                        <div className="sim__row">
+                          <p className="price">{formatCLP(s.discountPrice)}</p>
+                          {meta && <p className="t-small">{meta}</p>}
+                        </div>
+                        <div className="sim__vs">
+                          <Link href={`/auto/${s.slug}`} className="btn btn--secondary btn--sm btn--block">
+                            Ver auto
+                          </Link>
+                          <Link href={`/comparador?add=${s.slug}`} className="btn btn--secondary btn--sm" aria-label={`Comparar ${s.brand} ${s.name}`}>
+                            <Icon name="compare_arrows" size="none" />
+                            Comparar
+                          </Link>
+                        </div>
                       </div>
-                    )}
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-headline font-bold group-hover:text-primary-deep transition-colors">{s.brand} {s.name}</h3>
-                    <p className="text-xs text-text-ghost mb-3">{s.category} · {s.range} km</p>
-                    <p className="font-headline font-black text-lg text-primary-deep">{formatCLP(s.discountPrice)}</p>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
+                    </article>
+                  );
+                })}
+              </div>
+            </>
+          )}
 
-      {/* ─── Final CTA ────────────────────────────────────────────────── */}
-      <section className="py-14 bg-surface border-t border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <div className="bg-black rounded-2xl p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className={cn("soft-block cta-row", hasSimilar && "mt-[var(--section-y)]")}>
             <div>
-              <p className="text-primary text-xs uppercase tracking-widest font-bold mb-2">¿Listo para ahorrar?</p>
-              <h2 className="text-white font-headline font-black text-2xl md:text-3xl tracking-tight">
-                {car.isHotDeal ? `Obtén la mejor oferta del ${car.brand} ${car.name}` : `¿Te interesa el ${car.brand} ${car.name}?`}
-              </h2>
-              <p className="text-white/50 text-sm mt-1">
-                {car.isHotDeal && savingsPct > 0
-                  ? `Negociamos por ti. Ahorras hasta ${formatCLP(totalBonus)} sobre precio lista.`
-                  : "Consulta disponibilidad, financiamiento y los mejores precios del mercado."}
-              </p>
+              <h2 className="t-h2" id="pdp-cta-t">¿No sabes si el {car.name} es para ti?</h2>
+              <p>Te asesoramos por WhatsApp según tu uso, tus kilómetros y tu presupuesto, y lo comparamos con otras opciones del catálogo.</p>
             </div>
-            <OfferCta carSlug={car.slug} model={`${car.brand} ${car.name}`} source="pdp" className="flex-shrink-0 inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-black px-8 py-4 rounded-xl transition-colors text-sm whitespace-nowrap">
-              Quiero mi oferta
-            </OfferCta>
+            <div className="cta-row__actions">
+              <Link href="/asesoria" className="btn btn--primary btn--lg">
+                Quiero asesoría por {ASESORIA_PRICE}
+                <Icon name="arrow_forward" size="none" className="arrow" />
+              </Link>
+              <OfferCta carSlug={car.slug} model={model} source="pdp" className="btn btn--secondary btn--lg">
+                Únete a la waitlist
+              </OfferCta>
+            </div>
           </div>
         </div>
       </section>
-    </>
+
+      {/* ─── Barra fija inferior ────────────────────────────────────────── */}
+      <div className={cn("sticky-bar sticky-bar--buy", stickyVisible && "is-visible")} aria-hidden={!stickyVisible}>
+        <div className="wrap sticky-bar__in">
+          <div className="sticky-bar__car">
+            {galleryImages[0] && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={sanityImg(galleryImages[0], { w: 160, h: 100, fit: "crop" })} alt="" loading="lazy" decoding="async" />
+            )}
+            <div className="min-w-0">
+              <strong className="truncate">{model}</strong>
+              {verLabel && <span>{verLabel}</span>}
+            </div>
+          </div>
+          <div className="sticky-bar__actions">
+            <span className="sticky-bar__price">{formatCLP(price.final)}</span>
+            <Link href={compareHref} className="btn btn--secondary">
+              Comparar
+            </Link>
+            <OfferCta carSlug={car.slug} model={model} source="pdp" className="btn btn--primary">
+              Quiero esta oferta
+            </OfferCta>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

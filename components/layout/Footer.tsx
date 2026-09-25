@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
+import { Logo } from "@/components/ui/Logo";
 
 // ─── Social SVG icons (brand-accurate) ───────────────────────────────────────
 function IconInstagram() {
@@ -102,37 +103,34 @@ function NewsletterForm() {
 
   if (status === "success") {
     return (
-      <div className="flex items-center gap-2 text-primary text-sm font-medium">
-        <Icon name="check_circle" className="text-[18px]" />
-        ¡Gracias! Te avisaremos de las mejores ofertas.
-      </div>
+      <p className="flex items-center gap-2 text-[15px] text-ink">
+        <Icon name="check_circle" className="text-[18px] text-link" />
+        Listo. Te escribiremos con novedades.
+      </p>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-2">
+    <form onSubmit={handleSubmit} className="grid gap-2">
       {/* min-w-0 en el input: sin eso su min-width:auto impide que se achique y
           empuja el botón fuera del contenedor en pantallas angostas. */}
       <div className="flex w-full gap-2">
+        <label htmlFor="footer-newsletter" className="sr-only">Email para el newsletter</label>
         <input
+          id="footer-newsletter"
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="tu@email.com"
           required
-          aria-label="Email para newsletter"
-          className="bg-white/10 border border-white/20 rounded-lg text-sm px-4 py-2.5 min-w-0 flex-1 focus:border-primary focus:outline-none text-white placeholder:text-white/40 transition-colors"
+          className="input min-w-0 flex-1"
         />
-        <button
-          type="submit"
-          disabled={status === "loading"}
-          className="bg-primary hover:bg-primary-dark text-black shrink-0 px-4 py-2.5 rounded-lg font-bold text-sm transition-colors disabled:opacity-60 whitespace-nowrap"
-        >
-          {status === "loading" ? "..." : "Suscribir"}
+        <button type="submit" disabled={status === "loading"} className="btn btn--primary shrink-0">
+          {status === "loading" ? "Enviando…" : "Suscribir"}
         </button>
       </div>
       {status === "error" && (
-        <p className="text-red-400 text-xs">Error al suscribir. Intenta de nuevo.</p>
+        <p className="field__error">No pudimos suscribirte. Intenta de nuevo.</p>
       )}
     </form>
   );
@@ -141,37 +139,23 @@ function NewsletterForm() {
 // ─── Footer ───────────────────────────────────────────────────────────────────
 export function Footer() {
   return (
-    <footer className="bg-black text-white pt-20 pb-6" role="contentinfo">
-      <div className="max-w-7xl mx-auto px-4 md:px-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-12 mb-16 pb-16 border-b border-white/10">
-
-          {/* Brand */}
-          <div>
-            <Link
-              href="/"
-              className="inline-block mb-6"
-              aria-label="Electrificarte - Inicio"
-            >
-              <img
-                src="/logos-electrificarte/logo-elec-sin auto.webp"
-                alt="Electrificarte"
-                className="h-8 w-auto object-contain brightness-0 invert"
-                loading="lazy"
-                decoding="async"
-              />
+    <footer className="footer theme-dark" role="contentinfo">
+      <div className="wrap">
+        <div className="footer__top">
+          <div className="footer__brand">
+            <Link href="/" aria-label="Electrificarte, inicio" className="inline-block">
+              <Logo variant="lockup" className="w-[232px]" />
             </Link>
-            <p className="text-white/50 text-sm mb-6 leading-relaxed">
-              Negociamos por ti el mejor precio en autos electrificados de Chile,
-              con nuestra red de vendedores oficiales.
+            <p className="footer__about">
+              Te ayudamos a elegir y comprar tu auto electrificado en Chile, con una red de vendedores oficiales.
             </p>
-            <div className="flex gap-3">
+            <div className="socials">
               {socialLinks.map((s) => (
                 <a
                   key={s.label}
                   href={s.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-10 h-10 border border-white/20 rounded-full flex items-center justify-center text-white/70 hover:bg-primary hover:text-black hover:border-primary transition-all duration-200"
                   aria-label={`Electrificarte en ${s.label}`}
                 >
                   {s.icon}
@@ -180,31 +164,16 @@ export function Footer() {
             </div>
           </div>
 
-          {/* Nav sections */}
           {footerSections.map((section) => (
-            <div key={section.title}>
-              <h3 className="font-bold uppercase text-[10px] tracking-widest mb-6 text-white/40">
-                {section.title}
-              </h3>
-              <ul className="space-y-3.5">
+            <div key={section.title} className="footer__col">
+              <h3>{section.title}</h3>
+              <ul>
                 {section.links.map((link) => (
                   <li key={link.label}>
                     {link.external ? (
-                      <a
-                        href={link.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm text-white/60 font-medium hover:text-primary transition-colors"
-                      >
-                        {link.label}
-                      </a>
+                      <a href={link.href} target="_blank" rel="noopener noreferrer">{link.label}</a>
                     ) : (
-                      <Link
-                        href={link.href}
-                        className="text-sm text-white/60 font-medium hover:text-primary transition-colors"
-                      >
-                        {link.label}
-                      </Link>
+                      <Link href={link.href}>{link.label}</Link>
                     )}
                   </li>
                 ))}
@@ -212,25 +181,20 @@ export function Footer() {
             </div>
           ))}
 
-          {/* Newsletter */}
-          <div>
-            <h3 className="font-bold uppercase text-[10px] tracking-widest mb-6 text-white/40">
-              Newsletter
-            </h3>
-            <p className="text-xs text-white/50 mb-4 leading-relaxed">
-              Recibe las mejores ofertas y novedades del mundo electrificado en Chile.
-            </p>
+          <div className="newsletter">
+            <h3>Newsletter</h3>
+            <p>Recibe ofertas y novedades del mundo electrificado en Chile.</p>
             <NewsletterForm />
           </div>
-
         </div>
 
-        <p className="text-center text-[10px] text-white/30 uppercase tracking-widest">
-          Electrificarte S.P.A. &copy; {new Date().getFullYear()} · Santiago, Chile ·{" "}
-          <Link href="/terminos" className="hover:text-white/50 transition-colors">Términos</Link>
-          {" · "}
-          <Link href="/privacidad" className="hover:text-white/50 transition-colors">Privacidad</Link>
-        </p>
+        <div className="footer__bottom">
+          <p>Electrificarte S.P.A. © {new Date().getFullYear()}, Santiago de Chile</p>
+          <nav aria-label="Legal">
+            <Link href="/terminos">Términos</Link>
+            <Link href="/privacidad">Privacidad</Link>
+          </nav>
+        </div>
       </div>
     </footer>
   );

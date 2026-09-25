@@ -157,13 +157,19 @@ La suscripción de vendedores ($12.990/mes) sigue la misma lógica general de n8
 corre en una plataforma aparte — fuera de este repo.
 
 ## Diseño — regla dura
-No modificar la línea de diseño existente (tipografías, colores, espaciados — ver `DESIGN.md`)
-sin autorización explícita. Sí se pueden introducir componentes UI nuevos que aporten valor
-visual, siempre dentro de esa misma línea (Space Grotesk / Inter, cyan `#00E5E5` como acento
-primario, fondos negro/blanco, `rounded-xl`/`rounded-2xl`, `py-24`).
+Rige el **sistema de diseño v1** (septiembre 2026): ver `DESIGN.md` y la guía de marca
+`docs/design/electrificarte-brand-kit.html`. No modificar tipografías, colores ni espaciados sin
+autorización explícita. Sí se pueden introducir componentes UI nuevos, siempre con los tokens y
+clases del sistema (`app/globals.css`, `app/styles/*.css`):
+- Solo colores semánticos (`bg-canvas`, `text-ink-2`, `border-line`, `bg-accent`…). Bandas
+  oscuras con `.theme-dark`, nunca con colores fijos.
+- Prohibido: glow, `backdrop-blur`, sombras decorativas, fondos/bordes translúcidos
+  (`white/10`, `black/50`…), eyebrows en mayúscula, texto bajo 12 px, punto medio `·`,
+  botones/chips en píldora, `rounded-xl`/`2xl`.
+- Botones `.btn`, chips `.chip`, campos `.field`/`.input`, secciones `.section` + `.wrap`.
 
 ## Stack
-- Next.js 16.2.2 App Router · React 19.2.4 · Tailwind v4 · Framer Motion 12 · Sanity v5 · TypeScript
+- Next.js 16.2.6 App Router · React 19.2.4 · Tailwind v4 · Framer Motion 12 · Sanity v5 · TypeScript
 - Node.js 22
 
 ## Sanity
@@ -171,15 +177,15 @@ primario, fondos negro/blanco, `rounded-xl`/`rounded-2xl`, `py-24`).
 - Studio en `/studio`
 - Datos: ~120 autos · 49 marcas · logos subidos para 39 marcas
 
-## Colores (Tailwind custom tokens)
-- `primary` = `#00E5E5` (cyan)
-- `primary-deep` = `#006A61`
-- `amber` = `#F59E0B`
-- Fondos hero/secciones: negro (`bg-black`)
+## Colores (detalle en `DESIGN.md`)
+- Laguna `#1d605b` (acento en claro: primario, enlaces, foco) y Glaciar `#caefea` (acento en
+  oscuro y bloque destacado). Son los **únicos** dos colores de marca.
+- Neutros fríos: Tinta `#0f1716`, Grafito `#495251`, Piedra `#687170`, Línea `#dfe4e4`,
+  Niebla `#f2f7f6`, Papel `#fff`. Errores: Alerta `#ba362b`.
 
 ## Tipografía
-- Headline: Space Grotesk (`font-headline`)
-- Body: Inter
+- Titulares (20 px o más): Cabinet Grotesk 700/800 (`font-display`, `.t-h1`…)
+- Todo lo demás, cifras y precios: Switzer (`font-sans`, por defecto)
 
 ## Rutas públicas
 `/` · `/marcas` · `/marcas/[slug]` · `/auto/[slug]` · `/tipo/[slug]` · `/electrico/[slug]` · `/coleccion/[slug]` · `/comparador` · `/contacto` · `/blog` · `/blog/[slug]` · `/studio`
@@ -237,6 +243,10 @@ Cosas que costaron horas y no son obvias leyendo el código.
 - **Para probar flujos largos en local usar `npx next dev --webpack`.** Con Turbopack los
   trabajos en `after()` quedan colgados sin terminar y sin error.
 - **El log del server local bufferea** — verificar el resultado real (Sanity/Redis), no el log.
+- **Las fuentes de texto no están en el repo.** Cabinet Grotesk y Switzer (Fontshare, licencia
+  ITF FFL) no se pueden redistribuir en un repo público: `scripts/fetch-fonts.mjs` las baja a
+  `app/fonts/fontshare/` (gitignored) en `predev`/`prebuild`. Si `api.fontshare.com` no
+  responde, el build falla al no encontrar los `.woff2`: reintentar o copiarlas a mano.
 - **La fuente de íconos es un subset generado.** Al agregar un ícono (en código o en Sanity,
   que son campos de texto libre) hay que regenerar o no se dibuja:
   `npx tsx --env-file=.env.local scripts/subset-icon-font.ts`

@@ -1,13 +1,15 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import Link from "next/link";
-import { m } from "framer-motion";
-import { formatCLP } from "@/lib/utils";
+import { formatCLP, carStats, cleanSeparators, cn, sentenceCase } from "@/lib/utils";
+import { sanityImg } from "@/lib/sanityImage";
+import { LoadMore } from "@/components/filters/PlpFilters";
 import { CarCard } from "@/components/car/CarCard";
+import { electricTypeLabel } from "@/components/car/ElectricTypeBadge";
 import { Icon } from "@/components/ui/Icon";
 import { OfferCta } from "@/components/waitlist/OfferCta";
-import { HOT_DEALS_ENABLED } from "@/lib/products";
+import { ASESORIA_PRICE, HOT_DEALS_ENABLED } from "@/lib/products";
 
 const PAGE_SIZE = 9;
 
@@ -54,14 +56,14 @@ interface Props {
   cars: CarData[];
 }
 
-const ACCENT = "#00E5E5";
+// Orden de las tecnologías en las cifras (mismo criterio que el hero del home).
+const TECH_ORDER = ["EV", "PHEV", "HEV", "MHEV", "REEV"];
 
-const DEFAULT_HIGHLIGHTS: Highlight[] = [
-  { icon: "person_check",    title: "Ideal para ti si…",          description: "Buscas un auto electrificado con el mejor precio negociado del mercado chileno." },
-  { icon: "family_restroom", title: "Perfecto para familias",     description: "Espacio, seguridad y tecnología para que todos viajen cómodos." },
-  { icon: "savings",         title: "La mejor opción si ahorrar importa", description: "Precio lista vs. precio Electrificarte: diferencia promedio de $4.200.000." },
-  { icon: "star",            title: "Lo elegirías porque…",       description: "Combina autonomía, equipamiento y precio mejor que cualquier alternativa." },
-];
+/** "EV, PHEV y HEV". */
+function joinList(items: string[]): string {
+  if (items.length <= 1) return items.join("");
+  return `${items.slice(0, -1).join(", ")} y ${items[items.length - 1]}`;
+}
 
 export default function ColeccionPageContent({ col, cars }: Props) {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
@@ -71,293 +73,241 @@ export default function ColeccionPageContent({ col, cars }: Props) {
   const hotDeals    = useMemo(() => (HOT_DEALS_ENABLED ? cars.filter(c => c.isHotDeal) : []), [cars]);
   const rest        = useMemo(() => (HOT_DEALS_ENABLED ? cars.filter(c => !c.isHotDeal) : cars), [cars]);
   const visibleRest = rest.slice(0, visibleCount);
-  const hasMore     = visibleCount < rest.length;
-  const minPrice    = cars.length > 0 ? Math.min(...cars.map(c => c.discountPrice ?? c.basePrice)) : 0;
 
-  const highlights = (col.highlights && col.highlights.length > 0)
-    ? col.highlights
-    : DEFAULT_HIGHLIGHTS;
+  // Destacados: solo los que vienen de Sanity. Sin datos no hay franja (nada de textos
+  // genéricos ni cifras inventadas).
+  const highlights = col.highlights ?? [];
+
+  // ─── Copy y cifras (se calculan del catálogo, nunca a mano) ────────────────
+  const title = sentenceCase(col.title);
+  const n = cars.length;
+  const cheapest = cars
+    .map((c) => ({ eff: c.discountPrice ?? c.basePrice, base: c.basePrice }))
+    .filter((p) => p.eff > 0)
+    .reduce<{ eff: number; base: number } | null>((min, p) => (!min || p.eff < min.eff ? p : min), null);
+  const brandCount = new Set(cars.map((c) => c.brand?.slug || c.brand?.name).filter(Boolean)).size;
+  const techs = Array.from(new Set(cars.map((c) => electricTypeLabel(c.electricType?.tag)).filter(Boolean) as string[]))
+    .sort((a, b) => (TECH_ORDER.indexOf(a) + 1 || 99) - (TECH_ORDER.indexOf(b) + 1 || 99));
+  const kpis = [
+    n > 0 && { num: String(n), label: n === 1 ? "modelo en la colección" : "modelos en la colección" },
+    cheapest && { num: formatCLP(cheapest.eff), label: cheapest.eff < cheapest.base ? "precio más bajo con descuento" : "precio de lista más bajo" },
+    brandCount > 0 && { num: String(brandCount), label: brandCount === 1 ? "marca en la colección" : "marcas en la colección" },
+    techs.length > 0 && { num: String(techs.length), label: `${techs.length === 1 ? "tecnología" : "tecnologías"}: ${joinList(techs)}` },
+  ].filter(Boolean) as { num: string; label: string }[];
+  const ctaTitle = n > 1 ? `¿No sabes cuál de los ${n} te conviene?` : n === 1 ? "¿No sabes si te conviene?" : "¿No sabes qué auto te conviene?";
 
   return (
-    <>
-      {/* ─── Hero ─────────────────────────────────────────────────────── */}
-      <section className="relative bg-black overflow-hidden flex flex-col" style={{ minHeight: "100svh" }}>
-        {/* Background image */}
-        {col.heroImageUrl ? (
-          <img
-            src={col.heroImageUrl}
-            alt={col.title}
-            className="absolute inset-0 w-full h-full object-cover object-center"
-          />
-        ) : (
-          <div
-            className="absolute inset-0 opacity-[0.03] pointer-events-none"
-            style={{
-              backgroundImage:
-                "linear-gradient(rgba(255,255,255,.1) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.1) 1px,transparent 1px)",
-              backgroundSize: "60px 60px",
-            }}
-          />
-        )}
-
-        {/* Gradient overlays */}
-        <div className="absolute inset-0" style={{ background: "linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,0.82) 45%, rgba(0,0,0,0.30) 100%)" }} />
-        <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.70) 0%, transparent 55%, rgba(0,0,0,0.45) 100%)" }} />
-
-        {/* Glow accent */}
-        <div
-          className="absolute bottom-0 left-0 w-[500px] h-[300px] rounded-full blur-[120px] pointer-events-none"
-          style={{ backgroundColor: ACCENT, opacity: 0.15 }}
-        />
-
-        <div className="relative z-10 flex flex-col flex-1 max-w-7xl mx-auto px-4 md:px-8 w-full" style={{ minHeight: "100svh" }}>
-          {/* Breadcrumb */}
-          <nav className="flex items-center gap-2 text-white/30 text-xs pt-24 mb-auto">
-            <Link href="/" className="hover:text-white/60 transition-colors">Inicio</Link>
-            <span>/</span>
-            <Link href="/#colecciones" className="hover:text-white/60 transition-colors">Colecciones</Link>
-            <span>/</span>
-            <span className="text-white/60">{col.title}</span>
+    <div className="page">
+      {/* ─── Encabezado ──────────────────────────────────────────────── */}
+      <section className="page-head">
+        <div className="wrap">
+          <nav className="crumbs" aria-label="Migas de pan">
+            <Link href="/">Inicio</Link>
+            <span aria-hidden="true">/</span>
+            <span>Colecciones</span>
+            <span aria-hidden="true">/</span>
+            <span aria-current="page">{title}</span>
           </nav>
 
-          {/* Content — anchored to bottom */}
-          <div className="pb-16 max-w-2xl">
-            {col.badge && (
-              <span className="inline-block bg-primary text-black text-[10px] font-extrabold uppercase tracking-widest px-3 py-1 rounded-full mb-5">
-                {col.badge}
-              </span>
-            )}
-
-            <div className="flex flex-wrap items-center gap-2 mb-5">
-              {minPrice > 0 && (
-                <div
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full"
-                  style={{ backgroundColor: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.10)", backdropFilter: "blur(4px)" }}
-                >
-                  <Icon name="sell" className="text-primary text-[14px]" />
-                  <span className="text-xs font-semibold" style={{ color: "rgba(255,255,255,0.70)" }}>Desde {formatCLP(minPrice)}</span>
+          <div className={cn("page-head__grid", !col.heroImageUrl && "grid-cols-1")}>
+            <div>
+              {col.badge && (
+                <div className="head-chips">
+                  <span className="chip">{sentenceCase(col.badge)}</span>
                 </div>
               )}
-              {hotDeals.length > 0 && (
-                <div
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full"
-                  style={{ backgroundColor: "rgba(245,158,11,0.10)", border: "1px solid rgba(245,158,11,0.30)", backdropFilter: "blur(4px)" }}
-                >
-                  <Icon name="local_fire_department" className="text-amber text-[14px]" />
-                  <span className="text-amber text-xs font-bold">{hotDeals.length} Hot Deal{hotDeals.length !== 1 ? "s" : ""}</span>
-                </div>
-              )}
+              <h1 className="t-h1">{title}</h1>
+              {col.subtitle && <p className="t-lead">{col.subtitle}</p>}
+              {col.description && <p className="page-head__desc">{col.description}</p>}
+              <div className="page-head__actions">
+                {n > 0 && (
+                  <a className="btn btn--primary btn--lg" href={`#catalogo-${col.slug}`}>
+                    {n === 1 ? "Ver el modelo" : `Ver los ${n} modelos`}
+                    <Icon name="expand_more" size="none" />
+                  </a>
+                )}
+                <Link className="btn btn--quiet" href="/asesoria">
+                  ¿No sabes cuál? Asesoría por {ASESORIA_PRICE}
+                </Link>
+              </div>
             </div>
 
-            <h1 className="text-5xl md:text-7xl font-headline font-black text-white tracking-tighter leading-[0.9] mb-4">
-              {col.title}<span className="text-primary">.</span>
-            </h1>
-
-            {col.subtitle && (
-              <p className="font-headline text-xl md:text-2xl font-bold text-primary mb-4">
-                {col.subtitle}
-              </p>
+            {col.heroImageUrl && (
+              <div className="aspect-[16/10] overflow-hidden rounded-card bg-canvas-2">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={sanityImg(col.heroImageUrl, { w: 1200 })}
+                  alt=""
+                  className="h-full w-full object-cover"
+                  fetchPriority="high"
+                  decoding="async"
+                />
+              </div>
             )}
-
-            {col.description && (
-              <p className="text-white/60 text-base leading-relaxed mb-8">
-                {col.description}
-              </p>
-            )}
-
-            <div className="flex flex-wrap gap-x-6 gap-y-2 mb-8">
-              <div className="flex items-center gap-2 text-white/40 text-sm">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
-                {cars.length} modelo{cars.length !== 1 ? "s" : ""} disponible{cars.length !== 1 ? "s" : ""}
-              </div>
-              <div className="flex items-center gap-2 text-white/40 text-sm">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
-                Precios negociados al mejor valor
-              </div>
-              <div className="flex items-center gap-2 text-white/40 text-sm">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
-                Sin costo ni compromiso
-              </div>
-            </div>
-
-            <div className="flex flex-wrap gap-3">
-              <OfferCta
-                source="plp"
-                className="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-6 py-3 rounded-xl transition-all text-sm shadow-[0_4px_20px_rgba(0,229,229,0.30)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]"
-              >
-                Quiero mi oferta
-              </OfferCta>
-              <a
-                href={`#catalogo-${col.slug}`}
-                className="inline-flex items-center gap-2 text-white font-medium px-6 py-3 rounded-xl transition-all text-sm"
-                style={{ border: "1px solid rgba(255,255,255,0.20)" }}
-              >
-                Ver catálogo
-              </a>
-            </div>
           </div>
+
+          {kpis.length > 0 && (
+            <div className="kpis" style={{ "--kpis": kpis.length } as React.CSSProperties}>
+              {kpis.map((k) => (
+                <div className="kpi" key={k.label}>
+                  <p className="kpi__num">{k.num}</p>
+                  <p className="kpi__label">{k.label}</p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
-      {/* ─── Highlights ───────────────────────────────────────────────── */}
-      <section className="py-10 bg-surface border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {highlights.map((h, i) => (
-              <m.div
-                key={h.title}
-                initial={{ opacity: 0, y: 12 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.35, delay: i * 0.07 }}
-                className="flex flex-col items-start gap-3 bg-white border border-gray-100 rounded-2xl p-5"
-              >
-                <div
-                  className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: `${ACCENT}18` }}
-                >
-                  <Icon name={h.icon} className="text-[20px]" style={{ color: ACCENT }} />
+      {/* ─── Destacados de la colección (solo si Sanity los trae) ────── */}
+      {highlights.length > 0 && (
+        <section className="section section--subtle section--tight" aria-label="Destacados de la colección">
+          <div className="wrap">
+            <div className="how4">
+              {highlights.map((h) => (
+                <div key={h.title}>
+                  <Icon name={h.icon} size="none" />
+                  <h3>{h.title}</h3>
+                  <p>{h.description}</p>
                 </div>
-                <div>
-                  <p className="font-headline font-bold text-sm leading-snug mb-1 text-text-main">{h.title}</p>
-                  <p className="text-text-ghost text-[12px] leading-snug">{h.description}</p>
-                </div>
-              </m.div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
-      {/* ─── Catálogo ─────────────────────────────────────────────────── */}
-      <section id={`catalogo-${col.slug}`} className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 md:px-8">
+      {/* ─── Ofertas destacadas (detrás de HOT_DEALS_ENABLED) ────────── */}
+      {hotDeals.length > 0 && (
+        <section className="section theme-dark" aria-labelledby="deals-t">
+          <div className="wrap">
+            <div className="deal__head">
+              <div className="deal__eyebrow">
+                <h2 className="chip chip--soft" id="deals-t">Ofertas destacadas de la colección</h2>
+              </div>
+            </div>
+            <div className="deals2">
+              {hotDeals.map((car) => {
+                const brandName = car.brand?.name ?? "";
+                const model = `${brandName} ${cleanSeparators(car.name)}`.trim();
+                const hasDiscount = car.discountPrice > 0 && car.discountPrice < car.basePrice;
+                const first = carStats({ battery: car.batteryCapacity, range: car.range, maxVersionRange: car.maxVersionRange, electricRangeKm: car.electricRangeKm, fuelConsumption: car.fuelConsumption, rendimientoElectrico: car.rendimientoElectrico, electricTypeTag: car.electricType?.tag, power: car.power })[0];
+                const specs = [
+                  first && `${first.value} de ${first.label.toLowerCase()}`,
+                  car.power > 0 && `${car.power} CV`,
+                ].filter(Boolean).join(", ");
+                return (
+                  <article key={car._id} className="deal-card">
+                    <div className="deal-card__media">
+                      {car.imageUrl && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={sanityImg(car.imageUrl, { w: 800 })} alt="" loading="lazy" decoding="async" />
+                      )}
+                    </div>
+                    <div className="deal-card__body">
+                      <div>
+                        <p className="deal__brand">{brandName}</p>
+                        <h3 className="deal-card__name">{cleanSeparators(car.name)}</h3>
+                      </div>
+                      <dl className="deal__prices">
+                        {hasDiscount ? (
+                          <>
+                            <div><dt>Precio de lista</dt><dd className="price-was">{formatCLP(car.basePrice)}</dd></div>
+                            <div><dt>Con bonos</dt><dd className="price price--lg">{formatCLP(car.discountPrice)}</dd></div>
+                            <div><dt>Ahorras</dt><dd className="save">{formatCLP(car.basePrice - car.discountPrice)}</dd></div>
+                          </>
+                        ) : (
+                          <div><dt>Precio de lista</dt><dd className="price price--lg">{formatCLP(car.basePrice)}</dd></div>
+                        )}
+                      </dl>
+                      {specs && <p className="t-small">{specs}</p>}
+                      <div className="deal-card__actions">
+                        <OfferCta carSlug={car.slug} model={model} source="plp" className="btn btn--primary">
+                          Quiero esta oferta
+                        </OfferCta>
+                        <Link href={`/auto/${car.slug}`} className="btn btn--secondary">
+                          Ver auto
+                        </Link>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ─── Catálogo + los dos caminos ──────────────────────────────── */}
+      <section className="section" id={`catalogo-${col.slug}`} aria-labelledby="cat-t">
+        <div className="wrap">
+          <div className="section-head mb-6">
+            <div className="section-head__text">
+              <h2 className="t-h2" id="cat-t">Todos los modelos</h2>
+            </div>
+          </div>
 
           {cars.length === 0 ? (
-            <div className="text-center py-24">
-              <Icon name="electric_car" className="text-[64px] text-gray-200" />
-              <h2 className="text-xl font-headline font-bold text-text-main mt-4 mb-2">
-                Sin autos en esta colección todavía
-              </h2>
-              <p className="text-text-muted text-sm mb-8">Estamos actualizando el catálogo. Vuelve pronto.</p>
-              <Link
-                href="/"
-                className="inline-flex items-center gap-2 bg-primary text-black font-bold px-6 py-3 rounded-xl transition-all hover:bg-primary-dark shadow-[0_4px_20px_rgba(0,229,229,0.30)]"
-              >
-                <Icon name="arrow_back" className="text-[18px]" />
+            <div className="empty">
+              <p>Sin autos en esta colección todavía. Estamos actualizando el catálogo. Vuelve pronto.</p>
+              <Link href="/" className="btn btn--secondary mt-6">
                 Volver al inicio
               </Link>
             </div>
           ) : (
             <>
-              {/* Hot Deals */}
-              {hotDeals.length > 0 && (
-                <div className="mb-12">
-                  <div className="flex items-center gap-3 mb-6">
-                    <Icon name="local_fire_department" className="text-amber text-[22px]" />
-                    <h2 className="font-headline font-black text-xl uppercase tracking-tight">Hot Deals</h2>
-                    <span className="text-text-ghost text-sm">— precios especiales negociados</span>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {hotDeals.map((car, i) => (
-                      <CarCard
-                        key={car._id}
-                        name={car.name}
-                        brand={car.brand?.name ?? ""}
-                        brandLogo={car.brand?.logoUrl}
-                        slug={car.slug}
-                        image={car.imageUrl}
-                        category={car.vehicleType?.label ?? car.electricType?.tag}
-                        batteryCapacity={car.batteryCapacity}
-                        range={car.range}
-                        maxVersionRange={car.maxVersionRange}
-                        electricRangeKm={car.electricRangeKm}
-                        fuelConsumption={car.fuelConsumption}
-                        rendimientoElectrico={car.rendimientoElectrico}
-                        electricTypeTag={car.electricType?.tag}
-                        power={car.power}
-                        basePrice={car.basePrice}
-                        discountPrice={car.discountPrice}
-                        isNew={car.isNew}
-                        index={i}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Rest */}
-              {rest.length > 0 && (
-                <div>
-                  {hotDeals.length > 0 && (
-                    <h2 className="font-headline font-black text-xl uppercase tracking-tight mb-6">
-                      Todos los modelos
-                    </h2>
-                  )}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {visibleRest.map((car, i) => (
-                      <CarCard
-                        key={car._id}
-                        name={car.name}
-                        brand={car.brand?.name ?? ""}
-                        brandLogo={car.brand?.logoUrl}
-                        slug={car.slug}
-                        image={car.imageUrl}
-                        category={car.vehicleType?.label ?? car.electricType?.tag}
-                        batteryCapacity={car.batteryCapacity}
-                        range={car.range}
-                        maxVersionRange={car.maxVersionRange}
-                        electricRangeKm={car.electricRangeKm}
-                        fuelConsumption={car.fuelConsumption}
-                        rendimientoElectrico={car.rendimientoElectrico}
-                        electricTypeTag={car.electricType?.tag}
-                        power={car.power}
-                        basePrice={car.basePrice}
-                        discountPrice={car.discountPrice}
-                        isNew={car.isNew}
-                        index={i}
-                      />
-                    ))}
-                  </div>
-                  {hasMore && (
-                    <div className="text-center mt-10">
-                      <button
-                        onClick={() => setVisibleCount(v => v + PAGE_SIZE)}
-                        className="inline-flex items-center gap-2 border border-gray-200 hover:border-primary/40 text-text-main hover:text-primary font-semibold px-8 py-3 rounded-xl transition-all"
-                      >
-                        Ver más autos
-                        <Icon name="expand_more" className="text-[18px]" />
-                      </button>
-                    </div>
-                  )}
-                </div>
+              <div className="results">
+                <p className="results__count">
+                  <strong>{rest.length}</strong> {rest.length === 1 ? "auto" : "autos"}
+                </p>
+              </div>
+              <div className="cars-grid">
+                {visibleRest.map((car, i) => (
+                  <CarCard
+                    key={car._id}
+                    name={cleanSeparators(car.name)}
+                    brand={car.brand?.name ?? ""}
+                    brandLogo={car.brand?.logoUrl}
+                    slug={car.slug}
+                    image={car.imageUrl}
+                    category={car.vehicleType?.label ?? car.electricType?.tag}
+                    batteryCapacity={car.batteryCapacity}
+                    range={car.range}
+                    maxVersionRange={car.maxVersionRange}
+                    electricRangeKm={car.electricRangeKm}
+                    fuelConsumption={car.fuelConsumption}
+                    rendimientoElectrico={car.rendimientoElectrico}
+                    electricTypeTag={car.electricType?.tag}
+                    power={car.power}
+                    basePrice={car.basePrice}
+                    discountPrice={car.discountPrice}
+                    isNew={car.isNew}
+                    index={i % PAGE_SIZE}
+                  />
+                ))}
+              </div>
+              {rest.length > PAGE_SIZE && (
+                <LoadMore shown={visibleRest.length} total={rest.length} onMore={() => setVisibleCount((v) => v + PAGE_SIZE)} />
               )}
             </>
           )}
-        </div>
-      </section>
 
-      {/* ─── Bottom CTA ───────────────────────────────────────────────── */}
-      <section className="py-14 bg-surface border-t border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <div className="bg-black rounded-2xl p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="soft-block cta-row mt-section">
             <div>
-              <p className="text-primary text-xs uppercase tracking-widest font-bold mb-2">¿Ya decidiste?</p>
-              <h2 className="text-white font-headline font-black text-2xl md:text-3xl tracking-tight">
-                Consigue el mejor precio en {col.title}
-              </h2>
-              <p className="text-white/50 text-sm mt-1">
-                Negociamos por ti con nuestra red exclusiva de vendedores oficiales en Chile.
-              </p>
+              <h2 className="t-h2">{ctaTitle}</h2>
+              <p>Te asesoramos por WhatsApp según tu uso, tus kilómetros y tu presupuesto, y comparamos contigo los modelos que calzan.</p>
             </div>
-            <OfferCta
-              source="plp"
-              className="flex-shrink-0 inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-black px-8 py-4 rounded-xl transition-all text-sm whitespace-nowrap shadow-[0_4px_20px_rgba(0,229,229,0.30)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]"
-            >
-              Quiero mi oferta
-            </OfferCta>
+            <div className="cta-row__actions">
+              <Link href="/asesoria" className="btn btn--primary btn--lg">
+                Quiero asesoría por {ASESORIA_PRICE}
+                <Icon name="arrow_forward" size="none" className="arrow" />
+              </Link>
+              <OfferCta source="plp" className="btn btn--secondary btn--lg">
+                Únete a la waitlist
+              </OfferCta>
+            </div>
           </div>
         </div>
       </section>
-    </>
+    </div>
   );
 }

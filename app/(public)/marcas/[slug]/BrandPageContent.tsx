@@ -1,16 +1,17 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback, useRef } from "react";
-import { m } from "framer-motion";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { formatCLP, DEFAULT_HOT_DEAL_LABEL } from "@/lib/utils";
-import { PlpFilters } from "@/components/filters/PlpFilters";
+import { formatCLP, cleanSeparators, cn, sentenceCase, DEFAULT_HOT_DEAL_LABEL } from "@/lib/utils";
+import { sanityImg } from "@/lib/sanityImage";
+import { PlpFilters, LoadMore } from "@/components/filters/PlpFilters";
 import { useCarFilters } from "@/hooks/useCarFilters";
 import type { FacetCar } from "@/lib/filters/types";
-import { ElectricTypeBadge } from "@/components/car/ElectricTypeBadge";
+import { CarCard } from "@/components/car/CarCard";
+import { electricTypeLabel } from "@/components/car/ElectricTypeBadge";
 import { Icon } from "@/components/ui/Icon";
 import { OfferCta } from "@/components/waitlist/OfferCta";
-import { HOT_DEALS_ENABLED } from "@/lib/products";
+import { ASESORIA_PRICE, HOT_DEALS_ENABLED } from "@/lib/products";
 
 // ─── Interfaces ───────────────────────────────────────────────────────────────
 
@@ -20,6 +21,7 @@ interface BrandCarData {
   basePrice: number;
   discountPrice: number;
   range: number;
+  /** Potencia formateada ("150 CV"). La numérica para la card va en `powerCv`. */
   power: string;
   traction: string;
   seats?: number | null;
@@ -33,6 +35,12 @@ interface BrandCarData {
   isHotDeal: boolean;
   isTopSeller?: boolean;
   imageUrl?: string;
+  batteryCapacity?: number | null;
+  powerCv?: number | null;
+  maxVersionRange?: number | null;
+  electricRangeKm?: number | null;
+  fuelConsumption?: number | null;
+  rendimientoElectrico?: number | null;
   specs: { battery: string; charge0to80: string; topSpeed: string };
 }
 
@@ -95,8 +103,10 @@ export interface BrandData {
   description: string;
   heroTagline?: string;
   logoLetter: string;
+  /** Ya no se usa: el sistema v1 no tiene un color por marca. */
   logoColor: string;
   logoUrl?: string;
+  /** Ya no se usa: el sistema v1 no tiene un color por marca. */
   accentColor: string;
   stats: { label: string; value: string }[];
   heroFeaturedCar?: { name: string; slug: string; basePrice: number; discountPrice: number; imageUrl?: string } | null;
@@ -104,6 +114,30 @@ export interface BrandData {
   hotDeals: HotDealData[];
   videos: VideoData[];
   plpBanners?: PlpBannerData[];
+}
+
+// Orden de las tecnologías en las cifras (mismo criterio que el hero del home).
+const TECH_ORDER = ["EV", "PHEV", "HEV", "MHEV", "REEV"];
+
+/** "EV, PHEV y HEV". */
+function joinList(items: string[]): string {
+  if (items.length <= 1) return items.join("");
+  return `${items.slice(0, -1).join(", ")} y ${items[items.length - 1]}`;
+}
+
+/** URL de Sanity sin parámetros previos: el CDN respeta el primer `w` que encuentra. */
+function baseUrl(url?: string | null): string | undefined {
+  return url ? url.split("?")[0] : undefined;
+}
+
+/** Etiqueta de Sanity a mitad de frase: minúscula salvo siglas ("City Car" → "city car"). */
+function inlineLabel(label: string): string {
+  return sentenceCase(`x ${label}`).slice(2);
+}
+
+/** Sin guion largo como separador (regla de copy): se reemplaza por coma. */
+function noDash(text?: string | null): string {
+  return (text ?? "").replace(/\s*—\s*/g, ", ").trim();
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -117,47 +151,20 @@ const PAGE_SIZE = 9;
 
 export default function BrandPageContent({ slug, brand, hotDealUrgencyLabel }: BrandPageContentProps) {
   const urgencyLabel = hotDealUrgencyLabel ?? DEFAULT_HOT_DEAL_LABEL;
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   const filters = useCarFilters(brand.cars, { toFacet: brandToFacet, context: "marca" });
   const { filtered } = filters;
 
-  // Reinicia la paginación cuando cambian los filtros/orden.
-  useEffect(() => setVisibleCount(PAGE_SIZE), [filtered]);
-
+  // Paginación de 9 que vuelve a la primera página cuando cambian los filtros o el orden
+  // (`filtered` es memoizado: cambia de identidad solo cuando cambia el resultado).
+  const [page, setPage] = useState({ key: filtered, count: PAGE_SIZE });
+  const visibleCount = page.key === filtered ? page.count : PAGE_SIZE;
   const visibleCars = filtered.slice(0, visibleCount);
-  const hasMore = visibleCount < filtered.length;
 
-  // Hot deal carousel
   // Con HOT_DEALS_ENABLED=false no se arma la franja promocional de la marca.
   const hotDeals = HOT_DEALS_ENABLED ? brand.hotDeals : [];
-  const hotTrackRef  = useRef<HTMLDivElement>(null);
-  const hotPausedRef = useRef(false);
-  const [hotActiveIdx, setHotActiveIdx] = useState(0);
-  useEffect(() => {
-    const el = hotTrackRef.current;
-    if (!el) return;
-    function upd() {
-      setHotActiveIdx(Math.round(el!.scrollLeft / el!.clientWidth));
-    }
-    upd();
-    el.addEventListener("scroll", upd, { passive: true });
-    return () => el.removeEventListener("scroll", upd);
-  }, [hotDeals]);
 
-  useEffect(() => {
-    if (hotDeals.length < 2) return;
-    const id = setInterval(() => {
-      if (hotPausedRef.current) return;
-      const el = hotTrackRef.current;
-      if (!el) return;
-      const next = Math.round(el.scrollLeft / el.clientWidth) + 1;
-      el.scrollTo({ left: el.clientWidth * (next >= hotDeals.length ? 0 : next), behavior: "smooth" });
-    }, 7000);
-    return () => clearInterval(id);
-  }, [hotDeals.length]);
-
-  // Featured car for hero — Sanity override > hot deal > top seller > first with image
+  // Auto destacado del encabezado: Sanity (heroFeaturedCar) > hot deal > top seller > primero con foto
   const featuredCarForHero = useMemo(() => {
     if (brand.heroFeaturedCar) {
       const fc = brand.heroFeaturedCar;
@@ -182,451 +189,386 @@ export default function BrandPageContent({ slug, brand, hotDealUrgencyLabel }: B
     return () => clearInterval(t);
   }, [nextSlide, plpBanners.length]);
 
+  // ─── Copy y cifras (se calculan del catálogo, nunca a mano) ────────────────
+  const cars = brand.cars;
+  const n = cars.length;
+  const cheapest = cars
+    .map((c) => ({ eff: c.discountPrice ?? c.basePrice, base: c.basePrice }))
+    .filter((p) => p.eff > 0)
+    .reduce<{ eff: number; base: number } | null>((min, p) => (!min || p.eff < min.eff ? p : min), null);
+  const techs = Array.from(new Set(cars.map((c) => electricTypeLabel(c.electricTypeTag)).filter(Boolean) as string[]))
+    .sort((a, b) => (TECH_ORDER.indexOf(a) + 1 || 99) - (TECH_ORDER.indexOf(b) + 1 || 99));
+  const bodyTypes = Array.from(new Set(cars.map((c) => c.vehicleTypeLabel ?? "").filter(Boolean).map(inlineLabel)));
+  const kpis = [
+    n > 0 && { num: String(n), label: n === 1 ? "modelo en el catálogo" : "modelos en el catálogo" },
+    cheapest && { num: formatCLP(cheapest.eff), label: cheapest.eff < cheapest.base ? "precio más bajo con descuento" : "precio de lista más bajo" },
+    techs.length > 0 && { num: String(techs.length), label: `${techs.length === 1 ? "tecnología" : "tecnologías"}: ${joinList(techs)}` },
+    bodyTypes.length > 0 && { num: String(bodyTypes.length), label: `${bodyTypes.length === 1 ? "tipo de vehículo" : "tipos de vehículo"}: ${joinList(bodyTypes)}` },
+  ].filter(Boolean) as { num: string; label: string }[];
+
+  const featured = featuredCarForHero;
+  const featuredHasDiscount = !!featured && featured.discountPrice < featured.basePrice;
+  const tagline = noDash(brand.heroTagline);
+  const stats = brand.stats.slice(0, 4);
+  const hasVideos = brand.videos.length > 0;
+  const ctaTitle = n > 1 ? `¿No sabes cuál de los ${n} te conviene?` : n === 1 ? "¿No sabes si te conviene?" : "¿No sabes qué auto te conviene?";
 
   return (
-    <>
-      {/* ─── HERO ─────────────────────────────────────────────────── */}
-      <section className="bg-black pt-24 pb-20 md:pt-28 md:pb-28 overflow-hidden relative">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] rounded-full blur-[120px] opacity-20 pointer-events-none" style={{ backgroundColor: brand.logoColor }} />
-        <div className="max-w-7xl mx-auto px-4 md:px-8 relative z-10">
-          <nav className="flex items-center gap-2 text-white/30 text-xs mb-10">
-            <Link href="/" className="hover:text-white/60 transition-colors">Inicio</Link>
-            <span>/</span>
-            <Link href="/marcas" className="hover:text-white/60 transition-colors">Marcas</Link>
-            <span>/</span>
-            <span className="text-white/60">{brand.name}</span>
+    <div className="page">
+      {/* ─── Encabezado ──────────────────────────────────────────────── */}
+      <section className="page-head">
+        <div className="wrap">
+          <nav className="crumbs" aria-label="Migas de pan">
+            <Link href="/">Inicio</Link>
+            <span aria-hidden="true">/</span>
+            <Link href="/marcas">Marcas</Link>
+            <span aria-hidden="true">/</span>
+            <span aria-current="page">{brand.name}</span>
           </nav>
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <m.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
-              <div className="flex items-center gap-4 mb-6">
-                {brand.logoUrl ? (
-                  <img
-                    src={brand.logoUrl}
-                    alt={`${brand.name} logo`}
-                    className="h-12 sm:h-16 w-auto max-w-[120px] sm:max-w-[180px] object-contain flex-shrink-0" loading="lazy" decoding="async" />
-                ) : (
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center text-white text-2xl sm:text-3xl font-headline font-black shadow-lg flex-shrink-0" style={{ backgroundColor: brand.logoColor }}>
-                    {brand.logoLetter}
-                  </div>
-                )}
-                <p className="text-white/40 text-xs uppercase tracking-widest">{brand.country}{brand.foundedYear ? ` · Est. ${brand.foundedYear}` : ""}</p>
-              </div>
-              <h1 className="text-5xl md:text-7xl font-headline font-black text-white tracking-tighter leading-[0.9] mb-4">{brand.name}<span className="text-primary">.</span></h1>
-              {brand.heroTagline && <p className="text-white/40 text-sm uppercase tracking-widest mb-3">{brand.heroTagline}</p>}
-              <p className="text-white/60 text-base leading-relaxed max-w-md mb-8">{brand.description}</p>
-              <div className="flex flex-wrap gap-3">
-                <a href={`#autos-${slug}`} className="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-6 py-3 rounded-xl transition-all text-sm shadow-[0_4px_20px_rgba(0,229,229,0.30)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]">
-                  Ver modelos
-                  <Icon name="arrow_downward" className="text-[16px]" />
-                </a>
-              </div>
-            </m.div>
-            {featuredCarForHero && (
-              <m.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.15 }}>
 
-                {/* Label publicidad — encima de la card */}
-                {featuredCarForHero.isSponsored && (
-                  <p className="text-[11px] uppercase tracking-widest text-primary/70 font-semibold mb-3 text-right">
-                    · Publicidad
-                  </p>
-                )}
-
-                <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-white/5 hover:border-primary/40 transition-all duration-300 shadow-[0_8px_40px_rgba(0,0,0,0.4)]">
-
-                  {/* Imagen clicable */}
-                  <Link href={`/auto/${featuredCarForHero.slug}`} className="block group overflow-hidden">
-                    {featuredCarForHero.imageUrl ? (
-                      <img
-                        src={featuredCarForHero.imageUrl}
-                        alt={`${brand.name} ${featuredCarForHero.name}`}
-                        className="w-full aspect-[16/10] object-cover group-hover:scale-[1.03] transition-transform duration-500"
-                        fetchPriority="high"
-                        decoding="async"
-                      />
-                    ) : (
-                      <div className="w-full aspect-[16/10] flex items-center justify-center">
-                        <Icon name="electric_car" className="text-[80px] text-white/10" />
-                      </div>
-                    )}
-                  </Link>
-
-                  {/* Footer */}
-                  <div className="p-5 flex items-center justify-between gap-4">
-                    <div>
-                      {HOT_DEALS_ENABLED && featuredCarForHero.isHotDeal && (
-                        <span className="inline-block bg-amber text-black text-[9px] font-black uppercase tracking-wide px-2 py-0.5 rounded-full mb-1.5">HOT DEAL</span>
-                      )}
-                      <p className="text-white font-headline font-bold text-base leading-tight">{brand.name} {featuredCarForHero.name}</p>
-                      {featuredCarForHero.discountPrice < featuredCarForHero.basePrice && (
-                        <p className="text-white/40 text-xs line-through mt-0.5">{formatCLP(featuredCarForHero.basePrice)}</p>
-                      )}
-                      <p className="text-primary font-headline font-black text-xl">{formatCLP(featuredCarForHero.discountPrice < featuredCarForHero.basePrice ? featuredCarForHero.discountPrice : featuredCarForHero.basePrice)}</p>
-                    </div>
-                    <Link
-                      href={`/auto/${featuredCarForHero.slug}`}
-                      className="shrink-0 inline-flex items-center gap-1.5 bg-primary hover:bg-primary-dark text-black font-bold px-5 py-2.5 rounded-xl text-sm transition-all hover:scale-[1.02] active:scale-[0.99]"
-                    >
-                      Ver modelo
-                    </Link>
-                  </div>
-
+          <div className={cn("page-head__grid", !featured && "grid-cols-1")}>
+            <div>
+              {(brand.logoUrl || brand.country) && (
+                <div className="head-chips items-center">
+                  {brand.logoUrl && (
+                    // Logos de marca en gris: excepción registrada en la guía de marca.
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={sanityImg(brand.logoUrl, { w: 320, q: 90 })}
+                      alt={`Logo ${brand.name}`}
+                      className="mr-2 h-9 w-auto max-w-36 object-contain opacity-70 grayscale"
+                      decoding="async"
+                    />
+                  )}
+                  {brand.country && <span className="chip">{brand.country}</span>}
                 </div>
-              </m.div>
+              )}
+              <h1 className="t-h1">{brand.name}</h1>
+              {tagline && <p className="t-lead">{tagline}</p>}
+              {brand.description && <p className="page-head__desc">{brand.description}</p>}
+              <div className="page-head__actions">
+                {n > 0 && (
+                  <a className="btn btn--primary btn--lg" href={`#autos-${slug}`}>
+                    {n === 1 ? "Ver el modelo" : `Ver los ${n} modelos`}
+                    <Icon name="expand_more" size="none" />
+                  </a>
+                )}
+                <Link className="btn btn--quiet" href="/asesoria">
+                  ¿No sabes cuál? Asesoría por {ASESORIA_PRICE}
+                </Link>
+              </div>
+            </div>
+
+            {featured && (
+              <div>
+                {/* "Publicidad" solo cuando el auto lo eligió Sanity (heroFeaturedCar). */}
+                {featured.isSponsored && (
+                  <div className="ad-card__label">
+                    <span className="t-label">Publicidad</span>
+                  </div>
+                )}
+                <Link href={`/auto/${featured.slug}`} className="card ad-card">
+                  <div className="card__media">
+                    {featured.imageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={sanityImg(baseUrl(featured.imageUrl), { w: 960 })} alt="" fetchPriority="high" decoding="async" />
+                    ) : (
+                      <span className="flex h-full items-center justify-center">
+                        <Icon name="electric_car" className="text-[48px] text-line-2" />
+                      </span>
+                    )}
+                    {HOT_DEALS_ENABLED && featured.isHotDeal && <span className="chip chip--soft">Oferta</span>}
+                  </div>
+                  <div className="ad-card__body">
+                    <div>
+                      <p className="car__brand">{brand.name}</p>
+                      <p className="car__name">{cleanSeparators(featured.name)}</p>
+                    </div>
+                    <div className="ad-card__row">
+                      <div>
+                        {featuredHasDiscount ? (
+                          <>
+                            <p className="price-was">{formatCLP(featured.basePrice)}</p>
+                            <p className="price">{formatCLP(featured.discountPrice)}</p>
+                            <p className="price-save">Ahorras {formatCLP(featured.basePrice - featured.discountPrice)}</p>
+                          </>
+                        ) : (
+                          <>
+                            <p className="car__price-label">Precio de lista</p>
+                            <p className="price">{formatCLP(featured.basePrice)}</p>
+                          </>
+                        )}
+                      </div>
+                      <span className="btn btn--secondary btn--sm">
+                        Ver auto
+                        <Icon name="arrow_forward" size="none" className="arrow" />
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              </div>
             )}
           </div>
+
+          {kpis.length > 0 && (
+            <div className="kpis" style={{ "--kpis": kpis.length } as React.CSSProperties}>
+              {kpis.map((k) => (
+                <div className="kpi" key={k.label}>
+                  <p className="kpi__num">{k.num}</p>
+                  <p className="kpi__label">{k.label}</p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
-      {/* ─── Stats strip ────────────────────────────────────────────── */}
-      {brand.stats.length > 0 && (
-        <section className="bg-black border-t border-white/[0.07]">
-          <div className="max-w-7xl mx-auto px-4 md:px-8 py-10">
-            <div className={`grid gap-4 ${brand.stats.length <= 2 ? "grid-cols-2" : brand.stats.length === 3 ? "grid-cols-3" : "grid-cols-2 sm:grid-cols-4"}`}>
-              {brand.stats.slice(0, 4).map((stat) => (
-                <div key={stat.label} className="bg-white/5 border border-white/10 rounded-2xl p-4 sm:p-5 text-center">
-                  <p className="text-lg sm:text-2xl md:text-3xl font-headline font-black mb-1 text-primary break-words">{stat.value}</p>
-                  <p className="text-white/40 text-[10px] sm:text-[11px] uppercase tracking-wide leading-snug">{stat.label}</p>
-                </div>
-              ))}
+      {/* ─── Ofertas destacadas (detrás de HOT_DEALS_ENABLED) ────────── */}
+      {hotDeals.length > 0 && (
+        <section className="section theme-dark" aria-labelledby="deals-t">
+          <div className="wrap">
+            <div className="deal__head">
+              <div className="deal__eyebrow">
+                <h2 className="chip chip--soft" id="deals-t">Ofertas destacadas de {brand.name}</h2>
+                <p className="deal__urgency">{urgencyLabel}</p>
+              </div>
+            </div>
+            <div className="deals2">
+              {hotDeals.map((deal) => {
+                const model = `${brand.name} ${cleanSeparators(deal.carName)}`;
+                const hasDiscount = deal.discountPrice > 0 && deal.discountPrice < deal.basePrice;
+                const specs = [
+                  deal.range > 0 && `${deal.range} km de autonomía`,
+                  deal.power,
+                  deal.traction && deal.traction !== "–" && `tracción ${deal.traction}`,
+                ].filter(Boolean).join(", ");
+                return (
+                  <article key={deal.carSlug} className="deal-card">
+                    <div className="deal-card__media">
+                      {deal.imageUrl && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={sanityImg(baseUrl(deal.imageUrl), { w: 800 })} alt="" loading="lazy" decoding="async" />
+                      )}
+                    </div>
+                    <div className="deal-card__body">
+                      <div>
+                        <p className="deal__brand">{brand.name}</p>
+                        <h3 className="deal-card__name">{cleanSeparators(deal.carName)}</h3>
+                      </div>
+                      <dl className="deal__prices">
+                        {hasDiscount ? (
+                          <>
+                            <div><dt>Precio de lista</dt><dd className="price-was">{formatCLP(deal.basePrice)}</dd></div>
+                            <div><dt>Con bonos</dt><dd className="price price--lg">{formatCLP(deal.discountPrice)}</dd></div>
+                            <div><dt>Ahorras</dt><dd className="save">{formatCLP(deal.basePrice - deal.discountPrice)}</dd></div>
+                          </>
+                        ) : (
+                          <>
+                            <div><dt>Precio de lista</dt><dd className="price price--lg">{formatCLP(deal.basePrice)}</dd></div>
+                            {deal.bonus > 0 && <div><dt>Bonos de hasta</dt><dd className="save">{formatCLP(deal.bonus)}</dd></div>}
+                          </>
+                        )}
+                      </dl>
+                      {specs && <p className="t-small">{specs}</p>}
+                      <div className="deal-card__actions">
+                        <OfferCta carSlug={deal.carSlug} model={model} source="plp" className="btn btn--primary">
+                          Quiero esta oferta
+                        </OfferCta>
+                        <Link href={`/auto/${deal.carSlug}`} className="btn btn--secondary">
+                          Ver auto
+                        </Link>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
             </div>
           </div>
         </section>
       )}
 
-      {/* ─── Banner slideshow — solo si hay banners en Sanity ──────── */}
-      {plpBanners.length > 0 && (
-        <section className="py-8 bg-surface border-b border-gray-100">
-          <div className="max-w-7xl mx-auto px-4 md:px-8">
-            <div className="relative rounded-2xl overflow-hidden">
-              {/* Spacer image — sets the wrapper height. Uses mobile version
-                  when present so the wrapper resizes correctly on phones. */}
-              <picture>
-                {plpBanners[activeSlide]?.mobileImageUrl && (
-                  <source media="(max-width: 767px)" srcSet={plpBanners[activeSlide].mobileImageUrl} />
-                )}
-                <img src={plpBanners[activeSlide]?.imageUrl} alt="" aria-hidden className="w-full h-auto invisible" loading="lazy" decoding="async" />
-              </picture>
-              {plpBanners.map((b, i) => (
-                <div key={i} className="absolute inset-0 transition-opacity duration-500" style={{ opacity: i === activeSlide ? 1 : 0, pointerEvents: i === activeSlide ? "auto" : "none" }} onClick={plpBanners.length > 1 && !b.ctaHref ? nextSlide : undefined}>
-                  {b.ctaHref ? (
-                    <Link href={b.ctaHref} className="block w-full h-full">
-                      <picture>
-                        {b.mobileImageUrl && <source media="(max-width: 767px)" srcSet={b.mobileImageUrl} />}
-                        <img src={b.imageUrl} alt={b.altText ?? ""} className="w-full h-full object-cover" loading="lazy" decoding="async" />
-                      </picture>
-                    </Link>
-                  ) : (
-                    <picture>
-                      {b.mobileImageUrl && <source media="(max-width: 767px)" srcSet={b.mobileImageUrl} />}
-                      <img src={b.imageUrl} alt={b.altText ?? ""} className="w-full h-full object-cover" loading="lazy" decoding="async" />
-                    </picture>
+      {/* ─── Catálogo ────────────────────────────────────────────────── */}
+      <section className="section" id={`autos-${slug}`} aria-labelledby="cat-t">
+        <div className="wrap">
+          {/* Banners de Sanity (solo si hay) */}
+          {plpBanners.length > 0 && (
+            <div className="mb-section-sm">
+              <div className="relative overflow-hidden rounded-card bg-canvas-2">
+                {/* Sizer invisible: usa la versión móvil cuando existe, así el alto calza en teléfonos. */}
+                <picture>
+                  {plpBanners[activeSlide]?.mobileImageUrl && (
+                    <source media="(max-width: 767px)" srcSet={sanityImg(plpBanners[activeSlide].mobileImageUrl, { w: 800 })} />
                   )}
-                </div>
-              ))}
+                  <img src={sanityImg(plpBanners[activeSlide]?.imageUrl, { w: 2400 })} alt="" aria-hidden className="invisible h-auto w-full" loading="lazy" decoding="async" />
+                </picture>
+                {plpBanners.map((b, i) => (
+                  <div key={i} className="absolute inset-0 transition-opacity duration-500" style={{ opacity: i === activeSlide ? 1 : 0, pointerEvents: i === activeSlide ? "auto" : "none" }} onClick={plpBanners.length > 1 && !b.ctaHref ? nextSlide : undefined}>
+                    {b.ctaHref ? (
+                      <Link href={b.ctaHref} className="block h-full w-full">
+                        <picture>
+                          {b.mobileImageUrl && <source media="(max-width: 767px)" srcSet={sanityImg(b.mobileImageUrl, { w: 800 })} />}
+                          <img src={sanityImg(b.imageUrl, { w: 2400 })} alt={b.altText ?? ""} className="h-full w-full object-cover" loading="lazy" decoding="async" />
+                        </picture>
+                      </Link>
+                    ) : (
+                      <picture>
+                        {b.mobileImageUrl && <source media="(max-width: 767px)" srcSet={sanityImg(b.mobileImageUrl, { w: 800 })} />}
+                        <img src={sanityImg(b.imageUrl, { w: 2400 })} alt={b.altText ?? ""} className="h-full w-full object-cover" loading="lazy" decoding="async" />
+                      </picture>
+                    )}
+                  </div>
+                ))}
+              </div>
               {plpBanners.length > 1 && (
-                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+                <div className="mt-3 flex justify-center gap-1">
                   {plpBanners.map((_, i) => (
-                    <button key={i} onClick={(e) => { e.stopPropagation(); setActiveSlide(i); }} className="h-1.5 rounded-full transition-all duration-300" style={{ width: i === activeSlide ? 16 : 6, background: i === activeSlide ? "#00E5E5" : "rgba(0,0,0,0.35)" }} />
+                    <button key={i} type="button" onClick={() => setActiveSlide(i)} aria-label={`Ver banner ${i + 1} de ${plpBanners.length}`} aria-current={i === activeSlide} className="grid h-6 w-8 place-items-center">
+                      <span className={cn("block h-0.5 w-6", i === activeSlide ? "bg-ink" : "bg-line-2")} />
+                    </button>
                   ))}
                 </div>
               )}
             </div>
-          </div>
-        </section>
-      )}
-
-      {/* ─── HOT DEAL ─────────────────────────────────────────────── */}
-      {hotDeals.length > 0 && (
-        <section className="bg-black py-6 sm:py-10 md:py-14" onMouseEnter={() => { hotPausedRef.current = true; }} onMouseLeave={() => { hotPausedRef.current = false; }}>
-
-          <div
-            ref={hotTrackRef}
-            className="flex overflow-x-auto"
-            style={{
-              scrollSnapType: "x mandatory",
-              WebkitOverflowScrolling: "touch",
-              scrollbarWidth: "none",
-              msOverflowStyle: "none",
-            }}
-          >
-            {hotDeals.map((deal) => {
-              const discountPct = Math.round(((deal.basePrice - deal.discountPrice) / deal.basePrice) * 100);
-              const bonusAmt    = deal.bonus > 0 ? deal.bonus : deal.basePrice - deal.discountPrice;
-              const specs = [
-                { label: "Autonomía",  value: `${deal.range} km` },
-                { label: "Potencia",   value: deal.power },
-                { label: "Tracción",   value: deal.traction },
-                { label: "0-100 km/h", value: deal.acceleration },
-              ];
-              return (
-                <div key={deal.carSlug} style={{ flex: "0 0 100%", scrollSnapAlign: "start" }}>
-                  {/* ── MOBILE ── */}
-                  <div className="lg:hidden px-4">
-                    <div className="rounded-2xl overflow-hidden border border-white/10 bg-white/5">
-                      {deal.imageUrl ? (
-                        <img src={deal.imageUrl} alt={`${brand.name} ${deal.carName}`} className="w-full h-40 object-cover" loading="lazy" decoding="async" />
-                      ) : (
-                        <div className="w-full h-40 flex items-center justify-center">
-                          <Icon name="electric_car" className="text-[64px] text-primary/30" />
-                        </div>
-                      )}
-                      <div className="p-4 space-y-3">
-                        <div>
-                          <div className="flex items-center gap-2 mb-1.5">
-                            <span className="bg-amber text-black text-[10px] font-black uppercase tracking-wide px-3 py-1 rounded-full">HOT DEAL</span>
-                            <span className="text-white/40 text-xs">{urgencyLabel}</span>
-                          </div>
-                          <p className="text-white font-headline font-black text-base uppercase leading-tight">{brand.name} {deal.carName}</p>
-                          <p className="text-white/50 text-xs mt-0.5">Bonos de hasta <span className="text-primary font-bold">{formatCLP(bonusAmt)}</span></p>
-                        </div>
-                        <div className="flex items-center justify-between bg-white/5 rounded-xl px-3 py-2.5">
-                          <div>
-                            <p className="text-white/40 text-[10px] line-through">{formatCLP(deal.basePrice)}</p>
-                            <p className="text-primary font-headline font-black text-xl leading-none">{formatCLP(deal.discountPrice)}</p>
-                          </div>
-                          <p className="text-white/30 text-[10px] text-right leading-snug">Ahorra {discountPct}%<br />bono Electrificarte</p>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="bg-white/5 rounded-lg px-3 py-2">
-                            <p className="text-primary text-sm font-headline font-bold">{deal.range} km</p>
-                            <p className="text-white/40 text-[10px]">Autonomía</p>
-                          </div>
-                          <div className="bg-white/5 rounded-lg px-3 py-2">
-                            <p className="text-primary text-sm font-headline font-bold">{deal.traction}</p>
-                            <p className="text-white/40 text-[10px]">Tracción</p>
-                          </div>
-                        </div>
-                        <OfferCta carSlug={deal.carSlug} model={`${brand.name} ${deal.carName}`} source="plp" className="flex items-center justify-center gap-2 w-full bg-primary hover:bg-primary-dark text-black font-bold py-3 rounded-xl text-sm transition-colors">
-                          Quiero esta oferta
-                        </OfferCta>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* ── DESKTOP ── */}
-                  <div className="hidden lg:block max-w-7xl mx-auto px-8">
-                    <div className="grid lg:grid-cols-2 gap-12 items-center">
-                      <div>
-                        <div className="flex items-center gap-3 mb-5">
-                          <span className="bg-amber text-black text-[10px] font-black uppercase tracking-wide px-3 py-1 rounded-full">HOT DEAL</span>
-                          <span className="text-white/50 text-sm">{urgencyLabel}</span>
-                        </div>
-                        <h2 className="text-3xl md:text-4xl font-headline font-black text-white mb-4 uppercase leading-tight">
-                          {brand.name} {deal.carName} con bonos de hasta{" "}
-                          <span className="text-primary">{formatCLP(bonusAmt)}</span>
-                        </h2>
-                        <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-5 space-y-2">
-                          <div className="flex justify-between items-baseline">
-                            <span className="text-white/40 text-sm">Precio lista</span>
-                            <span className="text-white/40 line-through">{formatCLP(deal.basePrice)}</span>
-                          </div>
-                          <div className="flex justify-between items-baseline">
-                            <span className="text-white text-sm font-medium">Con bono Electrificarte</span>
-                            <span className="text-primary text-3xl font-headline font-black">{formatCLP(deal.discountPrice)}</span>
-                          </div>
-                          <p className="text-white/30 text-xs pt-2 border-t border-white/10">Ahorra {discountPct}% · Incluye bono vendedor + Electrificarte</p>
-                        </div>
-                        <div className="flex gap-3">
-                          <OfferCta carSlug={deal.carSlug} model={`${brand.name} ${deal.carName}`} source="plp" className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-6 py-3 rounded-xl transition-all text-sm shadow-[0_4px_20px_rgba(0,229,229,0.30)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]">
-                            Quiero esta oferta
-                          </OfferCta>
-                          <Link href={`/auto/${deal.carSlug}`} className="inline-flex items-center justify-center gap-2 border border-white/20 hover:border-white/40 text-white font-medium px-6 py-3 rounded-xl transition-all text-sm">
-                            Ver especificaciones
-                          </Link>
-                        </div>
-                      </div>
-
-                      <div className="bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 rounded-2xl overflow-hidden">
-                        {deal.imageUrl ? (
-                          <img src={deal.imageUrl} alt={`${brand.name} ${deal.carName}`} className="w-full aspect-[16/9] object-cover" loading="lazy" decoding="async" />
-                        ) : (
-                          <div className="w-full aspect-[16/9] flex items-center justify-center flex-col gap-2">
-                            <Icon name="electric_car" className="text-[80px] text-primary/30" />
-                            <p className="text-white/40 text-sm">{brand.name} {deal.carName}</p>
-                          </div>
-                        )}
-                        <div className="p-4 md:p-5">
-                          <div className="grid grid-cols-2 gap-2">
-                            {specs.map((s) => (
-                              <div key={s.label} className="bg-white/5 rounded-xl p-3">
-                                <p className="text-primary text-base font-headline font-bold">{s.value}</p>
-                                <p className="text-white/40 text-xs">{s.label}</p>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Dots */}
-          {hotDeals.length > 1 && (
-            <div className="flex items-center justify-center gap-3 mt-5">
-              <button
-                onClick={() => hotTrackRef.current?.scrollTo({ left: (hotTrackRef.current?.clientWidth ?? 0) * (hotActiveIdx > 0 ? hotActiveIdx - 1 : hotDeals.length - 1), behavior: "smooth" })}
-                aria-label="Anterior"
-                className="hidden lg:flex items-center justify-center w-6 h-6 rounded-full border border-white/20 hover:border-primary hover:bg-primary/10 transition-all"
-              >
-                <Icon name="chevron_left" className="text-white/50 text-[14px]" />
-              </button>
-              <div className="flex items-center gap-2">
-                {hotDeals.map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => hotTrackRef.current?.scrollTo({ left: (hotTrackRef.current?.clientWidth ?? 0) * i, behavior: "smooth" })}
-                    aria-label={`Ir al hot deal ${i + 1}`}
-                    style={{
-                      width: i === hotActiveIdx ? 20 : 6,
-                      height: 6,
-                      borderRadius: 9999,
-                      backgroundColor: i === hotActiveIdx ? "#00E5E5" : "rgba(255,255,255,0.2)",
-                      transition: "all 0.3s",
-                    }}
-                  />
-                ))}
-              </div>
-              <button
-                onClick={() => hotTrackRef.current?.scrollTo({ left: (hotTrackRef.current?.clientWidth ?? 0) * (hotActiveIdx < hotDeals.length - 1 ? hotActiveIdx + 1 : 0), behavior: "smooth" })}
-                aria-label="Siguiente"
-                className="hidden lg:flex items-center justify-center w-6 h-6 rounded-full border border-white/20 hover:border-primary hover:bg-primary/10 transition-all"
-              >
-                <Icon name="chevron_right" className="text-white/50 text-[14px]" />
-              </button>
-            </div>
           )}
-        </section>
-      )}
 
-      {/* ─── AUTOS ────────────────────────────────────────────────── */}
-      <section id={`autos-${slug}`} className="py-20 md:py-24">
-        <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <div className="mb-8">
-            <p className="text-[11px] uppercase tracking-widest text-primary-deep font-bold mb-2">Catálogo electrificado</p>
-            <h2 className="text-3xl md:text-4xl font-headline font-black uppercase tracking-tighter mb-6">Autos {brand.name} disponibles</h2>
-            <PlpFilters
-              facetGroups={filters.facetGroups}
-              active={filters.active}
-              sort={filters.sort}
-              onToggle={filters.toggle}
-              onSortChange={filters.setSort}
-              onClearAll={filters.clearAll}
-              activeCount={filters.activeCount}
-              total={filters.total}
-              count={filters.count}
-            />
-          </div>
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
-            {filtered.length === 0 ? (
-              <div className="col-span-3 py-16 text-center">
-                <Icon name="search_off" className="text-[40px] text-gray-200 block mb-3" />
-                <p className="text-text-muted font-medium">No hay autos con estos filtros.</p>
-              </div>
-            ) : visibleCars.map((car, i) => {
-              const pct = Math.round(((car.basePrice - car.discountPrice) / car.basePrice) * 100);
-              return (
-                <m.article key={car.slug} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.1 }}
-                  className="group relative flex flex-col border border-gray-100 bg-white rounded-2xl overflow-hidden hover:border-primary/40 hover:shadow-lg transition-all duration-300">
-                  <div className="aspect-[16/9] bg-gradient-to-br from-gray-50 to-gray-100 relative flex flex-col items-center justify-center overflow-hidden">
-                    {HOT_DEALS_ENABLED && car.isHotDeal && <span className="absolute top-3 left-3 bg-amber text-black text-[10px] font-black uppercase tracking-wide px-2.5 py-1 rounded-full z-10">HOT DEAL</span>}
-                    {pct > 0 && <span className="absolute top-3 right-3 text-[10px] font-black text-white px-2 py-1 rounded-full z-10" style={{ backgroundColor: brand.accentColor }}>-{pct}%</span>}
-                    <ElectricTypeBadge tag={car.electricType} className="absolute bottom-3 left-3 z-10 shadow-sm" />
-                    {car.imageUrl ? (
-                      <img src={car.imageUrl} alt={`${brand.name} ${car.name}`} className="w-full h-full object-cover" loading="lazy" decoding="async" />
-                    ) : (
-                      <>
-                        <Icon name="electric_car" className="text-[72px] text-gray-200" />
-                        <span className="text-[10px] uppercase tracking-widest text-text-ghost font-bold mt-1">{car.category}</span>
-                      </>
-                    )}
-                  </div>
-                  <div className="flex flex-col flex-1 p-3 sm:p-5">
-                    <h3 className="font-headline font-bold text-sm sm:text-lg mb-1 group-hover:text-primary-deep transition-colors leading-tight">{brand.name} {car.name}</h3>
-                    <p className="hidden sm:block text-xs text-text-ghost mb-2 sm:mb-3 leading-snug line-clamp-2">{car.range} km · {car.power} · {car.traction}</p>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-1 sm:gap-2 mb-2 sm:mb-4">
-                      <div className="bg-surface rounded-lg p-1.5 sm:p-2 text-center"><p className="text-[10px] sm:text-[11px] font-bold">{car.specs.battery}</p><p className="text-[9px] sm:text-[10px] text-text-ghost">Batería</p></div>
-                      <div className="bg-surface rounded-lg p-1.5 sm:p-2 text-center"><p className="text-[10px] sm:text-[11px] font-bold">{car.specs.topSpeed}</p><p className="text-[9px] sm:text-[10px] text-text-ghost">V. máx</p></div>
-                      <div className="hidden sm:block bg-surface rounded-lg p-1.5 sm:p-2 text-center"><p className="text-[10px] sm:text-[11px] font-bold">{car.specs.charge0to80}</p><p className="text-[9px] sm:text-[10px] text-text-ghost">0→80%</p></div>
-                    </div>
-                    <div className="mb-2 sm:mb-4">
-                      {pct > 0 && <p className="text-[10px] text-text-ghost line-through">{formatCLP(car.basePrice)}</p>}
-                      <p className="text-sm sm:text-xl font-headline font-black text-primary-deep">{formatCLP(pct > 0 ? car.discountPrice : car.basePrice)}</p>
-                    </div>
-                    <div className="flex gap-2 mt-auto">
-                      <Link href={`/auto/${car.slug}`} className="flex-1 text-center bg-primary hover:bg-primary-dark text-black font-bold py-2.5 rounded-xl text-sm transition-colors after:absolute after:inset-0">
-                        Ver auto
-                      </Link>
-                      <Link href={`/comparador?add=${car.slug}`} title="Comparar"
-                        className="relative z-[1] px-3 border border-gray-200 hover:border-primary/40 text-text-muted hover:text-primary-deep rounded-xl flex items-center transition-colors">
-                        <Icon name="compare_arrows" className="text-[18px]" />
-                      </Link>
-                    </div>
-                  </div>
-                </m.article>
-              );
-            })}
-          </div>
-
-          {hasMore && (
-            <div className="mt-10 flex justify-center">
-              <button
-                onClick={() => setVisibleCount((n) => n + PAGE_SIZE)}
-                className="inline-flex items-center gap-2 border border-gray-200 hover:border-primary/40 hover:text-primary-deep text-text-muted font-semibold px-8 py-3 rounded-xl transition-all text-sm"
-              >
-                Ver más autos
-                <Icon name="expand_more" className="text-[18px]" />
-              </button>
+          <div className="section-head mb-6">
+            <div className="section-head__text">
+              <h2 className="t-h2" id="cat-t">Todos los modelos {brand.name}</h2>
             </div>
+          </div>
+
+          {n === 0 ? (
+            <p className="empty">Estamos cargando el catálogo {brand.name}. Vuelve pronto.</p>
+          ) : (
+            <>
+              <PlpFilters
+                facetGroups={filters.facetGroups}
+                active={filters.active}
+                sort={filters.sort}
+                onToggle={filters.toggle}
+                onSortChange={filters.setSort}
+                onClearAll={filters.clearAll}
+                activeCount={filters.activeCount}
+                total={filters.total}
+                count={filters.count}
+              />
+
+              {filtered.length === 0 ? (
+                <p className="empty">
+                  No hay autos con estos filtros.{" "}
+                  <button type="button" className="clear-all" onClick={filters.clearAll}>Limpiar filtros</button>
+                </p>
+              ) : (
+                <div className="cars-grid">
+                  {visibleCars.map((car, i) => (
+                    <CarCard
+                      key={car.slug}
+                      name={cleanSeparators(car.name)}
+                      brand={brand.name}
+                      slug={car.slug}
+                      image={car.imageUrl}
+                      batteryCapacity={car.batteryCapacity}
+                      range={car.range}
+                      maxVersionRange={car.maxVersionRange}
+                      electricRangeKm={car.electricRangeKm}
+                      fuelConsumption={car.fuelConsumption}
+                      rendimientoElectrico={car.rendimientoElectrico}
+                      electricTypeTag={car.electricTypeTag}
+                      power={car.powerCv}
+                      basePrice={car.basePrice}
+                      discountPrice={car.discountPrice}
+                      index={i % PAGE_SIZE}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {filtered.length > PAGE_SIZE && (
+                <LoadMore shown={visibleCars.length} total={filtered.length} onMore={() => setPage({ key: filtered, count: visibleCount + PAGE_SIZE })} />
+              )}
+            </>
           )}
         </div>
       </section>
 
-      {/* ─── VIDEOS ───────────────────────────────────────────────── */}
-      {brand.videos.length > 0 && (
-        <section className="py-20 md:py-24 bg-surface">
-          <div className="max-w-7xl mx-auto px-4 md:px-8">
-            <div className="mb-12">
-              <p className="text-[11px] uppercase tracking-widest text-primary-deep font-bold mb-2">Multimedia</p>
-              <h2 className="text-3xl md:text-4xl font-headline font-black uppercase tracking-tighter">Videos y contenido</h2>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {brand.videos.map((video, i) => (
-                <m.div key={video.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.1 }}
-                  className="group bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-primary/30 hover:shadow-md transition-all duration-300 cursor-pointer">
-                  <div className="aspect-video bg-gradient-to-br from-gray-900 to-gray-800 relative flex items-center justify-center overflow-hidden">
-                    <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.1) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.1) 1px,transparent 1px)", backgroundSize: "24px 24px" }} />
-                    <div className="absolute inset-0 flex items-center justify-center"><div className="w-32 h-32 rounded-full blur-3xl opacity-30" style={{ backgroundColor: brand.logoColor }} /></div>
-                    <Icon name="electric_car" className="text-[48px] text-white/20 relative z-10" />
-                    <div className="absolute inset-0 flex items-center justify-center z-20">
-                      <div className="w-14 h-14 bg-white/10 group-hover:bg-primary/90 backdrop-blur-sm border border-white/20 group-hover:border-primary rounded-full flex items-center justify-center transition-all duration-300 shadow-lg group-hover:scale-110">
-                        <Icon name="play_arrow" className="text-white group-hover:text-black text-[22px] ml-0.5 transition-colors" />
-                      </div>
-                    </div>
-                    {video.duration && <span className="absolute bottom-2 right-2 bg-black/80 text-white text-[11px] font-bold px-2 py-0.5 rounded">{video.duration}</span>}
-                  </div>
-                  <div className="p-4">
-                    {(video.channel || video.views) && <p className="text-[10px] text-text-ghost uppercase tracking-wide font-semibold mb-1">{video.channel}{video.views ? ` · ${video.views} vistas` : ""}</p>}
-                    <h3 className="font-headline font-bold text-sm leading-snug group-hover:text-primary-deep transition-colors line-clamp-2">{video.title}</h3>
-                  </div>
-                </m.div>
-              ))}
-            </div>
-            <div className="mt-14 bg-black rounded-2xl p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-6">
-              <div>
-                <p className="text-primary text-xs uppercase tracking-widest font-bold mb-2">¿Te convenció?</p>
-                <h3 className="text-white font-headline font-black text-2xl md:text-3xl tracking-tight">Consigue el mejor precio en tu {brand.name}</h3>
-                <p className="text-white/50 text-sm mt-1">Negociamos por ti con nuestra red exclusiva de vendedores oficiales en Chile.</p>
+      {/* ─── Videos (solo si la marca tiene en Sanity) ───────────────── */}
+      {hasVideos && (
+        <section className="section section--subtle" aria-labelledby="videos-t">
+          <div className="wrap">
+            <div className="section-head">
+              <div className="section-head__text">
+                <h2 className="t-h2" id="videos-t">Videos y contenido</h2>
               </div>
-              <OfferCta source="plp" className="flex-shrink-0 inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-black px-8 py-4 rounded-xl transition-all text-sm whitespace-nowrap shadow-[0_4px_20px_rgba(0,229,229,0.30)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.45)] hover:scale-[1.02] active:scale-[0.99]">
-                Quiero mi oferta
-              </OfferCta>
+            </div>
+            <div className="grid gap-grid sm:grid-cols-2 lg:grid-cols-3">
+              {brand.videos.map((video) => {
+                const body = (
+                  <>
+                    <span className="relative grid aspect-video place-items-center border-b border-line">
+                      <Icon name="play_circle" className="text-[48px] text-ink-3" />
+                      {video.duration && <span className="chip absolute right-3 bottom-3">{video.duration}</span>}
+                    </span>
+                    <span className="flex flex-col gap-1 p-5">
+                      <span className="t-h4 line-clamp-2">{video.title}</span>
+                      {(video.channel || video.views) && (
+                        <span className="t-small">{[video.channel, video.views && `${video.views} vistas`].filter(Boolean).join(", ")}</span>
+                      )}
+                    </span>
+                  </>
+                );
+                return video.videoUrl ? (
+                  <a key={video.id} href={video.videoUrl} target="_blank" rel="noopener noreferrer" className="card flex flex-col">
+                    {body}
+                  </a>
+                ) : (
+                  <div key={video.id} className="card flex flex-col">
+                    {body}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </section>
       )}
-    </>
+
+      {/* ─── La marca en cifras (stats de Sanity) + los dos caminos ─── */}
+      <section className={cn("section", !hasVideos && "section--rule")} aria-labelledby={stats.length > 0 ? "cifras-t" : undefined}>
+        <div className="wrap">
+          {stats.length > 0 && (
+            <>
+              <div className="section-head">
+                <div className="section-head__text">
+                  <h2 className="t-h2" id="cifras-t">{brand.name} en cifras</h2>
+                </div>
+              </div>
+              <div className="kpis mt-0" style={{ "--kpis": stats.length } as React.CSSProperties}>
+                {stats.map((s) => (
+                  <div className="kpi" key={s.label}>
+                    <p className="kpi__num">{cleanSeparators(s.value)}</p>
+                    <p className="kpi__label">{s.label}</p>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          <div className={cn("soft-block cta-row", stats.length > 0 && "mt-section")}>
+            <div>
+              <h2 className="t-h2">{ctaTitle}</h2>
+              <p>Te asesoramos por WhatsApp según tu uso, tus kilómetros y tu presupuesto, y comparamos contigo los modelos que calzan.</p>
+            </div>
+            <div className="cta-row__actions">
+              <Link href="/asesoria" className="btn btn--primary btn--lg">
+                Quiero asesoría por {ASESORIA_PRICE}
+                <Icon name="arrow_forward" size="none" className="arrow" />
+              </Link>
+              <OfferCta source="plp" className="btn btn--secondary btn--lg">
+                Únete a la waitlist
+              </OfferCta>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
   );
 }

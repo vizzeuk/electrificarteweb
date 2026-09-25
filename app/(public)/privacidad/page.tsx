@@ -9,29 +9,33 @@ export const metadata: Metadata = {
 
 const LAST_UPDATED = "08 de abril de 2025";
 
+// Tipografía de lectura: cuerpo de 16 px con interlineado 1,55 y ~70 caracteres por línea.
+// (El repo no tiene el plugin de typography, así que las clases `prose` de antes no hacían nada.)
+const LEGAL_PROSE = [
+  "max-w-[70ch] text-body leading-[1.55] text-ink-2",
+  "[&_h2]:mt-12 [&_h2]:font-display [&_h2]:text-h3 [&_h2]:font-bold [&_h2]:text-balance [&_h2]:text-ink [&_h2:first-child]:mt-0",
+  "[&_p]:mt-4 [&_ul]:mt-4 [&_ul]:grid [&_ul]:list-disc [&_ul]:gap-2 [&_ul]:pl-6 [&_li]:pl-1 [&_li]:marker:text-ink-3",
+  "[&_strong]:font-semibold [&_strong]:text-ink",
+].join(" ");
+
 export default function PrivacidadPage() {
   return (
-    <>
-      {/* Hero */}
-      <section className="bg-black pt-24 pb-14">
-        <div className="max-w-3xl mx-auto px-4 md:px-8">
-          <nav className="flex items-center gap-2 text-white/30 text-xs mb-8">
-            <Link href="/" className="hover:text-white/60 transition-colors">Inicio</Link>
-            <span>/</span>
-            <span className="text-white/60">Política de privacidad</span>
+    <div className="page">
+      <section className="page-head">
+        <div className="wrap">
+          <nav className="crumbs" aria-label="Migas de pan">
+            <Link href="/">Inicio</Link>
+            <span aria-hidden="true">/</span>
+            <span aria-current="page">Política de privacidad</span>
           </nav>
-          <p className="text-primary text-[11px] uppercase tracking-widest font-bold mb-3">Legal</p>
-          <h1 className="text-4xl md:text-5xl font-headline font-black text-white tracking-tighter mb-4">
-            Política de privacidad
-          </h1>
-          <p className="text-white/40 text-sm">Última actualización: {LAST_UPDATED}</p>
+          <h1 className="t-h1 mt-header">Política de privacidad</h1>
+          <p className="t-small mt-6">Última actualización: {LAST_UPDATED}</p>
         </div>
       </section>
 
-      {/* Content */}
-      <section className="py-14 bg-white">
-        <div className="max-w-3xl mx-auto px-4 md:px-8">
-          <div className="prose prose-sm md:prose-base prose-gray max-w-none">
+      <section className="section">
+        <div className="wrap">
+          <div className={LEGAL_PROSE}>
 
             <h2>1. Responsable del tratamiento</h2>
             <p>
@@ -80,7 +84,7 @@ export default function PrivacidadPage() {
             </ul>
             <p>
               Para ejercer estos derechos, contáctanos a través de{" "}
-              <span className="text-text-muted">electrificarte.cl/solicitar</span>.
+              <span className="text-ink-2">electrificarte.cl/solicitar</span>.
             </p>
 
             <h2>7. Seguridad</h2>
@@ -101,12 +105,12 @@ export default function PrivacidadPage() {
             <h2>10. Contacto</h2>
             <p>
               Para cualquier consulta sobre el tratamiento de tus datos personales, escríbenos a través del formulario en{" "}
-              <span className="text-text-muted">electrificarte.cl/solicitar</span>.
+              <span className="text-ink-2">electrificarte.cl/solicitar</span>.
             </p>
 
           </div>
         </div>
       </section>
-    </>
+    </div>
   );
 }
