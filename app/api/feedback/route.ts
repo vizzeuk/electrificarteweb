@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { n8nHeaders } from "@/lib/n8n";
 
 const schema = z.object({
   rating:  z.number().int().min(1).max(5),
@@ -23,7 +24,7 @@ export async function POST(req: Request) {
 
     const res = await fetch(webhookUrl, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: n8nHeaders(),
       body: JSON.stringify({ ...data, source: "feedback-widget", timestamp: new Date().toISOString() }),
       signal: AbortSignal.timeout(5_000),
     });

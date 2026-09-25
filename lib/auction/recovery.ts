@@ -15,6 +15,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSupabase, normalizePhone } from "@/lib/whatsapp/subscription";
 import { WINDOW_HOURS, RECOVERY_CAP, N8N_LEAD_PAID_URL } from "@/lib/auction/config";
+import { n8nHeaders } from "@/lib/n8n";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const MODEL = "claude-haiku-4-5-20251001";
@@ -63,7 +64,7 @@ export async function createRecoveryLead(
 
   if (N8N_LEAD_PAID_URL) {
     fetch(N8N_LEAD_PAID_URL, {
-      method: "POST", headers: { "Content-Type": "application/json" },
+      method: "POST", headers: n8nHeaders(),
       body: JSON.stringify({ leadId: nuevo.id }), signal: AbortSignal.timeout(5000),
     }).catch(() => {});
   }

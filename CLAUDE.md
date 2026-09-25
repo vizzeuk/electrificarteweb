@@ -292,6 +292,8 @@ Más n8n (VPS de Matías) y Supabase. Un cambio en el modelo de leads toca a los
 - `docs/FLUJO-PDP-N8N.md` — los dos flujos de PDP en n8n (creación desde Sheet + re-check
   semanal de precios). Directrices, contratos de endpoint, reparto web/n8n/Claude Console y
   orden de fases. Implementa el board de Miro "FLUJO PDP's".
+- `docs/N8N-SEGURIDAD.md` — header secreto `x-electrificarte-secret` en los webhooks de n8n: estado,
+  cómo activarlo en n8n (primero desplegar la web) y qué no cubre (webhook de Reveniu).
 - `docs/REVIEWS-UGC-PLAN.md` — sistema de reseñas UGC: arquitectura, costos y estado por fase.
 - `docs/COSTOS-PARA-FRANCISCO.md` — **explicación de costos sin tecnicismos**, para Francisco.
 - `docs/CAMBIOS-PARA-FRANCISCO.md` — resumen no técnico de todos los cambios del giro.
@@ -322,6 +324,8 @@ Bloqueantes de lanzamiento (detalle en `docs/HANDOFF-CONDUCTOR.md` §8):
 - Decidir www vs no-www (canonical usa no-www, Reveniu retorna a www)
 
 Otros:
+- **Header Auth en n8n** (`docs/N8N-SEGURIDAD.md`): la web ya manda el secreto; falta activarlo
+  en cada nodo Webhook de n8n **después** de desplegar la web.
 - **Plantilla WhatsApp `asesoria_ultimo_dia`** (idioma `es_CL`): ⏳ pendiente de aprobación de
   Meta, pero **ya configurada** en Vercel. Es seguro porque `sendAsesoriaReminder` ahora cae a
   **texto libre si el envío por plantilla falla**, así que nadie queda sin mensaje. Cuando Meta
@@ -334,6 +338,7 @@ Otros:
   Sin ella, el dashboard no podía forzar el refresco al aprobar una reseña.
 - ⚠️ **`ADMIN_API_SECRET` de producción ≠ el de `.env.local`.** Para el dashboard hay que usar
   el de Vercel, no el local, o `/api/reviews/publish` responde 401 y las fotos no se publican.
+  (sep-2026: ya corregido en el dashboard, en Vercel production + preview y en su `.env.local`.)
 - `N8N_CONTACT_URL` en Vercel necesita URL de producción (sin `-test`)
 - Terminología "concesionario" → "vendedores oficiales": quedan 3 archivos
 - 10 autos sin imágenes: Tesla Model Y, Chevrolet Blazer/Bolt/Equinox/Spark, Cupra Tavascan, JAC E-JS1/JS4, Skoda Elroq, Changan Hunter E

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
+  <title>Electrificarte</title>
+</head>
+<!--
+  ASESORÍA: confirmación de pago a la persona.
+  Lee del nodo Set "Datos correo asesoría": nombre, telefono.
+  ⚠️ Copy del giro: la asesoría NO negocia ni consigue ofertas. No mencionar $19.990.
+
+  GENERADO por scripts/gen-emails.mjs (sistema de diseño v1). No editar a mano: cambiá el
+  generador y corré  node scripts/gen-emails.mjs && node scripts/gen-waitlist-reviews-workflows.mjs
+  Todo dato que escribe el usuario va escapado para HTML.
+-->
+<body style="margin:0;padding:0;background:#f2f7f6;-webkit-font-smoothing:antialiased;">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">Tu asesoría está confirmada. Te escribimos por WhatsApp.</div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f2f7f6;">
+    <tr><td align="center" style="padding:32px 12px;">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;">
+
+        <tr><td style="padding:0 4px 20px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+            <td><picture><source srcset="https://www.electrificarte.com/brand/email-wordmark-niebla.png" media="(prefers-color-scheme: dark)"><img src="https://www.electrificarte.com/brand/email-wordmark-tinta.png" alt="Electrificarte" width="218" height="16" style="display:block;border:0;width:218px;height:16px;"></picture></td>
+            
+          </tr></table>
+        </td></tr>
+
+        <tr><td style="background:#ffffff;border:1px solid #dfe4e4;border-radius:12px;padding:36px 32px 32px;">
+<h1 style="margin:0 0 16px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:28px;font-weight:700;line-height:1.1;letter-spacing:-0.02em;color:#0f1716;">Tu asesoría está confirmada</h1>
+<p style="margin:0 0 16px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.55;color:#495251;">Hola <strong style="font-weight:600;color:#0f1716;">{{ String(($('Datos correo asesoría').item.json.nombre) ?? '').trim().replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';') }}</strong>, recibimos tu pago. Durante los próximos 10 días tienes un asesor experto por WhatsApp para ayudarte a elegir tu auto electrificado según tu uso, tu presupuesto y dónde vas a cargar.</p>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:8px 0 24px;background:#caefea;border-radius:12px;">
+  <tr><td style="padding:20px;">
+    <p style="margin:0;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#0f1716;">Te escribimos a este WhatsApp</p>
+    <p style="margin:4px 0 0;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:20px;line-height:1.25;font-weight:700;letter-spacing:-0.01em;color:#0f1716;">{{ String(($('Datos correo asesoría').item.json.telefono) ?? '').trim().replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';') }}</p>
+  </td></tr>
+</table>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:8px 0 24px;border-top:1px solid #dfe4e4;">
+  <tr>
+    <td style="padding:12px 16px 12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#495251;vertical-align:top;width:34%;">1. Diagnóstico</td>
+    <td style="padding:12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;font-weight:600;color:#0f1716;vertical-align:top;">Cómo usas el auto, cuántos km haces y con qué presupuesto.</td>
+  </tr>
+  <tr>
+    <td style="padding:12px 16px 12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#495251;vertical-align:top;width:34%;">2. Recomendación</td>
+    <td style="padding:12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;font-weight:600;color:#0f1716;vertical-align:top;">Hasta 3 modelos del catálogo, con datos reales de cada ficha.</td>
+  </tr>
+  <tr>
+    <td style="padding:12px 16px 12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#495251;vertical-align:top;width:34%;">3. Compra</td>
+    <td style="padding:12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;font-weight:600;color:#0f1716;vertical-align:top;">Cómo cotizar con vendedores oficiales y qué revisar antes de firmar.</td>
+  </tr>
+</table>
+<p style="margin:0 0 16px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.55;color:#495251;font-size:14px;">Si el número no es el correcto, escríbenos a <a href="mailto:contacto@electrificarte.com" style="color:#1d605b;">contacto@electrificarte.com</a> y lo corregimos.</p>
+
+<table role="presentation" cellpadding="0" cellspacing="0" style="margin:8px 0 0;"><tr>
+  <td style="border-radius:8px;background:#ffffff;border:1px solid #cad1d0;">
+    <a href="https://www.electrificarte.com/marcas" style="display:inline-block;padding:14px 24px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;font-weight:600;line-height:1.2;color:#0f1716;text-decoration:none;border-radius:8px;">Explorar el catálogo &rarr;</a>
+  </td>
+</tr></table>
+        </td></tr>
+
+        <tr><td style="padding:24px 4px 0;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;line-height:1.6;color:#687170;">
+          Electrificarte, marketplace de autos electrificados en Chile.<br>
+          <a href="https://www.electrificarte.com" style="color:#1d605b;text-decoration:underline;">electrificarte.com</a> y <a href="mailto:contacto@electrificarte.com" style="color:#1d605b;text-decoration:underline;">contacto@electrificarte.com</a>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>

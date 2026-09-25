@@ -1,0 +1,185 @@
+{
+  "name": "Asesoría: correos tras el pago (nodos para pegar)",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "as-trigger",
+      "name": "Probar (Manual)",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -260,
+        300
+      ],
+      "notes": "Solo para probar suelto. En el flujo real, conectá el Set después de la verificación del pago."
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "nombre",
+              "type": "string",
+              "value": "={{ $json.fullName ?? $json.nombre ?? $json.name }}"
+            },
+            {
+              "id": "a2",
+              "name": "email",
+              "type": "string",
+              "value": "={{ $json.email }}"
+            },
+            {
+              "id": "a3",
+              "name": "telefono",
+              "type": "string",
+              "value": "={{ $json.phone ?? $json.telefono }}"
+            },
+            {
+              "id": "a4",
+              "name": "orderId",
+              "type": "string",
+              "value": "={{ $json.orderId ?? $json.order_id ?? $json.external_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "as-set",
+      "name": "Datos correo asesoría",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        300
+      ],
+      "notes": "Ajustá estas 4 expresiones a los campos de la fila de advisory_payments que llega a este punto. Las plantillas solo leen de este nodo."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "keypair",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "from",
+              "value": "Electrificarte <no-reply@electrificarte.com>"
+            },
+            {
+              "name": "to",
+              "value": "={{ $('Datos correo asesoría').item.json.email }}"
+            },
+            {
+              "name": "subject",
+              "value": "Tu asesoría está confirmada"
+            },
+            {
+              "name": "html",
+              "value": "=<!DOCTYPE html>\n<html lang=\"es\">\n<head>\n  <meta charset=\"utf-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n  <meta name=\"color-scheme\" content=\"light dark\">\n  <meta name=\"supported-color-schemes\" content=\"light dark\">\n  <title>Electrificarte</title>\n</head>\n<!--\n  ASESORÍA: confirmación de pago a la persona.\n  Lee del nodo Set \"Datos correo asesoría\": nombre, telefono.\n  ⚠️ Copy del giro: la asesoría NO negocia ni consigue ofertas. No mencionar $19.990.\n\n  GENERADO por scripts/gen-emails.mjs (sistema de diseño v1). No editar a mano: cambiá el\n  generador y corré  node scripts/gen-emails.mjs && node scripts/gen-waitlist-reviews-workflows.mjs\n  Todo dato que escribe el usuario va escapado para HTML.\n-->\n<body style=\"margin:0;padding:0;background:#f2f7f6;-webkit-font-smoothing:antialiased;\">\n  <div style=\"display:none;max-height:0;overflow:hidden;opacity:0;\">Tu asesoría está confirmada. Te escribimos por WhatsApp.</div>\n  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#f2f7f6;\">\n    <tr><td align=\"center\" style=\"padding:32px 12px;\">\n      <table role=\"presentation\" width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:100%;max-width:600px;\">\n\n        <tr><td style=\"padding:0 4px 20px;\">\n          <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n            <td><picture><source srcset=\"https://www.electrificarte.com/brand/email-wordmark-niebla.png\" media=\"(prefers-color-scheme: dark)\"><img src=\"https://www.electrificarte.com/brand/email-wordmark-tinta.png\" alt=\"Electrificarte\" width=\"218\" height=\"16\" style=\"display:block;border:0;width:218px;height:16px;\"></picture></td>\n            \n          </tr></table>\n        </td></tr>\n\n        <tr><td style=\"background:#ffffff;border:1px solid #dfe4e4;border-radius:12px;padding:36px 32px 32px;\">\n<h1 style=\"margin:0 0 16px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:28px;font-weight:700;line-height:1.1;letter-spacing:-0.02em;color:#0f1716;\">Tu asesoría está confirmada</h1>\n<p style=\"margin:0 0 16px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.55;color:#495251;\">Hola <strong style=\"font-weight:600;color:#0f1716;\">{{ String(($('Datos correo asesoría').item.json.nombre) ?? '').trim().replace(/[&<>\"']/g, c => '&#' + c.charCodeAt(0) + ';') }}</strong>, recibimos tu pago. Durante los próximos 10 días tienes un asesor experto por WhatsApp para ayudarte a elegir tu auto electrificado según tu uso, tu presupuesto y dónde vas a cargar.</p>\n\n<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin:8px 0 24px;background:#caefea;border-radius:12px;\">\n  <tr><td style=\"padding:20px;\">\n    <p style=\"margin:0;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#0f1716;\">Te escribimos a este WhatsApp</p>\n    <p style=\"margin:4px 0 0;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:20px;line-height:1.25;font-weight:700;letter-spacing:-0.01em;color:#0f1716;\">{{ String(($('Datos correo asesoría').item.json.telefono) ?? '').trim().replace(/[&<>\"']/g, c => '&#' + c.charCodeAt(0) + ';') }}</p>\n  </td></tr>\n</table>\n\n<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin:8px 0 24px;border-top:1px solid #dfe4e4;\">\n  <tr>\n    <td style=\"padding:12px 16px 12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#495251;vertical-align:top;width:34%;\">1. Diagnóstico</td>\n    <td style=\"padding:12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;font-weight:600;color:#0f1716;vertical-align:top;\">Cómo usas el auto, cuántos km haces y con qué presupuesto.</td>\n  </tr>\n  <tr>\n    <td style=\"padding:12px 16px 12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#495251;vertical-align:top;width:34%;\">2. Recomendación</td>\n    <td style=\"padding:12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;font-weight:600;color:#0f1716;vertical-align:top;\">Hasta 3 modelos del catálogo, con datos reales de cada ficha.</td>\n  </tr>\n  <tr>\n    <td style=\"padding:12px 16px 12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#495251;vertical-align:top;width:34%;\">3. Compra</td>\n    <td style=\"padding:12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;font-weight:600;color:#0f1716;vertical-align:top;\">Cómo cotizar con vendedores oficiales y qué revisar antes de firmar.</td>\n  </tr>\n</table>\n<p style=\"margin:0 0 16px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.55;color:#495251;font-size:14px;\">Si el número no es el correcto, escríbenos a <a href=\"mailto:contacto@electrificarte.com\" style=\"color:#1d605b;\">contacto@electrificarte.com</a> y lo corregimos.</p>\n\n<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin:8px 0 0;\"><tr>\n  <td style=\"border-radius:8px;background:#ffffff;border:1px solid #cad1d0;\">\n    <a href=\"https://www.electrificarte.com/marcas\" style=\"display:inline-block;padding:14px 24px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;font-weight:600;line-height:1.2;color:#0f1716;text-decoration:none;border-radius:8px;\">Explorar el catálogo &rarr;</a>\n  </td>\n</tr></table>\n        </td></tr>\n\n        <tr><td style=\"padding:24px 4px 0;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;line-height:1.6;color:#687170;\">\n          Electrificarte, marketplace de autos electrificados en Chile.<br>\n          <a href=\"https://www.electrificarte.com\" style=\"color:#1d605b;text-decoration:underline;\">electrificarte.com</a> y <a href=\"mailto:contacto@electrificarte.com\" style=\"color:#1d605b;text-decoration:underline;\">contacto@electrificarte.com</a>\n        </td></tr>\n\n      </table>\n    </td></tr>\n  </table>\n</body>\n</html>\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "as-mail-cliente",
+      "name": "Correo asesoría confirmada (persona)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        300,
+        180
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Resend (Authorization Bearer)"
+        }
+      },
+      "notes": "Asigná la credencial Resend. El html va en modo expresión (empieza con '=')."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "keypair",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "from",
+              "value": "Electrificarte <no-reply@electrificarte.com>"
+            },
+            {
+              "name": "to",
+              "value": "francisco@electrificarte.com"
+            },
+            {
+              "name": "subject",
+              "value": "Se pagó una asesoría"
+            },
+            {
+              "name": "html",
+              "value": "=<!DOCTYPE html>\n<html lang=\"es\">\n<head>\n  <meta charset=\"utf-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n  <meta name=\"color-scheme\" content=\"light dark\">\n  <meta name=\"supported-color-schemes\" content=\"light dark\">\n  <title>Electrificarte</title>\n</head>\n<!--\n  ASESORÍA: aviso interno a Francisco de un pago confirmado.\n  Lee del nodo Set \"Datos correo asesoría\": nombre, email, telefono, orderId.\n\n  GENERADO por scripts/gen-emails.mjs (sistema de diseño v1). No editar a mano: cambiá el\n  generador y corré  node scripts/gen-emails.mjs && node scripts/gen-waitlist-reviews-workflows.mjs\n  Todo dato que escribe el usuario va escapado para HTML.\n-->\n<body style=\"margin:0;padding:0;background:#f2f7f6;-webkit-font-smoothing:antialiased;\">\n  <div style=\"display:none;max-height:0;overflow:hidden;opacity:0;\">Se pagó una asesoría nueva.</div>\n  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#f2f7f6;\">\n    <tr><td align=\"center\" style=\"padding:32px 12px;\">\n      <table role=\"presentation\" width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:100%;max-width:600px;\">\n\n        <tr><td style=\"padding:0 4px 20px;\">\n          <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n            <td><picture><source srcset=\"https://www.electrificarte.com/brand/email-wordmark-niebla.png\" media=\"(prefers-color-scheme: dark)\"><img src=\"https://www.electrificarte.com/brand/email-wordmark-tinta.png\" alt=\"Electrificarte\" width=\"218\" height=\"16\" style=\"display:block;border:0;width:218px;height:16px;\"></picture></td>\n            <td align=\"right\"><span style=\"display:inline-block;padding:4px 8px;border-radius:4px;background:#0f1716;color:#ffffff;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;font-weight:600;line-height:1.2;\">Uso interno</span></td>\n          </tr></table>\n        </td></tr>\n\n        <tr><td style=\"background:#ffffff;border:1px solid #dfe4e4;border-radius:12px;padding:36px 32px 32px;\">\n<h1 style=\"margin:0 0 16px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:28px;font-weight:700;line-height:1.1;letter-spacing:-0.02em;color:#0f1716;\">Se pagó una asesoría</h1>\n<p style=\"margin:0 0 16px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.55;color:#495251;\">Reveniu confirmó el pago. El asesor de WhatsApp ya la atiende por 10 días.</p>\n\n<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin:8px 0 24px;border-top:1px solid #dfe4e4;\">\n  <tr>\n    <td style=\"padding:12px 16px 12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#495251;vertical-align:top;width:34%;\">Nombre</td>\n    <td style=\"padding:12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;font-weight:600;color:#0f1716;vertical-align:top;\">{{ String(($('Datos correo asesoría').item.json.nombre) ?? '').trim().replace(/[&<>\"']/g, c => '&#' + c.charCodeAt(0) + ';') }}</td>\n  </tr>\n  <tr>\n    <td style=\"padding:12px 16px 12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#495251;vertical-align:top;width:34%;\">Teléfono</td>\n    <td style=\"padding:12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;font-weight:600;color:#0f1716;vertical-align:top;\">{{ String(($('Datos correo asesoría').item.json.telefono) ?? '').trim().replace(/[&<>\"']/g, c => '&#' + c.charCodeAt(0) + ';') }}</td>\n  </tr>\n  <tr>\n    <td style=\"padding:12px 16px 12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#495251;vertical-align:top;width:34%;\">Email</td>\n    <td style=\"padding:12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;font-weight:600;color:#0f1716;vertical-align:top;\">{{ String(($('Datos correo asesoría').item.json.email) ?? '').trim().replace(/[&<>\"']/g, c => '&#' + c.charCodeAt(0) + ';') }}</td>\n  </tr>\n  <tr>\n    <td style=\"padding:12px 16px 12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#495251;vertical-align:top;width:34%;\">Orden</td>\n    <td style=\"padding:12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;font-weight:600;color:#0f1716;vertical-align:top;\">{{ String(($('Datos correo asesoría').item.json.orderId) ?? '').trim().replace(/[&<>\"']/g, c => '&#' + c.charCodeAt(0) + ';') }}</td>\n  </tr>\n</table>\n\n<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin:8px 0 0;\"><tr>\n  <td style=\"border-radius:8px;background:#1d605b;\">\n    <a href=\"https://wa.me/{{ String(($('Datos correo asesoría').item.json.telefono) ?? '').replace(/[^0-9]/g, '') }}\" style=\"display:inline-block;padding:14px 24px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;font-weight:600;line-height:1.2;color:#ffffff;text-decoration:none;border-radius:8px;\">Escribir por WhatsApp &rarr;</a>\n  </td>\n</tr></table>\n        </td></tr>\n\n        <tr><td style=\"padding:24px 4px 0;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;line-height:1.6;color:#687170;\">\n          Aviso interno generado automáticamente por n8n.\n        </td></tr>\n\n      </table>\n    </td></tr>\n  </table>\n</body>\n</html>\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "as-mail-francisco",
+      "name": "Correo asesoría pagada (Francisco)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        300,
+        420
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Resend (Authorization Bearer)"
+        }
+      },
+      "notes": "Asigná la credencial Resend. El html va en modo expresión (empieza con '=')."
+    }
+  ],
+  "connections": {
+    "Probar (Manual)": {
+      "main": [
+        [
+          {
+            "node": "Datos correo asesoría",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Datos correo asesoría": {
+      "main": [
+        [
+          {
+            "node": "Correo asesoría confirmada (persona)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Correo asesoría pagada (Francisco)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {},
+  "pinData": {}
+}

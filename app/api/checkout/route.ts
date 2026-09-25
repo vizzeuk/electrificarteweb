@@ -4,6 +4,7 @@ import crypto from "crypto";
 import { z } from "zod";
 import { signOrderToken } from "@/lib/order-token";
 import { checkRateLimitRedis } from "@/lib/rate-limit-redis";
+import { n8nHeaders } from "@/lib/n8n";
 
 /**
  * Inicia el pago en Reveniu para una solicitud del formulario.
@@ -128,7 +129,7 @@ export async function POST(req: NextRequest) {
       try {
         const res = await fetch(webhookUrl, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: n8nHeaders(),
           body: JSON.stringify({ orderId, status: "pendiente", type: isAdvisory ? "advisory" : "lead", ...data }),
           signal: AbortSignal.timeout(8_000),
         });

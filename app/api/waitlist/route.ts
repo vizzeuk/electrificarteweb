@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { n8nHeaders } from "@/lib/n8n";
 
 /**
  * Alta en la WAITLIST — registro de personas interesadas. Flujo principal de captación
@@ -49,7 +50,7 @@ export async function POST(request: Request) {
   try {
     const res = await fetch(webhookUrl, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: n8nHeaders(),
       body: JSON.stringify({
         ...parsed.data,
         model: parsed.data.model || null,

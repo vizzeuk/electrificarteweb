@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
+  <title>Electrificarte</title>
+</head>
+<!--
+  ASESORÍA: aviso interno a Francisco de un pago confirmado.
+  Lee del nodo Set "Datos correo asesoría": nombre, email, telefono, orderId.
+
+  GENERADO por scripts/gen-emails.mjs (sistema de diseño v1). No editar a mano: cambiá el
+  generador y corré  node scripts/gen-emails.mjs && node scripts/gen-waitlist-reviews-workflows.mjs
+  Todo dato que escribe el usuario va escapado para HTML.
+-->
+<body style="margin:0;padding:0;background:#f2f7f6;-webkit-font-smoothing:antialiased;">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">Se pagó una asesoría nueva.</div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f2f7f6;">
+    <tr><td align="center" style="padding:32px 12px;">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;">
+
+        <tr><td style="padding:0 4px 20px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+            <td><picture><source srcset="https://www.electrificarte.com/brand/email-wordmark-niebla.png" media="(prefers-color-scheme: dark)"><img src="https://www.electrificarte.com/brand/email-wordmark-tinta.png" alt="Electrificarte" width="218" height="16" style="display:block;border:0;width:218px;height:16px;"></picture></td>
+            <td align="right"><span style="display:inline-block;padding:4px 8px;border-radius:4px;background:#0f1716;color:#ffffff;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;font-weight:600;line-height:1.2;">Uso interno</span></td>
+          </tr></table>
+        </td></tr>
+
+        <tr><td style="background:#ffffff;border:1px solid #dfe4e4;border-radius:12px;padding:36px 32px 32px;">
+<h1 style="margin:0 0 16px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:28px;font-weight:700;line-height:1.1;letter-spacing:-0.02em;color:#0f1716;">Se pagó una asesoría</h1>
+<p style="margin:0 0 16px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.55;color:#495251;">Reveniu confirmó el pago. El asesor de WhatsApp ya la atiende por 10 días.</p>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:8px 0 24px;border-top:1px solid #dfe4e4;">
+  <tr>
+    <td style="padding:12px 16px 12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#495251;vertical-align:top;width:34%;">Nombre</td>
+    <td style="padding:12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;font-weight:600;color:#0f1716;vertical-align:top;">{{ String(($('Datos correo asesoría').item.json.nombre) ?? '').trim().replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';') }}</td>
+  </tr>
+  <tr>
+    <td style="padding:12px 16px 12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#495251;vertical-align:top;width:34%;">Teléfono</td>
+    <td style="padding:12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;font-weight:600;color:#0f1716;vertical-align:top;">{{ String(($('Datos correo asesoría').item.json.telefono) ?? '').trim().replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';') }}</td>
+  </tr>
+  <tr>
+    <td style="padding:12px 16px 12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#495251;vertical-align:top;width:34%;">Email</td>
+    <td style="padding:12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;font-weight:600;color:#0f1716;vertical-align:top;">{{ String(($('Datos correo asesoría').item.json.email) ?? '').trim().replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';') }}</td>
+  </tr>
+  <tr>
+    <td style="padding:12px 16px 12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#495251;vertical-align:top;width:34%;">Orden</td>
+    <td style="padding:12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;font-weight:600;color:#0f1716;vertical-align:top;">{{ String(($('Datos correo asesoría').item.json.orderId) ?? '').trim().replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';') }}</td>
+  </tr>
+</table>
+
+<table role="presentation" cellpadding="0" cellspacing="0" style="margin:8px 0 0;"><tr>
+  <td style="border-radius:8px;background:#1d605b;">
+    <a href="https://wa.me/{{ String(($('Datos correo asesoría').item.json.telefono) ?? '').replace(/[^0-9]/g, '') }}" style="display:inline-block;padding:14px 24px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;font-weight:600;line-height:1.2;color:#ffffff;text-decoration:none;border-radius:8px;">Escribir por WhatsApp &rarr;</a>
+  </td>
+</tr></table>
+        </td></tr>
+
+        <tr><td style="padding:24px 4px 0;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;line-height:1.6;color:#687170;">
+          Aviso interno generado automáticamente por n8n.
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>

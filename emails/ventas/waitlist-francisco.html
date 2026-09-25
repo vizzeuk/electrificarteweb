@@ -3,68 +3,67 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="light">
-  <title>Nueva persona en la waitlist</title>
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
+  <title>Electrificarte</title>
 </head>
 <!--
-  WAITLIST · USO INTERNO (Francisco). Se dispara cuando alguien se registra en la waitlist.
-  Expresiones n8n (referencian al nodo Webhook para funcionar en cualquier posición del flujo):
-    {{ $('Webhook waitlist').item.json.body.firstName }} {{ $('Webhook waitlist').item.json.body.lastName }}
-    {{ $('Webhook waitlist').item.json.body.email }} {{ $('Webhook waitlist').item.json.body.phone }}
-    {{ $('Webhook waitlist').item.json.body.model }}  → auto de interés (opcional)
-    {{ $('Webhook waitlist').item.json.body.source }} → de qué CTA vino (hero, pdp, plp, comparador...)
+  WAITLIST: aviso interno a Francisco.
+  Lee del nodo "Webhook waitlist": body.firstName, lastName, email, phone, model, source.
+
+  GENERADO por scripts/gen-emails.mjs (sistema de diseño v1). No editar a mano: cambiá el
+  generador y corré  node scripts/gen-emails.mjs && node scripts/gen-waitlist-reviews-workflows.mjs
+  Todo dato que escribe el usuario va escapado para HTML.
 -->
-<body style="margin:0;padding:0;background:#F3F4F6;font-family:'Helvetica Neue',Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+<body style="margin:0;padding:0;background:#f2f7f6;-webkit-font-smoothing:antialiased;">
   <div style="display:none;max-height:0;overflow:hidden;opacity:0;">Se registró una persona nueva en la waitlist.</div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f2f7f6;">
+    <tr><td align="center" style="padding:32px 12px;">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;">
 
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F3F4F6;">
-    <tr><td align="center" style="padding:24px 12px;">
-      <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;background:#FFFFFF;border:1px solid #E5E7EB;border-radius:16px;overflow:hidden;">
-
-        <tr><td style="padding:26px 32px;border-bottom:1px solid #F3F4F6;">
-          <table role="presentation" width="100%"><tr>
-            <td><picture><source srcset="https://www.electrificarte.com/logo-email-white.png" media="(prefers-color-scheme: dark)"><img src="https://www.electrificarte.com/logo-email.png" alt="Electrificarte" height="28" style="display:block;border:0;height:28px;width:auto;"></picture></td>
-            <td align="right" style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:#9CA3AF;">Uso interno</td>
+        <tr><td style="padding:0 4px 20px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+            <td><picture><source srcset="https://www.electrificarte.com/brand/email-wordmark-niebla.png" media="(prefers-color-scheme: dark)"><img src="https://www.electrificarte.com/brand/email-wordmark-tinta.png" alt="Electrificarte" width="218" height="16" style="display:block;border:0;width:218px;height:16px;"></picture></td>
+            <td align="right"><span style="display:inline-block;padding:4px 8px;border-radius:4px;background:#0f1716;color:#ffffff;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;font-weight:600;line-height:1.2;">Uso interno</span></td>
           </tr></table>
         </td></tr>
 
-        <tr><td style="padding:36px 32px 8px;">
-          <p style="margin:0 0 8px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#00A6A6;">Nueva inscripción · Waitlist</p>
-          <h1 style="margin:0 0 16px;font-size:24px;font-weight:800;line-height:1.2;color:#111827;letter-spacing:-0.01em;">Se sumó una persona a la lista</h1>
-          <p style="margin:0 0 20px;font-size:15px;line-height:1.65;color:#4B5563;">Hola <strong style="color:#111827;">Francisco</strong>, entró un registro nuevo en la waitlist. Acá van sus datos.</p>
+        <tr><td style="background:#ffffff;border:1px solid #dfe4e4;border-radius:12px;padding:36px 32px 32px;">
+<h1 style="margin:0 0 16px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:28px;font-weight:700;line-height:1.1;letter-spacing:-0.02em;color:#0f1716;">Se sumó una persona a la waitlist</h1>
+<p style="margin:0 0 16px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.55;color:#495251;">Entró un registro nuevo. Estos son sus datos.</p>
 
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #E5E7EB;border-radius:12px;margin:0 0 20px;">
-            <tr><td style="padding:14px 20px;border-bottom:1px solid #F3F4F6;">
-              <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;color:#9CA3AF;">Persona</div>
-              <div style="font-size:15px;font-weight:700;color:#111827;margin-top:3px;">{{ $('Webhook waitlist').item.json.body.firstName }} {{ $('Webhook waitlist').item.json.body.lastName }}</div>
-            </td></tr>
-            <tr><td style="padding:14px 20px;border-bottom:1px solid #F3F4F6;">
-              <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;color:#9CA3AF;">Auto de interés</div>
-              <div style="font-size:15px;font-weight:700;color:#006A61;margin-top:3px;">{{ $('Webhook waitlist').item.json.body.model || '— no indicó' }}</div>
-            </td></tr>
-            <tr><td style="padding:14px 20px;border-bottom:1px solid #F3F4F6;">
-              <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;color:#9CA3AF;">Contacto</div>
-              <div style="font-size:15px;font-weight:700;color:#111827;margin-top:3px;">{{ $('Webhook waitlist').item.json.body.phone }}</div>
-              <div style="font-size:13px;color:#4B5563;margin-top:2px;">{{ $('Webhook waitlist').item.json.body.email }}</div>
-            </td></tr>
-            <tr><td style="padding:14px 20px;">
-              <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;color:#9CA3AF;">Vino desde</div>
-              <div style="font-size:15px;font-weight:700;color:#111827;margin-top:3px;">{{ $('Webhook waitlist').item.json.body.source }}</div>
-            </td></tr>
-          </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:8px 0 24px;border-top:1px solid #dfe4e4;">
+  <tr>
+    <td style="padding:12px 16px 12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#495251;vertical-align:top;width:34%;">Nombre</td>
+    <td style="padding:12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;font-weight:600;color:#0f1716;vertical-align:top;">{{ String(($('Webhook waitlist').item.json.body.firstName) ?? '').trim().replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';') }} {{ String(($('Webhook waitlist').item.json.body.lastName) ?? '').trim().replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';') }}</td>
+  </tr>
+  <tr>
+    <td style="padding:12px 16px 12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#495251;vertical-align:top;width:34%;">Auto de interés</td>
+    <td style="padding:12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;font-weight:600;color:#0f1716;vertical-align:top;">{{ String(($('Webhook waitlist').item.json.body.model) ?? '').trim().replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';') || 'No indicó' }}</td>
+  </tr>
+  <tr>
+    <td style="padding:12px 16px 12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#495251;vertical-align:top;width:34%;">Teléfono</td>
+    <td style="padding:12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;font-weight:600;color:#0f1716;vertical-align:top;">{{ String(($('Webhook waitlist').item.json.body.phone) ?? '').trim().replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';') }}</td>
+  </tr>
+  <tr>
+    <td style="padding:12px 16px 12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#495251;vertical-align:top;width:34%;">Email</td>
+    <td style="padding:12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;font-weight:600;color:#0f1716;vertical-align:top;">{{ String(($('Webhook waitlist').item.json.body.email) ?? '').trim().replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';') }}</td>
+  </tr>
+  <tr>
+    <td style="padding:12px 16px 12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#495251;vertical-align:top;width:34%;">Vino desde</td>
+    <td style="padding:12px 0;border-bottom:1px solid #dfe4e4;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;font-weight:600;color:#0f1716;vertical-align:top;">{{ String(($('Webhook waitlist').item.json.body.source) ?? '').trim().replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';') || 'web' }}</td>
+  </tr>
+</table>
+
+<table role="presentation" cellpadding="0" cellspacing="0" style="margin:8px 0 0;"><tr>
+  <td style="border-radius:8px;background:#1d605b;">
+    <a href="https://wa.me/{{ String(($('Webhook waitlist').item.json.body.phone) ?? '').replace(/[^0-9]/g, '') }}" style="display:inline-block;padding:14px 24px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;font-weight:600;line-height:1.2;color:#ffffff;text-decoration:none;border-radius:8px;">Escribir por WhatsApp &rarr;</a>
+  </td>
+</tr></table>
         </td></tr>
 
-        <tr><td style="padding:0 32px 36px;">
-          <table role="presentation" cellpadding="0" cellspacing="0"><tr>
-            <td style="border-radius:12px;background:#00E5E5;">
-              <a href="https://wa.me/{{ $('Webhook waitlist').item.json.body.phone.replace(/[^0-9]/g, '') }}" style="display:inline-block;padding:15px 34px;font-size:14px;font-weight:700;color:#000000;text-decoration:none;border-radius:12px;">Escribir por WhatsApp</a>
-            </td>
-          </tr></table>
-        </td></tr>
-
-        <tr><td style="padding:28px 32px;background:#000000;">
-          <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:#FFFFFF;letter-spacing:-0.01em;">ELECTRIFICARTE<span style="color:#00E5E5;">.COM</span></p>
-          <p style="margin:0;font-size:12px;line-height:1.6;color:rgba(255,255,255,0.55);">Alerta interna generada automáticamente.</p>
+        <tr><td style="padding:24px 4px 0;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;line-height:1.6;color:#687170;">
+          Aviso interno generado automáticamente por n8n.
         </td></tr>
 
       </table>

@@ -28,17 +28,25 @@ sobre fondo oscuro. Ambos PNG viven en `public/` y se sirven desde `www`.
 | `waitlist-francisco.html` | (mismo evento) | **Francisco** (interno) | `n8n/waitlist.json` |
 | `nueva-resena-francisco.html` | Alguien envía una reseña | **Francisco** (interno) | `n8n/reviews.json` |
 | `resena-recibida.html` | (mismo evento) | Quien dejó la reseña | `n8n/reviews.json` |
+| `asesoria-confirmada.html` | Reveniu confirma el pago de la Asesoría | La persona | `n8n/asesoria-correos.json` |
+| `asesoria-francisco.html` | (mismo evento) | **Francisco** (interno) | `n8n/asesoria-correos.json` |
+
+**Estos 6 se generan con `scripts/gen-emails.mjs` (sistema de diseño v1): no se editan a mano.**
+Todo dato que escribe el usuario va escapado para HTML (una reseña con `<a href>` llega como
+texto, no como link). Flujo de edición:
+```bash
+node scripts/gen-emails.mjs && node scripts/gen-waitlist-reviews-workflows.mjs
+```
+Los de asesoría leen de un nodo Set **"Datos correo asesoría"** (nombre, email, telefono,
+orderId) que se agrega en el workflow de pagos justo antes de los correos: así la plantilla no
+depende de cómo se llamen los nodos de ese flujo.
 
 Estos 4 usan expresiones que **referencian al nodo Webhook por nombre**
 (`$('Webhook waitlist')` / `$('Webhook reseñas')`) en vez de `$json`. Así funcionan
 aunque el nodo de correo vaya después del de Supabase — que es justo el problema que
 tuvimos con los correos de ventas.
 
-Los workflows se generan con:
-```bash
-node scripts/gen-waitlist-reviews-workflows.mjs
-```
-Correlo cada vez que edites uno de esos HTML, o el cambio no llega al JSON de n8n.
+Los workflows se regeneran con el comando de arriba. Si no lo corrés, el cambio no llega al JSON de n8n.
 
 ## Probar los 4 correos directo en n8n (sin tu flujo real)
 

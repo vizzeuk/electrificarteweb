@@ -3,56 +3,55 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="light">
-  <title>Ya estás en la waitlist — Electrificarte</title>
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
+  <title>Electrificarte</title>
 </head>
 <!--
-  WAITLIST · Confirmación a la persona que se registró. Va DIRECTO al nodo Resend de n8n.
-  Expresiones n8n (referencian al nodo Webhook para funcionar en cualquier posición del flujo):
-    {{ $('Webhook waitlist').item.json.body.firstName }}  → nombre
-    {{ $('Webhook waitlist').item.json.body.model }}      → auto de interés (puede venir vacío)
+  WAITLIST: confirmación a la persona que se registró. Va al nodo Resend de n8n.
+  Lee del nodo "Webhook waitlist": body.firstName, body.model (opcional).
+  ⚠️ La waitlist SOLO registra interesados: no prometer una oferta, no dar plazos y no decir
+  que el servicio de negociación es o será gratis.
 
-  ⚠️ OJO CON EL WORDING: la waitlist SOLO registra interesados. No prometer una oferta,
-  no dar plazos y no decir que el servicio de negociación es o será gratis.
+  GENERADO por scripts/gen-emails.mjs (sistema de diseño v1). No editar a mano: cambiá el
+  generador y corré  node scripts/gen-emails.mjs && node scripts/gen-waitlist-reviews-workflows.mjs
+  Todo dato que escribe el usuario va escapado para HTML.
 -->
-<body style="margin:0;padding:0;background:#F3F4F6;font-family:'Helvetica Neue',Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+<body style="margin:0;padding:0;background:#f2f7f6;-webkit-font-smoothing:antialiased;">
   <div style="display:none;max-height:0;overflow:hidden;opacity:0;">Quedaste registrado en la waitlist de Electrificarte.</div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f2f7f6;">
+    <tr><td align="center" style="padding:32px 12px;">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;">
 
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F3F4F6;">
-    <tr><td align="center" style="padding:24px 12px;">
-      <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;background:#FFFFFF;border:1px solid #E5E7EB;border-radius:16px;overflow:hidden;">
-
-        <tr><td style="padding:26px 32px;border-bottom:1px solid #F3F4F6;">
-          <picture><source srcset="https://www.electrificarte.com/logo-email-white.png" media="(prefers-color-scheme: dark)"><img src="https://www.electrificarte.com/logo-email.png" alt="Electrificarte" height="28" style="display:block;border:0;height:28px;width:auto;"></picture>
-        </td></tr>
-
-        <tr><td style="padding:36px 32px 8px;">
-          <p style="margin:0 0 8px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#00A6A6;">Waitlist</p>
-          <h1 style="margin:0 0 16px;font-size:24px;font-weight:800;line-height:1.2;color:#111827;letter-spacing:-0.01em;">Ya estás en la lista</h1>
-          <p style="margin:0 0 16px;font-size:15px;line-height:1.65;color:#4B5563;">Hola <strong style="color:#111827;">{{ $('Webhook waitlist').item.json.body.firstName }}</strong>, registramos tus datos. Te contactaremos cuando abramos el acceso y tengamos novedades para ti.</p>
-
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #E5E7EB;border-radius:12px;margin:8px 0 20px;">
-            <tr><td style="padding:16px 20px;">
-              <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;color:#9CA3AF;">Auto que te interesa</div>
-              <div style="font-size:16px;font-weight:700;color:#006A61;margin-top:3px;">{{ $('Webhook waitlist').item.json.body.model || 'Aún no lo definiste' }}</div>
-            </td></tr>
-          </table>
-
-          <p style="margin:0 0 24px;font-size:14px;line-height:1.6;color:#4B5563;">Mientras tanto puedes seguir explorando el catálogo. Si todavía no tienes claro qué auto te conviene, nuestra <strong style="color:#111827;">Asesoría</strong> te ayuda a decidir según tu uso, presupuesto y perfil.</p>
-        </td></tr>
-
-        <tr><td style="padding:0 32px 36px;">
-          <table role="presentation" cellpadding="0" cellspacing="0"><tr>
-            <td style="border-radius:12px;background:#00E5E5;">
-              <a href="https://www.electrificarte.com/marcas" style="display:inline-block;padding:15px 34px;font-size:14px;font-weight:700;color:#000000;text-decoration:none;border-radius:12px;">Ver vehículos</a>
-            </td>
+        <tr><td style="padding:0 4px 20px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+            <td><picture><source srcset="https://www.electrificarte.com/brand/email-wordmark-niebla.png" media="(prefers-color-scheme: dark)"><img src="https://www.electrificarte.com/brand/email-wordmark-tinta.png" alt="Electrificarte" width="218" height="16" style="display:block;border:0;width:218px;height:16px;"></picture></td>
+            
           </tr></table>
         </td></tr>
 
-        <tr><td style="padding:28px 32px;background:#000000;">
-          <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:#FFFFFF;letter-spacing:-0.01em;">ELECTRIFICARTE<span style="color:#00E5E5;">.COM</span></p>
-          <p style="margin:0;font-size:12px;line-height:1.6;color:rgba(255,255,255,0.55);">Marketplace de autos electrificados en Chile.<br>
-          <a href="https://www.electrificarte.com" style="color:#00E5E5;text-decoration:none;">www.electrificarte.com</a> · contacto@electrificarte.com</p>
+        <tr><td style="background:#ffffff;border:1px solid #dfe4e4;border-radius:12px;padding:36px 32px 32px;">
+<h1 style="margin:0 0 16px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:28px;font-weight:700;line-height:1.1;letter-spacing:-0.02em;color:#0f1716;">Ya estás en la lista</h1>
+<p style="margin:0 0 16px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.55;color:#495251;">Hola <strong style="font-weight:600;color:#0f1716;">{{ String(($('Webhook waitlist').item.json.body.firstName) ?? '').trim().replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';') }}</strong>, registramos tus datos. Te contactaremos cuando abramos el acceso y tengamos novedades para ti.</p>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:8px 0 24px;background:#caefea;border-radius:12px;">
+  <tr><td style="padding:20px;">
+    <p style="margin:0;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#0f1716;">Auto que te interesa</p>
+    <p style="margin:4px 0 0;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:20px;line-height:1.25;font-weight:700;letter-spacing:-0.01em;color:#0f1716;">{{ String(($('Webhook waitlist').item.json.body.model) ?? '').trim().replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';') || 'Aún no lo definiste' }}</p>
+  </td></tr>
+</table>
+<p style="margin:0 0 16px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.55;color:#495251;">Mientras tanto puedes seguir explorando el catálogo. Si todavía no tienes claro qué auto te conviene, la <strong style="font-weight:600;color:#0f1716;">Asesoría</strong> te ayuda a decidir según tu uso, tu presupuesto y dónde vas a cargar.</p>
+
+<table role="presentation" cellpadding="0" cellspacing="0" style="margin:8px 0 0;"><tr>
+  <td style="border-radius:8px;background:#1d605b;">
+    <a href="https://www.electrificarte.com/marcas" style="display:inline-block;padding:14px 24px;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;font-weight:600;line-height:1.2;color:#ffffff;text-decoration:none;border-radius:8px;">Ver el catálogo &rarr;</a>
+  </td>
+</tr></table>
+        </td></tr>
+
+        <tr><td style="padding:24px 4px 0;font-family:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;line-height:1.6;color:#687170;">
+          Electrificarte, marketplace de autos electrificados en Chile.<br>
+          <a href="https://www.electrificarte.com" style="color:#1d605b;text-decoration:underline;">electrificarte.com</a> y <a href="mailto:contacto@electrificarte.com" style="color:#1d605b;text-decoration:underline;">contacto@electrificarte.com</a>
         </td></tr>
 
       </table>

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { checkRateLimitRedis } from "@/lib/rate-limit-redis";
+import { n8nHeaders } from "@/lib/n8n";
 
 const schema = z.object({
   // Datos personales
@@ -56,7 +57,7 @@ export async function POST(request: Request) {
   try {
     const webhookResponse = await fetch(webhookUrl, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: n8nHeaders(),
       body: JSON.stringify({
         ...parsed.data,
         timestamp: new Date().toISOString(),
