@@ -1,0 +1,132 @@
+/* ==========================================================================
+   ELECTRIFICARTE v1 para proyectos con shadcn/ui (dashboard).
+   Reemplaza el bloque :root / .dark / @theme inline que trae shadcn en globals.css.
+   Va DESPUÉS de @import "./tokens.css" (usa sus primitivos --color-laguna, etc.).
+
+   Idea: shadcn sigue usando sus nombres (bg-primary, text-muted-foreground, border…), pero
+   cada uno apunta a un token del sistema.
+
+   ⚠️ `accent` choca de nombre: en la web es la ACCIÓN (Laguna); en shadcn es el fondo suave de
+   hover de menús y botones ghost. Acá gana el sentido de shadcn (Niebla), porque lo usan sus
+   componentes. En un proyecto shadcn: acción = `bg-primary`; destacado Glaciar = `bg-accent-soft`. Así los componentes de components/ui no se tocan
+   para cambiar color; solo se les quitan sombras y píldoras (ver README, sección shadcn).
+   ========================================================================== */
+
+@theme inline {
+  --font-sans: var(--font-switzer), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-cabinet), var(--font-switzer), ui-sans-serif, sans-serif;
+
+  /* Escala de radios del sistema: 4 chip, 8 control, 12 card. Los rounded-* de shadcn caen acá. */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 12px;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+:root {
+  --radius: 12px;
+  --background: var(--color-papel);
+  --foreground: var(--color-tinta);
+  --card: var(--color-papel);
+  --card-foreground: var(--color-tinta);
+  --popover: var(--color-papel);
+  --popover-foreground: var(--color-tinta);
+  --primary: var(--color-laguna);            /* acción: botón primario, enlaces, foco */
+  --primary-foreground: var(--color-papel);
+  --secondary: var(--color-niebla);
+  --secondary-foreground: var(--color-tinta);
+  --muted: var(--color-niebla);
+  --muted-foreground: var(--color-grafito);
+  --accent: var(--color-niebla);             /* hover de menús/ghost (sentido shadcn) */
+  --accent-foreground: var(--color-tinta);
+  --destructive: var(--color-alerta);
+  --border: var(--color-linea);              /* hairlines de cards y tablas */
+  --input: var(--color-linea-fuerte);        /* borde de controles */
+  --ring: var(--color-laguna);
+  /* Gráficos: solo colores del sistema, ordenados por contraste sobre Papel. */
+  --chart-1: var(--color-laguna);
+  --chart-2: var(--color-tinta);
+  --chart-3: var(--color-piedra);
+  --chart-4: var(--color-glaciar-hover);
+  --chart-5: var(--color-linea-fuerte);
+  --sidebar: var(--color-niebla);
+  --sidebar-foreground: var(--color-tinta);
+  --sidebar-primary: var(--color-laguna);
+  --sidebar-primary-foreground: var(--color-papel);
+  --sidebar-accent: var(--color-papel);
+  --sidebar-accent-foreground: var(--color-tinta);
+  --sidebar-border: var(--color-linea);
+  --sidebar-ring: var(--color-laguna);
+}
+
+/* Modo oscuro de shadcn (.dark) = la misma inversión que .theme-dark en la web. */
+.dark {
+  --background: var(--color-tinta);
+  --foreground: var(--color-niebla);
+  --card: var(--color-tinta-2);
+  --card-foreground: var(--color-niebla);
+  --popover: var(--color-tinta-2);
+  --popover-foreground: var(--color-niebla);
+  --primary: var(--color-glaciar);
+  --primary-foreground: var(--color-tinta);
+  --secondary: var(--color-tinta-2);
+  --secondary-foreground: var(--color-niebla);
+  --muted: var(--color-tinta-2);
+  --muted-foreground: var(--color-noche-texto-2);
+  --accent: var(--color-noche-linea);
+  --accent-foreground: var(--color-niebla);
+  --destructive: var(--color-alerta-oscuro);
+  --border: var(--color-noche-linea);
+  --input: var(--color-noche-linea-fuerte);
+  --ring: var(--color-glaciar);
+  --chart-1: var(--color-glaciar);
+  --chart-2: var(--color-niebla);
+  --chart-3: var(--color-noche-texto-3);
+  --chart-4: var(--color-laguna);
+  --chart-5: var(--color-noche-linea-fuerte);
+  --sidebar: var(--color-tinta-2);
+  --sidebar-foreground: var(--color-niebla);
+  --sidebar-primary: var(--color-glaciar);
+  --sidebar-primary-foreground: var(--color-tinta);
+  --sidebar-accent: var(--color-tinta);
+  --sidebar-accent-foreground: var(--color-niebla);
+  --sidebar-border: var(--color-noche-linea);
+  --sidebar-ring: var(--color-glaciar);
+}
+
+@layer base {
+  * { @apply border-border outline-ring/50; }
+  body { @apply bg-background text-foreground font-sans antialiased; }
+}

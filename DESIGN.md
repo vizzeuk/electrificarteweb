@@ -9,6 +9,8 @@ referencia: `docs/design/electrificarte-home.html`, `electrificarte-asesoria.htm
 con qué se reemplaza cada uno (tabla de equivalencias), el inventario de las ~300 clases ya
 definidas y el checklist de revisión. Se verifica con `npm run design:check`.
 
+**Para llevar el sistema a otro proyecto** (dashboard, vendedores): `docs/design/portable/`.
+
 En código:
 - Tokens: `app/globals.css` (`@theme` con primitivos, `@theme inline` con la capa semántica,
   `.theme-dark` para bandas oscuras).

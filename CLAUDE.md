@@ -286,6 +286,9 @@ Más n8n (VPS de Matías) y Supabase. Un cambio en el modelo de leads toca a los
 
 - **`DESIGN.md` + `docs/design/GUIDELINES.md`** — sistema de diseño v1: el primero describe qué es,
   el segundo qué está prohibido, con qué se reemplaza y cómo se verifica.
+- **`docs/design/portable/`** — el sistema v1 empaquetado para el dashboard y la página de
+  vendedores (tokens, `brand.css`, tema shadcn, fuentes, chequeo, capturas y prompt para el
+  agente). Se regenera con `node scripts/gen-design-portable.mjs` cuando cambia un token.
 
 - **`docs/PIVOT-WAITLIST-PLAN.md` — 🔴 EL PLAN VIGENTE.** El giro a waitlist + asesoría-first:
   fases, inventario de qué cambia, estado y tareas manuales. **Empezar por acá.**
