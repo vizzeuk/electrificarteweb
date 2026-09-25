@@ -330,12 +330,17 @@ Bloqueantes de lanzamiento (detalle en `docs/HANDOFF-CONDUCTOR.md` §8):
 - Decidir www vs no-www (canonical usa no-www, Reveniu retorna a www)
 
 Otros:
-- 📝 **Verificar el flujo de VENTAS antiguo en n8n** (pedido de Vicente, sep-2026): el webhook
-  `electrificarte-pago` (Reveniu) → `External id not null` → `Switch` venía de cuando había tres
-  planes; hoy solo quedan **Asesoría** y **vendedores** (la Oferta está en standby). Revisar cada
-  rama del Switch contra Reveniu, cablear ahí los correos de asesoría (`n8n/asesoria-correos.json`,
-  ya probados 5/5 en un workflow temporal) y corregir "Correo pago confirmado (cliente)", que tiene
-  el destinatario fijo en `vicentecossio.dev@gmail.com`.
+- 🔧 **Flujo de VENTAS en n8n (25-sep-2026)** — `scripts/n8n-patch-ventas.mjs` (corrige la rama de
+  pagos) + `scripts/qa/ventas-sim.mts` (simula alta + aviso de pago de Reveniu, sin cobrar).
+  - ✅ Asesoría: el pago ahora deja `status='pagado'` **y `paid_at`**; los 2 correos salen (probado).
+    Antes "Get many rows2" buscaba en `leads` y nada después del pago corría.
+  - ⏳ WhatsApp de confirmación (plantilla `confirmacion_asesoria`): la API key de Kapso que tenía
+    n8n no puede enviar por el número (Meta: "does not exist or missing permissions"). Poner en la
+    credencial n8n "Kapso (X-API-Key)" la misma `KAPSO_API_KEY` que usa la web en Vercel.
+  - "HTTP A WEBHOOK" (flujo de Kapso sin trigger por API) quedó desactivado.
+  - ⏳ Vendedores: correr `scripts/sql/2026-09-25_leads_vendors_order_id.sql` y después
+    `n8n-patch-ventas.mjs --vendedores` (el alta guardaba el RUT donde el pago buscaba la orden).
+  - La API key de Kapso estaba en texto plano en dos nodos: ahora es una credencial.
 - **Header Auth en n8n** (`docs/N8N-SEGURIDAD.md`): la web ya manda el secreto; falta activarlo
   en cada nodo Webhook de n8n **después** de desplegar la web.
 - **Plantilla WhatsApp `asesoria_ultimo_dia`** (idioma `es_CL`): ⏳ pendiente de aprobación de

@@ -231,3 +231,38 @@ writeFileSync("n8n/asesoria-correos.json", JSON.stringify({
   settings: {}, pinData: {},
 }, null, 2));
 console.log("✓ n8n/asesoria-correos.json — 4 nodos");
+
+// ─── VENDEDORES (correos tras el pago de la suscripción) ─────────────────────
+// Igual que asesoría: un Set "Datos correo vendedor" normaliza la fila de leads_vendors que
+// devuelve el update del pago; las plantillas solo leen de ese nodo.
+const vdNodes = [
+  {
+    parameters: {
+      mode: "manual",
+      assignments: { assignments: [
+        { id: "v1", name: "nombre",        type: "string", value: "={{ $json.nombre }}" },
+        { id: "v2", name: "apellido",      type: "string", value: "={{ $json.apellido }}" },
+        { id: "v3", name: "email",         type: "string", value: "={{ $json.email }}" },
+        { id: "v4", name: "telefono",      type: "string", value: "={{ $json.telefono }}" },
+        { id: "v5", name: "concesionario", type: "string", value: "={{ $json.nombre_concesionario }}" },
+        { id: "v6", name: "marcas",        type: "string", value: "={{ Array.isArray($json.marcas) ? $json.marcas.join(', ') : $json.marcas }}" },
+      ] },
+      options: {},
+    },
+    id: "vd-set", name: "Datos correo vendedor",
+    type: "n8n-nodes-base.set", typeVersion: 3.4, position: [0, 300],
+    notes: "Lee la fila de leads_vendors que devuelve 'Update a row' (pago confirmado).",
+  },
+  resend("vd-mail-vendedor", "Correo bienvenida (vendedor)",
+    "={{ $('Datos correo vendedor').item.json.email }}",
+    "Bienvenido a la red de vendedores oficiales", "registro-vendedor.html", [300, 180]),
+  resend("vd-mail-francisco", "Correo vendedor pagó (Francisco)",
+    F, "Un vendedor pagó su suscripción", "nuevo-vendedor-francisco.html", [300, 420]),
+];
+writeFileSync("n8n/vendedores-correos.json", JSON.stringify({
+  name: "Vendedores: correos tras el pago (nodos para pegar)",
+  nodes: vdNodes,
+  connections: { "Datos correo vendedor": { main: [[to("Correo bienvenida (vendedor)"), to("Correo vendedor pagó (Francisco)")]] } },
+  settings: {}, pinData: {},
+}, null, 2));
+console.log("✓ n8n/vendedores-correos.json — 3 nodos");
