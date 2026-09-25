@@ -4,7 +4,14 @@
  *   npx tsx --env-file=.env.local scripts/gen-sheet-autos.ts
  *   npx tsx --env-file=.env.local scripts/gen-sheet-autos.ts --sin-descubrir   (rápido, sin red)
  *
- * Sale en .context/sheet/*.tsv, listo para pegar en cada pestaña del Sheet.
+ * Escribe directo en el Sheet "AUTOS ELECTRIFICARTE" (lib/sheet-sync.ts, vía el
+ * webhook de n8n) y deja una copia en .context/sheet/*.tsv. Con --solo-tsv no
+ * toca el Sheet.
+ *
+ * AUTOS no se reemplaza: se cruza por pdp_id y se escriben solo las celdas que
+ * cambiaron. Las filas que Francisco agrega a mano (sin pdp_id) no se tocan, y
+ * `estado` / `detalle` / `url_oficial` nunca se vacían. CORRIDAS y FALTAN
+ * FUENTES las llena n8n: acá solo se les asegura el encabezado.
  *
  * Además del volcado del catálogo, hace el trabajo pesado de la Fase 0: PROPONE
  * la URL oficial de cada auto. No la inventa con patrones (eso da 404 casi
@@ -20,6 +27,9 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { isChileConfirmedUrl } from "@/lib/chile-url";
 import { describeSlot } from "@/lib/catalog-recheck/slots";
 import { firecrawlConfigured } from "@/lib/catalog-recheck/firecrawl";
+import {
+  asegurarEncabezado, describir, guardarPisadas, reemplazarHoja, sheetSyncConfigured, sincronizar,
+} from "@/lib/sheet-sync";
 
 const descubrir = !process.argv.includes("--sin-descubrir");
 /**
@@ -28,6 +38,7 @@ const descubrir = !process.argv.includes("--sin-descubrir");
  * renderizan todo con JavaScript). 1 credit por página, una sola vez.
  */
 const conFirecrawl = process.argv.includes("--firecrawl");
+const soloTsv = process.argv.includes("--solo-tsv");
 const OUT = ".context/sheet";
 const UA =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0 Safari/537.36";
@@ -492,19 +503,13 @@ async function main(): Promise<void> {
   writeFileSync(`${OUT}/AUTOS.tsv`, tsv([AUTOS_HEADER, ...autos]));
 
   // ── corridas / faltan fuentes (solo encabezados; los llena n8n) ──────────
-  writeFileSync(
-    `${OUT}/CORRIDAS.tsv`,
-    tsv([["fecha", "runId", "lote", "del_lote", "relleno", "revisados", "sin_cambios", "con_cambios", "fuente_caida", "errores", "detalle"]])
-  );
-  writeFileSync(
-    `${OUT}/FALTAN-FUENTES.tsv`,
-    tsv([["fecha", "marca", "modelo", "slug", "carId", "url_oficial"]])
-  );
+  const CORRIDAS_HEADER = ["fecha", "runId", "lote", "del_lote", "relleno", "revisados", "sin_cambios", "con_cambios", "fuente_caida", "errores", "detalle"];
+  const FALTAN_HEADER = ["fecha", "marca", "modelo", "slug", "carId", "url_oficial"];
+  writeFileSync(`${OUT}/CORRIDAS.tsv`, tsv([CORRIDAS_HEADER]));
+  writeFileSync(`${OUT}/FALTAN-FUENTES.tsv`, tsv([FALTAN_HEADER]));
 
   // ── instrucciones ────────────────────────────────────────────────────────
-  writeFileSync(
-    `${OUT}/INSTRUCCIONES.tsv`,
-    tsv([
+  const instrucciones: unknown[][] = [
       ["Columna", "Quién la llena", "Qué va"],
       ["estado", "n8n", 'Vacío = la fila no se procesa. Poner "listo" SOLO para crear una PDP nueva. Las 182 filas precargadas ya existen como PDP: dejar vacío.'],
       ["pdp_id", "automático", "ID del documento en Sanity. Lleno = el auto ya existe (solo se le actualiza la fuente). Vacío = PDP nueva por crear."],
@@ -520,8 +525,39 @@ async function main(): Promise<void> {
       ["", "", ""],
       ["REGLA DURA", "", "Un auto se crea siempre OCULTO. Publicar es siempre acto humano."],
       ["REGLA DURA", "", "Nunca inventar un dato: specs, precio o tipo salen de la fuente o quedan vacíos."],
-    ])
-  );
+      ["", "", ""],
+      ["CÓMO SE ACTUALIZA", "", "Esta planilla la escribe scripts/gen-sheet-autos.ts directo, sin pegar TSV. En AUTOS solo cambia las celdas que difieren de Sanity: nunca borra filas, nunca toca las filas sin pdp_id, y nunca vacía estado, detalle ni url_oficial."],
+      ["CORREGIR UNA URL", "", "Si un auto YA tiene url_oficial y la del Sheet es mejor: editarla acá y correr scripts/import-sheet-fuentes.ts --reemplazar --aplicar ANTES de regenerar. Si no, al regenerar gana la de Sanity (la anterior queda guardada en .context/sheet/pisadas-*.tsv)."],
+  ];
+  writeFileSync(`${OUT}/INSTRUCCIONES.tsv`, tsv(instrucciones));
+
+  // ── al Sheet ─────────────────────────────────────────────────────────────
+  if (soloTsv) {
+    console.log("\n  (--solo-tsv: el Sheet no se tocó)");
+  } else if (!sheetSyncConfigured()) {
+    console.log("\n  \x1b[33mSin N8N_SHEET_SYNC_URL/SECRET: el Sheet no se tocó, solo los TSV.\x1b[0m");
+  } else {
+    console.log("");
+    const r = await sincronizar("AUTOS", {
+      columnas: AUTOS_HEADER,
+      filas: autos.map((f) => Object.fromEntries(AUTOS_HEADER.map((h, i) => [h, f[i]]))),
+      clave: (f) => f.pdp_id,
+      noVaciar: ["estado", "url_oficial", "detalle"],
+    });
+    console.log(describir("AUTOS", r));
+    const log = await guardarPisadas("AUTOS", r.pisadas);
+    if (log) {
+      for (const p of r.pisadas.slice(0, 10)) console.log(`      ${p.columna}: ${p.antes} → ${p.ahora}`);
+      if (r.pisadas.length > 10) console.log(`      … y ${r.pisadas.length - 10} más`);
+      console.log(`      lo anterior quedó en ${log}`);
+    }
+    for (const [hoja, header] of [["CORRIDAS", CORRIDAS_HEADER], ["FALTAN FUENTES", FALTAN_HEADER]] as const) {
+      const creado = await asegurarEncabezado(hoja, [...header]);
+      console.log(`  Sheet · ${hoja.padEnd(15)} ${creado ? "encabezado escrito" : "ya tiene datos (lo llena n8n, no se toca)"}`);
+    }
+    await reemplazarHoja("INSTRUCCIONES", instrucciones);
+    console.log(`  Sheet · ${"INSTRUCCIONES".padEnd(15)} reescrita`);
+  }
 
   // ── Resumen ──────────────────────────────────────────────────────────────
   const conFuente = cars.filter((c) => c.sourceUrls?.[0]).length;
@@ -537,9 +573,7 @@ async function main(): Promise<void> {
     console.log(`  sin candidato (buscar a mano):   ${sug.length - utiles.length}`);
     if (creditsUsados) console.log(`  credits de Firecrawl usados:     ${creditsUsados}`);
   }
-  console.log(`\n  Archivos en ${OUT}/ : AUTOS.tsv · CORRIDAS.tsv · FALTAN-FUENTES.tsv · INSTRUCCIONES.tsv`);
-  console.log(`  Los nombres calzan con las hojas del Sheet. Para re-aplicar las fuentes ya`);
-  console.log(`  encontradas a mano: npx tsx --env-file=.env.local scripts/validar-fuentes.ts data/fuentes-candidatas.tsv\n`);
+  console.log(`\n  Copia local en ${OUT}/ (AUTOS · CORRIDAS · FALTAN-FUENTES · INSTRUCCIONES .tsv)\n`);
 }
 
 void main();

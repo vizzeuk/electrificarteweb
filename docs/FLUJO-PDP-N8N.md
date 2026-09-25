@@ -616,9 +616,9 @@ Sheet real: **AUTOS ELECTRIFICARTE** (`1QYqaKy3pRkGhAe4K4VnV0uUa5G1sOWNMvkyWQxTi
 hojas `AUTOS`, `FALTAN FUENTES`, `CORRIDAS` e `INSTRUCCIONES`. Los nombres van en **mayúsculas**:
 el nodo de Google Sheets las busca por nombre exacto.
 
-Los TSV se generan con **`npx tsx --env-file=.env.local scripts/gen-sheet-autos.ts`** y quedan
-en `.context/sheet/`. El script hace dos cosas: volcar el catálogo y **proponer la URL oficial**
-de cada auto (ver §4).
+**`npx tsx --env-file=.env.local scripts/gen-sheet-autos.ts`** escribe directo en el Sheet (ver
+"Sheet sync" abajo) y deja copia en `.context/sheet/*.tsv`. Hace dos cosas: volcar el catálogo y
+**proponer la URL oficial** de cada auto (ver §4).
 
 **Pestaña `autos`** — una fila = un modelo = una PDP (R1, nunca una fila por versión):
 
@@ -638,15 +638,55 @@ de cada auto (ver §4).
 `CORRIDAS` y `FALTAN FUENTES` son del Flujo C (solo encabezados; las llena n8n), e
 `INSTRUCCIONES` es la guía para Francisco.
 
-**Para volver del Sheet a Sanity** (mientras no exista la credencial de Google en n8n):
+**Para volver del Sheet a Sanity:**
 
 ```
-Sheet → Archivo → Descargar → .tsv
-npx tsx --env-file=.env.local scripts/import-sheet-fuentes.ts ~/Downloads/autos.tsv --aplicar
+npx tsx --env-file=.env.local scripts/import-sheet-fuentes.ts             # lee AUTOS del Sheet, en seco
+npx tsx --env-file=.env.local scripts/import-sheet-fuentes.ts --aplicar
 ```
 
-Solo escribe `sourceUrls`. Rechaza URLs inválidas, de otro mercado (reusa `lib/chile-url.ts`) y
-`pdp_id` que no existan. Sin `--aplicar` solo reporta.
+Solo escribe `sourceUrls`, y por defecto **solo llena**: un auto que ya tiene fuente en Sanity no
+se toca aunque el Sheet diga otra cosa, porque el Sheet puede estar atrasado y pisar a ciegas
+revertiría las correcciones hechas en Sanity. Para imponer la del Sheet a propósito,
+`--reemplazar`. Rechaza URLs inválidas, de otro mercado (`lib/chile-url.ts`) y `pdp_id` que no
+existan. Con un archivo como argumento sigue leyendo un TSV (respaldo si n8n está caído).
+
+#### Sheet sync — los scripts escriben el Sheet solos
+
+Antes cada script dejaba un TSV y había que pegarlo a mano en la pestaña. Ahora escriben directo:
+
+```
+scripts (lib/sheet-sync.ts) ──POST──▶ n8n "Sheet sync" ──▶ Google Sheets API
+                              header secreto      credencial OAuth "Sheets Cadre"
+```
+
+- **Workflow:** `n8n/sheet-sync.json` (id `ecSheetSync00001`, generado por
+  `scripts/gen-sheet-sync-workflow.mjs`). Es un proxy sin lógica: valida, reenvía y devuelve.
+  Webhook `POST https://n8n.cadre.cl/webhook/electrificarte-sheet-sync`.
+- **Por qué por n8n:** es el único lugar con credencial de Google. Con una Service Account,
+  `lib/sheet-sync.ts` podría hablarle a Google directo y el workflow se apaga.
+- **Candados:** header `x-sheet-sync-secret` (credencial n8n "Electrificarte Sheet Sync" ↔
+  `N8N_SHEET_SYNC_SECRET` en `.env.local`) + lista blanca de spreadsheets en el nodo Validar.
+  Con el secreto se escribe en **este** Sheet, no en cualquiera al que tenga acceso la cuenta.
+- **Env:** `N8N_SHEET_SYNC_URL`, `N8N_SHEET_SYNC_SECRET`. Solo en `.env.local`: ningún endpoint
+  de la web lo usa, así que **no va en Vercel**.
+
+**La regla: el Sheet lo edita gente.** Por eso casi nada se reemplaza entero:
+
+| Hoja | Quién la escribe | Cómo |
+|---|---|---|
+| `AUTOS` | `gen-sheet-autos.ts` | Cruza por `pdp_id` y escribe **solo las celdas que cambiaron**. Filas sin `pdp_id` (PDPs nuevas de Francisco) no se tocan. `estado`, `detalle` y `url_oficial` nunca se vacían; si Sanity trae otra `url_oficial`, gana Sanity y la anterior queda en `.context/sheet/pisadas-*.tsv`. |
+| `REVISAR` | `auditar-catalogo.ts --sheet` | Cruza por tipo+auto+detalle. `resuelto` y `nota` nunca se vacían. Un hallazgo que ya no aparece **no se borra**: se marca en `vigente`. Con `--check` no sube (marcaría todo lo demás como resuelto). |
+| `CORRIDAS`, `FALTAN FUENTES` | n8n (Flujo C) | El script solo escribe el encabezado si la hoja está vacía. |
+| `INSTRUCCIONES` | `gen-sheet-autos.ts` | Se reescribe entera — pero aborta si alguien le agregó columnas. |
+
+Las columnas se ubican **por nombre**: si alguien reordena o agrega columnas en el Sheet, se
+respeta. Tests contra un Sheet simulado: `scripts/qa/sheet-sync.test.ts` (en `npm test`).
+
+**Si deja de andar:** HTTP 404 "webhook not registered" = el workflow está inactivo en n8n.
+401/403 = el secreto no calza o venció el OAuth de "Sheets Cadre" (reconectarlo en n8n). El
+OAuth es de una cuenta personal: si esa cuenta revoca el acceso, se cae esto **y** la escritura
+del Flujo C.
 
 ### 3.3 El agente en Console
 

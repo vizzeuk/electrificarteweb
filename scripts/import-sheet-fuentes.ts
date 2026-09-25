@@ -1,13 +1,17 @@
 /**
  * Mete las `url_oficial` del Sheet de vuelta a Sanity (`sourceUrls`).
  *
- *   # En el Sheet: Archivo → Descargar → Valores separados por tabulaciones (.tsv)
- *   npx tsx --env-file=.env.local scripts/import-sheet-fuentes.ts ~/Downloads/autos.tsv
- *   npx tsx --env-file=.env.local scripts/import-sheet-fuentes.ts ~/Downloads/autos.tsv --aplicar
+ *   npx tsx --env-file=.env.local scripts/import-sheet-fuentes.ts              # lee la hoja AUTOS
+ *   npx tsx --env-file=.env.local scripts/import-sheet-fuentes.ts --aplicar
+ *   npx tsx --env-file=.env.local scripts/import-sheet-fuentes.ts ~/Downloads/autos.tsv   # respaldo sin n8n
  *
- * Existe para no quedar bloqueados esperando la credencial de Google en n8n: se
- * exporta el Sheet a TSV y esto escribe. Cuando la credencial exista, el mismo
- * trabajo lo hará un workflow y este script queda como respaldo manual.
+ * Sin archivo, lee la hoja AUTOS directo del Sheet (lib/sheet-sync.ts).
+ *
+ * Por defecto solo LLENA: escribe la URL del Sheet en los autos que no tienen
+ * ninguna. Un auto que ya tiene fuente en Sanity no se toca aunque el Sheet diga
+ * otra cosa — el Sheet puede estar atrasado (las fuentes se corrigen en Sanity
+ * con los scripts de re-check) y pisar a ciegas revertiría esas correcciones.
+ * Para imponer la del Sheet a propósito: --reemplazar.
  *
  * Solo toca `sourceUrls`. No cambia precios, ni specs, ni publica nada.
  */
@@ -15,12 +19,15 @@
 import { createClient } from "@sanity/client";
 import { readFileSync } from "node:fs";
 import { isChileConfirmedUrl } from "@/lib/chile-url";
+import { leerHoja, sheetSyncConfigured } from "@/lib/sheet-sync";
 
 const file = process.argv.find((a) => a.endsWith(".tsv") || a.endsWith(".csv"));
 const aplicar = process.argv.includes("--aplicar");
+const reemplazar = process.argv.includes("--reemplazar");
 
-if (!file) {
-  console.error("Uso: npx tsx --env-file=.env.local scripts/import-sheet-fuentes.ts <archivo.tsv> [--aplicar]");
+if (!file && !sheetSyncConfigured()) {
+  console.error("Sin N8N_SHEET_SYNC_URL/SECRET hay que pasar un archivo:");
+  console.error("  npx tsx --env-file=.env.local scripts/import-sheet-fuentes.ts <archivo.tsv> [--aplicar]");
   process.exit(1);
 }
 
@@ -63,7 +70,11 @@ function parse(raw: string): Row[] {
 }
 
 async function main(): Promise<void> {
-  const rows = parse(readFileSync(file!, "utf8"));
+  const raw = file
+    ? readFileSync(file, "utf8")
+    : (await leerHoja("AUTOS")).map((f) => f.join("\t")).join("\n");
+  console.log(file ? `\nLeyendo ${file}` : "\nLeyendo la hoja AUTOS del Sheet");
+  const rows = parse(raw);
   const conUrl = rows.filter((r) => r.pdp_id && r.url_oficial);
 
   console.log(`\n${rows.length} filas · ${conUrl.length} con pdp_id y url_oficial.\n`);
@@ -76,6 +87,7 @@ async function main(): Promise<void> {
 
   const cambios: { id: string; label: string; url: string }[] = [];
   const problemas: string[] = [];
+  const distintas: string[] = [];
 
   for (const r of conUrl) {
     const label = `${r.marca} ${r.modelo}`.trim() || r.pdp_id;
@@ -102,6 +114,10 @@ async function main(): Promise<void> {
       continue;
     }
     if (porId.get(r.pdp_id) === r.url_oficial) continue; // ya está igual
+    if (porId.get(r.pdp_id) && !reemplazar) {
+      distintas.push(`${label}: Sanity ${porId.get(r.pdp_id)} · Sheet ${r.url_oficial}`);
+      continue;
+    }
 
     cambios.push({ id: r.pdp_id, label, url: r.url_oficial });
   }
@@ -110,6 +126,13 @@ async function main(): Promise<void> {
     console.log(`\x1b[33m${problemas.length} fila(s) rechazada(s):\x1b[0m`);
     for (const p of problemas.slice(0, 25)) console.log(`  · ${p}`);
     if (problemas.length > 25) console.log(`  … y ${problemas.length - 25} más`);
+    console.log("");
+  }
+
+  if (distintas.length) {
+    console.log(`${distintas.length} auto(s) ya tienen otra fuente en Sanity — no se tocan (--reemplazar para imponer la del Sheet):`);
+    for (const d of distintas.slice(0, 15)) console.log(`  · ${d}`);
+    if (distintas.length > 15) console.log(`  … y ${distintas.length - 15} más`);
     console.log("");
   }
 
