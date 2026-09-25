@@ -22,7 +22,7 @@ const FRANCISCO = "francisco@electrificarte.com";
 // Webhooks del workflow central que SOLO llama esta web (mandan x-electrificarte-secret): con
 // --header-auth se les activa también. NO van acá: electrificarte-pago (lo llama Reveniu, se
 // protege con su propio reveniu-secret-key) ni electrificarte-vendors (página de vendedores).
-const EXTRA_AUTH_PATHS = ["electrificarte-asesoria", "newsletter", "electrificarte-customers"];
+const EXTRA_AUTH_PATHS = ["electrificarte-asesoria", "newsletter", "electrificarte-customers", "rating-web"];
 const arg = (k) => process.argv.find((a) => a.startsWith(`--${k}`))?.split("=")[1] ?? (process.argv.includes(`--${k}`) ? true : undefined);
 const DRY = !!arg("dry-run");
 const FRANCISCO_TO = arg("francisco-to");
