@@ -23,6 +23,8 @@
     "scripts/qa/recheck-diff.test.ts",
     "scripts/qa/sheet-sync.test.ts",
     "scripts/qa/asesoria-vigencia.test.ts",
+    "scripts/qa/whatsapp-guards.test.ts",
+    "scripts/qa/whatsapp-sim.mts",
     "scripts/qa/recheck-source.test.ts",
     "scripts/qa/pdp-contrato.test.ts",
     "scripts/qa/pdp-crear.test.ts",

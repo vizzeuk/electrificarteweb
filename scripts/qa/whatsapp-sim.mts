@@ -208,7 +208,8 @@ async function enviar(phone: string, text: string, id = `wamid.in.${++seq}`): Pr
     await Promise.allSettled(pendientes.splice(0));
     await new Promise((r) => setTimeout(r, 20));
   }
-  return enviados.slice(desde).map((e) => e.text);
+  // Solo lo que le llegó a este número (una derivación también le escribe a los admins).
+  return enviados.slice(desde).filter((e) => e.to === phone).map((e) => e.text);
 }
 
 // ─── Reporte ─────────────────────────────────────────────────────────────────
@@ -222,7 +223,8 @@ function registrar(caso: string, v: Veredicto, nota = "") {
   console.log(`  ${icono} ${caso}${nota ? `\n      \x1b[90m${nota.replace(/\n/g, "\n      ")}\x1b[0m` : ""}`);
 }
 const corto = (s: string, n = 150) => (s ?? "").replace(/\s+/g, " ").slice(0, n);
-const esBienvenida = (r: string) => /servicio para suscriptores/.test(r);
+const esBienvenida = (r: string) => /Asesoría 1:1 por \$4\.990/.test(r);
+const CONTACTO = "https://www.electrificarte.com/contacto";
 const esVendedor = (r: string) => /reservado para compradores/.test(r);
 const PROHIBIDO_GIRO = /19[.,]?990|pago [úu]nico|negociamos por ti|garant[íi]a de devoluci/i;
 
@@ -244,7 +246,7 @@ async function main(): Promise<void> {
   ({ bot } = await import("@/lib/whatsapp/bot"));
   await bot.initialize();
   const promptAsesoria = "ya pagó una asesoría 1:1";
-  const promptOferta = "Servicio de Oferta Exclusiva";
+  const promptOferta = "ya tiene una solicitud en curso";
 
   // ── 1. Niveles de advisory_payments ────────────────────────────────────────
   grupo = "Niveles de acceso";
@@ -259,6 +261,7 @@ async function main(): Promise<void> {
     registrar("  link de contratación que recibe", /electrificarte\.com\/asesoria\/contratar/.test(r) ? "ok" : "hallazgo",
       `${link[0] ?? "—"}\n→ debería ser https://www.electrificarte.com/asesoria/contratar (con orderId). El checkout directo de Reveniu no deja rastro para n8n.`);
     registrar("  no nombra $19.990 ni promesas del giro", PROHIBIDO_GIRO.test(r) ? "falla" : "ok");
+    registrar("  un solo llamado a la acción: la asesoría (sin waitlist)", /waitlist/i.test(r) ? "falla" : "ok");
   }
 
   {
@@ -282,9 +285,8 @@ async function main(): Promise<void> {
     const p = nuevoPhone();
     TABLAS.advisory_payments.push({ phone: comoCheckout(p), status: "pagado", created_at: hace(11), paid_at: hace(11) });
     const [r] = await enviar(p, "Hola, sigo con dudas del auto");
-    registrar("Asesoría pagada hace 11 días → vencida, vuelve a la bienvenida", esBienvenida(r) ? "ok" : "falla", corto(r));
-    registrar("  el mensaje le dice que su asesoría terminó", /termin|venci|finaliz/i.test(r) ? "ok" : "hallazgo",
-      "Recibe el mismo saludo que un desconocido (\"es un servicio para suscriptores\"), sin saber que la suya venció.");
+    registrar("Asesoría pagada hace 11 días → vencida, sin modelo", !esBienvenida(r) && /termin/.test(r) ? "ok" : "falla", corto(r, 200));
+    registrar("  le dice que terminó, cuándo, y cómo renovarla", /termin[óo] el \*\d+ de/.test(r) && /asesoria\/contratar/.test(r) ? "ok" : "falla");
   }
 
   {
@@ -322,8 +324,12 @@ async function main(): Promise<void> {
     const c = llmCalls[antes];
     registrar("Oferta $19.990 pagada (STANDBY, clientes previos) → prompt de oferta",
       c && c.system.includes(promptOferta) ? "ok" : "falla", corto(r));
-    registrar("  el prompt de oferta contiene la cifra $19.990", c?.system.includes("19.990") ? "hallazgo" : "ok",
-      "El prompt le dice al modelo \"no repitas $19.990\" pero se la da. Un modelo obediente no la dice; la salida no la filtra.");
+    registrar("  el prompt de oferta ya no contiene cifras", /19[.,]?990|4[.,]?990/.test(c?.system ?? "") ? "falla" : "ok");
+    // "negociamos" solo puede aparecer dentro de la línea que lo prohíbe.
+    const asesor = llmCalls.find((x) => x.system.includes(promptAsesoria))?.system ?? "";
+    const lineas = asesor.split("\n").filter((l) => /negociamos|negociaci[óo]n/i.test(l));
+    registrar("  el prompt del asesor solo nombra la negociación para prohibirla",
+      lineas.every((l) => /NO negocia|No digas|No ofrezcas/.test(l)) ? "ok" : "falla", lineas.map((l) => corto(l, 80)).join("\n"));
   }
 
   {
@@ -449,7 +455,7 @@ async function main(): Promise<void> {
     registrar("precio inventado sin la palabra CLP", /referenciales/.test(r) ? "ok" : "falla", corto(r));
 
     r = await salida("El *BYD Dolphin* cuesta *$9.990.000 CLP* 🔋");
-    registrar("precio inventado con CLP", /referenciales/.test(r) ? "ok" : "falla", "solo agrega un aviso; el precio falso igual se envía");
+    registrar("precio inventado con CLP", /referenciales/.test(r) ? "ok" : "falla", "agrega el aviso; la cifra no se borra (no hay cómo saber cuál es la correcta)");
 
     r = await salida("Con el servicio de oferta pagas solo $19.990 y negociamos por ti, con garantía de devolución.");
     registrar("menciona $19.990 / \"negociamos por ti\" (prohibido por el giro)", PROHIBIDO_GIRO.test(r) ? "falla" : "ok", corto(r));
@@ -474,7 +480,7 @@ async function main(): Promise<void> {
     guion.push((req) => {
       const res = req.messages.at(-1).content[0].content as string;
       const slug = (JSON.parse(res).results?.[0]?.slug as string) ?? "sin-resultados";
-      return texto(`Te sirve el real: https://www.electrificarte.com/auto/${slug} y también este: https://www.electrificarte.com/auto/auto-que-no-existe`);
+      return texto(`Te sirve el real: https://www.electrificarte.com/auto/${slug}. También este otro: https://www.electrificarte.com/auto/auto-que-no-existe`);
     });
     r = (await enviar(suscriptor(), "Tengo 30 millones, ¿qué hay?"))[0];
     const real = r.match(/\/auto\/([a-z0-9-]+)/)?.[1];
@@ -482,7 +488,29 @@ async function main(): Promise<void> {
     registrar("  y el link inventado junto a uno real", /auto-que-no-existe/.test(r) ? "falla" : "ok", corto(r, 200));
   }
 
-  // ── 4. Sin créditos en la API ──────────────────────────────────────────────
+  // ── 4. Derivación a una persona ────────────────────────────────────────────
+  grupo = "Cuando el modelo no puede resolver → persona del equipo";
+  console.log(`\n\x1b[1m${grupo}\x1b[0m`);
+  if (!LLM_REAL) {
+    const p = suscriptor();
+    const aAdmin = () => enviados.filter((e) => e.to === ADMIN).length;
+    const antes = aAdmin();
+    guion.push(() => toolUse("derivar_a_humano", { motivo: "pago_o_asesoria", resumen: "Pagó la asesoría y dice que no le llegó la confirmación" }));
+    guion.push(() => texto(`Entiendo, eso lo tiene que revisar una persona del equipo. Tu solicitud será revisada por una persona del equipo; también puedes escribirnos en ${CONTACTO}`));
+    let [r] = await enviar(p, "Pagué ayer y no me llegó ninguna confirmación");
+    const aviso = enviados.filter((e) => e.to === ADMIN).at(-1)?.text ?? "";
+    registrar("el modelo deriva → los admins reciben el caso por WhatsApp", aAdmin() === antes + 1 ? "ok" : "falla", corto(aviso, 200));
+    registrar("  el aviso trae el número y un link para responderle", aviso.includes(`wa.me/${p}`) ? "ok" : "falla");
+    registrar("  el cliente recibe el link de contacto y que lo revisará una persona", r.includes(CONTACTO) && /persona/.test(r) ? "ok" : "falla", corto(r));
+
+    guion.push(() => toolUse("derivar_a_humano", { motivo: "reclamo", resumen: "Insiste con lo mismo" }));
+    guion.push(() => texto("Ya lo tenemos registrado."));
+    [r] = await enviar(p, "¿Y? Sigo esperando");
+    registrar("insiste antes de 6 h → no se le vuelve a escribir a Francisco", aAdmin() === antes + 1 ? "ok" : "falla");
+    registrar("  aunque el modelo olvide el link, el código lo agrega", r.includes(CONTACTO) ? "ok" : "falla", corto(r, 200));
+  }
+
+  // ── 5. Sin créditos en la API ──────────────────────────────────────────────
   grupo = "API de Anthropic sin créditos (el estado de hoy)";
   console.log(`\n\x1b[1m${grupo}\x1b[0m`);
   if (!LLM_REAL) {
@@ -490,8 +518,9 @@ async function main(): Promise<void> {
     sinCreditos = true;
     const [r] = await enviar(p, "Hola, necesito ayuda con mi auto");
     sinCreditos = false;
-    registrar("cliente que pagó escribe → recibe un mensaje de error genérico", r ? "hallazgo" : "falla",
-      `"${corto(r, 90)}"\nNo se avisa a nadie: el cliente que pagó queda sin asesor y Francisco no se entera.`);
+    registrar("cliente que pagó escribe → mensaje de error con el link de contacto", r?.includes(CONTACTO) ? "ok" : "falla", corto(r, 150));
+    registrar("  pero no se avisa a nadie (punto 1, fuera de este alcance)", "hallazgo",
+      "El cliente que pagó queda sin asesor y Francisco no se entera hasta que alguien escriba a /contacto.");
     const cuota = [...kv.entries()].find(([k]) => k.startsWith(`wa_daily:${p}`))?.[1].v;
     registrar("  la cuota se devuelve (no le cuenta el turno fallido)", cuota === "0" ? "ok" : "falla", `contador: ${cuota}`);
   }
