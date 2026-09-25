@@ -300,6 +300,11 @@ Otros:
 - **`ADMIN_NOTIFY_TEMPLATE=pdp_aviso_catalogo`** está en Vercel pero ⚠️ **el código no la lee**:
   los avisos a Francisco usan `sendProactiveText` (texto libre, solo dentro de la ventana de
   24 h). Para que sirva hay que cablearla donde se notifica al admin.
+- **`SANITY_REVALIDATE_SECRET`** faltaba en Vercel: `/api/revalidate` es fail-closed y
+  **rechazaba todo con 401**. Ya se generó y configuró (production + preview + `.env.local`).
+  Sin ella, el dashboard no podía forzar el refresco al aprobar una reseña.
+- ⚠️ **`ADMIN_API_SECRET` de producción ≠ el de `.env.local`.** Para el dashboard hay que usar
+  el de Vercel, no el local, o `/api/reviews/publish` responde 401 y las fotos no se publican.
 - `N8N_CONTACT_URL` en Vercel necesita URL de producción (sin `-test`)
 - Terminología "concesionario" → "vendedores oficiales": quedan 3 archivos
 - 10 autos sin imágenes: Tesla Model Y, Chevrolet Blazer/Bolt/Equinox/Spark, Cupra Tavascan, JAC E-JS1/JS4, Skoda Elroq, Changan Hunter E
