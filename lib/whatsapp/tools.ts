@@ -120,7 +120,70 @@ export const advisorTools: Anthropic.Tool[] = [
       required: ["query"],
     },
   },
+  {
+    name: "derivar_a_humano",
+    description:
+      "Deriva la conversación a una persona del equipo de Electrificarte. Úsala SOLO cuando no puedas resolver la solicitud con las otras herramientas: estado de un pago o de la asesoría, un reclamo, un problema con la compra, o un dato que no está en el catálogo y que la persona necesita. NO la uses para dudas técnicas, recomendaciones ni comparaciones: eso lo resuelves tú. Al usarla, el equipo recibe un aviso con el resumen.",
+    input_schema: {
+      type: "object",
+      properties: {
+        motivo: {
+          type: "string",
+          enum: ["pago_o_asesoria", "reclamo", "problema_con_compra", "dato_no_disponible", "otro"],
+          description: "Categoría de lo que no puedes resolver.",
+        },
+        resumen: {
+          type: "string",
+          description: "Una o dos frases con lo que pide la persona, para que el equipo no tenga que leer toda la conversación.",
+        },
+      },
+      required: ["motivo", "resumen"],
+    },
+  },
 ];
+
+// ─── Catálogo publicado (para validar la respuesta final) ─────────────────────
+// El filtro de salida necesita saber qué fichas existen para cortar links
+// inventados. Antes se validaba solo contra lo que las tools devolvieron EN ESE
+// turno, así que un auto recomendado en un turno anterior contaba como
+// inventado. Esto es el catálogo publicado completo, cacheado 5 minutos.
+
+interface CatalogoPublicado {
+  fichas: Set<string>;
+  /**
+   * Precios por ficha. NO se valida contra todos los precios del catálogo: con
+   * ~170 autos entre $9M y $150M, cualquier cifra cae a ±10% de alguno y el
+   * chequeo deja de detectar nada. Se valida contra los autos de la conversación.
+   */
+  preciosPorFicha: Map<string, number[]>;
+}
+let _catalogo: { data: CatalogoPublicado; expiresAt: number } | null = null;
+
+export async function getCatalogoPublicado(): Promise<CatalogoPublicado | null> {
+  if (_catalogo && Date.now() < _catalogo.expiresAt) return _catalogo.data;
+  const rows = await sanityFetch(
+    () =>
+      sanity.fetch<{ slug: string; basePrice?: number; discountPrice?: number; vp?: (number | null)[] }[]>(
+        groq`*[_type == "car" && hidden != true && !(_id in path("drafts.**")) && defined(slug.current)]{
+          "slug": slug.current, basePrice, discountPrice, "vp": versions[].price
+        }`,
+      ),
+    null,
+  );
+  // Si Sanity no respondió, null: el llamador cae a lo que devolvieron las tools.
+  if (!rows || rows.length === 0) return null;
+  const data: CatalogoPublicado = {
+    fichas: new Set(rows.map((r) => r.slug.toLowerCase())),
+    preciosPorFicha: new Map(
+      rows.map((r) => [
+        r.slug.toLowerCase(),
+        [r.basePrice, r.discountPrice, ...(r.vp ?? [])].filter((p): p is number => typeof p === "number" && p > 0),
+      ]),
+    ),
+  };
+  _catalogo = { data, expiresAt: Date.now() + 5 * 60 * 1000 };
+  return data;
+}
 
 // ─── search_vehicles ──────────────────────────────────────────────────────────
 

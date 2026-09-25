@@ -56,17 +56,26 @@ export function normalizePhone(raw: string): string {
 /**
  * Variantes habituales bajo las que podría estar guardado el número en la tabla,
  * para tolerar distintos formatos de escritura desde n8n / el gateway de pago.
+ *
+ * Incluye `+56 9XXXXXXXX` (con espacio): es lo que manda NUESTRO formulario de
+ * checkout (`+56 ${phone}` en AsesoriaCheckoutForm) y n8n lo guarda tal cual. Sin
+ * esa variante, ningún cliente que pagó desde la web calzaba con su número.
  */
-function phoneCandidates(digits: string): string[] {
+export function phoneCandidates(digits: string): string[] {
   const candidates = new Set<string>([digits, `+${digits}`]);
+  let local = "";
   // Número chileno local sin código de país (9XXXXXXXX) ↔ con código (569XXXXXXXX)
   if (digits.startsWith("56") && digits.length > 9) {
-    const local = digits.slice(2);
+    local = digits.slice(2);
     candidates.add(local);
-    candidates.add(`+${digits}`);
   } else if (digits.length === 9 && digits.startsWith("9")) {
+    local = digits;
     candidates.add(`56${digits}`);
     candidates.add(`+56${digits}`);
+  }
+  if (local.length === 9) {
+    candidates.add(`+56 ${local}`);
+    candidates.add(`+56 ${local[0]} ${local.slice(1, 5)} ${local.slice(5)}`); // +56 9 1234 5678
   }
   return [...candidates];
 }
@@ -107,20 +116,20 @@ async function querySubscription(phone: string): Promise<boolean> {
   }
 
   try {
+    // Todas las filas del número, no la primera: quien abandonó un intento y
+    // pagó en el segundo tiene una `pendiente` y una `pagado`, y `.limit(1)` sin
+    // orden podía devolver la pendiente y negarle el acceso a alguien que pagó.
     const { data, error } = await supabase
       .from(TABLE)
       .select("*")
       .in(PHONE_COLUMN, phoneCandidates(phone))
-      .limit(1);
+      .limit(50);
 
     if (error) {
       console.warn("[advisor] error consultando suscripción:", error.message);
       return false;
     }
-    const row = data?.[0];
-    if (!row) return false;
-
-    return isRowActive(row);
+    return algunaAsesoriaVigente(data ?? []);
   } catch (err) {
     console.warn("[advisor] excepción consultando suscripción:", err instanceof Error ? err.message : err);
     return false;
@@ -138,10 +147,13 @@ export function isRowActive(row: Record<string, unknown>): boolean {
   if (typeof row.active === "boolean" && !row.active) return false;
 
   if (typeof row.status === "string") {
-    const s = row.status.toLowerCase();
-    if (["cancelled", "canceled", "cancelado", "expired", "expirado", "inactive", "inactivo", "pendiente", "pending"].includes(s)) {
+    const s = row.status.trim().toLowerCase();
+    if (["cancelled", "canceled", "cancelado", "expired", "expirado", "inactive", "inactivo"].includes(s)) {
       return false;
     }
+    // Por prefijo, no por igualdad: n8n escribe "Pendiente pago" en `leads`, y
+    // con la comparación exacta ese lead sin pagar recibía el tier "oferta".
+    if (s.startsWith("pendiente") || s.startsWith("pending")) return false;
   }
 
   const expiry = row.expires_at ?? row.expiresAt ?? row.valid_until;
@@ -153,6 +165,86 @@ export function isRowActive(row: Record<string, unknown>): boolean {
   return true;
 }
 
+// ─── Vigencia de la asesoría $4.990 ───────────────────────────────────────────
+// La asesoría dura ASESORIA_WINDOW_DAYS (10) días desde el pago. Antes eso solo
+// lo usaba el recordatorio del día 9: el gating no vencía nunca, porque
+// `advisory_payments` no tiene `expires_at`. Ahora el vencimiento se calcula acá
+// y lo usan las dos cosas — el bot y el recordatorio — con la misma regla.
+// La vista `asesorias_estado` (scripts/sql/2026-09-24_asesorias_estado.sql)
+// replica esta cuenta en SQL para verla en Supabase.
+
+export const ASESORIA_WINDOW_DAYS = Number(process.env.ASESORIA_WINDOW_DAYS ?? 10);
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Columna de respaldo si la fila no tiene `paid_at`. Configurable por si el
+ * esquema real usa otro nombre. `paid_at` siempre gana: la fila se crea como
+ * `pendiente` al llenar el formulario (`created_at`), y la asesoría corre desde
+ * que se paga, no desde que se llenó el formulario.
+ */
+export const ADVISORY_START_FALLBACK = process.env.SUPABASE_SUBSCRIPTION_CREATED_COLUMN ?? "created_at";
+
+/** Cuándo empezó a correr la asesoría: `paid_at`, o la columna de respaldo. */
+export function inicioAsesoria(row: Record<string, unknown>): Date | null {
+  for (const col of ["paid_at", ADVISORY_START_FALLBACK]) {
+    const raw = row[col];
+    if (!raw) continue;
+    const d = new Date(raw as string);
+    if (!Number.isNaN(d.getTime())) return d;
+  }
+  return null;
+}
+
+/** Pagada (según `isRowActive`) y dentro de los 10 días. */
+export function asesoriaVigente(row: Record<string, unknown>, now = new Date()): boolean {
+  if (!isRowActive(row)) return false;
+  const inicio = inicioAsesoria(row);
+  // Sin fecha no se puede saber si venció: fail-closed, igual que el resto del gating.
+  if (!inicio) return false;
+  return now.getTime() < inicio.getTime() + ASESORIA_WINDOW_DAYS * DAY_MS;
+}
+
+export function algunaAsesoriaVigente(rows: Record<string, unknown>[], now = new Date()): boolean {
+  return rows.some((r) => asesoriaVigente(r, now));
+}
+
+/**
+ * Si el número tuvo una asesoría pagada que ya venció, cuándo venció la última.
+ * null si nunca pagó, o si tiene una vigente. Puro: recibe las filas.
+ */
+export function vencimientoDeUltimaAsesoria(rows: Record<string, unknown>[], now = new Date()): Date | null {
+  if (algunaAsesoriaVigente(rows, now)) return null;
+  const inicios = rows
+    .filter((r) => isRowActive(r))
+    .map((r) => inicioAsesoria(r))
+    .filter((d): d is Date => d !== null);
+  if (!inicios.length) return null;
+  const ultimo = Math.max(...inicios.map((d) => d.getTime()));
+  return new Date(ultimo + ASESORIA_WINDOW_DAYS * DAY_MS);
+}
+
+/**
+ * Para el mensaje de "tu asesoría terminó": solo se consulta cuando el número no
+ * tiene tier, así que no agrega una query al camino de los clientes activos.
+ * Fail-silent: ante un error, null (y el cliente recibe la bienvenida normal).
+ */
+export async function asesoriaVencidaEl(rawPhone: string): Promise<Date | null> {
+  const phone = normalizePhone(rawPhone);
+  const supabase = getSupabase();
+  if (!phone || !supabase) return null;
+  try {
+    const { data, error } = await supabase
+      .from(TABLE)
+      .select("*")
+      .in(PHONE_COLUMN, phoneCandidates(phone))
+      .limit(50);
+    if (error) return null;
+    return vencimientoDeUltimaAsesoria(data ?? []);
+  } catch {
+    return null;
+  }
+}
+
 // ─── Tier de suscripción ──────────────────────────────────────────────────────
 
 /**
@@ -162,8 +254,8 @@ export function isRowActive(row: Record<string, unknown>): boolean {
  *                 qué auto quiere y espera precio de la red de vendedores.
  *                 El advisor le da soporte técnico sin venderle nada más.
  * - "asesoria"  → contrató la Asesoría IA ($4.990): aún decide qué auto comprar.
- *                 El advisor le ayuda a elegir y puede recomendarle el $19.990
- *                 como siguiente paso una vez que tenga claro el modelo.
+ *                 El advisor le ayuda a elegir y a conseguirlo (giro sep-2026:
+ *                 nunca le ofrece la Oferta, que está en STANDBY).
  * - null        → sin suscripción activa → mostrar mensaje de suscripción
  *
  * Si alguien tiene ambos → "oferta" (ya pasó la etapa de decisión).
@@ -245,9 +337,9 @@ async function checkTable(table: string, phone: string, phoneCol = PHONE_COLUMN)
       .from(table)
       .select("*")
       .in(phoneCol, phoneCandidates(phone))
-      .limit(1);
-    const row = data?.[0];
-    return row ? isRowActive(row) : false;
+      .limit(50);
+    // Misma razón que en querySubscription: cualquier fila activa basta.
+    return (data ?? []).some((row) => isRowActive(row));
   } catch {
     return false;
   }

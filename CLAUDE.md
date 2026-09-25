@@ -36,8 +36,10 @@ una waitlist gratis maximiza el volumen de leads interesados.
 - El interruptor es `OFERTA_STANDBY` en `lib/products.ts`. Los CTAs de oferta preguntan por
   él: en standby abren la waitlist; al apagarlo vuelven a `/solicitar` sin re-editar archivos.
 - `/solicitar` queda **oculta** (sin CTAs que apunten ahí) para no confundir al usuario.
-- Los chatbots (WhatsApp y web) **no promocionan el $19.990**: promocionan **waitlist** +
-  **Asesoría $4.990**.
+- Los chatbots (WhatsApp y web) **nunca mencionan el $19.990** ni que "negociamos". El de
+  **WhatsApp** (sep-2026, pedido de Francisco): a quien no pagó le ofrece **solo la Asesoría
+  $4.990**; a quien pagó lo atiende como **experto** hasta que consiga su auto. El web sigue
+  con waitlist + Asesoría.
 
 **Plan completo, fases y estado:** `docs/PIVOT-WAITLIST-PLAN.md`.
 
@@ -77,7 +79,11 @@ asesor ("Francisco IA", ver `lib/whatsapp/advisor.ts`) que ayuda a decidir en ba
 kilometraje, presupuesto y perfil.
 
 > **Cambio por el giro:** antes recomendaba la Oferta Exclusiva ($19.990) como paso siguiente.
-> Ahora **no la menciona**: el paso siguiente que ofrece es **unirse a la waitlist**.
+> Ahora **no la menciona** ni habla de negociar: es un experto que guía a la persona hasta
+> conseguir su auto. Si no puede resolver algo, lo deriva a una persona (tool
+> `derivar_a_humano` → aviso por WhatsApp a `ADMIN_PHONE_NUMBERS`) y manda
+> https://www.electrificarte.com/contacto. Guardrails en `lib/whatsapp/output-guard.ts`;
+> simulador en `scripts/qa/whatsapp-sim.mts`.
 
 ### 3. Suscripción de vendedores — $12.990/mes (plataforma separada, NO vive en este repo)
 Los vendedores oficiales pagan $12.990 para acceder a los leads generados por los flujos 1 y 2
@@ -193,10 +199,10 @@ Tres tiers, cada uno con su propio comportamiento. La tabla Supabase determina e
 
 | Tier | Tabla Supabase | Servicio | Comportamiento del bot |
 |---|---|---|---|
-| `asesoria` | `advisory_payments` | Asesoría IA $4.990 | Ayuda a decidir qué auto comprar. 🔴 **Con el giro:** ya **NO** recomienda el $19.990 — el paso siguiente que ofrece es **unirse a la waitlist**. |
+| `asesoria` | `advisory_payments` | Asesoría IA $4.990 | 🔴 **Experto** que guía a la persona hasta conseguir su nuevo auto: diagnóstico, recomendación con fichas reales, cómo cotizar con vendedores oficiales, prueba de manejo. **No negocia ni ofrece ofertas**; la waitlist solo si la persona pregunta cómo recibir ofertas. Vence a los 10 días. |
 | `oferta` | `leads` (status=`pagado`) | Oferta Exclusiva $19.990 — 🟡 STANDBY | Solo aplica a clientes que **ya pagaron** antes del standby (no entran nuevos). El bot resuelve dudas técnicas del modelo elegido. ❌ No menciona $4.990 ni $19.990. |
 | `vendedor` | `leads_vendors` | Plataforma vendedores | Canal incorrecto. Responde con mensaje de redirección a vendedores@electrificarte.com. ❌ Ninguna oferta de compra. |
-| `null` | — | Sin suscripción | 🔴 **Con el giro:** invita a la **waitlist** y a contratar la **Asesoría $4.990**. |
+| `null` | — | Sin suscripción | 🔴 Mensaje fijo (sin modelo) que invita **solo** a la **Asesoría $4.990** vía `/asesoria/contratar`. Si tuvo una asesoría que venció, se lo dice con la fecha y cómo renovarla. |
 
 **Prioridad de resolución**: `vendedor` > `oferta` > `asesoria` (si alguien tiene ambas, prevalece la etapa más avanzada).
 
@@ -205,7 +211,8 @@ Tres tiers, cada uno con su propio comportamiento. La tabla Supabase determina e
 **Webhook Kapso**: apunta a `/api/whatsapp/kapso`. Variables necesarias en Vercel: `KAPSO_WEBHOOK_SECRET`, `SUPABASE_OFERTA_TABLE=leads`, `SUPABASE_VENDOR_TABLE=leads_vendors`, `SUPABASE_SUBSCRIPTION_TABLE=advisory_payments`.
 
 **Recordatorio "queda 1 día" (asesoría $4.990)**: la asesoría dura exactamente 10 días desde el pago. En el día 9 (1 día restante) un cron diario (`vercel.json` → `/api/cron/asesoria-reminder`) envía un mensaje proactivo por WhatsApp. Lógica: `lib/whatsapp/lifecycle.ts` (selecciona filas de `advisory_payments` con activación hace 9-10 días) + `lib/whatsapp/outbound.ts` (envío Kapso) + dedup en Redis (`wa_day9_sent:<phone>`, TTL 3 días).
-- **Prerequisitos externos para que envíe de verdad**: (1) la tabla `advisory_payments` debe tener columna de fecha de activación (`SUPABASE_SUBSCRIPTION_CREATED_COLUMN`, default `created_at`); (2) por la ventana de 24h de WhatsApp, el mensaje casi siempre cae fuera de ventana → se necesita una **plantilla aprobada** en Kapso/Meta (`ASESORIA_REMINDER_TEMPLATE`, idioma `ASESORIA_REMINDER_TEMPLATE_LANG`). Sin plantilla, cae a texto libre y solo llega a quienes escribieron en las últimas 24h.
+- **Vencimiento (desde sep-2026):** el bot corta el acceso a los 10 días (`asesoriaVigente` en `lib/whatsapp/subscription.ts`), contados desde `paid_at` — o `created_at` si falta. La vista `asesorias_estado` en Supabase muestra los días restantes con la misma regla (`scripts/sql/2026-09-24_asesorias_estado.sql`).
+- **Prerequisitos externos para que envíe de verdad**: (1) n8n debe llenar `paid_at` al confirmar el pago (si no, se cuenta desde `created_at`, que es cuando se llenó el formulario); (2) por la ventana de 24h de WhatsApp, el mensaje casi siempre cae fuera de ventana → se necesita una **plantilla aprobada** en Kapso/Meta (`ASESORIA_REMINDER_TEMPLATE`, idioma `ASESORIA_REMINDER_TEMPLATE_LANG`). Sin plantilla, cae a texto libre y solo llega a quienes escribieron en las últimas 24h.
 - **Env vars**: `CRON_SECRET` (auth del cron), `KAPSO_API_KEY`, `KAPSO_PHONE_NUMBER_ID`, `ASESORIA_REMINDER_TEMPLATE`. Opcionales: `ASESORIA_WINDOW_DAYS` (10), `ASESORIA_REMINDER_DAY` (9), `KAPSO_BASE_URL`.
 - **Limitación**: si el cron no corre un día (outage), esa cohorte se pierde (la ventana es de 1 día). Aceptable para un nudge.
 
@@ -263,6 +270,9 @@ Más n8n (VPS de Matías) y Supabase. Un cambio en el modelo de leads toca a los
 
 - **`docs/PIVOT-WAITLIST-PLAN.md` — 🔴 EL PLAN VIGENTE.** El giro a waitlist + asesoría-first:
   fases, inventario de qué cambia, estado y tareas manuales. **Empezar por acá.**
+- `docs/FLUJO-PDP-N8N.md` — los dos flujos de PDP en n8n (creación desde Sheet + re-check
+  semanal de precios). Directrices, contratos de endpoint, reparto web/n8n/Claude Console y
+  orden de fases. Implementa el board de Miro "FLUJO PDP's".
 - `docs/REVIEWS-UGC-PLAN.md` — sistema de reseñas UGC: arquitectura, costos y estado por fase.
 - `docs/COSTOS-PARA-FRANCISCO.md` — **explicación de costos sin tecnicismos**, para Francisco.
 - `docs/CAMBIOS-PARA-FRANCISCO.md` — resumen no técnico de todos los cambios del giro.

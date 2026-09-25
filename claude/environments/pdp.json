@@ -1,0 +1,6 @@
+{
+  "name": "Electrificarte PDP",
+  "description": "Sandbox del extractor de PDP. Sin credenciales montadas: no hay vaults ni repos. web_fetch corre en los servidores de Anthropic y no depende de este networking.",
+  "config": { "type": "cloud", "networking": { "type": "unrestricted" } },
+  "metadata": { "proyecto": "electrificarte" }
+}

@@ -12,9 +12,13 @@ function parseCLPAmount(raw: string): number {
   return parseInt(raw.replace(/\./g, ""), 10);
 }
 
-/** Precios grandes en CLP mencionados en el texto (> 1M para ignorar cifras chicas). */
+/**
+ * Precios grandes en CLP mencionados en el texto (> 1M para ignorar cifras chicas).
+ * Con o sin "CLP": el prompt pide "$22.990.000 CLP" pero el modelo a veces
+ * escribe solo "$22.990.000", y así un precio inventado pasaba sin aviso.
+ */
 function mentionedCLPPrices(text: string): number[] {
-  return [...text.matchAll(/\$([\d.]+(?:,\d+)?)\s*CLP/g)]
+  return [...text.matchAll(/\$\s?(\d{1,3}(?:\.\d{3}){2,})(?:,\d+)?/g)]
     .map((m) => parseCLPAmount(m[1]))
     .filter((n) => !isNaN(n) && n > 1_000_000);
 }

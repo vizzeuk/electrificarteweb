@@ -22,12 +22,23 @@ const INJECTION_PATTERNS: RegExp[] = [
   /modo\s+(desarrollador|dios|sin\s+restricciones|libre)/i,
   /nuev[oa]\s+(prompt|instrucci[óo]n|sistema)\s*(del\s+sistema)?\s*:/i,
   // ── Exfiltración del prompt / instrucciones (EN + ES) ───────────────────────
-  /(reveal|show|repeat|print|display|leak|expose)\s+(me\s+)?(your|the|my)?\s*(system\s+|initial\s+)?(prompt|instructions?|guidelines?|rules?)/i,
-  /(dime|mu[ée]strame|repite|imprime|revela|comparte|dame)\s+(me\s+)?(tu|el|tus|las|mis)?\s*(prompt|instrucci|reglas?|configuraci|system\s*prompt)/i,
-  /(what|cu[áa]l(?:es)?)\s+(are|is|son|es)\s+(your|tus|las)\s+(system\s+)?(prompt|instructions?|instrucci|reglas?)/i,
+  // "Instrucciones" y "reglas" solo cuentan cuando son las DEL BOT (tus/your,
+  // del sistema) o con "prompt": "dime las instrucciones para cargar el auto" y
+  // "muéstrame las reglas de la garantía" son preguntas de clientes que pagaron,
+  // y con el patrón amplio recibían "no puedo procesar esa solicitud".
+  /(reveal|show|repeat|print|display|leak|expose)\s+(me\s+)?(your|the)?\s*(system\s+|initial\s+)?(prompt|instructions?|guidelines?)/i,
+  /(dime|mu[ée]strame|repite|imprime|revela|comparte|dame|pega|copia|escribe|traduce)\s+(me\s+)?(tu|tus)\s+(prompt|instrucci|reglas?|configuraci|directrices)/i,
+  /(dime|mu[ée]strame|repite|imprime|revela|comparte|dame|pega|copia)\s+(me\s+)?(el\s+)?(system\s*prompt|prompt(\s+del\s+sistema)?|instrucciones\s+(del\s+sistema|iniciales|internas|originales))\b/i,
+  /(what|cu[áa]l(?:es)?)\s+(are|is|son|es)\s+(your|tus)\s+(system\s+)?(prompt|instructions?|instrucci|reglas?)/i,
   /repeat\s+(the\s+)?(text|words|everything)\s+(above|before)/i,
+  // Variantes indirectas: pedir el texto de arriba, lo que "le dijeron", cómo lo configuraron.
+  /(texto|mensaje|lo)\s+(que\s+(tienes|est[áa])\s+)?(de\s+)?arriba\b/i,
+  /lo\s+que\s+te\s+(dijeron|indicaron|escribieron|pidieron|configuraron)\b/i,
+  /c[óo]mo\s+te\s+(configuraron|programaron|instruyeron|entrenaron|armaron)\b/i,
   // ── Inyección de roles de chat ──────────────────────────────────────────────
-  /(^|\n)\s*(system|assistant|developer|usuario|sistema|asistente)\s*:/i,
+  // Sin "usuario": "Usuario: Matías. Quiero un SUV" es una persona presentándose,
+  // y el rol de usuario es justamente el que ya tiene.
+  /(^|\n)\s*(system|assistant|developer|sistema|asistente)\s*:/i,
 ];
 
 export function detectInjection(content: string): boolean {
@@ -58,23 +69,34 @@ const RELEVANT_KEYWORDS = [
   "carga rápida", "wallbox", "enchufe", "rango",
   "supercharger", "kilometraje", "consumo",
   "asesoría", "asesoria", "recomienda", "recomendar",
+  "descuento", "garantía", "garantia", "mantención", "mantencion", "versión", "version",
+  "maleta", "maletero", "asientos", "espacio", "seguridad", "airbag", "neumático", "neumatico",
+  // Marcas del catálogo publicado (sep-2026). Sin ellas, "¿qué tal el Volkswagen
+  // Golf GTE?" no tenía ninguna palabra relevante y caía por "gol".
+  "audi", "avatr", "avtr", "baic", "changan", "chevrolet", "cupra", "deepal", "dfsk",
+  "dongfeng", "fiat", "ford", "geely", "gwm", "haval", "honda", "jaecoo", "jeep",
+  "jetour", "jmc", "leapmotor", "lexus", "lynk", "maxus", "mazda", "mini", "nammi",
+  "omoda", "porsche", "riddara", "skoda", "smart", "soueast", "ssangyong", "kgm",
+  "subaru", "suzuki", "volkswagen",
 ];
 
 // Tokens cortos/ambiguos que solo cuentan como relevantes si aparecen como
 // palabra completa (evita que "ahora"→"ora", "evento"→"ev" o "llevar"→"ev"
 // desactiven el filtro off-topic por un falso positivo de relevancia).
 const RELEVANT_TOKENS = [
-  "ev", "bev", "phev", "hev", "mhev", "erev",
-  "km", "kwh", "suv", "mg", "kia", "gac", "jac", "ora", "ayuda",
+  "ev", "bev", "phev", "hev", "mhev", "erev", "reev",
+  "km", "kwh", "suv", "mg", "kia", "gac", "jac", "ora", "ds", "vw", "ayuda",
 ];
 const RELEVANT_TOKEN_RE = new RegExp(`\\b(${RELEVANT_TOKENS.join("|")})\\b`, "i");
 
 const OFFTOPIC_KEYWORDS = [
   "receta", "ingrediente", "cocinar", "gastronomía",
   "política", "presidente", "congreso", "elección", "partido político",
-  "fútbol", "deporte", "gol", "jugador",
+  // "deporte" fuera: "modo deporte" es una pregunta de auto.
+  "fútbol", "futbol", "gol", "jugador",
   "enfermedad", "síntoma", "diagnóstico", "medicina", "hospital",
-  "programar", "código", "javascript", "python", "java", "sql",
+  // "código" fuera: "¿tienen código de descuento?" es una pregunta de compra.
+  "programar", "javascript", "python", "java", "sql",
   "matemática", "ecuación", "álgebra", "cálculo",
   "historia", "guerra mundial", "siglo xix",
   "chiste", "broma",
@@ -96,11 +118,17 @@ export function isOffTopic(content: string): boolean {
     RELEVANT_KEYWORDS.some((k) => lower.includes(k)) || RELEVANT_TOKEN_RE.test(lower);
   if (hasRelevant) return false;
 
-  return OFFTOPIC_KEYWORDS.some((k) => lower.includes(k));
+  // Palabra completa: con `includes`, "gol" calzaba en "Golf" y "dios" en "adios".
+  return OFFTOPIC_KEYWORDS.some((k) => palabraCompleta(k).test(lower));
+}
+
+function palabraCompleta(k: string): RegExp {
+  const esc = k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`(^|[^\\p{L}\\p{N}])${esc}($|[^\\p{L}\\p{N}])`, "iu");
 }
 
 export const OFFTOPIC_RESPONSE =
-  "Soy Francisco, especialista en autos eléctricos e híbridos en Chile 🔋. ¿Puedo ayudarte a encontrar tu próximo auto o resolver alguna duda sobre movilidad eléctrica?";
+  "Soy *Francisco IA*, especialista en autos eléctricos e híbridos en Chile 🔋. ¿Te ayudo a encontrar tu próximo auto o a resolver alguna duda sobre movilidad eléctrica?";
 
 // ─── Detección de fuga del system prompt (output-side) ────────────────────────
 // Complementa detectInjection (input-side, regex): si una inyección evade el
@@ -113,8 +141,9 @@ const LEAK_MARKERS: RegExp[] = [
   /\bsearch_vehicles\b/i,
   /\bget_vehicle_detail\b/i,
   /\bsearch_knowledge\b/i,
+  /\bderivar_a_humano\b/i,
   // Encabezados textuales de los system prompts
-  /##\s*(Reglas innegociables|Diagn[óo]stico estructurado|Casos de referencia|C[óo]mo trabajas|Qui[ée]n eres|Formato WhatsApp|Producto principal|Tu rol en este contexto|Qu[ée] puedes y no puedes hacer)/i,
+  /##\s*(Reglas innegociables|Diagn[óo]stico estructurado|Casos de referencia|C[óo]mo trabajas|Qui[ée]n eres|Formato WhatsApp|Producto principal|Tu rol en este contexto|Qu[ée] puedes y no puedes hacer|Lo que NO ofreces|Cuando ya eligi[óo] modelo|Cuando no puedes resolver algo)/i,
   /\b(BASE_SYSTEM|OFERTA_SYSTEM)\b/,
   /Conocimiento base de Electrificarte/i,
   // Pedidos meta que solo tendrían sentido si se filtró el prompt
