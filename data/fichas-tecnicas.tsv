@@ -1,0 +1,99 @@
+# PDFs oficiales por auto — auto<TAB>tipo<TAB>url
+#
+# Generado por scripts/buscar-fichas.ts. `tipo` es ficha (especificaciones) o
+# precios (lista de precios). El web_fetch de Anthropic los lee nativamente,
+# así que sirven como segunda URL en sourceUrls cuando la página HTML no trae
+# el dato — que es el caso de casi todas las marcas para specs por versión.
+#
+# Última pasada: 2026-09-24
+
+AVTR 11	ficha	https://inchcapelatam.sirv.com/Avatr/CL/avatr-11-ficha-tecnica.pdf
+BMW X1 PHEV	ficha	https://www.bmw.cl/bmw/site/docs/20210818/20210818163246/ficha_de_eficiencia_x1_sdrive18d__21eg____x1_sdrive18i__21ee_.pdf
+BMW i5	ficha	https://www.bmw.cl/bmw/site/docs/20231128/20231128161444/ficha_de_eficiencia_520d_sed_n_eu6d__31bl____530i_sed_n_eu6b__51bh____m550i_sed_n_eu6b__11bk_.pdf
+BYD Atto 8	ficha	https://www.byd.com/material/byd-site/cl/new-flyers/Ficha%20T%C3%A9cnica%20-%20ATTO%208%20-%202026.06.pdf
+BYD Dolphin Mini	ficha	https://www.byd.com/material/byd-site/cl/new-flyers/Ficha%20T%C3%A9cnica%20-%20DOLPHIN%20MINI%20-%202026.06.pdf
+BYD Yuan Pro	ficha	https://www.byd.com/material/byd-site/cl/yuan-pro-dmi/FICHA%20TECNICA%20-%20YUAN%20PRO%20DM-I%20-%202026.06.pdf
+Changan CS55 Plus iDD	ficha	https://www.changan.cl/media/qe0nd32w/ficha-tecnica-cs55-plus-idd-062026.pdf
+Changan Eado Plus iDD	ficha	https://www.changan.cl/media/mkgfm4gc/ficha-tecnica_eado_2026.pdf
+Changan Hunter E REEV	ficha	https://www.changan.cl/media/pffj030k/ficha-t&#xE9;cnica-changan-hunter-reev.pdf
+Changan Lumin	ficha	https://www.changan.cl/media/jypdjon0/ficha-t&#xE9;cnica-lumin-ev.pdf
+DFSK E5 Plus	ficha	https://www.dfsk.cl/media/1zfmtqvy/ficha-e5plus-1.pdf
+Fiat 500 e	ficha	https://www.fiat.cl/content/dam/fiat/chile/modelos/fichas-tecnias/ficha_tecnia_500e_Chile.pdf
+Ford F-150 Híbrida	ficha	https://www.ford.cl/content/dam/Ford/website-assets/latam/cl/nameplate/f-150-hibrida/2022/pdf/fcl-f150-hev-ficha-tecnica.pdf
+Ford Territory	ficha	https://www.ford.cl/content/dam/Ford/website-assets/latam/cl/nameplate/territory/2026/pdf/fcl-territory-ficha-tecnica.pdf
+GWM POER P500 HI4-T PHEV	ficha	https://www.gwm.cl/media/dqjffj1a/ficha-tecnica_-poer-p500_nov-0711.pdf
+GWM Tank 500 HEV	ficha	https://www.gwm.cl/media/zt4fwgei/ficha-tank-500_euro-6-c_290925_v1.pdf
+Geely EX2	ficha	https://www.geely.cl/content/uploads/2026/03/FICHA-TECNICA-Geely-EX2.pdf
+Geely EX5	ficha	https://www.geely.cl/content/uploads/2025/04/NEW-EX5-FICHA-TECNICA-2-1.pdf
+Geely EX5 EM-i	ficha	https://www.geely.cl/content/uploads/2026/03/FICHA-TECNICA-EX5-EMI-3.pdf
+Haval H6 Híbrido	ficha	https://www.gwm.cl/media/lxafjqk1/ficha-h6-hibrido-10_2024-web.pdf
+Haval H7 Híbrido	ficha	https://www.gwm.cl/media/4omhof33/ficha-haval-h7-020726.pdf
+Haval Jolion Híbrido	ficha	https://www.gwm.cl/media/ialnu5eb/ficha-jolion-hibrido-02_2026.pdf
+Haval Jolion Pro Híbrido	ficha	https://www.gwm.cl/media/hmnnpuo2/ficha-te-cnica_jolion-pro-1912-v1.pdf
+Honda CRV Hybrid eHEV	ficha	https://autos.honda.cl/wp-content/uploads/2025/07/FICHA-ADVANCE-HYBRID.pdf
+Hyundai All New Palisade Híbrido	ficha	https://www.hyundai.cl/content/uploads/ficha-tecnica-palisade-2.pdf
+Hyundai Tucson Híbrido	ficha	https://www.hyundai.cl/content/uploads/brochure-nx4-fl-k2-gen-lhd-spanish-32p-compressed.pdf
+Jaecoo 6	ficha	https://www.omodajaecoo.cl/wp-content/uploads/2025/03/Ficha_tecnica_JAECOO_6_FINAL.pdf
+Jaecoo 7 SHS	ficha	https://www.omodajaecoo.cl//wp-content/uploads/2025/08/NUEVA_FICHA-TECNICA-J7-SHS-V7.pdf
+Kia Carnival	ficha	https://www.kia.cl/content/dam/indumotora/general/fichas-tecnicas/2026/Ficha%20T%C3%A9cnica%20-%20Carnival%20(KA4%20PE)%202026%2004.pdf
+Kia Carnival	ficha	https://www.kia.cl/content/dam/indumotora/general/ficha-eficiencia-energetica/ficha-eficiencia-energetica-kia-carnival.pdf
+Kia Carnival	ficha	https://www.kia.cl/content/dam/indumotora/general/ficha-eficiencia-energetica/Carnival%201.6T%206AT%20HEV,%20EU6d,%20CIT%20KI10107E60725M00-4%20-%20EEE.pdf
+Kia EV5	ficha	https://www.kia.cl/content/dam/indumotora/general/fichas-tecnicas/2026/Ficha%20T%C3%A9cnica%20-%20EV5%20(OVc)%202026%2004.pdf
+Kia EV5	ficha	https://www.kia.cl/content/dam/indumotora/general/ficha-eficiencia-energetica/Ficha-Eficiencia-Energetica-EV5.pdf
+Kia EV6	ficha	https://www.kia.cl/content/dam/indumotora/general/fichas-tecnicas/2025/Ficha-Tecnica-NuevoEV6.pdf
+Kia EV6	ficha	https://www.kia.cl/content/dam/indumotora/general/ficha-eficiencia-energetica/Ficha-Eficiencia-Energetica-EV6.pdf
+Kia EV9	ficha	https://www.kia.cl/content/dam/indumotora/general/fichas-tecnicas/2026/Ficha%20T%C3%A9cnica%20-%20EV9%202026%2005.pdf
+Kia EV9	ficha	https://www.kia.cl/content/dam/indumotora/general/ficha-eficiencia-energetica/Ficha-Eficiencia-Energetica-EV9.pdf
+Kia Sorento	ficha	https://www.kia.cl/content/dam/indumotora/general/fichas-tecnicas/2026/Ficha%20T%C3%A9cnica%20-%20Sorento%20(MQ4%20PE)%202026%2002.pdf
+Kia Sorento	ficha	https://www.kia.cl/content/dam/indumotora/general/ficha-eficiencia-energetica/ficha-eficiencia-energetica-kia-sorento.pdf
+Kia Sorento	ficha	https://www.kia.cl/content/dam/indumotora/general/ficha-eficiencia-energetica/Ficha%20de%20eficiencia%20en%C3%A9rgetica%20Sorento.pdf
+Kia Sportage Híbrido	ficha	https://www.kia.cl/content/dam/indumotora/general/fichas-tecnicas/2026/Ficha%20T%C3%A9cnica%20-%20Sportage%20(NQ5%20PE)%202026%2002.pdf
+Kia Sportage Híbrido	ficha	https://www.kia.cl/content/dam/indumotora/general/fichas-tecnicas/2025/KIA_SPORTAGE__SUV_5d_GD_ES.pdf
+Kia Sportage Híbrido	ficha	https://www.kia.cl/content/dam/indumotora/general/ficha-eficiencia-energetica/ficha-eficiencia-energetica-kia-sportage.pdf
+Kia Sportage Híbrido	ficha	https://www.kia.cl/content/dam/indumotora/general/ficha-eficiencia-energetica/Ficha%20de%20eficiencia%20en%C3%A9rgetica%20Sportage.pdf
+MG 3 Hybrid HEV	ficha	https://mgmotors-prod-s3.s3.us-east-2.amazonaws.com/CL/brochure/mg-3-hev.pdf
+MG 3 Hybrid HEV	precios	https://mgmotors-prod-s3.s3.us-east-2.amazonaws.com/CL/menu/2026/09/cl_20260905_111138_menu_lista-de-precios_menu.pdf
+MG 4	ficha	https://mgmotors-prod-s3.s3.us-east-2.amazonaws.com/CL/brochure/mg-4.pdf
+MG 4	precios	https://mgmotors-prod-s3.s3.us-east-2.amazonaws.com/CL/menu/2026/09/cl_20260905_111138_menu_lista-de-precios_menu.pdf
+MG 4 Urban EV	ficha	https://mgmotors-prod-s3.s3.us-east-2.amazonaws.com/CL/brochure/mg-4-urban-ev.pdf
+MG 4 Urban EV	precios	https://mgmotors-prod-s3.s3.us-east-2.amazonaws.com/CL/menu/2026/09/cl_20260905_111138_menu_lista-de-precios_menu.pdf
+MG Cyberster	precios	https://mgmotors-prod-s3.s3.us-east-2.amazonaws.com/CL/menu/2026/09/cl_20260905_111138_menu_lista-de-precios_menu.pdf
+MG Marvel R	precios	https://mgmotors-prod-s3.s3.us-east-2.amazonaws.com/CL/menu/2026/09/cl_20260905_111138_menu_lista-de-precios_menu.pdf
+MG S5 EV	ficha	https://mgmotors-prod-s3.s3.us-east-2.amazonaws.com/CL/brochure/mgs5-ev.pdf
+MG S5 EV	precios	https://mgmotors-prod-s3.s3.us-east-2.amazonaws.com/CL/menu/2026/09/cl_20260905_111138_menu_lista-de-precios_menu.pdf
+MG ZS EV	ficha	https://mgmotors-prod-s3.s3.us-east-2.amazonaws.com/CL/brochure/mg-zs-ev.pdf
+MG ZS EV	precios	https://mgmotors-prod-s3.s3.us-east-2.amazonaws.com/CL/menu/2026/09/cl_20260905_111138_menu_lista-de-precios_menu.pdf
+MG ZS Hybrid	ficha	https://mgmotors-prod-s3.s3.us-east-2.amazonaws.com/CL/brochure/mg-zs-hev.pdf
+MG ZS Hybrid	precios	https://mgmotors-prod-s3.s3.us-east-2.amazonaws.com/CL/menu/2026/09/cl_20260905_111138_menu_lista-de-precios_menu.pdf
+MINI Countryman eléctrico	ficha	https://www.mini.cl/mini/site/docs/20210923/20210923150719/ficha_eficiencia_countryman_cooper___21br__cooper_s___br51_cooper_s_all4___81br__cooper_se_all4___21bs.pdf
+Mazda CX60 SIGNATURE 2.5 PHEV	ficha	https://www.mazda.cl/media/nzapkpcd/mazda-ficha-tecnica-mazda-cx-60_vnov-2025.pdf
+Omoda E5	ficha	https://www.omodajaecoo.cl/wp-content/uploads/2025/03/FICHA-TECNICA-OMODA-E5.pdf
+Ora 03	ficha	https://www.gwm.cl/media/zdpeoevy/ficha-t&#xE9;cnica-ora-03-090625.pdf
+Peugeot NEW 3008 MHEV	ficha	http://hub.peugeot.cl/media/catalogos-accesorios/catalaogo-accesorios-3008.pdf
+Renault Arkana E-TECH Hybrid	ficha	https://renault.cl/wp-content/uploads/2026/06/RENAULT_Arkana_Brochure.pdf
+Renault Arkana E-TECH Hybrid	ficha	http://renault.cl/wp-content/uploads/2026/06/ficha_arkana-hybrid.pdf
+Renault Koleos Full Hybrid E-Tech	ficha	https://renault.cl/wp-content/uploads/2026/06/ficha-koleos.pdf
+Renault Koleos Full Hybrid E-Tech	ficha	http://renault.cl/wp-content/uploads/2026/06/ficha-koleos.pdf
+Subaru Crosstrek Híbrido	ficha	https://www.subaru.cl/media/k1mkeoad/spec-crosstrek-2026-a4-1812_compressed.pdf
+Subaru Crosstrek Híbrido	ficha	https://www.subaru.cl/media/bpeakjki/all_new_crosstrek_brochure.pdf
+Subaru Forester Híbrido	ficha	https://www.subaru.cl/media/3idphp1z/spec-all-new-forester-2025-new-a4-2.pdf
+Subaru Forester Híbrido	ficha	https://www.subaru.cl/media/gnjoz5ke/brochure-all-new-forester.pdf
+Subaru Forester Strong Hybrid	ficha	https://www.subaru.cl/media/dsnpk4jp/precio-y-especificaciones_new-forester-new-forester-hybrid_precio.pdf
+Subaru Forester Strong Hybrid	ficha	https://www.subaru.cl/media/dqtbwbox/precio-y-especificaciones_new-forester-new-forester-hybrid_catalogo.pdf
+Subaru Forester Strong Hybrid	ficha	https://www.subaru.cl/media/fjbiumzy/precio-y-especificaciones_new-forester_especificaciones-tecnicas.pdf
+Subaru Forester Strong Hybrid	ficha	https://www.subaru.cl/media/miibgmkr/precio-y-especificaciones_new-forester-hybrid_especificaciones-tecnicas.pdf
+Subaru Forester Strong Hybrid	precios	https://www.subaru.cl/media/dsnpk4jp/precio-y-especificaciones_new-forester-new-forester-hybrid_precio.pdf
+Subaru Forester Strong Hybrid	ficha	https://www.subaru.cl/media/dqtbwbox/precio-y-especificaciones_new-forester-new-forester-hybrid_catalogo.pdf
+Subaru Forester Strong Hybrid	ficha	https://www.subaru.cl/media/fjbiumzy/precio-y-especificaciones_new-forester_especificaciones-tecnicas.pdf
+Subaru Forester Strong Hybrid	ficha	https://www.subaru.cl/media/miibgmkr/precio-y-especificaciones_new-forester-hybrid_especificaciones-tecnicas.pdf
+Suzuki Across Hybrid	ficha	https://www.suzuki.cl/media/gd3ho5ss/suzuki_across_ficha-tecnica_web-1.pdf
+Suzuki Across Hybrid	ficha	https://www.suzuki.cl/media/avgd1tcq/suzuki_across_ficha-tecnica_web.pdf
+Suzuki Fronx Hybrid	ficha	https://www.suzuki.cl/media/ir0eoncr/ficha-tecnica_fronx-hybrid.pdf
+Suzuki New Swift Hybrid	ficha	https://www.suzuki.cl/media/wmwl3mq3/suzuki_swift-hybrid_ficha-tecnica_web.pdf
+Suzuki e VITARA	ficha	https://www.suzuki.cl/media/sdsjc1b4/suzuki-e-vitara-ficha-t&#xE9;cnica-20260515.pdf
+Volvo EC40 Pure Electric	ficha	https://www.volvocars.com/files/cs//v3/assets/blt28ab7201175197d7/bltbbce729b8e5a437c/66d0e4035458e56210ac08a2/brochureasistenciaenruta_nuevos.pdf?branch=prod_alias
+Volvo EX30	ficha	https://www.volvocars.com/files/cs//v3/assets/blt28ab7201175197d7/bltbbce729b8e5a437c/66d0e4035458e56210ac08a2/brochureasistenciaenruta_nuevos.pdf?branch=prod_alias
+Volvo EX40 Pure Electric	ficha	https://www.volvocars.com/files/cs//v3/assets/blt28ab7201175197d7/bltbbce729b8e5a437c/66d0e4035458e56210ac08a2/brochureasistenciaenruta_nuevos.pdf?branch=prod_alias
+Volvo EX90 Electric	ficha	https://www.volvocars.com/files/cs//v3/assets/blt28ab7201175197d7/bltbbce729b8e5a437c/66d0e4035458e56210ac08a2/brochureasistenciaenruta_nuevos.pdf?branch=prod_alias
+Volvo XC60 Híbrido Enchufable	ficha	https://www.volvocars.com/files/cs//v3/assets/blt28ab7201175197d7/bltbbce729b8e5a437c/66d0e4035458e56210ac08a2/brochureasistenciaenruta_nuevos.pdf?branch=prod_alias
+Volvo XC90 Plug-in Hybrid	ficha	https://www.volvocars.com/files/cs//v3/assets/blt28ab7201175197d7/bltbbce729b8e5a437c/66d0e4035458e56210ac08a2/brochureasistenciaenruta_nuevos.pdf?branch=prod_alias

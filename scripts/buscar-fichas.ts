@@ -15,6 +15,7 @@
  */
 
 import { createClient } from "@sanity/client";
+import { writeFileSync } from "node:fs";
 
 const soloProblemas = process.argv.includes("--solo-problemas");
 const UA =
@@ -130,7 +131,28 @@ async function main(): Promise<void> {
     for (const u of enlacesPrecio.slice(0, 2)) console.log(`      \x1b[36menlace\x1b[0m   ${u} \x1b[90m(texto "precios", puede ser una página)\x1b[0m`);
   }
 
-  console.log(`\n── ${porUrl.size} páginas revisadas · ${conFicha} fichas técnicas · ${conPrecios} listas de precios ──\n`);
+  // Se persisten a propósito: la primera versión solo las imprimía en consola y
+  // los enlaces se perdieron al cerrar la terminal. Encontrarlos cuesta una
+  // pasada por todas las fuentes; perderlos, otra.
+  const SALIDA = "data/fichas-tecnicas.tsv";
+  writeFileSync(
+    SALIDA,
+    [
+      "# PDFs oficiales por auto — auto<TAB>tipo<TAB>url",
+      "#",
+      "# Generado por scripts/buscar-fichas.ts. `tipo` es ficha (especificaciones) o",
+      "# precios (lista de precios). El web_fetch de Anthropic los lee nativamente,",
+      "# así que sirven como segunda URL en sourceUrls cuando la página HTML no trae",
+      "# el dato — que es el caso de casi todas las marcas para specs por versión.",
+      "#",
+      `# Última pasada: ${new Date().toISOString().slice(0, 10)}`,
+      "",
+      ...hallados,
+    ].join("\n") + "\n",
+  );
+
+  console.log(`\n── ${porUrl.size} páginas revisadas · ${conFicha} fichas técnicas · ${conPrecios} listas de precios ──`);
+  console.log(`   → ${SALIDA} (${hallados.length} enlaces)\n`);
 }
 
 void main();
