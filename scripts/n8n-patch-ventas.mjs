@@ -42,6 +42,7 @@ const resendCred = nodes.find((n) => n.parameters?.url === "https://api.resend.c
 // ── Kapso: API key en texto plano → credencial ────────────────────────────────
 let kapsoCred = process.env.N8N_KAPSO_CRED;
 const kapsoNodes = nodes.filter((n) => String(n.parameters?.url ?? "").startsWith("https://api.kapso.ai/"));
+if (!process.env.N8N_HEADER_AUTH_CRED) throw new Error("Falta N8N_HEADER_AUTH_CRED en .env.local");
 const plainKey = kapsoNodes.flatMap((n) => n.parameters.headerParameters?.parameters ?? []).find((h) => h.name === "X-API-Key")?.value;
 if (plainKey && !kapsoCred && !DRY) {
   const c = await api("POST", "/credentials", { name: "Kapso (X-API-Key)", type: "httpHeaderAuth", data: { name: "X-API-Key", value: plainKey } });
@@ -62,11 +63,22 @@ for (const n of kapsoNodes) {
 const upd3 = must("Update a row3");
 const fv = upd3.parameters.fieldsUi.fieldValues;
 if (!fv.some((f) => f.fieldId === "paid_at")) fv.push({ fieldId: "paid_at", fieldValue: "={{ $now.toISO() }}" });
-// El teléfono llega "+56 9 1234 5678": Kapso/Meta quieren solo dígitos.
-for (const name of ["HTTP Request1", "HTTP A WEBHOOK"]) {
-  const n = must(name);
-  n.parameters.jsonBody = n.parameters.jsonBody.replaceAll('"{{ $json.phone }}"', '"{{ String($json.phone).replace(/\\D/g, \'\') }}"');
-}
+// WhatsApp de confirmación: ya no llama a Kapso directo (su API key no puede enviar por el número:
+// Meta responde "does not exist or missing permissions"). Lo manda la web, que tiene la key que sí
+// funciona: POST /api/whatsapp/asesoria-confirmada con el header secreto de siempre.
+const wa = must("HTTP Request1");
+wa.parameters = {
+  method: "POST",
+  url: "https://www.electrificarte.com/api/whatsapp/asesoria-confirmada",
+  authentication: "genericCredentialType",
+  genericAuthType: "httpHeaderAuth",
+  sendBody: true,
+  specifyBody: "json",
+  jsonBody: '={{ JSON.stringify({ phone: $json.phone, nombre: $json.fullname }) }}',
+  options: {},
+};
+wa.credentials = { httpHeaderAuth: { id: process.env.N8N_HEADER_AUTH_CRED, name: "Web Electrificarte (x-electrificarte-secret)" } };
+Object.assign(wa, { retryOnFail: true, maxTries: 3, waitBetweenTries: 3000, notes: "WhatsApp de confirmación vía la web (/api/whatsapp/asesoria-confirmada): plantilla confirmacion_asesoria, y si falla, texto libre." });
 const gen = JSON.parse(readFileSync("n8n/asesoria-correos.json", "utf8"));
 const asNames = ["Datos correo asesoría", "Correo asesoría confirmada (persona)", "Correo asesoría pagada (Francisco)"];
 nodes = nodes.filter((n) => !asNames.includes(n.name) && n.name !== "Get many rows2");

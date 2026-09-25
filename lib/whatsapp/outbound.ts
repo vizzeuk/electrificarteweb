@@ -61,20 +61,22 @@ export async function sendTemplate(
   phone: string,
   name: string,
   language: string,
-  bodyParams: string[] = [],
+  // Posicionales ({{1}}, {{2}}…) como arreglo, o con nombre ({{customer_name}}) como objeto.
+  bodyParams: string[] | Record<string, string> = [],
 ): Promise<boolean> {
   const client = getClient();
   const from = phoneNumberId();
   if (!client || !from) return false;
   try {
-    const components =
-      bodyParams.length > 0
-        ? [{ type: "body", parameters: bodyParams.map((text) => ({ type: "text", text })) }]
-        : undefined;
+    const parameters = Array.isArray(bodyParams)
+      ? bodyParams.map((text) => ({ type: "text", text }))
+      : Object.entries(bodyParams).map(([parameter_name, text]) => ({ type: "text", parameter_name, text }));
+    const components = parameters.length > 0 ? [{ type: "body", parameters }] : undefined;
     await client.messages.sendTemplate({
       phoneNumberId: from,
       to: phone,
-      template: { name, language: { code: language }, components },
+      // parameter_name (parámetros con nombre) no está en los tipos del SDK, pero la API de Meta lo acepta.
+      template: { name, language: { code: language }, components } as never,
     });
     return true;
   } catch (err) {
@@ -117,4 +119,23 @@ export async function sendAsesoriaReminder(phone: string): Promise<boolean> {
     );
   }
   return sendProactiveText(phone, ASESORIA_REMINDER_TEXT);
+}
+
+// ─── Confirmación de pago de la asesoría ($4.990) ─────────────────────────────
+// La dispara n8n cuando Reveniu confirma el pago (vía /api/whatsapp/asesoria-confirmada), así la
+// única credencial de Kapso que envía mensajes vive en la web.
+
+const CONFIRM_TEMPLATE = process.env.ASESORIA_CONFIRM_TEMPLATE ?? "confirmacion_asesoria";
+const CONFIRM_TEMPLATE_LANG = process.env.ASESORIA_CONFIRM_TEMPLATE_LANG ?? "es_AR";
+
+export function asesoriaConfirmadaText(nombre: string): string {
+  const saludo = nombre ? `Hola ${nombre.split(" ")[0]} 👋` : "Hola 👋";
+  return `${saludo} Soy *Francisco IA*, tu asesor de electrificarte.com. Tu asesoría está confirmada: durante 10 días te ayudo a elegir tu auto electrificado. Cuéntame para qué lo usarías y cuál es tu presupuesto aproximado 🔋`;
+}
+
+/** Plantilla de confirmación; si falla, texto libre (solo llega dentro de la ventana de 24 h). */
+export async function sendAsesoriaConfirmada(phone: string, nombre: string): Promise<"plantilla" | "texto" | null> {
+  if (await sendTemplate(phone, CONFIRM_TEMPLATE, CONFIRM_TEMPLATE_LANG, { customer_name: nombre || "cliente" })) return "plantilla";
+  console.warn(`[outbound] la plantilla "${CONFIRM_TEMPLATE}" (${CONFIRM_TEMPLATE_LANG}) falló — cayendo a texto libre`);
+  return (await sendProactiveText(phone, asesoriaConfirmadaText(nombre))) ? "texto" : null;
 }
