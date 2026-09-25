@@ -48,10 +48,10 @@ DFSK	600 PHEV	https://www.dfsk.cl/600-phev/
 DFSK	E5 Plus	https://www.dfsk.cl/vehiculos/dfsk/e5-plus/
 DS	3	https://cotizador.dsautomobiles.cl/modelos/ds3/cotiza.html 	# necesita navegador
 DS	3 Opera E-tense	https://cotizador.dsautomobiles.cl/modelos/ds3/cotiza.html 	# necesita navegador
-Deepal	S05	https://forsale.dynadot.com/deepal.cl?drefid=2071 	# necesita navegador
-Deepal	S05 REEV	https://forsale.dynadot.com/deepal.cl?drefid=2071 	# necesita navegador
-Deepal	S07 BEV	https://forsale.dynadot.com/deepal.cl?drefid=2071 	# necesita navegador
-Deepal	S07 REEV	https://forsale.dynadot.com/deepal.cl?drefid=2071 	# necesita navegador
+Deepal	S05	https://www.deepalautos.cl/vehiculo/s05	# deepal.cl está estacionado; el real lo linkea changan.cl. Precio en HTML estático
+Deepal	S05 REEV	https://www.deepalautos.cl/vehiculo/s05	# deepal.cl está estacionado; el real lo linkea changan.cl. Precio en HTML estático
+Deepal	S07 BEV	https://www.deepalautos.cl/vehiculo/s07	# deepal.cl está estacionado; el real lo linkea changan.cl. Precio en HTML estático
+Deepal	S07 REEV	https://www.deepalautos.cl/vehiculo/s07	# deepal.cl está estacionado; el real lo linkea changan.cl. Precio en HTML estático
 Dongfeng	E70	https://dongfengindumotora.cl/cotizador.html?modelo=6737621adf1d723e84d4d389 	# necesita navegador
 Fiat	500 e	https://www.fiat.cl/modelos/500e.html 	# necesita navegador
 Ford	Escape HEV	https://www.ford.cl/

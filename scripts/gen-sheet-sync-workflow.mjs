@@ -42,6 +42,23 @@ return [{ json: {
 } }];
 `.trim();
 
+const sheetsHttp = (id, name, position, extra) => ({
+  parameters: {
+    method: "={{ $json.metodo }}",
+    url: "={{ $json.url }}",
+    authentication: "predefinedCredentialType",
+    nodeCredentialType: "googleSheetsOAuth2Api",
+    ...extra,
+    options: {
+      timeout: 50000,
+      response: { response: { fullResponse: true, neverError: true } },
+    },
+  },
+  id, name,
+  type: "n8n-nodes-base.httpRequest", typeVersion: 4.2, position,
+  credentials: SHEETS_CRED,
+});
+
 const nodes = [
   {
     parameters: {
@@ -93,22 +110,28 @@ const nodes = [
   },
   {
     parameters: {
-      method: "={{ $json.metodo }}",
-      url: "={{ $json.url }}",
-      authentication: "predefinedCredentialType",
-      nodeCredentialType: "googleSheetsOAuth2Api",
-      sendBody: "={{ $json.conCuerpo }}",
-      specifyBody: "json",
-      jsonBody: "={{ $json.cuerpo }}",
-      options: {
-        timeout: 50000,
-        response: { response: { fullResponse: true, neverError: true } },
+      conditions: {
+        options: { caseSensitive: true, leftValue: "", typeValidation: "strict", version: 2 },
+        conditions: [{
+          id: "get", leftValue: "={{ $json.conCuerpo }}", rightValue: false,
+          operator: { type: "boolean", operation: "false", singleValue: true },
+        }],
+        combinator: "and",
       },
+      options: {},
     },
-    id: "sheets", name: "Google Sheets API",
-    type: "n8n-nodes-base.httpRequest", typeVersion: 4.2, position: [680, 100],
-    credentials: SHEETS_CRED,
+    id: "si-get", name: "¿Sin cuerpo?",
+    type: "n8n-nodes-base.if", typeVersion: 2.2, position: [660, 100],
   },
+  // Dos nodos HTTP en vez de uno con `sendBody` por expresión: n8n no evalúa
+  // expresiones en ese booleano y el cuerpo nunca salía (Google respondía
+  // "valueInputOption is required").
+  sheetsHttp("sheets-get", "Sheets · GET", [900, 0], {}),
+  sheetsHttp("sheets-body", "Sheets · con cuerpo", [900, 200], {
+    sendBody: true,
+    specifyBody: "json",
+    jsonBody: "={{ $json.cuerpo }}",
+  }),
   {
     parameters: {
       respondWith: "json",
@@ -116,7 +139,7 @@ const nodes = [
       options: { responseCode: "={{ $json.statusCode }}" },
     },
     id: "responder", name: "Responder",
-    type: "n8n-nodes-base.respondToWebhook", typeVersion: 1.1, position: [900, 100],
+    type: "n8n-nodes-base.respondToWebhook", typeVersion: 1.1, position: [1140, 100],
   },
   {
     parameters: {
@@ -134,11 +157,18 @@ const connections = {
   Validar: { main: [[{ node: "¿Válido?", type: "main", index: 0 }]] },
   "¿Válido?": {
     main: [
-      [{ node: "Google Sheets API", type: "main", index: 0 }],
+      [{ node: "¿Sin cuerpo?", type: "main", index: 0 }],
       [{ node: "Rechazar", type: "main", index: 0 }],
     ],
   },
-  "Google Sheets API": { main: [[{ node: "Responder", type: "main", index: 0 }]] },
+  "¿Sin cuerpo?": {
+    main: [
+      [{ node: "Sheets · GET", type: "main", index: 0 }],
+      [{ node: "Sheets · con cuerpo", type: "main", index: 0 }],
+    ],
+  },
+  "Sheets · GET": { main: [[{ node: "Responder", type: "main", index: 0 }]] },
+  "Sheets · con cuerpo": { main: [[{ node: "Responder", type: "main", index: 0 }]] },
 };
 
 const workflow = {
