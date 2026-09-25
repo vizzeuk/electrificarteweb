@@ -1,10 +1,7 @@
-"use client";
-
-import { useState } from "react";
 import Link from "next/link";
-import { m, AnimatePresence } from "framer-motion";
 import { Icon } from "@/components/ui/Icon";
 import { OfferCta } from "@/components/waitlist/OfferCta";
+import { ASESORIA_PRICE } from "@/lib/products";
 
 export interface FAQItem {
   question: string;
@@ -18,169 +15,79 @@ interface FAQProps {
 }
 
 const DEFAULT_FAQS: FAQItem[] = [
-  { icon: "savings",       question: "¿Cuánto ahorro realmente usando Electrificarte?",  answer: "El ahorro depende del modelo y del momento de compra. Negociamos con nuestra red de vendedores oficiales para conseguirte la mejor oferta disponible, incluyendo bonos y descuentos que no están al alcance del público general. Nuestros clientes han ahorrado desde $800.000 hasta más de $6.000.000." },
-  { icon: "groups",        question: "¿Cómo logran esos descuentos?",                    answer: "Trabajamos con una amplia red de vendedores oficiales y distribuidores en Chile. Al agrupar múltiples solicitudes de compra, podemos negociar descuentos por volumen, acceder a bonos exclusivos y encontrar ofertas de inventario que no están disponibles al público general." },
-  { icon: "payments",      question: "¿Tiene algún costo para mí?",                      answer: "Sumarte a la waitlist no tiene costo: solo dejas tus datos y quedas registrado como interesado. Si además quieres ayuda para decidir qué auto comprar, la Asesoría IA por WhatsApp tiene un valor de $4.990." },
-  { icon: "directions_car",question: "¿Tengo que comprar sin ver el auto?",              answer: "Para nada. Nosotros te conseguimos la mejor oferta y te conectamos con el vendedor oficial que la ofrece. Puedes visitarlo, hacer test drive y revisar el vehículo antes de tomar cualquier decisión. La oferta final siempre es tuya para aceptar o rechazar." },
-  { icon: "shield",        question: "¿Qué pasa después de sumarme a la waitlist?",      answer: "Quedas registrado como interesado en el modelo que nos indicaste. Te contactamos cuando abramos el acceso y tengamos novedades para ti. No adquieres ningún compromiso al registrarte." },
+  { icon: "savings",        question: "¿Cuánto ahorro realmente usando Electrificarte?", answer: "El ahorro depende del modelo y del momento de compra. Negociamos con nuestra red de vendedores oficiales para conseguirte la mejor oferta disponible, incluyendo bonos y descuentos que no están al alcance del público general. Nuestros clientes han ahorrado desde $800.000 hasta más de $6.000.000." },
+  { icon: "groups",         question: "¿Cómo logran esos descuentos?",                   answer: "Trabajamos con una amplia red de vendedores oficiales en Chile. Al agrupar múltiples solicitudes de compra, podemos negociar descuentos por volumen, acceder a bonos exclusivos y encontrar ofertas de inventario que no están disponibles al público general." },
+  { icon: "payments",       question: "¿Tiene algún costo para mí?",                     answer: "Sumarte a la waitlist no tiene costo: solo dejas tus datos y quedas registrado como interesado. Si además quieres ayuda para decidir qué auto comprar, la asesoría por WhatsApp tiene un valor de $4.990." },
+  { icon: "directions_car", question: "¿Tengo que comprar sin ver el auto?",             answer: "Para nada. Te conectamos con el vendedor oficial y puedes visitarlo, hacer test drive y revisar el vehículo antes de tomar cualquier decisión. La oferta final siempre es tuya para aceptar o rechazar." },
+  { icon: "shield",         question: "¿Qué pasa después de sumarme a la waitlist?",     answer: "Quedas registrado como interesado en el modelo que nos indicaste. Te contactamos cuando abramos el acceso y tengamos novedades para ti. No adquieres ningún compromiso al registrarte." },
 ];
 
+/**
+ * Preguntas frecuentes (acordeón nativo con <details>, la primera abierta) y, a la derecha,
+ * la tarjeta de ayuda con los dos caminos: Asesoría (principal) y waitlist (secundario).
+ */
 export function FAQ({ title = "Preguntas frecuentes", faqs }: FAQProps) {
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
   const displayFaqs = faqs && faqs.length > 0 ? faqs : DEFAULT_FAQS;
 
   return (
-    <section className="py-24 bg-gray-50" aria-labelledby="faq-title">
-      <div className="max-w-7xl mx-auto px-4 md:px-8">
-        <div className="grid lg:grid-cols-[3fr_2fr] gap-12 lg:gap-16 items-start">
-
-          {/* ── Left: accordion ─────────────────────────────── */}
+    <section className="section section--rule" aria-labelledby="faq-title">
+      <div className="wrap faq">
+        {/* ── Izquierda: acordeón ── */}
+        <div>
+          <h2 id="faq-title" className="t-h2">{title}</h2>
           <div>
-            <h2
-              id="faq-title"
-              className="text-3xl md:text-4xl font-headline font-black mb-10 uppercase"
-            >
-              {title}
-            </h2>
+            {displayFaqs.map((faq, i) => (
+              <details key={faq.question} className="qa" open={i === 0}>
+                <summary>
+                  {faq.question}
+                  <Icon name="add" size="none" className="text-[20px]" />
+                </summary>
+                <p className="qa__a">{faq.answer}</p>
+              </details>
+            ))}
+          </div>
+        </div>
 
-            <div className="space-y-3" role="list">
-              {displayFaqs.map((faq, i) => (
-                <m.div
-                  key={i}
-                  initial={{ opacity: 0, y: 12 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.35, delay: i * 0.07 }}
-                  className="border border-gray-200 bg-white rounded-xl overflow-hidden hover:border-primary/30 transition-colors duration-200"
-                  role="listitem"
-                >
-                  <button
-                    className="w-full px-5 py-4 text-left flex items-center gap-4 hover:bg-gray-50 transition-colors"
-                    onClick={() => setOpenIndex(openIndex === i ? null : i)}
-                    aria-expanded={openIndex === i}
-                    aria-controls={`faq-answer-${i}`}
-                  >
-                    {/* Number + icon */}
-                    <div className="flex-shrink-0 flex flex-col items-center gap-0.5">
-                      <span className="text-[9px] font-black text-primary/50 tracking-widest leading-none">
-                        {String(i + 1).padStart(2, "0")}
-                      </span>
-                      <div className="w-8 h-8 rounded-lg bg-primary/8 flex items-center justify-center">
-                        <Icon name={faq.icon ?? "help"} className="text-[16px] text-primary-deep" />
-                      </div>
-                    </div>
+        {/* ── Derecha: ayuda según la etapa ── */}
+        <aside className="help" aria-label="Ayuda según tu etapa">
+          <div className="help__media">
+            {/* Lazy a propósito: el FAQ está bajo el pliegue y precargar esta foto le
+                quitaba ancho de banda al primer pintado del hero en móvil. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/images/coleccion-byd-electrico.jpg"
+              alt=""
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
+          <div className="help__body">
+            <p className="t-label">¿Todavía tienes dudas?</p>
+            <h3 className="t-h3">Elige la ayuda según la etapa en que estés</h3>
 
-                    <span className="flex-1 font-bold text-sm text-text-main pr-2">
-                      {faq.question}
-                    </span>
+            {/* Camino 1 — Asesoría: para quien aún no decide */}
+            <div className="help__path">
+              <p>
+                <strong>¿Aún no sabes qué auto comprar?</strong> Te ayudamos a decidir según tu uso,
+                tu kilometraje y tu presupuesto.
+              </p>
+              <Link href="/asesoria/contratar" className="btn btn--primary">
+                Quiero asesoría por {ASESORIA_PRICE}
+              </Link>
+            </div>
 
-                    <m.span
-                      animate={{ rotate: openIndex === i ? 45 : 0 }}
-                      transition={{ duration: 0.2 }}
-                      className="flex-shrink-0"
-                    >
-                      <Icon name="add" className="text-[20px] text-gray-300" />
-                    </m.span>
-                  </button>
-
-                  <AnimatePresence>
-                    {openIndex === i && (
-                      <m.div
-                        id={`faq-answer-${i}`}
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.25 }}
-                        className="overflow-hidden"
-                      >
-                        <p className="px-5 pb-5 pl-[4.5rem] text-sm text-text-muted leading-relaxed">
-                          {faq.answer}
-                        </p>
-                      </m.div>
-                    )}
-                  </AnimatePresence>
-                </m.div>
-              ))}
+            {/* Camino 2 — Waitlist: para quien ya eligió su auto */}
+            <div className="help__path">
+              <p>
+                <strong>¿Ya sabes cuál quieres?</strong> Súmate a la waitlist y te avisamos cuando
+                abramos el acceso.
+              </p>
+              <OfferCta source="faq" className="btn btn--secondary">
+                Únete a la waitlist
+              </OfferCta>
             </div>
           </div>
-
-          {/* ── Right: photo card ───────────────────────────── */}
-          <div className="lg:sticky lg:top-28 lg:self-start">
-            <m.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="relative rounded-2xl overflow-hidden flex flex-col justify-end"
-              style={{ minHeight: "520px" }}
-            >
-              {/* Background car photo — lazy-loaded so Next.js doesn't auto-
-                  preload it. The FAQ is below the fold; preloading this image
-                  was burning mobile bandwidth during the hero's first paint. */}
-              <img
-                src="/images/coleccion-byd-electrico.jpg"
-                alt=""
-                aria-hidden="true"
-                className="absolute inset-0 w-full h-full object-cover"
-                loading="lazy"
-                decoding="async"
-              />
-              {/* Dark gradient overlay — stronger at bottom */}
-              <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.60) 45%, rgba(0,0,0,0.20) 100%)" }} />
-
-              {/* Título de la sección — arriba de la card */}
-              <div className="absolute top-5 left-5 right-5 z-10">
-                <div
-                  className="rounded-xl px-4 py-3.5"
-                  style={{ backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)", border: "1px solid rgba(255,255,255,0.10)" }}
-                >
-                  <p className="text-primary text-[11px] font-bold uppercase tracking-widest mb-1">
-                    ¿Todavía tienes dudas?
-                  </p>
-                  <p className="text-white font-headline font-bold text-base leading-snug">
-                    Elige la ayuda según la etapa en que estés
-                  </p>
-                </div>
-              </div>
-
-              {/* Content on top of photo */}
-              <div className="relative z-10 p-7 space-y-4">
-                <div className="h-px" style={{ backgroundColor: "rgba(255,255,255,0.15)" }} />
-
-                {/* Camino 1 — Asesoría: para quien aún no decide */}
-                <div className="space-y-2">
-                  <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.65)" }}>
-                    <span className="text-white font-semibold">¿Aún no sabes qué auto comprar?</span> Te ayudamos a decidir el modelo ideal según tu uso, kilometraje y presupuesto.
-                  </p>
-                  <Link
-                    href="/asesoria/contratar"
-                    className="flex items-center justify-center w-full bg-amber hover:bg-amber-dark text-black font-bold py-3 rounded-xl transition-all text-sm shadow-[0_4px_20px_rgba(245,158,11,0.25)] hover:shadow-[0_6px_28px_rgba(245,158,11,0.40)] hover:scale-[1.02] active:scale-[0.99]"
-                  >
-                    Quiero asesoría · $4.990
-                  </Link>
-                </div>
-
-                {/* Camino 2 — Oferta: para quien ya eligió su auto */}
-                <div className="space-y-2">
-                  <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.65)" }}>
-                    <span className="text-white font-semibold">¿Ya sabes cuál quieres?</span> Súmate a la waitlist y te avisamos cuando abramos el acceso.
-                  </p>
-                  <OfferCta
-                    source="faq"
-                    className="flex items-center justify-center w-full bg-primary hover:bg-primary-dark text-black font-bold py-3 rounded-xl transition-all text-sm shadow-[0_4px_20px_rgba(0,229,229,0.25)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.40)] hover:scale-[1.02] active:scale-[0.99]"
-                  >
-                    Quiero mi oferta
-                  </OfferCta>
-                </div>
-
-                <p className="text-[11px] text-center pt-1" style={{ color: "rgba(255,255,255,0.45)" }}>
-                  Sumarte a la waitlist no tiene costo ni compromiso.
-                </p>
-              </div>
-            </m.div>
-          </div>
-
-        </div>
+        </aside>
       </div>
     </section>
   );

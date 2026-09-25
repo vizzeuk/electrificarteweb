@@ -10,8 +10,8 @@ import { Icon } from "@/components/ui/Icon";
 import type { WaitlistPrefill } from "./WaitlistProvider";
 
 /**
- * Modal de la waitlist. Cáscara y línea visual tomadas de `PromoPopup.tsx`
- * (overlay oscuro, borde white/10, glow cyan) para no salirse del diseño.
+ * Modal de la waitlist, sistema de diseño v1: card clara con radio 12 y sombra de
+ * overlay sobre el velo de modal. Sin glow ni orbes. Campos de 48 px con foco sólido.
  */
 
 const schema = z.object({
@@ -24,14 +24,10 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
-const INPUT_CLS =
-  "w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/35 transition-all focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/25";
-
-function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
+function FieldLabel({ children, htmlFor }: { children: React.ReactNode; htmlFor: string }) {
   return (
-    <label className="mb-1.5 block px-1 text-[11px] font-bold uppercase tracking-wider text-white/50">
+    <label htmlFor={htmlFor} className="field__label">
       {children}
-      {required && <span className="ml-1 text-primary">*</span>}
     </label>
   );
 }
@@ -111,7 +107,8 @@ export function WaitlistModal({ isOpen, onClose, prefill }: WaitlistModalProps) 
           exit={{ opacity: 0 }}
           transition={{ duration: 0.25 }}
           onClick={onClose}
-          className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/70 p-4 backdrop-blur-sm sm:p-6"
+          className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto p-4 sm:p-6"
+          style={{ background: "var(--veil-modal)" }}
           role="dialog"
           aria-modal="true"
           aria-labelledby="waitlist-title"
@@ -123,84 +120,75 @@ export function WaitlistModal({ isOpen, onClose, prefill }: WaitlistModalProps) 
             exit={{ opacity: 0, scale: 0.96, y: 8 }}
             transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
             onClick={(e) => e.stopPropagation()}
-            className="relative my-auto w-full max-w-md overflow-hidden rounded-2xl border border-white/10 bg-black shadow-[0_40px_120px_-20px_rgba(0,0,0,0.8),0_0_80px_rgba(0,229,229,0.08)]"
+            className="relative my-auto w-full max-w-[500px] rounded-card bg-papel text-tinta shadow-overlay"
           >
-            <div aria-hidden className="pointer-events-none absolute -left-16 -top-20 h-72 w-72 rounded-full bg-primary/15 blur-[90px]" />
-
             <button
               type="button"
               onClick={onClose}
               aria-label="Cerrar"
-              className="absolute right-3 top-3 z-10 rounded-full p-2 text-white/50 transition-colors hover:bg-white/10 hover:text-white"
+              className="btn btn--secondary btn--icon btn--sm absolute right-3 top-3 z-10"
             >
-              <Icon name="close" className="text-[20px]" />
+              <Icon name="close" size="none" />
             </button>
 
-            <div className="relative p-6 sm:p-8">
+            <div className="p-6 sm:p-8">
               {status === "success" ? (
-                <div className="py-6 text-center">
-                  <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/15">
-                    <Icon name="check_circle" className="text-[30px] text-primary" />
+                <div>
+                  <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-control bg-glaciar text-laguna">
+                    <Icon name="check" className="text-[24px]" />
                   </div>
-                  <h2 className="mb-2 font-headline text-2xl font-bold text-white">Ya estás en la lista</h2>
-                  <p className="text-sm leading-relaxed text-white/60">
+                  <h2 className="font-display text-[1.75rem] font-bold leading-[1.08] tracking-[-0.02em]">Ya estás en la lista</h2>
+                  <p className="mt-3 text-[15px] leading-relaxed text-grafito">
                     Registramos tus datos. Te contactaremos cuando tengamos novedades. Mientras tanto,
                     puedes seguir explorando el catálogo.
                   </p>
-                  <button
-                    type="button"
-                    onClick={onClose}
-                    className="mt-6 w-full rounded-full bg-white/10 py-3.5 font-headline text-sm font-bold text-white transition-all hover:bg-white/15"
-                  >
-                    Cerrar
+                  <button type="button" onClick={onClose} className="btn btn--secondary btn--lg btn--block mt-6">
+                    Seguir explorando
                   </button>
                 </div>
               ) : (
                 <>
-                  <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-primary">
-                    Waitlist
-                  </p>
-                  <h2 id="waitlist-title" className="mb-2 font-headline text-2xl font-bold leading-tight text-white">
+                  <h2 id="waitlist-title" className="pr-10 font-display text-[1.75rem] font-bold leading-[1.08] tracking-[-0.02em]">
                     Únete a la waitlist de electrificarte.com
                   </h2>
-                  <p className="mb-6 text-sm leading-relaxed text-white/60">
-                    Y consigue la mejor oferta en autos electrificados. Déjanos tus datos y te
-                    contactamos cuando tengamos novedades.
+                  <p className="mt-3 text-[15px] leading-relaxed text-grafito">
+                    Déjanos tus datos y te contactamos cuando abramos el acceso y tengamos novedades
+                    para tu modelo.
                   </p>
 
-                  <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
+                  <form onSubmit={handleSubmit(onSubmit)} noValidate className="mt-6 grid gap-4">
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <div>
-                        <FieldLabel required>Nombre</FieldLabel>
-                        <input {...register("firstName")} type="text" autoComplete="given-name" placeholder="Juan" className={INPUT_CLS} />
-                        {errors.firstName && <p className="mt-1 px-1 text-xs text-red-400">{errors.firstName.message}</p>}
+                      <div className="field">
+                        <FieldLabel htmlFor="wl-first">Nombre</FieldLabel>
+                        <input id="wl-first" {...register("firstName")} type="text" autoComplete="given-name" placeholder="Juan" className="input" aria-invalid={!!errors.firstName} />
+                        {errors.firstName && <p className="field__error">{errors.firstName.message}</p>}
                       </div>
-                      <div>
-                        <FieldLabel required>Apellido</FieldLabel>
-                        <input {...register("lastName")} type="text" autoComplete="family-name" placeholder="Pérez" className={INPUT_CLS} />
-                        {errors.lastName && <p className="mt-1 px-1 text-xs text-red-400">{errors.lastName.message}</p>}
+                      <div className="field">
+                        <FieldLabel htmlFor="wl-last">Apellido</FieldLabel>
+                        <input id="wl-last" {...register("lastName")} type="text" autoComplete="family-name" placeholder="Pérez" className="input" aria-invalid={!!errors.lastName} />
+                        {errors.lastName && <p className="field__error">{errors.lastName.message}</p>}
                       </div>
                     </div>
 
-                    <div>
-                      <FieldLabel required>Email</FieldLabel>
-                      <input {...register("email")} type="email" autoComplete="email" placeholder="juan@ejemplo.com" className={INPUT_CLS} />
-                      {errors.email && <p className="mt-1 px-1 text-xs text-red-400">{errors.email.message}</p>}
+                    <div className="field">
+                      <FieldLabel htmlFor="wl-email">Email</FieldLabel>
+                      <input id="wl-email" {...register("email")} type="email" autoComplete="email" placeholder="juan@ejemplo.com" className="input" aria-invalid={!!errors.email} />
+                      {errors.email && <p className="field__error">{errors.email.message}</p>}
                     </div>
 
-                    <div>
-                      <FieldLabel required>Número de WhatsApp</FieldLabel>
-                      <div className="flex">
-                        <span className="flex flex-shrink-0 select-none items-center rounded-l-lg border border-r-0 border-white/10 bg-white/10 px-3 text-sm font-semibold text-white/60">
-                          +56
-                        </span>
+                    <div className="field">
+                      <FieldLabel htmlFor="wl-phone">Número de WhatsApp</FieldLabel>
+                      <div className="input-group">
+                        <span className="input-group__prefix">+56</span>
                         <input
+                          id="wl-phone"
                           {...register("phone")}
                           type="tel"
                           inputMode="numeric"
                           autoComplete="tel-national"
-                          placeholder="995760998"
+                          placeholder="912345678"
                           maxLength={9}
+                          aria-invalid={!!errors.phone}
                           onInput={(e) => {
                             let v = e.currentTarget.value.replace(/\D/g, "");
                             if (v.length > 9 && v.startsWith("56")) v = v.slice(2);
@@ -208,26 +196,24 @@ export function WaitlistModal({ isOpen, onClose, prefill }: WaitlistModalProps) 
                             e.currentTarget.value = v;
                             setValue("phone", v, { shouldValidate: true });
                           }}
-                          className={`${INPUT_CLS} rounded-l-none`}
+                          className="input"
                         />
                       </div>
-                      {errors.phone && <p className="mt-1 px-1 text-xs text-red-400">{errors.phone.message}</p>}
+                      {errors.phone && <p className="field__error">{errors.phone.message}</p>}
                     </div>
 
-                    <div>
-                      <FieldLabel>Auto que te interesa <span className="font-normal normal-case tracking-normal text-white/30">(opcional)</span></FieldLabel>
-                      <input {...register("model")} type="text" placeholder="Ej: BYD Dolphin" className={INPUT_CLS} />
+                    <div className="field">
+                      <FieldLabel htmlFor="wl-model">
+                        Modelo de interés <span className="font-medium text-piedra">(opcional)</span>
+                      </FieldLabel>
+                      <input id="wl-model" {...register("model")} type="text" placeholder="Ej: BYD Dolphin" className="input" />
                     </div>
 
-                    <button
-                      type="submit"
-                      disabled={status === "loading"}
-                      className="!mt-6 flex w-full items-center justify-center gap-3 rounded-full bg-primary py-4 font-headline text-base font-bold text-black shadow-lg transition-all hover:shadow-[0_0_25px_rgba(0,229,229,0.3)] active:scale-[0.98] disabled:opacity-60"
-                    >
+                    <button type="submit" disabled={status === "loading"} className="btn btn--primary btn--lg btn--block">
                       {status === "loading" ? (
                         <>
-                          <Icon name="progress_activity" className="animate-spin text-[20px]" />
-                          Enviando...
+                          <Icon name="progress_activity" size="none" className="animate-spin" />
+                          Enviando…
                         </>
                       ) : (
                         "Unirme a la waitlist"
@@ -235,17 +221,15 @@ export function WaitlistModal({ isOpen, onClose, prefill }: WaitlistModalProps) 
                     </button>
 
                     {status === "error" && (
-                      <p className="text-center text-sm text-red-400">
-                        Hubo un error al registrarte. Intenta de nuevo.
-                      </p>
+                      <p className="field__error">Hubo un error al registrarte. Intenta de nuevo.</p>
                     )}
 
-                    <p className="!mt-4 text-center text-[10px] uppercase tracking-wider text-white/35">
-                      Al unirte aceptas nuestra{" "}
-                      <Link href="/privacidad" className="underline transition-colors hover:text-primary">
+                    <p className="t-micro">
+                      Al registrarte aceptas nuestra{" "}
+                      <Link href="/privacidad" className="link">
                         política de privacidad
                       </Link>
-                      .
+                      . No adquieres ningún compromiso.
                     </p>
                   </form>
                 </>

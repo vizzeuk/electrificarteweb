@@ -1,12 +1,10 @@
 "use client";
 
 import { useRef, useState, useEffect, useCallback, useMemo } from "react";
-import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
-import { formatCLP, carStats } from "@/lib/utils";
-import { sanityImg } from "@/lib/sanityImage";
+import { CarCard } from "@/components/car/CarCard";
 import { useInViewport } from "@/lib/useInViewport";
-import { ElectricTypeBadge } from "@/components/car/ElectricTypeBadge";
+import { HOT_DEALS_ENABLED } from "@/lib/products";
 
 export interface OpportunityCarData {
   _id?: string;
@@ -43,13 +41,16 @@ const FALLBACK: OpportunityCarData[] = [
   { name: "BYD Seal",         slug: "byd-seal",         brand: "BYD",   category: "Sedán",        basePrice: 42990000, discountPrice: 35990000, range: 570, batteryCapacity: 82,  power: 313 },
 ];
 
-const CARD_W  = 280; // px — card width
-const GAP     = 16;  // px — gap between cards
 const AUTO_MS = 5000;
+/** Cards que avanza cada paso (auto y flechas). */
+const STEP_CARDS = 2;
 
 // Mobile cap: iOS WebKit may OOM with 8 decoded car images simultaneously.
 // SSR keeps the full set for SEO; client reduces after hydration on mobile.
 const MOBILE_LIMIT = 4;
+
+// Ancho de card de esta franja (la maqueta la hace un poco más angosta que la de lanzamientos).
+const RAIL_STYLE = { "--rail-w": "280px" } as React.CSSProperties;
 
 export function Opportunities({ title = "Destacados Electrificarte", cars }: OpportunitiesProps) {
   const allCars = cars && cars.length > 0 ? cars : FALLBACK;
@@ -64,38 +65,42 @@ export function Opportunities({ title = "Destacados Electrificarte", cars }: Opp
     return () => mql.removeEventListener("change", apply);
   }, [allCars.length]);
 
-  const displayCars    = useMemo(() => allCars.slice(0, limit), [allCars, limit]);
+  const displayCars = useMemo(() => allCars.slice(0, limit), [allCars, limit]);
   // Double items for seamless infinite loop
-  const loopCars       = useMemo(() => [...displayCars, ...displayCars], [displayCars]);
-  const singleSetWidth = useMemo(() => displayCars.length * (CARD_W + GAP), [displayCars]);
+  const loopCars    = useMemo(() => [...displayCars, ...displayCars], [displayCars]);
+  const setCount    = displayCars.length;
 
   const sectionRef = useRef<HTMLElement>(null);
   const trackRef   = useRef<HTMLDivElement>(null);
   const timerRef   = useRef<ReturnType<typeof setInterval> | null>(null);
-  const [canLeft, setCanLeft]   = useState(false);
-  const [scrollPct, setScrollPct] = useState(0);
-  const canRight = true; // always true — infinite carousel
+  const [canLeft, setCanLeft] = useState(false);
   const inView = useInViewport(sectionRef);
+
+  // Paso de una card (ancho + gap), medido del DOM: el gap del .rail cambia con el viewport.
+  const stepWidth = useCallback(() => {
+    const el    = trackRef.current;
+    const first = el?.firstElementChild as HTMLElement | null;
+    if (!el || !first) return 0;
+    return first.getBoundingClientRect().width + (parseFloat(getComputedStyle(el).columnGap) || 0);
+  }, []);
 
   const updateState = useCallback(() => {
     const el = trackRef.current;
     if (!el) return;
-    const max = el.scrollWidth - el.clientWidth;
     setCanLeft(el.scrollLeft > 8);
-    setScrollPct(max > 0 ? Math.min(el.scrollLeft / singleSetWidth, 1) : 0);
-  }, [singleSetWidth]);
+  }, []);
 
   const scheduleReset = useCallback((el: HTMLElement) => {
-    let fallback: ReturnType<typeof setTimeout>;
     const onSettled = () => {
       clearTimeout(fallback);
-      if (el.scrollLeft >= singleSetWidth) {
-        el.scrollLeft = el.scrollLeft - singleSetWidth;
+      const setWidth = stepWidth() * setCount;
+      if (setWidth > 0 && el.scrollLeft >= setWidth) {
+        el.scrollLeft = el.scrollLeft - setWidth;
       }
     };
     el.addEventListener("scrollend", onSettled, { once: true });
-    fallback = setTimeout(onSettled, 900);
-  }, [singleSetWidth]);
+    const fallback = setTimeout(onSettled, 900);
+  }, [stepWidth, setCount]);
 
   const stopAuto = useCallback(() => {
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
@@ -106,10 +111,10 @@ export function Opportunities({ title = "Destacados Electrificarte", cars }: Opp
     timerRef.current = setInterval(() => {
       const el = trackRef.current;
       if (!el) return;
-      el.scrollBy({ left: (CARD_W + GAP) * 2, behavior: "smooth" });
+      el.scrollBy({ left: stepWidth() * STEP_CARDS, behavior: "smooth" });
       scheduleReset(el);
     }, AUTO_MS);
-  }, [stopAuto, scheduleReset]);
+  }, [stopAuto, scheduleReset, stepWidth]);
 
   useEffect(() => {
     const el = trackRef.current;
@@ -127,216 +132,94 @@ export function Opportunities({ title = "Destacados Electrificarte", cars }: Opp
   function scroll(dir: "left" | "right") {
     const el = trackRef.current;
     if (!el) return;
+    const step = stepWidth();
     if (dir === "left") {
-      if (el.scrollLeft <= 8) el.scrollLeft = singleSetWidth;
-      el.scrollBy({ left: -(CARD_W + GAP) * 2, behavior: "smooth" });
+      if (el.scrollLeft <= 8) el.scrollLeft = step * setCount;
+      el.scrollBy({ left: -step * STEP_CARDS, behavior: "smooth" });
     } else {
-      el.scrollBy({ left: (CARD_W + GAP) * 2, behavior: "smooth" });
+      el.scrollBy({ left: step * STEP_CARDS, behavior: "smooth" });
       scheduleReset(el);
     }
   }
 
+  // Con la Oferta destacada apagada, esta sección queda pegada a la de tipos (ambas en
+  // blanco): una línea fina las separa. Con la banda oscura de por medio no hace falta.
+  const sectionClass = HOT_DEALS_ENABLED ? "section" : "section section--rule";
+
   return (
-    <section ref={sectionRef} className="py-20 md:py-24 overflow-hidden" aria-labelledby="opportunities-title">
-      {/* Header */}
-      <div className="max-w-7xl mx-auto px-4 md:px-8 mb-10">
-        <div className="flex items-end justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <p className="text-[11px] uppercase tracking-widest text-primary-deep font-bold">
-                Selección exclusiva
-              </p>
-              <span className="text-[9px] font-medium text-text-ghost border border-gray-200 px-1.5 py-0.5 rounded">
-                Publicidad
-              </span>
+    <section ref={sectionRef} className={sectionClass} aria-labelledby="opportunities-title">
+      <div className="wrap section-head">
+        <div className="section-head__text">
+          <p className="chip mb-4">Publicidad</p>
+          <h2 id="opportunities-title" className="t-h2">
+            {title ?? "Destacados Electrificarte"}
+          </h2>
+        </div>
+
+        {/* Flechas: ocultas en móvil (ahí se desliza con el dedo). */}
+        <div className="section-head__side">
+          <button
+            type="button"
+            data-rail-prev="rail-opportunities"
+            onClick={() => { stopAuto(); scroll("left"); startAuto(); }}
+            disabled={!canLeft}
+            aria-label="Anterior"
+            className="btn btn--secondary btn--icon btn--sm"
+          >
+            <Icon name="chevron_left" size="none" />
+          </button>
+          <button
+            type="button"
+            data-rail-next="rail-opportunities"
+            onClick={() => { stopAuto(); scroll("right"); startAuto(); }}
+            aria-label="Siguiente"
+            className="btn btn--secondary btn--icon btn--sm"
+          >
+            <Icon name="chevron_right" size="none" />
+          </button>
+        </div>
+      </div>
+
+      {/* La primera card se alinea con el contenedor; el resto sale por la derecha. */}
+      <div
+        ref={trackRef}
+        id="rail-opportunities"
+        className="rail"
+        style={RAIL_STYLE}
+        onMouseEnter={stopAuto}
+        onMouseLeave={startAuto}
+        onTouchStart={stopAuto}
+        onTouchEnd={startAuto}
+      >
+        {loopCars.map((deal, loopIdx) => {
+          const brandName    = deal.brand    ? (typeof deal.brand    === "string" ? deal.brand    : deal.brand.name)    : "";
+          const categoryName = deal.category ? (typeof deal.category === "string" ? deal.category : deal.category.name) : undefined;
+          return (
+            <div key={`${deal._id ?? deal.slug}-${loopIdx}`}>
+              <CarCard
+                name={deal.name}
+                brand={brandName}
+                slug={deal.slug}
+                image={deal.imageUrl}
+                category={categoryName}
+                batteryCapacity={deal.batteryCapacity}
+                range={deal.range}
+                maxVersionRange={deal.maxVersionRange}
+                electricRangeKm={deal.electricRangeKm}
+                fuelConsumption={deal.fuelConsumption}
+                rendimientoElectrico={deal.rendimientoElectrico}
+                electricTypeTag={deal.electricType?.tag}
+                power={deal.power}
+                basePrice={deal.basePrice}
+                discountPrice={deal.discountPrice}
+                isNew={deal.isNew}
+                index={loopIdx % setCount}
+                maxStats={3}
+                noAnimate
+              />
             </div>
-            <h2
-              id="opportunities-title"
-              className="text-3xl md:text-4xl font-headline font-black uppercase tracking-tighter"
-            >
-              {title ?? "Destacados Electrificarte"}
-            </h2>
-          </div>
-
-          {/* Desktop nav arrows */}
-          <div className="hidden md:flex gap-2 shrink-0">
-            <button
-              onClick={() => { stopAuto(); scroll("left"); startAuto(); }}
-              disabled={!canLeft}
-              aria-label="Anterior"
-              className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-text-muted hover:border-primary hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-            >
-              <Icon name="chevron_left" className="text-[20px]" />
-            </button>
-            <button
-              onClick={() => { stopAuto(); scroll("right"); startAuto(); }}
-              disabled={!canRight}
-              aria-label="Siguiente"
-              className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-text-muted hover:border-primary hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-            >
-              <Icon name="chevron_right" className="text-[20px]" />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Carousel track — full width, overflows viewport */}
-      <div className="relative">
-        {/* Left fade */}
-        <div
-          className="pointer-events-none absolute left-0 top-0 bottom-0 w-0 sm:w-16 z-10 transition-opacity duration-200"
-          style={{
-            background: "linear-gradient(to right, white, transparent)",
-            opacity: canLeft ? 1 : 0,
-          }}
-        />
-        {/* Right fade */}
-        <div
-          className="pointer-events-none absolute right-0 top-0 bottom-0 w-0 sm:w-16 z-10 transition-opacity duration-200"
-          style={{
-            background: "linear-gradient(to left, white, transparent)",
-            opacity: canRight ? 1 : 0,
-          }}
-        />
-
-        <div
-          ref={trackRef}
-          className="flex gap-4 overflow-x-auto pb-4 scroll-smooth"
-          style={{
-            scrollSnapType: "x mandatory",
-            WebkitOverflowScrolling: "touch",
-            paddingLeft: "max(1rem, calc((100vw - 1280px) / 2 + 2rem))",
-            paddingRight: "max(1rem, calc((100vw - 1280px) / 2 + 2rem))",
-            msOverflowStyle: "none",
-            scrollbarWidth: "none",
-          }}
-          onMouseEnter={stopAuto}
-          onMouseLeave={startAuto}
-          onTouchStart={stopAuto}
-          onTouchEnd={startAuto}
-        >
-          {loopCars.map((deal, loopIdx) => {
-            const brandName    = deal.brand    ? (typeof deal.brand    === "string" ? deal.brand    : deal.brand.name)    : "";
-            const categoryName = deal.category ? (typeof deal.category === "string" ? deal.category : deal.category.name) : "";
-            const hasDiscount  = deal.discountPrice && deal.discountPrice < deal.basePrice;
-            const discountPct  = hasDiscount
-              ? Math.round(((deal.basePrice - deal.discountPrice!) / deal.basePrice) * 100)
-              : 0;
-
-            return (
-              <article
-                key={`${deal._id ?? deal.slug}-${loopIdx}`}
-                style={{ minWidth: CARD_W, scrollSnapAlign: "start" }}
-                className="group relative border border-gray-100 bg-white rounded-xl flex flex-col hover:border-primary/40 hover:shadow-md transition-all duration-300"
-              >
-                {/* Image */}
-                <div className="aspect-[16/9] skeleton-shimmer rounded-t-xl overflow-hidden relative">
-                  {deal.imageUrl ? (
-                    <img
-                      src={sanityImg(deal.imageUrl, { w: 480, q: 75 })}
-                      alt={`${brandName} ${deal.name}`}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      loading="lazy"
-                      decoding="async"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center">
-                      <Icon name="electric_car" className="text-gray-200 mb-2" size="xl" />
-                      <span className="text-[10px] uppercase tracking-widest text-text-ghost font-bold">
-                        {categoryName}
-                      </span>
-                    </div>
-                  )}
-                  {deal.isNew && (
-                    <span className="absolute top-3 left-3 bg-primary text-black text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wide">
-                      Nuevo
-                    </span>
-                  )}
-                  {hasDiscount && (
-                    <span className="absolute top-3 right-3 bg-red-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full">
-                      -{discountPct}%
-                    </span>
-                  )}
-                  <ElectricTypeBadge tag={deal.electricType?.tag} className="absolute bottom-3 left-3 shadow-sm" />
-                </div>
-
-                {/* Body */}
-                <div className="p-4 flex flex-col flex-1">
-                  <p className="text-[10px] uppercase tracking-widest text-text-ghost font-bold mb-0.5">{brandName}</p>
-                  <h3 className="font-headline font-bold text-sm mb-3 leading-tight">
-                    {deal.name}
-                  </h3>
-
-                  {/* Spec strip */}
-                  {(() => {
-                    const specs = carStats({
-                      battery: deal.batteryCapacity,
-                      range: deal.range,
-                      maxVersionRange: deal.maxVersionRange,
-                      electricRangeKm: deal.electricRangeKm,
-                      fuelConsumption: deal.fuelConsumption,
-                      rendimientoElectrico: deal.rendimientoElectrico,
-                      electricTypeTag: deal.electricType?.tag,
-                      power: deal.power,
-                    });
-                    if (specs.length === 0) return null;
-                    return (
-                      <div className="flex gap-2 mb-3">
-                        {specs.map(s => (
-                          <div key={s.label} className="flex-1 bg-gray-50 rounded-lg px-2 py-1.5 text-center">
-                            <p className="text-[10px] text-text-ghost leading-none mb-0.5">{s.label}</p>
-                            <p className="text-xs font-bold text-text leading-none">{s.value}</p>
-                          </div>
-                        ))}
-                      </div>
-                    );
-                  })()}
-
-                  <div className="space-y-1 mb-4">
-                    {hasDiscount && (
-                      <div className="flex justify-between text-xs text-text-ghost">
-                        <span>Precio lista</span>
-                        <span className="line-through">{formatCLP(deal.basePrice)}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between items-baseline">
-                      <span className="text-xs font-bold">{hasDiscount ? "Con descuento" : "Precio"}</span>
-                      <span className="text-base font-headline font-black text-primary-deep">
-                        {formatCLP(deal.discountPrice ?? deal.basePrice)}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="mt-auto flex gap-2">
-                    <Link
-                      href={`/auto/${deal.slug}`}
-                      className="flex-1 py-2.5 bg-primary hover:bg-primary-dark font-bold text-xs rounded-lg text-center transition-colors text-black after:absolute after:inset-0"
-                    >
-                      Ver detalle
-                    </Link>
-                    <Link
-                      href={`/comparador?add=${deal.slug}`}
-                      title="Comparar"
-                      className="relative z-[1] px-3 border border-gray-200 hover:border-primary/40 text-text-muted hover:text-primary-deep rounded-lg flex items-center transition-colors"
-                    >
-                      <Icon name="compare_arrows" className="text-[18px]" />
-                    </Link>
-                  </div>
-                </div>
-              </article>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Barra de progreso mobile */}
-      <div className="md:hidden mx-4 mt-5">
-        <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
-          <div
-            className="h-full rounded-full transition-all duration-150"
-            style={{ width: `${Math.max(scrollPct * 100, 8)}%`, backgroundColor: "#00E5E5" }}
-          />
-        </div>
+          );
+        })}
       </div>
     </section>
   );

@@ -1,6 +1,5 @@
 import React from "react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { client } from "@/lib/sanity/client";
 import { blogPostBySlugQuery, allBlogSlugsQuery } from "@/lib/queries/blog";

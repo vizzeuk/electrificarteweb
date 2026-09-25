@@ -13,8 +13,10 @@ import { REVIEW_MAX_CHARS, REVIEW_MIN_CHARS } from "@/lib/reviews/config";
 import type { ReviewPrefill } from "./ReviewProvider";
 
 /**
- * Formulario de reseña. Misma línea visual que el popup de waitlist
- * (overlay oscuro, borde white/10, glow cyan) para no salirse del diseño.
+ * Formulario de reseña. Misma cáscara que el popup de waitlist del sistema v1
+ * (app/styles/home.css → .modal): velo Tinta detrás, card Papel con sombra de overlay,
+ * campos .field/.input de 48 px con foco sólido. Sin glow, sin orbes, sin blur.
+ * Se abre desde la PDP y desde el home (ReviewProvider vive en el layout público).
  */
 
 const schema = z.object({
@@ -33,21 +35,9 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
-const INPUT_CLS =
-  "w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/35 transition-all focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/25";
-
-function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
-  return (
-    <label className="mb-1.5 block px-1 text-[11px] font-bold uppercase tracking-wider text-white/50">
-      {children}
-      {required && <span className="ml-1 text-primary">*</span>}
-    </label>
-  );
-}
-
 /**
  * Sube las fotos directo al bucket con URLs firmadas y devuelve las RUTAS (no URLs)
- * para guardarlas en la BD. Nunca pasan por /api/* — Vercel corta el body en 4,5 MB.
+ * para guardarlas en la BD. Nunca pasan por /api/*: Vercel corta el body en 4,5 MB.
  * Si algo falla devuelve [] : preferimos publicar la reseña sin fotos antes que perderla.
  */
 async function uploadPhotos(photos: PickedPhoto[]): Promise<string[]> {
@@ -91,6 +81,7 @@ export function ReviewModal({ isOpen, onClose, prefill }: ReviewModalProps) {
   const [rating, setRating] = useState(0);
   const [photos, setPhotos] = useState<PickedPhoto[]>([]);
   const submitting = useRef(false);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   const {
     register,
@@ -128,6 +119,17 @@ export function ReviewModal({ isOpen, onClose, prefill }: ReviewModalProps) {
       document.body.style.overflow = prev;
     };
   }, [isOpen, onClose]);
+
+  // Foco: entra al diálogo al abrir y vuelve al botón que lo abrió al cerrar.
+  useEffect(() => {
+    if (!isOpen) return;
+    const trigger = document.activeElement as HTMLElement | null;
+    const id = requestAnimationFrame(() => cardRef.current?.focus({ preventScroll: true }));
+    return () => {
+      cancelAnimationFrame(id);
+      trigger?.focus?.({ preventScroll: true });
+    };
+  }, [isOpen]);
 
   function pickRating(n: number) {
     setRating(n);
@@ -175,6 +177,7 @@ export function ReviewModal({ isOpen, onClose, prefill }: ReviewModalProps) {
   }
 
   const autoLabel = [prefill.carBrand, prefill.carModel].filter(Boolean).join(" ");
+  const loading = status === "loading";
 
   return (
     <AnimatePresence>
@@ -186,200 +189,220 @@ export function ReviewModal({ isOpen, onClose, prefill }: ReviewModalProps) {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.25 }}
           onClick={onClose}
-          className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/70 p-4 backdrop-blur-sm sm:p-6"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="review-title"
+          // transition-none: la animación la lleva Framer; así no se suma la transición CSS de .modal.
+          className="modal is-open transition-none"
         >
           <m.div
             key="review-modal"
-            initial={{ opacity: 0, scale: 0.94, y: 12 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.96, y: 8 }}
-            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            ref={cardRef}
+            tabIndex={-1}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="review-title"
+            initial={{ y: 8 }}
+            animate={{ y: 0 }}
+            exit={{ y: 8 }}
+            transition={{ duration: 0.4, ease: [0.2, 0.7, 0.2, 1] }}
             onClick={(e) => e.stopPropagation()}
-            className="relative my-auto w-full max-w-lg overflow-hidden rounded-2xl border border-white/10 bg-black shadow-[0_40px_120px_-20px_rgba(0,0,0,0.8),0_0_80px_rgba(0,229,229,0.08)]"
+            className="modal__card outline-none transition-none"
           >
-            <div aria-hidden className="pointer-events-none absolute -left-16 -top-20 h-72 w-72 rounded-full bg-primary/15 blur-[90px]" />
-
             <button
               type="button"
               onClick={onClose}
               aria-label="Cerrar"
-              className="absolute right-3 top-3 z-10 rounded-full p-2 text-white/50 transition-colors hover:bg-white/10 hover:text-white"
+              className="btn btn--secondary btn--icon btn--sm modal__close"
             >
-              <Icon name="close" className="text-[20px]" />
+              <Icon name="close" size="none" />
             </button>
 
-            <div className="relative p-6 sm:p-8">
-              {status === "success" ? (
-                <div className="py-6 text-center">
-                  <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/15">
-                    <Icon name="check_circle" className="text-[30px] text-primary" />
-                  </div>
-                  <h2 className="mb-2 font-headline text-2xl font-bold text-white">¡Gracias por tu reseña!</h2>
-                  <p className="text-sm leading-relaxed text-white/60">
-                    La revisaremos antes de publicarla. Nos ayuda muchísimo a que otros compradores
-                    decidan mejor.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={onClose}
-                    className="mt-6 w-full rounded-full bg-white/10 py-3.5 font-headline text-sm font-bold text-white transition-all hover:bg-white/15"
-                  >
-                    Cerrar
-                  </button>
+            {status === "success" ? (
+              <div className="modal__done">
+                <div className="done-mark">
+                  <Icon name="check" className="text-[24px]" />
                 </div>
-              ) : (
-                <>
-                  <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-primary">
-                    Tu experiencia
-                  </p>
-                  <h2 id="review-title" className="mb-2 font-headline text-2xl font-bold leading-tight text-white">
-                    {autoLabel ? `¿Cómo ha sido tu ${autoLabel}?` : "Cuéntanos sobre tu auto"}
-                  </h2>
-                  <p className="mb-6 text-sm leading-relaxed text-white/60">
-                    Tu reseña ayuda a otros compradores a decidir. La revisamos antes de publicarla.
-                  </p>
+                <h2 id="review-title" className="modal__title text-balance">¡Gracias por tu reseña!</h2>
+                <p className="modal__text">
+                  La revisaremos antes de publicarla. Nos ayuda muchísimo a que otros compradores
+                  decidan mejor.
+                </p>
+                <button type="button" onClick={onClose} className="btn btn--secondary btn--lg btn--block mt-6">
+                  Cerrar
+                </button>
+              </div>
+            ) : (
+              <>
+                <h2 id="review-title" className="modal__title text-balance">
+                  {autoLabel ? `¿Cómo ha sido tu ${autoLabel}?` : "Cuéntanos sobre tu auto"}
+                </h2>
+                <p className="modal__text">
+                  Tu reseña ayuda a otros compradores a decidir. La revisamos antes de publicarla.
+                </p>
 
-                  <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
-                    {/* Estrellas */}
-                    <div>
-                      <FieldLabel required>Tu calificación</FieldLabel>
-                      <div className="flex items-center gap-3 px-1">
-                        <StarRating value={rating} onChange={pickRating} size={30} />
-                        {rating > 0 && <span className="text-sm font-semibold text-white/60">{rating}/5</span>}
-                      </div>
-                      <input type="hidden" {...register("rating", { valueAsNumber: true })} />
-                      {errors.rating && <p className="mt-1 px-1 text-xs text-red-400">{errors.rating.message}</p>}
+                <form onSubmit={handleSubmit(onSubmit)} noValidate>
+                  {/* Estrellas */}
+                  <div className="field">
+                    <span className="field__label">Tu calificación</span>
+                    <div className="flex items-center gap-3">
+                      <StarRating value={rating} onChange={pickRating} size={28} />
+                      {rating > 0 && <span className="t-small">{rating} de 5</span>}
                     </div>
+                    <input type="hidden" {...register("rating", { valueAsNumber: true })} />
+                    {errors.rating && <p className="field__error">{errors.rating.message}</p>}
+                  </div>
 
-                    {/* Reseña */}
-                    <div>
-                      <FieldLabel required>Tu reseña</FieldLabel>
-                      <textarea
-                        {...register("body")}
-                        rows={4}
-                        placeholder="¿Cómo ha sido la experiencia? Autonomía real, carga, manejo, lo bueno y lo malo…"
-                        className={`${INPUT_CLS} resize-none`}
+                  {/* Reseña */}
+                  <div className="field">
+                    <label className="field__label" htmlFor="rv-body">Tu reseña</label>
+                    <textarea
+                      id="rv-body"
+                      {...register("body")}
+                      rows={4}
+                      placeholder="¿Cómo ha sido la experiencia? Autonomía real, carga, manejo, lo bueno y lo malo…"
+                      aria-invalid={errors.body ? true : undefined}
+                      className="input h-auto min-h-[120px] resize-none py-3 leading-[1.5]"
+                    />
+                    <div className="flex items-start justify-between gap-3">
+                      {errors.body ? <p className="field__error">{errors.body.message}</p> : <span />}
+                      <span className="t-micro num flex-none">{bodyValue.length}/{REVIEW_MAX_CHARS}</span>
+                    </div>
+                  </div>
+
+                  {/* Fotos */}
+                  <div className="field">
+                    <span className="field__label">
+                      Fotos de tu auto <span className="opt">(opcional)</span>
+                    </span>
+                    <PhotoPicker photos={photos} onChange={setPhotos} disabled={loading} />
+                  </div>
+
+                  {/* Datos del auto: se precargan desde la PDP */}
+                  {!prefill.carSlug && (
+                    <div className="row2">
+                      <div className="field">
+                        <label className="field__label" htmlFor="rv-brand">Marca</label>
+                        <input id="rv-brand" {...register("carBrand")} placeholder="BYD" className="input" />
+                      </div>
+                      <div className="field">
+                        <label className="field__label" htmlFor="rv-model">Modelo</label>
+                        <input id="rv-model" {...register("carModel")} placeholder="Dolphin" className="input" />
+                      </div>
+                    </div>
+                  )}
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="field">
+                      <label className="field__label" htmlFor="rv-year">Año</label>
+                      <input id="rv-year" {...register("carYear")} inputMode="numeric" maxLength={4} placeholder="2025" className="input" />
+                    </div>
+                    <div className="field">
+                      <label className="field__label" htmlFor="rv-color">Color</label>
+                      <input id="rv-color" {...register("carColor")} placeholder="Blanco" className="input" />
+                    </div>
+                    <div className="field">
+                      <label className="field__label" htmlFor="rv-version">Versión</label>
+                      <input id="rv-version" {...register("carVersion")} placeholder="GS" className="input" />
+                    </div>
+                  </div>
+
+                  {/* Persona */}
+                  <div className="row2">
+                    <div className="field">
+                      <label className="field__label" htmlFor="rv-first">Nombre</label>
+                      <input
+                        id="rv-first"
+                        {...register("firstName")}
+                        autoComplete="given-name"
+                        placeholder="Juan"
+                        aria-invalid={errors.firstName ? true : undefined}
+                        className="input"
                       />
-                      <div className="mt-1 flex items-center justify-between px-1">
-                        {errors.body ? (
-                          <p className="text-xs text-red-400">{errors.body.message}</p>
-                        ) : <span />}
-                        <span className="text-[11px] text-white/30">{bodyValue.length}/{REVIEW_MAX_CHARS}</span>
-                      </div>
+                      {errors.firstName && <p className="field__error">{errors.firstName.message}</p>}
                     </div>
-
-                    {/* Fotos */}
-                    <div>
-                      <FieldLabel>Fotos de tu auto <span className="font-normal normal-case tracking-normal text-white/30">(opcional)</span></FieldLabel>
-                      <PhotoPicker photos={photos} onChange={setPhotos} disabled={status === "loading"} />
+                    <div className="field">
+                      <label className="field__label" htmlFor="rv-last">Apellido</label>
+                      <input
+                        id="rv-last"
+                        {...register("lastName")}
+                        autoComplete="family-name"
+                        placeholder="Pérez"
+                        aria-invalid={errors.lastName ? true : undefined}
+                        className="input"
+                      />
+                      {errors.lastName && <p className="field__error">{errors.lastName.message}</p>}
                     </div>
+                  </div>
+                  <p className="t-micro -mt-2">
+                    Publicamos solo tu nombre y la inicial del apellido (ej. &ldquo;Juan P.&rdquo;).
+                  </p>
 
-                    {/* Datos del auto — se precargan desde la PDP */}
-                    {!prefill.carSlug && (
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <FieldLabel>Marca</FieldLabel>
-                          <input {...register("carBrand")} placeholder="BYD" className={INPUT_CLS} />
-                        </div>
-                        <div>
-                          <FieldLabel>Modelo</FieldLabel>
-                          <input {...register("carModel")} placeholder="Dolphin" className={INPUT_CLS} />
-                        </div>
-                      </div>
+                  <div className="field">
+                    <label className="field__label" htmlFor="rv-email">Email</label>
+                    <input
+                      id="rv-email"
+                      {...register("email")}
+                      type="email"
+                      autoComplete="email"
+                      placeholder="juan@ejemplo.com"
+                      aria-invalid={errors.email ? true : undefined}
+                      className="input"
+                    />
+                    {errors.email && <p className="field__error">{errors.email.message}</p>}
+                  </div>
+
+                  <div className="field">
+                    <label className="field__label" htmlFor="rv-phone">
+                      WhatsApp <span className="opt">(opcional)</span>
+                    </label>
+                    <div className="input-group">
+                      <span className="input-group__prefix">+56</span>
+                      <input
+                        id="rv-phone"
+                        {...register("phone")}
+                        type="tel"
+                        inputMode="numeric"
+                        maxLength={9}
+                        placeholder="995760998"
+                        aria-invalid={errors.phone ? true : undefined}
+                        onInput={(e) => {
+                          let v = e.currentTarget.value.replace(/\D/g, "");
+                          if (v.length > 9 && v.startsWith("56")) v = v.slice(2);
+                          v = v.slice(0, 9);
+                          e.currentTarget.value = v;
+                          setValue("phone", v, { shouldValidate: true });
+                        }}
+                        className="input"
+                      />
+                    </div>
+                    {errors.phone && <p className="field__error">{errors.phone.message}</p>}
+                  </div>
+
+                  <button
+                    type="submit"
+                    aria-busy={loading || undefined}
+                    className={`btn btn--primary btn--lg btn--block mt-2${loading ? " pointer-events-none" : ""}`}
+                  >
+                    {loading ? (
+                      <>
+                        <Icon name="progress_activity" size="none" className="animate-spin" />
+                        Enviando...
+                      </>
+                    ) : (
+                      "Enviar mi reseña"
                     )}
-                    <div className="grid grid-cols-3 gap-3">
-                      <div>
-                        <FieldLabel>Año</FieldLabel>
-                        <input {...register("carYear")} inputMode="numeric" maxLength={4} placeholder="2025" className={INPUT_CLS} />
-                      </div>
-                      <div>
-                        <FieldLabel>Color</FieldLabel>
-                        <input {...register("carColor")} placeholder="Blanco" className={INPUT_CLS} />
-                      </div>
-                      <div>
-                        <FieldLabel>Versión</FieldLabel>
-                        <input {...register("carVersion")} placeholder="GS" className={INPUT_CLS} />
-                      </div>
-                    </div>
+                  </button>
 
-                    {/* Persona */}
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <div>
-                        <FieldLabel required>Nombre</FieldLabel>
-                        <input {...register("firstName")} autoComplete="given-name" placeholder="Juan" className={INPUT_CLS} />
-                        {errors.firstName && <p className="mt-1 px-1 text-xs text-red-400">{errors.firstName.message}</p>}
-                      </div>
-                      <div>
-                        <FieldLabel required>Apellido</FieldLabel>
-                        <input {...register("lastName")} autoComplete="family-name" placeholder="Pérez" className={INPUT_CLS} />
-                        {errors.lastName && <p className="mt-1 px-1 text-xs text-red-400">{errors.lastName.message}</p>}
-                      </div>
-                    </div>
-                    <p className="-mt-1 px-1 text-[11px] text-white/35">
-                      Publicamos solo tu nombre y la inicial del apellido (ej. &ldquo;Juan P.&rdquo;).
+                  {status === "error" && (
+                    <p className="field__error text-center" role="alert">
+                      Hubo un error al enviar tu reseña. Intenta de nuevo.
                     </p>
+                  )}
 
-                    <div>
-                      <FieldLabel required>Email</FieldLabel>
-                      <input {...register("email")} type="email" autoComplete="email" placeholder="juan@ejemplo.com" className={INPUT_CLS} />
-                      {errors.email && <p className="mt-1 px-1 text-xs text-red-400">{errors.email.message}</p>}
-                    </div>
-
-                    <div>
-                      <FieldLabel>WhatsApp <span className="font-normal normal-case tracking-normal text-white/30">(opcional)</span></FieldLabel>
-                      <div className="flex">
-                        <span className="flex flex-shrink-0 select-none items-center rounded-l-lg border border-r-0 border-white/10 bg-white/10 px-3 text-sm font-semibold text-white/60">+56</span>
-                        <input
-                          {...register("phone")}
-                          type="tel"
-                          inputMode="numeric"
-                          maxLength={9}
-                          placeholder="995760998"
-                          onInput={(e) => {
-                            let v = e.currentTarget.value.replace(/\D/g, "");
-                            if (v.length > 9 && v.startsWith("56")) v = v.slice(2);
-                            v = v.slice(0, 9);
-                            e.currentTarget.value = v;
-                            setValue("phone", v, { shouldValidate: true });
-                          }}
-                          className={`${INPUT_CLS} rounded-l-none`}
-                        />
-                      </div>
-                      {errors.phone && <p className="mt-1 px-1 text-xs text-red-400">{errors.phone.message}</p>}
-                    </div>
-
-                    <button
-                      type="submit"
-                      disabled={status === "loading"}
-                      className="!mt-6 flex w-full items-center justify-center gap-3 rounded-full bg-primary py-4 font-headline text-base font-bold text-black shadow-lg transition-all hover:shadow-[0_0_25px_rgba(0,229,229,0.3)] active:scale-[0.98] disabled:opacity-60"
-                    >
-                      {status === "loading" ? (
-                        <>
-                          <Icon name="progress_activity" className="animate-spin text-[20px]" />
-                          Enviando...
-                        </>
-                      ) : (
-                        "Enviar mi reseña"
-                      )}
-                    </button>
-
-                    {status === "error" && (
-                      <p className="text-center text-sm text-red-400">
-                        Hubo un error al enviar tu reseña. Intenta de nuevo.
-                      </p>
-                    )}
-
-                    <p className="!mt-4 text-center text-[10px] uppercase tracking-wider text-white/35">
-                      Al enviar aceptas nuestra{" "}
-                      <Link href="/privacidad" className="underline transition-colors hover:text-primary">política de privacidad</Link>.
-                    </p>
-                  </form>
-                </>
-              )}
-            </div>
+                  <p className="t-micro">
+                    Al enviar aceptas nuestra{" "}
+                    <Link href="/privacidad" className="link">política de privacidad</Link>.
+                  </p>
+                </form>
+              </>
+            )}
           </m.div>
         </m.div>
       )}

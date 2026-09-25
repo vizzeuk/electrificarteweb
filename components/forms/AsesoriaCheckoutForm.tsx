@@ -4,9 +4,9 @@ import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { m } from "framer-motion";
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
+import { ASESORIA_PRICE } from "@/lib/products";
 
 const schema = z.object({
   fullName: z.string().min(2, "Ingresa tu nombre completo"),
@@ -15,16 +15,6 @@ const schema = z.object({
 });
 
 type FormValues = z.infer<typeof schema>;
-
-const INPUT_CLS = "w-full bg-gray-100 rounded-lg py-3 px-4 text-sm text-text-main placeholder-text-ghost focus:outline-none focus:ring-2 focus:ring-amber/30 transition-all";
-
-function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
-  return (
-    <label className="block text-xs font-bold uppercase tracking-wider text-text-muted mb-1.5 px-1">
-      {children}{required && <span className="text-red-400 ml-1">*</span>}
-    </label>
-  );
-}
 
 export function AsesoriaCheckoutForm() {
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
@@ -86,46 +76,55 @@ export function AsesoriaCheckoutForm() {
   }
 
   return (
-    <m.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-2xl shadow-xl p-6 md:p-10 space-y-8"
-    >
-      <div>
-        <h2 className="text-2xl md:text-3xl font-headline font-bold text-text-main mb-1">
-          Contrata tu asesoría
-        </h2>
-        <p className="text-text-muted text-sm">
-          Con estos datos activamos tu pago y Francisco IA te escribe por WhatsApp al instante.
-        </p>
-      </div>
+    <div className="rounded-card border border-line p-6 md:p-10">
+      <h2 className="t-h3">Contrata tu asesoría</h2>
+      <p className="t-body mt-2">
+        Con estos datos activamos tu pago y Francisco IA te escribe por WhatsApp al instante.
+      </p>
 
-      <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-5">
-        <div>
-          <FieldLabel required>Nombre completo</FieldLabel>
-          <input {...register("fullName")} type="text" autoComplete="name" placeholder="Juan Pérez" className={INPUT_CLS} />
-          {errors.fullName && <p className="text-red-500 text-xs mt-1 px-1">{errors.fullName.message}</p>}
+      <form onSubmit={handleSubmit(onSubmit)} noValidate className="mt-8 grid gap-5">
+        <div className="field">
+          <label htmlFor="ac-name" className="field__label">Nombre completo</label>
+          <input
+            id="ac-name"
+            {...register("fullName")}
+            type="text"
+            autoComplete="name"
+            placeholder="Juan Pérez"
+            className="input"
+            aria-invalid={!!errors.fullName}
+          />
+          {errors.fullName && <p className="field__error">{errors.fullName.message}</p>}
         </div>
 
-        <div>
-          <FieldLabel required>Email</FieldLabel>
-          <input {...register("email")} type="email" autoComplete="email" placeholder="juan@ejemplo.com" className={INPUT_CLS} />
-          {errors.email && <p className="text-red-500 text-xs mt-1 px-1">{errors.email.message}</p>}
+        <div className="field">
+          <label htmlFor="ac-email" className="field__label">Email</label>
+          <input
+            id="ac-email"
+            {...register("email")}
+            type="email"
+            autoComplete="email"
+            placeholder="juan@ejemplo.com"
+            className="input"
+            aria-invalid={!!errors.email}
+          />
+          {errors.email && <p className="field__error">{errors.email.message}</p>}
         </div>
 
-        <div>
-          <FieldLabel required>Número de WhatsApp</FieldLabel>
-          <div className="flex">
-            <span className="flex-shrink-0 flex items-center bg-gray-200 text-text-muted text-sm font-semibold px-3 rounded-l-lg border-r border-gray-300 select-none">
-              +56
-            </span>
+        <div className="field">
+          <label htmlFor="ac-phone" className="field__label">Número de WhatsApp</label>
+          <div className="input-group">
+            <span className="input-group__prefix select-none">+56</span>
             <input
+              id="ac-phone"
               {...register("phone")}
               type="tel"
               inputMode="numeric"
               autoComplete="tel-national"
               placeholder="995760998"
               maxLength={9}
+              aria-invalid={!!errors.phone}
+              aria-describedby="ac-phone-hint"
               onInput={(e) => {
                 let v = e.currentTarget.value.replace(/\D/g, "");
                 if (v.length > 9 && v.startsWith("56")) v = v.slice(2);
@@ -133,47 +132,40 @@ export function AsesoriaCheckoutForm() {
                 e.currentTarget.value = v;
                 setValue("phone", v, { shouldValidate: true });
               }}
-              className={`${INPUT_CLS} rounded-l-none`}
+              className="input"
             />
           </div>
-          {errors.phone && <p className="text-red-500 text-xs mt-1 px-1">{errors.phone.message}</p>}
-          <p className="text-[11px] text-text-ghost mt-1.5 px-1">
+          {errors.phone && <p className="field__error">{errors.phone.message}</p>}
+          <p id="ac-phone-hint" className="t-micro">
             Francisco IA te escribirá a este mismo número por WhatsApp.
           </p>
         </div>
 
-        <div className="pt-2">
-          <button
-            type="submit"
-            disabled={status === "loading"}
-            className="w-full bg-amber hover:bg-amber-dark text-black font-headline font-bold py-5 rounded-full text-lg shadow-lg hover:shadow-[0_0_25px_rgba(245,158,11,0.3)] transition-all active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-60"
-          >
+        <div className="mt-3 grid gap-4">
+          <button type="submit" disabled={status === "loading"} className="btn btn--primary btn--lg btn--block">
             {status === "loading" ? (
               <>
-                <Icon name="progress_activity" className="text-[20px] animate-spin" />
+                <Icon name="progress_activity" size="none" className="animate-spin" />
                 Procesando...
               </>
             ) : (
-              <>
-                Pagar $4.990 y activar mi asesoría
-              </>
+              <>Pagar {ASESORIA_PRICE} y activar mi asesoría</>
             )}
           </button>
 
           {status === "error" && (
-            <p className="text-center text-red-500 text-sm mt-3">
+            <p className="field__error" role="alert">
               Hubo un error al procesar tu pago. Intenta de nuevo.
             </p>
           )}
 
-          <p className="text-center text-[10px] text-text-muted mt-4 uppercase tracking-wider">
+          <p className="t-micro">
             Al hacer clic, aceptas nuestros{" "}
-            <Link href="/terminos" className="underline hover:text-primary-deep transition-colors">términos de servicio</Link>{" "}
-            y{" "}
-            <Link href="/privacidad" className="underline hover:text-primary-deep transition-colors">política de privacidad</Link>.
+            <Link href="/terminos" className="link">términos de servicio</Link> y{" "}
+            <Link href="/privacidad" className="link">política de privacidad</Link>.
           </p>
         </div>
       </form>
-    </m.div>
+    </div>
   );
 }

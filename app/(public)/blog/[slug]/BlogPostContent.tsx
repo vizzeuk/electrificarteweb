@@ -1,14 +1,19 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import Link from "next/link";
-import { PortableText, type PortableTextComponents } from "@portabletext/react";
+import { PortableText, type PortableTextBlock, type PortableTextComponents } from "@portabletext/react";
 import { formatCLP, formatFecha } from "@/lib/utils";
 import { safeJsonLd } from "@/lib/seo";
+import { sanityImg } from "@/lib/sanityImage";
 import { Icon } from "@/components/ui/Icon";
 import { OfferCta } from "@/components/waitlist/OfferCta";
+import { ASESORIA_PRICE, OFERTA_STANDBY } from "@/lib/products";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
+
+/** Bloques de texto de Sanity más los tipos propios del cuerpo (image, callout). */
+type BodyNode = PortableTextBlock | { _type: string; _key?: string; [key: string]: unknown };
 
 interface BlogPost {
   _id: string;
@@ -21,7 +26,7 @@ interface BlogPost {
   tags?: string[];
   coverImage?: { asset?: { url: string }; alt?: string } | null;
   author?: { name: string; role: string; avatar?: { url: string } } | null;
-  body?: any[];
+  body?: BodyNode[];
   featuredSnippet?: string;
   faqBlock?: { question: string; answer: string }[];
   howToBlock?: { name: string; description: string; steps: { name: string; text: string }[] };
@@ -48,62 +53,49 @@ interface BlogPost {
 }
 
 // ─── PortableText renderers ───────────────────────────────────────────────────
+// Cuerpo de lectura: Switzer 18 px con interlineado 1,65 (lo hereda del <article>), títulos en Cabinet.
+
+const H2_CLASS = "font-display text-[clamp(1.5rem,1.25rem+1vw,2rem)] font-bold leading-[1.12] tracking-[-0.02em] text-ink text-balance";
+
+// Íconos de los avisos: ya no hay un color ni un emoji por tipo.
+const CALLOUT_ICON: Record<string, string> = { info: "info", tip: "lightbulb", warning: "error" };
 
 const ptComponents: PortableTextComponents = {
   block: {
-    h2: ({ children }) => (
-      <h2 className="font-headline font-black text-2xl md:text-3xl tracking-tight mt-10 mb-4 text-text-main">
-        {children}
-      </h2>
-    ),
-    h3: ({ children }) => (
-      <h3 className="font-headline font-bold text-xl md:text-2xl mt-8 mb-3 text-text-main">
-        {children}
-      </h3>
-    ),
-    h4: ({ children }) => (
-      <h4 className="font-headline font-bold text-lg mt-6 mb-2 text-text-main">{children}</h4>
-    ),
-    normal: ({ children }) => (
-      <p className="text-text-muted text-base leading-relaxed mb-5">{children}</p>
-    ),
+    h2: ({ children }) => <h2 className={`mb-4 mt-14 ${H2_CLASS}`}>{children}</h2>,
+    h3: ({ children }) => <h3 className="t-h3 mb-3 mt-10 text-ink">{children}</h3>,
+    h4: ({ children }) => <h4 className="t-h4 mb-2 mt-8 text-ink">{children}</h4>,
+    normal: ({ children }) => <p className="mb-6 text-ink-2">{children}</p>,
     blockquote: ({ children }) => (
-      <blockquote className="border-l-4 border-primary pl-5 py-1 my-6 text-text-muted italic text-base leading-relaxed">
+      <blockquote className="my-10 border-l-2 border-accent pl-6 text-[1.25rem] leading-[1.5] text-ink">
         {children}
       </blockquote>
     ),
   },
   list: {
     bullet: ({ children }) => (
-      <ul className="space-y-2 mb-6 pl-1">{children}</ul>
+      <ul className="mb-6 list-disc space-y-2 pl-6 marker:text-ink-3">{children}</ul>
     ),
     number: ({ children }) => (
-      <ol className="space-y-2 mb-6 pl-1 list-decimal list-inside">{children}</ol>
+      <ol className="mb-6 list-decimal space-y-2 pl-6 marker:font-semibold marker:text-ink-3">{children}</ol>
     ),
   },
   listItem: {
-    bullet: ({ children }) => (
-      <li className="flex items-start gap-2.5 text-text-muted text-base leading-relaxed">
-        <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0 mt-2.5" />
-        <span>{children}</span>
-      </li>
-    ),
-    number: ({ children }) => (
-      <li className="text-text-muted text-base leading-relaxed">{children}</li>
-    ),
+    bullet: ({ children }) => <li className="pl-1 text-ink-2">{children}</li>,
+    number: ({ children }) => <li className="pl-1 text-ink-2">{children}</li>,
   },
   marks: {
-    strong: ({ children }) => <strong className="font-bold text-text-main">{children}</strong>,
+    strong: ({ children }) => <strong className="font-semibold text-ink">{children}</strong>,
     em:     ({ children }) => <em className="italic">{children}</em>,
     code:   ({ children }) => (
-      <code className="bg-gray-100 text-primary-deep font-mono text-sm px-1.5 py-0.5 rounded">{children}</code>
+      <code className="rounded-chip bg-canvas-2 px-1.5 py-0.5 font-mono text-[0.9em] text-ink">{children}</code>
     ),
     link: ({ value, children }) => (
       <a
         href={value?.href}
         target={value?.blank ? "_blank" : "_self"}
         rel={value?.blank ? "noopener noreferrer" : undefined}
-        className="text-primary-deep underline underline-offset-2 hover:text-primary transition-colors"
+        className="link"
       >
         {children}
       </a>
@@ -112,39 +104,32 @@ const ptComponents: PortableTextComponents = {
   types: {
     image: ({ value }) =>
       value?.asset?.url ? (
-        <figure className="my-8">
+        <figure className="my-10">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={value.asset.url}
+            src={sanityImg(value.asset.url, { w: 1400, q: 80 })}
             alt={value.alt ?? ""}
-            className="w-full rounded-2xl object-cover" loading="lazy" decoding="async" />
+            className="w-full rounded-card object-cover" loading="lazy" decoding="async" />
           {value.caption && (
-            <figcaption className="text-center text-text-ghost text-xs mt-2">
+            <figcaption className="t-micro mt-3">
               {value.caption}
             </figcaption>
           )}
         </figure>
       ) : null,
-    callout: ({ value }) => {
-      const styles: Record<string, string> = {
-        info:    "bg-blue-50  border-blue-200  text-blue-800",
-        tip:     "bg-green-50 border-green-200 text-green-800",
-        warning: "bg-amber-50 border-amber-200 text-amber-800",
-      };
-      const icons: Record<string, string> = { info: "💡", tip: "✅", warning: "⚠️" };
-      return (
-        <div className={`border rounded-xl px-5 py-4 my-6 text-sm leading-relaxed ${styles[value.type] ?? styles.tip}`}>
-          <span className="mr-2">{icons[value.type] ?? "📌"}</span>
-          {value.text}
-        </div>
-      );
-    },
+    callout: ({ value }) => (
+      <aside className="my-8 flex gap-3 rounded-card bg-canvas-2 p-5 md:p-6">
+        <Icon name={CALLOUT_ICON[value.type] ?? "lightbulb"} className="mt-0.5 flex-none text-[20px] text-link" />
+        <p className="text-[1rem] leading-[1.6] text-ink">{value.text}</p>
+      </aside>
+    ),
   },
 };
 
 // ─── JSON-LD builder ──────────────────────────────────────────────────────────
 
 function buildJsonLd(post: BlogPost) {
-  const schemas: any[] = [];
+  const schemas: Record<string, unknown>[] = [];
 
   // Article / NewsArticle schema
   schemas.push({
@@ -202,13 +187,67 @@ const CATEGORY_LABELS: Record<string, string> = {
   ahorro: "Ahorro", carga: "Carga", legislacion: "Legislación",
 };
 
+const WAITLIST_LABEL = OFERTA_STANDBY ? "Únete a la waitlist" : "Quiero mi oferta";
+
+// Alto de la barra fija móvil: 12 + 40 + 12 de relleno y 1 de hairline.
+const MOBILE_BAR_H = 65;
+
+/**
+ * La barra fija móvil queda bajo el lanzador del chat y el widget de feedback. Los levanta
+ * con el mismo contrato que StickyCTA y la PDP: --sticky-h y --chat-bottom en <html>, más el
+ * estilo en línea del lanzador (en Safari la herencia de variables en el shadow DOM falla).
+ */
+function useLiftFloatingWidgets() {
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 1023px)");
+    const root = document.documentElement;
+    const lifted = `${24 + MOBILE_BAR_H}px`;
+    let launcherDone = false;
+
+    // El chat se monta diferido: su lanzador puede no existir todavía.
+    const syncLauncher = () => {
+      if (launcherDone) return;
+      try {
+        const el = document.querySelector("ev-chat-widget")?.shadowRoot?.querySelector("#launcher") as HTMLElement | null;
+        if (!el) return;
+        el.style.bottom = mq.matches ? lifted : "";
+        launcherDone = true;
+      } catch { /* no bloquea */ }
+    };
+    const apply = () => {
+      root.style.setProperty("--sticky-h", mq.matches ? `${MOBILE_BAR_H}px` : "0px");
+      root.style.setProperty("--chat-bottom", mq.matches ? lifted : "24px");
+      launcherDone = false;
+      syncLauncher();
+    };
+
+    apply();
+    mq.addEventListener("change", apply);
+    window.addEventListener("scroll", syncLauncher, { passive: true });
+    customElements.whenDefined("ev-chat-widget").then(() => requestAnimationFrame(syncLauncher));
+
+    return () => {
+      mq.removeEventListener("change", apply);
+      window.removeEventListener("scroll", syncLauncher);
+      launcherDone = true;
+      root.style.setProperty("--sticky-h", "0px");
+      root.style.setProperty("--chat-bottom", "24px");
+      try {
+        const el = document.querySelector("ev-chat-widget")?.shadowRoot?.querySelector("#launcher") as HTMLElement | null;
+        if (el) el.style.bottom = "";
+      } catch { /* no bloquea */ }
+    };
+  }, []);
+}
+
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function BlogPostContent({ post }: { post: BlogPost }) {
   const schemas = buildJsonLd(post);
+  useLiftFloatingWidgets();
 
   return (
-    <>
+    <div className="page">
       {/* ─── JSON-LD ─────────────────────────────────────────────────── */}
       {schemas.map((schema, i) => (
         <script
@@ -218,281 +257,251 @@ export function BlogPostContent({ post }: { post: BlogPost }) {
         />
       ))}
 
-      {/* ─── Hero ────────────────────────────────────────────────────── */}
-      <section className="bg-black pt-20 pb-0 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-[600px] h-[400px] bg-primary/6 rounded-full blur-[140px] pointer-events-none" />
-
-        <div className="max-w-4xl mx-auto px-4 md:px-8 relative z-10 pb-12">
-          {/* Breadcrumb */}
-          <nav className="flex items-center gap-2 text-white/30 text-xs mb-8">
-            <Link href="/"     className="hover:text-white/60 transition-colors">Inicio</Link>
-            <span>/</span>
-            <Link href="/blog" className="hover:text-white/60 transition-colors">Blog</Link>
-            <span>/</span>
-            <span className="text-white/60 truncate max-w-[200px]">{post.title}</span>
+      {/* ─── Encabezado ──────────────────────────────────────────────── */}
+      <section className="pt-[clamp(40px,5vw,72px)]">
+        <div className="wrap">
+          <nav className="crumbs" aria-label="Migas de pan">
+            <Link href="/">Inicio</Link>
+            <span aria-hidden="true">/</span>
+            <Link href="/blog">Blog</Link>
+            <span aria-hidden="true">/</span>
+            <span aria-current="page" className="max-w-[200px] truncate sm:max-w-[420px]">{post.title}</span>
           </nav>
 
-          {/* Category + meta */}
-          <div className="flex flex-wrap items-center gap-3 mb-5">
-            <span className="text-[10px] font-black uppercase tracking-wide bg-primary text-black px-2.5 py-1 rounded-full">
-              {CATEGORY_LABELS[post.category] ?? post.category}
-            </span>
-            <span className="text-white/40 text-xs flex items-center gap-1">
-              <Icon name="schedule" className="text-[13px]" />
-              {post.readingTime} min de lectura
-            </span>
-            <span className="text-white/40 text-xs">
-              {formatFecha(post.publishedAt, true)}
-            </span>
-          </div>
+          <div className="mt-[clamp(32px,4vw,48px)] max-w-[56rem]">
+            <p className="post-cat">{CATEGORY_LABELS[post.category] ?? post.category}</p>
+            <h1 className="t-h1 mt-3">{post.title}</h1>
+            <p className="t-lead mt-6 max-w-[42rem]">{post.excerpt}</p>
 
-          <h1 className="font-headline font-black text-white text-3xl md:text-5xl tracking-tight leading-[1.05] mb-6">
-            {post.title}
-          </h1>
-
-          <p className="text-white/60 text-lg leading-relaxed mb-8">
-            {post.excerpt}
-          </p>
-
-          {/* Author */}
-          {post.author && (
-            <div className="flex items-center gap-3 pb-8">
-              {post.author.avatar?.url ? (
-                <img src={post.author.avatar.url} alt={post.author.name} className="w-9 h-9 rounded-full object-cover" loading="lazy" decoding="async" />
-              ) : (
-                <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center">
-                  <Icon name="person" className="text-white/40 text-[18px]" />
+            <div className="mt-8 flex flex-wrap items-center gap-x-8 gap-y-4">
+              {post.author && (
+                <div className="person">
+                  {post.author.avatar?.url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={post.author.avatar.url} alt={post.author.name} className="avatar" loading="lazy" decoding="async" />
+                  ) : (
+                    <span className="chat__avatar" aria-hidden="true">{post.author.name.charAt(0)}</span>
+                  )}
+                  <div>
+                    <p className="person__name">{post.author.name}</p>
+                    <p className="t-label font-normal">{post.author.role}</p>
+                  </div>
                 </div>
               )}
-              <div>
-                <p className="text-white text-sm font-semibold">{post.author.name}</p>
-                <p className="text-white/40 text-xs">{post.author.role}</p>
-              </div>
+              <p className="post-meta mt-0">
+                <span>{formatFecha(post.publishedAt, true)}</span>
+                <span>{post.readingTime} min de lectura</span>
+              </p>
+            </div>
+          </div>
+
+          {/* Portada: sin texto ni velo encima */}
+          {post.coverImage?.asset?.url && (
+            <div className="mt-[clamp(40px,5vw,64px)] aspect-[16/9] overflow-hidden rounded-card bg-canvas-2 md:aspect-[21/9]">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={sanityImg(post.coverImage.asset.url, { w: 1600, q: 80 })}
+                alt={post.coverImage.alt ?? post.title}
+                className="h-full w-full object-cover" loading="lazy" decoding="async" />
             </div>
           )}
         </div>
-
-        {/* Cover image */}
-        {post.coverImage?.asset?.url && (
-          <div className="max-w-5xl mx-auto px-4 md:px-8">
-            <div className="aspect-[21/9] overflow-hidden rounded-t-2xl">
-              <img
-                src={post.coverImage.asset.url}
-                alt={post.coverImage.alt ?? post.title}
-                className="w-full h-full object-cover" loading="lazy" decoding="async" />
-            </div>
-          </div>
-        )}
       </section>
 
       {/* ─── Body ────────────────────────────────────────────────────── */}
-      <section className="py-14">
-        <div className="max-w-4xl mx-auto px-4 md:px-8">
-          <div className="grid lg:grid-cols-[1fr_260px] gap-12 items-start">
+      <section className="section pb-12 pt-[clamp(48px,6vw,80px)] lg:pb-0">
+        <div className="wrap grid items-start gap-12 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-[clamp(48px,6vw,96px)]">
 
-            {/* Article body */}
-            <article>
-              {/* Featured snippet box (AEO) */}
-              {post.featuredSnippet && (
-                <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6 mb-8">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Icon name="lightbulb" className="text-primary text-[18px]" />
-                    <span className="text-primary-deep text-xs font-bold uppercase tracking-wide">Resumen rápido</span>
-                  </div>
-                  <p className="text-text-main text-base leading-relaxed font-medium">
-                    {post.featuredSnippet}
-                  </p>
-                </div>
-              )}
+          {/* Article body */}
+          <article className="min-w-0 max-w-[68ch] text-[1.125rem] leading-[1.65]">
+            {/* Featured snippet box (AEO) */}
+            {post.featuredSnippet && (
+              <div className="mb-10 rounded-card border border-line p-6">
+                <p className="t-label flex items-center gap-2">
+                  <Icon name="lightbulb" className="text-[18px] text-link" />
+                  Resumen rápido
+                </p>
+                <p className="mt-3 text-ink">
+                  {post.featuredSnippet}
+                </p>
+              </div>
+            )}
 
-              {/* PortableText body */}
-              {post.body && post.body.length > 0 ? (
-                <PortableText value={post.body} components={ptComponents} />
-              ) : (
-                <p className="text-text-muted">Contenido próximamente.</p>
-              )}
+            {/* PortableText body */}
+            {post.body && post.body.length > 0 ? (
+              <PortableText value={post.body} components={ptComponents} />
+            ) : (
+              <p className="text-ink-2">Contenido próximamente.</p>
+            )}
 
-              {/* Tags */}
-              {post.tags && post.tags.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-10 pt-8 border-t border-gray-100">
-                  {post.tags.map((tag) => (
-                    <span key={tag} className="bg-surface border border-gray-200 text-text-ghost text-xs px-3 py-1 rounded-full">
-                      #{tag}
-                    </span>
+            {/* Tags */}
+            {post.tags && post.tags.length > 0 && (
+              <div className="mt-12 flex flex-wrap gap-2 border-t border-line pt-8">
+                {post.tags.map((tag) => (
+                  <span key={tag} className="chip">#{tag}</span>
+                ))}
+              </div>
+            )}
+
+            {/* FAQ block (AEO) */}
+            {post.faqBlock && post.faqBlock.length > 0 && (
+              <div className="mt-16">
+                <h2 className={`mb-6 ${H2_CLASS}`}>Preguntas frecuentes</h2>
+                <div>
+                  {post.faqBlock.map((faq, i) => (
+                    <details key={i} className="qa">
+                      <summary>
+                        {faq.question}
+                        <Icon name="add" size="none" className="flex-none text-[20px]" />
+                      </summary>
+                      <p className="qa__a">{faq.answer}</p>
+                    </details>
                   ))}
                 </div>
-              )}
+              </div>
+            )}
 
-              {/* FAQ block (AEO) */}
-              {post.faqBlock && post.faqBlock.length > 0 && (
-                <div className="mt-12">
-                  <h2 className="font-headline font-black text-2xl tracking-tight mb-6">
-                    Preguntas frecuentes
-                  </h2>
-                  <div className="space-y-4">
-                    {post.faqBlock.map((faq, i) => (
-                      <details key={i} className="group border border-gray-200 rounded-2xl overflow-hidden">
-                        <summary className="flex items-center justify-between px-5 py-4 cursor-pointer list-none font-semibold text-sm hover:bg-surface transition-colors">
-                          {faq.question}
-                          <Icon name="expand_more" className="text-[18px] text-text-ghost group-open:rotate-180 transition-transform flex-shrink-0 ml-3" />
-                        </summary>
-                        <div className="px-5 pb-4 text-text-muted text-sm leading-relaxed">
-                          {faq.answer}
-                        </div>
-                      </details>
-                    ))}
-                  </div>
+            {/* Article CTA (desde Sanity) */}
+            {post.articleCta && (
+              <div className="card mt-12 flex flex-col gap-6 p-6 sm:flex-row sm:items-center md:p-8">
+                <div className="min-w-0 flex-1">
+                  <h3 className="t-h3">{post.articleCta.heading}</h3>
+                  {post.articleCta.subtext && (
+                    <p className="t-small mt-2">{post.articleCta.subtext}</p>
+                  )}
                 </div>
-              )}
+                <Link href={post.articleCta.buttonUrl} className="btn btn--primary flex-none">
+                  {post.articleCta.buttonLabel}
+                  <Icon name="arrow_forward" size="none" className="arrow" />
+                </Link>
+              </div>
+            )}
 
-              {/* Article CTA */}
-              {post.articleCta && (
-                <div className="mt-12 rounded-2xl bg-black overflow-hidden relative">
-                  <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-[80px] pointer-events-none" />
-                  <div className="relative z-10 p-8 md:p-10 flex flex-col sm:flex-row sm:items-center gap-6">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-3">
-                        <Icon name="bolt" className="text-primary text-[16px]" />
-                        <span className="text-primary text-[10px] font-black uppercase tracking-widest">Electrificarte</span>
-                      </div>
-                      <h3 className="font-headline font-black text-white text-xl md:text-2xl leading-tight mb-2">
-                        {post.articleCta.heading}
-                      </h3>
-                      {post.articleCta.subtext && (
-                        <p className="text-white/50 text-sm leading-relaxed">
-                          {post.articleCta.subtext}
+            {/* Related cars */}
+            {post.relatedCars && post.relatedCars.length > 0 && (
+              <div className="mt-16">
+                <h2 className={`mb-6 ${H2_CLASS}`}>Autos mencionados en este artículo</h2>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {post.relatedCars.map((car) => {
+                    const pct = Math.round(((car.basePrice - car.discountPrice) / car.basePrice) * 100);
+                    return (
+                      <Link key={car._id} href={`/auto/${car.slug}`} className="card card--link p-5">
+                        <p className="car__brand">{car.brand?.name}</p>
+                        <p className="mt-0.5 truncate font-semibold text-ink">{car.name}</p>
+                        {car.tagline && <p className="t-small mt-1 truncate">{car.tagline}</p>}
+                        <p className="mt-3 flex items-baseline gap-2">
+                          <span className="font-semibold tabular-nums text-ink">{formatCLP(car.discountPrice)}</span>
+                          {pct > 0 && <span className="price-save">-{pct}%</span>}
                         </p>
-                      )}
-                    </div>
-                    <Link
-                      href={post.articleCta.buttonUrl}
-                      className="flex-shrink-0 inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-black font-bold text-sm px-6 py-3.5 rounded-xl transition-colors whitespace-nowrap"
-                    >
-                      {post.articleCta.buttonLabel}
-                    </Link>
-                  </div>
-                </div>
-              )}
-
-              {/* Related cars */}
-              {post.relatedCars && post.relatedCars.length > 0 && (
-                <div className="mt-12">
-                  <h2 className="font-headline font-black text-xl tracking-tight mb-5">
-                    Autos mencionados en este artículo
-                  </h2>
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    {post.relatedCars.map((car) => {
-                      const pct = Math.round(((car.basePrice - car.discountPrice) / car.basePrice) * 100);
-                      return (
-                        <Link
-                          key={car._id}
-                          href={`/auto/${car.slug}`}
-                          className="group flex gap-4 border border-gray-100 hover:border-primary/40 rounded-2xl p-4 transition-all hover:shadow-sm"
-                        >
-                          <div className="w-16 h-16 bg-gray-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                            <Icon name="electric_car" className="text-[28px] text-gray-200" />
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-text-ghost text-[11px] uppercase tracking-wide mb-0.5">{car.brand?.name}</p>
-                            <p className="font-headline font-bold text-sm group-hover:text-primary-deep transition-colors truncate">{car.name}</p>
-                            <p className="text-text-ghost text-[11px] truncate mb-1">{car.tagline}</p>
-                            <div className="flex items-center gap-2">
-                              <span className="text-primary-deep font-black text-sm">{formatCLP(car.discountPrice)}</span>
-                              {pct > 0 && (
-                                <span className="bg-black text-white text-[9px] font-black px-1.5 py-0.5 rounded-full">-{pct}%</span>
-                              )}
-                            </div>
-                          </div>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </article>
-
-            {/* Sidebar */}
-            <aside className="hidden lg:block">
-              <div className="sticky top-24 space-y-6">
-                {/* CTA */}
-                <div className="bg-black rounded-2xl p-6">
-                  <p className="text-primary text-[10px] uppercase tracking-widest font-bold mb-2">¿Listo para el salto?</p>
-                  <p className="text-white font-headline font-black text-lg leading-tight mb-3">
-                    Solicita tu oferta personalizada
-                  </p>
-                  <p className="text-white/50 text-xs mb-5">
-                    Negociamos con toda la red de vendedores oficiales para darte el mejor precio disponible.
-                  </p>
-                  <OfferCta
-                    source="blog"
-                    className="block text-center bg-primary hover:bg-primary-dark text-black font-bold py-3 rounded-xl text-sm transition-colors"
-                  >
-                    Quiero mi oferta
-                  </OfferCta>
-                </div>
-
-                {/* Related posts */}
-                {post.relatedPosts && post.relatedPosts.length > 0 && (
-                  <div>
-                    <p className="text-[11px] uppercase tracking-widest text-primary-deep font-bold mb-4">
-                      Artículos relacionados
-                    </p>
-                    <div className="space-y-4">
-                      {post.relatedPosts.map((rp) => (
-                        <Link
-                          key={rp._id}
-                          href={`/blog/${rp.slug}`}
-                          className="group flex gap-3 hover:bg-surface rounded-xl p-2 -mx-2 transition-colors"
-                        >
-                          <div className="w-14 h-14 bg-gray-100 rounded-xl flex-shrink-0 overflow-hidden">
-                            {rp.coverImage?.asset?.url ? (
-                              <img src={rp.coverImage.asset.url} alt={rp.title} className="w-full h-full object-cover" loading="lazy" decoding="async" />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center">
-                                <Icon name="article" className="text-[20px] text-gray-300" />
-                              </div>
-                            )}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-xs font-semibold leading-snug line-clamp-2 group-hover:text-primary-deep transition-colors">
-                              {rp.title}
-                            </p>
-                            <p className="text-text-ghost text-[11px] mt-1">{rp.readingTime} min</p>
-                          </div>
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Share */}
-                <div>
-                  <p className="text-[11px] uppercase tracking-widest text-text-ghost font-bold mb-3">Compartir</p>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => navigator.clipboard.writeText(window.location.href)}
-                      className="flex-1 flex items-center justify-center gap-1.5 border border-gray-200 hover:border-primary/40 hover:text-primary-deep rounded-xl py-2 text-xs font-semibold transition-all"
-                    >
-                      <Icon name="link" className="text-[15px]" />
-                      Copiar link
-                    </button>
-                  </div>
+                      </Link>
+                    );
+                  })}
                 </div>
               </div>
-            </aside>
-          </div>
+            )}
+          </article>
+
+          {/* Sidebar */}
+          <aside className="hidden lg:block">
+            <div className="sticky top-24 grid gap-10">
+              {/* CTA */}
+              <div className="card p-6">
+                <p className="t-h4">¿No sabes cuál te conviene?</p>
+                <p className="t-small mt-2">
+                  Te asesoramos por WhatsApp según tu uso, tus kilómetros y tu presupuesto.
+                </p>
+                <div className="mt-5 grid gap-2">
+                  <Link href="/asesoria" className="btn btn--primary btn--block">
+                    Quiero asesoría por {ASESORIA_PRICE}
+                  </Link>
+                  <OfferCta source="blog" className="btn btn--secondary btn--block">
+                    {WAITLIST_LABEL}
+                  </OfferCta>
+                </div>
+              </div>
+
+              {/* Related posts */}
+              {post.relatedPosts && post.relatedPosts.length > 0 && (
+                <div>
+                  <p className="t-label mb-4">Artículos relacionados</p>
+                  <ul className="grid gap-4">
+                    {post.relatedPosts.map((rp) => (
+                      <li key={rp._id}>
+                        <Link href={`/blog/${rp.slug}`} className="group flex gap-3">
+                          <span className="h-14 w-20 flex-none overflow-hidden rounded-control bg-canvas-2">
+                            {rp.coverImage?.asset?.url ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={sanityImg(rp.coverImage.asset.url, { w: 240, q: 75 })} alt={rp.title} className="h-full w-full object-cover" loading="lazy" decoding="async" />
+                            ) : (
+                              <span className="flex h-full w-full items-center justify-center">
+                                <Icon name="article" className="text-[20px] text-line-2" />
+                              </span>
+                            )}
+                          </span>
+                          <span className="min-w-0">
+                            <span className="line-clamp-2 text-[0.9375rem] font-semibold leading-snug text-ink transition-colors group-hover:text-link">
+                              {rp.title}
+                            </span>
+                            <span className="t-micro mt-1 block">{rp.readingTime} min de lectura</span>
+                          </span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Share */}
+              <div>
+                <p className="t-label mb-3">Compartir</p>
+                <button
+                  type="button"
+                  onClick={() => navigator.clipboard.writeText(window.location.href)}
+                  className="btn btn--secondary btn--sm btn--block"
+                >
+                  <Icon name="link" size="none" />
+                  Copiar link
+                </button>
+              </div>
+            </div>
+          </aside>
         </div>
       </section>
 
-      {/* ─── Mobile CTA ──────────────────────────────────────────────── */}
-      <div className="lg:hidden sticky bottom-0 z-40 p-4 bg-white/95 backdrop-blur border-t border-gray-100">
-        <OfferCta
-          source="blog"
-          className="block w-full text-center bg-primary hover:bg-primary-dark text-black font-bold py-3.5 rounded-xl text-sm transition-colors"
-        >
-          Quiero mi oferta
-        </OfferCta>
+      {/* ─── Mobile CTA: fija abajo mientras se lee ────────────────────── */}
+      <div className="sticky bottom-0 z-40 border-t border-line bg-canvas lg:hidden">
+        <div className="wrap flex gap-2 py-3">
+          <OfferCta source="blog" className="btn btn--secondary btn--sm flex-1">
+            {WAITLIST_LABEL}
+          </OfferCta>
+          <Link href="/asesoria" className="btn btn--primary btn--sm flex-1">
+            Quiero asesoría
+          </Link>
+        </div>
       </div>
-    </>
+
+      {/* ─── CTA final: Asesoría (principal) y waitlist ─────────────── */}
+      <section className="section" aria-label="Asesoría y waitlist">
+        <div className="wrap">
+          <div className="soft-block cta-row">
+            <div>
+              <h2 className="t-h2">¿No sabes cuál te conviene?</h2>
+              <p>
+                Te asesoramos por WhatsApp según tu uso, tus kilómetros y tu presupuesto, y comparamos contigo los modelos que calzan.
+              </p>
+            </div>
+            <div className="cta-row__actions">
+              <Link href="/asesoria" className="btn btn--primary btn--lg">
+                Quiero asesoría por {ASESORIA_PRICE}
+                <Icon name="arrow_forward" size="none" className="arrow" />
+              </Link>
+              <OfferCta source="blog" className="btn btn--secondary btn--lg">
+                {WAITLIST_LABEL}
+              </OfferCta>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
   );
 }

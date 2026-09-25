@@ -1,6 +1,3 @@
-"use client";
-
-import React, { useRef, useState } from "react";
 import Link from "next/link";
 import { sanityImg } from "@/lib/sanityImage";
 import { formatFecha } from "@/lib/utils";
@@ -76,144 +73,56 @@ const CATEGORY_LABELS: Record<string, string> = {
   legislacion:   "Legislación",
 };
 
-const CATEGORY_COLORS: Record<string, string> = {
-  "guia-compra": "bg-primary/10 text-primary-deep",
-  comparativa:   "bg-purple-50 text-purple-700",
-  noticias:      "bg-blue-50 text-blue-700",
-  tecnologia:    "bg-cyan-50 text-cyan-700",
-  ahorro:        "bg-green-50 text-green-700",
-  carga:         "bg-amber-50 text-amber-700",
-  legislacion:   "bg-orange-50 text-orange-700",
-};
-
 // ─── Component ───────────────────────────────────────────────────────────────
 
+/**
+ * "Lo último sobre electromovilidad": grilla de 3 artículos iguales (foto 16:10, categoría,
+ * título, bajada y fecha). En móvil el CSS (.posts) la vuelve carrusel horizontal.
+ */
 export function BlogPreview({ title, posts }: BlogPreviewProps) {
-  const displayPosts = (posts && posts.length > 0) ? posts : FALLBACK_POSTS;
-  const [activeIdx, setActiveIdx] = useState(0);
-  const trackRef = useRef<HTMLDivElement>(null);
-
-  const featured = displayPosts[0];
-  const rest     = displayPosts.slice(1, 3);
+  const displayPosts = (posts && posts.length > 0 ? posts : FALLBACK_POSTS).slice(0, 3);
 
   return (
-    <section className="py-16 md:py-20 bg-white border-t border-gray-100">
-      <div className="max-w-7xl mx-auto px-4 md:px-8">
-
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
-          <div>
-            <p className="text-[11px] uppercase tracking-widest text-primary-deep font-bold mb-2">
-              Blog & Guías
-            </p>
-            <h2 className="text-3xl md:text-4xl font-headline font-black uppercase tracking-tighter">
-              {title ?? "Lo último sobre electromovilidad"}
-            </h2>
+    <section className="section" aria-labelledby="blog-title">
+      <div className="wrap">
+        <div className="section-head">
+          <div className="section-head__text">
+            <h2 id="blog-title" className="t-h2">{title ?? "Lo último sobre electromovilidad"}</h2>
           </div>
-          <Link
-            href="/blog"
-            className="flex items-center gap-2 text-primary-deep font-semibold text-sm hover:text-primary transition-colors flex-shrink-0"
-          >
+          <Link href="/blog" className="link-arrow">
             Ver todos los artículos
+            <Icon name="arrow_forward" size="none" />
           </Link>
         </div>
 
-        {/* Grid: featured + 2 cards */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-          {/* Featured article (spans 2 cols) */}
-          <article className="fade-in-up lg:col-span-2 group relative bg-black rounded-2xl overflow-hidden min-h-[340px] flex flex-col justify-end cursor-pointer">
-            {/* Background image or gradient */}
-            {featured.coverImage?.asset?.url ? (
-              <img
-                src={sanityImg(featured.coverImage.asset.url, { w: 960, q: 75 })}
-                alt={featured.coverImage.alt ?? featured.title}
-                className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:opacity-50 transition-opacity duration-500" loading="lazy" decoding="async" />
-            ) : (
-              <div className="absolute inset-0 bg-gradient-to-br from-primary-deep/30 via-black to-black" />
-            )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
-
-            <div className="relative z-10 p-7 md:p-8">
-              <div className="flex items-center gap-3 mb-3">
-                <span className="text-[10px] font-black uppercase tracking-wide bg-primary text-black px-2.5 py-1 rounded-full">
-                  {CATEGORY_LABELS[featured.category] ?? featured.category}
-                </span>
-                <span className="text-white/40 text-xs">
-                  {featured.readingTime} min lectura
-                </span>
-              </div>
-              <Link href={`/blog/${featured.slug}`}>
-                <h3 className="font-headline font-black text-white text-2xl md:text-3xl leading-tight tracking-tight mb-3 group-hover:text-primary transition-colors">
-                  {featured.title}
-                </h3>
-              </Link>
-              <p className="text-white/60 text-sm leading-relaxed line-clamp-2 mb-5">
-                {featured.excerpt}
-              </p>
-              <div className="flex items-center justify-between">
-                <span className="text-white/30 text-xs">
-                  {formatFecha(featured.publishedAt, true)}
-                </span>
-                <Link
-                  href={`/blog/${featured.slug}`}
-                  className="flex items-center gap-1.5 text-primary font-bold text-sm hover:text-primary-dark transition-colors"
-                >
-                  Leer artículo
-                </Link>
-              </div>
-            </div>
-          </article>
-
-          {/* Side cards */}
-          <div className="flex flex-col gap-6">
-            {rest.map((post, i) => (
-              <article
-                key={post._id}
-                className="fade-in-up group bg-white border border-gray-100 rounded-2xl overflow-hidden hover:border-primary/40 hover:shadow-md transition-all duration-300 flex flex-col"
-                style={{ animationDelay: `${(i + 1) * 0.1}s` }}
-              >
-                {/* Image area */}
-                <div className="aspect-[16/8] bg-gradient-to-br from-gray-50 to-gray-100 relative overflow-hidden flex-shrink-0">
-                  {post.coverImage?.asset?.url ? (
-                    <img
-                      src={sanityImg(post.coverImage.asset.url, { w: 480, q: 75 })}
-                      alt={post.coverImage.alt ?? post.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" decoding="async" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Icon name="article" className="text-[40px] text-gray-200" />
-                    </div>
-                  )}
-                  <span className={`absolute top-3 left-3 text-[10px] font-bold px-2.5 py-1 rounded-full ${CATEGORY_COLORS[post.category] ?? "bg-gray-100 text-gray-600"}`}>
-                    {CATEGORY_LABELS[post.category] ?? post.category}
+        <div className="posts">
+          {displayPosts.map((post) => (
+            <Link key={post._id} href={`/blog/${post.slug}`} className="post">
+              <div className="post__media">
+                {post.coverImage?.asset?.url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={sanityImg(post.coverImage.asset.url, { w: 800, h: 500, fit: "crop" })}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                  />
+                ) : (
+                  <span className="grid h-full w-full place-items-center">
+                    <Icon name="article" className="text-[40px] text-line-2" />
                   </span>
-                </div>
-
-                {/* Content */}
-                <div className="p-5 flex flex-col flex-1">
-                  <Link href={`/blog/${post.slug}`}>
-                    <h3 className="font-headline font-bold text-base leading-snug mb-2 group-hover:text-primary-deep transition-colors line-clamp-2">
-                      {post.title}
-                    </h3>
-                  </Link>
-                  <p className="text-text-ghost text-xs leading-relaxed line-clamp-2 flex-1 mb-3">
-                    {post.excerpt}
-                  </p>
-                  <div className="flex items-center justify-between mt-auto pt-3 border-t border-gray-100">
-                    <span className="text-text-ghost text-[11px]">
-                      {post.readingTime} min
-                    </span>
-                    <span className="text-text-ghost text-[11px]">
-                      {formatFecha(post.publishedAt)}
-                    </span>
-                  </div>
-                </div>
-              </article>
-            ))}
-          </div>
+                )}
+              </div>
+              <p className="post-cat">{CATEGORY_LABELS[post.category] ?? post.category}</p>
+              <h3 className="post__title">{post.title}</h3>
+              <p className="post__text">{post.excerpt}</p>
+              <p className="post-meta">
+                <span>{formatFecha(post.publishedAt, true)}</span>
+                {post.readingTime ? <span>{post.readingTime} min de lectura</span> : null}
+              </p>
+            </Link>
+          ))}
         </div>
-
       </div>
     </section>
   );

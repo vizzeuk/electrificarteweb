@@ -12,37 +12,31 @@ export default function Error({
   reset: () => void;
 }) {
   return (
-    <main className="min-h-[70vh] flex flex-col items-center justify-center gap-8 px-4 text-center bg-white">
-      <Icon name="error" className="text-[64px] text-amber-400" />
-
-      <div className="max-w-md">
-        <h1 className="font-headline font-black text-2xl md:text-3xl text-text-main mb-3">
-          Algo salió mal
-        </h1>
-        <p className="text-text-muted text-base mb-1">
-          Ocurrió un error inesperado. Puedes intentar de nuevo o volver al inicio.
-        </p>
-        {error.digest && (
-          <p className="text-xs text-text-ghost font-mono mt-2">ref: {error.digest}</p>
-        )}
-      </div>
-
-      <div className="flex flex-col sm:flex-row gap-3">
-        <button
-          onClick={reset}
-          className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-8 py-3.5 rounded-xl transition-colors text-sm"
-        >
-          <Icon name="refresh" className="text-[18px]" />
-          Intentar de nuevo
-        </button>
-        <Link
-          href="/"
-          className="inline-flex items-center justify-center gap-2 border border-gray-200 hover:border-primary/50 text-text-main font-semibold px-8 py-3.5 rounded-xl transition-colors text-sm"
-        >
-          <Icon name="home" className="text-[18px]" />
-          Ir al inicio
-        </Link>
-      </div>
-    </main>
+    <div className="page">
+      <section className="section">
+        <div className="wrap">
+          <div className="max-w-[40rem]">
+            <h1 className="t-h1">Algo salió mal</h1>
+            <p className="t-lead mt-6">
+              Ocurrió un error inesperado. Puedes intentar de nuevo o volver al inicio.
+            </p>
+            {error.digest && (
+              <p className="t-micro mt-3">
+                Referencia del error: <span className="num">{error.digest}</span>
+              </p>
+            )}
+            <div className="mt-10 flex flex-wrap gap-3">
+              <button type="button" onClick={reset} className="btn btn--primary btn--lg">
+                <Icon name="refresh" size="none" />
+                Intentar de nuevo
+              </button>
+              <Link href="/" className="btn btn--secondary btn--lg">
+                Ir al inicio
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
   );
 }

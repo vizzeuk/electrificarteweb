@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { m, AnimatePresence } from "framer-motion";
+import Link from "next/link";
 import { OfferCta } from "@/components/waitlist/OfferCta";
 
 export function StickyCTA() {
@@ -16,10 +16,10 @@ export function StickyCTA() {
   }, []);
 
   useEffect(() => {
-    const LIFTED = "92px";
+    const LIFTED = "97px"; // 24 px de margen + 73 px de la barra (12 + 48 + 12 + 1 de hairline)
     const BASE   = "24px";
 
-    document.documentElement.style.setProperty("--sticky-h",    visible ? "68px" : "0px");
+    document.documentElement.style.setProperty("--sticky-h",    visible ? "73px" : "0px");
     document.documentElement.style.setProperty("--chat-bottom", visible ? LIFTED : BASE);
 
     // Direct shadow-DOM manipulation — CSS variable inheritance is unreliable in
@@ -45,35 +45,21 @@ export function StickyCTA() {
   }, [visible]);
 
   return (
-    <AnimatePresence>
-      {visible && (
-        <m.div
-          initial={{ y: 100, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: 100, opacity: 0 }}
-          transition={{ duration: 0.3 }}
-          className="fixed bottom-0 left-0 right-0 z-40 bg-black/95 backdrop-blur-lg border-t border-white/10 py-3 px-4 md:px-8"
-        >
-          <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-            <div className="hidden sm:block">
-              <p className="text-white text-sm font-medium">
-                Conseguimos el mejor precio del mercado
-              </p>
-              <p className="text-white/40 text-xs">
-                Súmate a la waitlist y te avisamos cuando abramos el acceso
-              </p>
-            </div>
-            <div className="flex gap-3 w-full sm:w-auto">
-              <OfferCta
-                source="sticky"
-                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-8 py-3 rounded-xl transition-all text-sm shadow-[0_4px_20px_rgba(0,229,229,0.25)] hover:shadow-[0_6px_28px_rgba(0,229,229,0.38)] hover:scale-[1.02] active:scale-[0.99]"
-              >
-                Quiero mi oferta
-              </OfferCta>
-            </div>
-          </div>
-        </m.div>
-      )}
-    </AnimatePresence>
+    <div className={`sticky-bar${visible ? " is-visible" : ""}`} aria-hidden={!visible}>
+      <div className="wrap sticky-bar__in">
+        <p className="sticky-bar__text">
+          <strong>¿No sabes cuál elegir?</strong>
+          <span>Te asesoramos por WhatsApp según tu uso y tu presupuesto.</span>
+        </p>
+        <div className="sticky-bar__actions">
+          <OfferCta source="sticky" className="btn btn--secondary">
+            Únete a la waitlist
+          </OfferCta>
+          <Link href="/asesoria" className="btn btn--primary" tabIndex={visible ? undefined : -1}>
+            Quiero asesoría
+          </Link>
+        </div>
+      </div>
+    </div>
   );
 }

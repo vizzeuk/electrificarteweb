@@ -8,7 +8,7 @@ export const revalidate = 60;
 export const metadata: Metadata = {
   title: "Comparador de autos eléctricos e híbridos",
   description:
-    "Compará autos eléctricos e híbridos lado a lado: precio, autonomía, batería, carga y equipamiento. Encontrá el auto ideal al mejor precio en Chile.",
+    "Compara autos eléctricos e híbridos lado a lado: precio, autonomía, batería, carga y equipamiento. Encuentra el auto ideal al mejor precio en Chile.",
   alternates: { canonical: "/comparador" },
 };
 
@@ -16,14 +16,48 @@ interface PageProps {
   searchParams: Promise<{ add?: string }>;
 }
 
+// Forma de allCarsForComparadorQuery (Sanity puede devolver null en cualquier campo).
+interface RawVersion {
+  name?: string | null;
+  price?: number | null;
+  discountPrice?: number | null;
+  batteryCapacity?: number | null;
+  range?: number | null;
+  power?: number | null;
+  traction?: string | null;
+  acceleration?: number | null;
+  topSpeed?: number | null;
+  chargeTimeDC?: string | null;
+  chargeTimeAC?: string | null;
+  seats?: number | null;
+  cargo?: number | null;
+  chargeType?: string | null;
+}
+
+interface RawCar extends Omit<RawVersion, "price"> {
+  slug: string;
+  name: string;
+  imageUrl?: string | null;
+  basePrice?: number | null;
+  groundClearance?: number | null;
+  isHotDeal?: boolean | null;
+  highlight?: string;
+  brand?: { name?: string; slug?: string } | null;
+  vehicleType?: { label?: string } | null;
+  electricType?: { tag?: string } | null;
+  versions?: RawVersion[] | null;
+}
+
 export default async function ComparadorPage({ searchParams }: PageProps) {
   const { add } = await searchParams;
-  const raw = await client.fetch(allCarsForComparadorQuery, {}, { next: { tags: ["car"], revalidate: 60 } }).catch(() => []);
+  const raw: RawCar[] = await client
+    .fetch<RawCar[]>(allCarsForComparadorQuery, {}, { next: { tags: ["car"], revalidate: 60 } })
+    .catch(() => []);
 
   const allCars: Car[] = [];
 
-  for (const c of raw as any[]) {
-    const versions: any[] = c.versions ?? [];
+  for (const c of raw) {
+    const versions: RawVersion[] = c.versions ?? [];
 
     const base = {
       slug:      c.slug as string,
@@ -31,6 +65,7 @@ export default async function ComparadorPage({ searchParams }: PageProps) {
       brand:     c.brand?.name ?? "",
       brandSlug: c.brand?.slug ?? "",
       category:  c.vehicleType?.label ?? c.electricType?.tag ?? "",
+      electricTypeTag: c.electricType?.tag ?? undefined,
       isHotDeal: c.isHotDeal ?? false,
       highlight: c.highlight,
       ground:    c.groundClearance ?? 0,

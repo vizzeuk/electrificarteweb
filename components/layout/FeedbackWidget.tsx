@@ -7,13 +7,12 @@ const SEEN_KEY = "ea_feedback_ts";
 const DAYS_UNTIL_RESHOWN = 30;
 
 // 5 caritas que mapean al rating 1-5 que sigue recibiendo n8n/Supabase.
-// Los colores se aplican solo en la cara activa (hover o seleccionada).
 const FACES = [
-  { icon: "sentiment_very_dissatisfied", color: "text-red-500",     label: "Muy mal" },
-  { icon: "sentiment_dissatisfied",      color: "text-orange-500",  label: "Mal" },
-  { icon: "sentiment_neutral",           color: "text-amber-500",   label: "Regular" },
-  { icon: "sentiment_satisfied",         color: "text-lime-500",    label: "Bien" },
-  { icon: "sentiment_very_satisfied",    color: "text-emerald-500", label: "Excelente" },
+  { icon: "sentiment_very_dissatisfied", label: "Muy mal" },
+  { icon: "sentiment_dissatisfied", label: "Mal" },
+  { icon: "sentiment_neutral", label: "Regular" },
+  { icon: "sentiment_satisfied", label: "Bien" },
+  { icon: "sentiment_very_satisfied", label: "Excelente" },
 ];
 
 export function FeedbackWidget() {
@@ -98,87 +97,90 @@ export function FeedbackWidget() {
 
   return (
     <>
-      {/* Collapsed — botón discreto anclado abajo-izquierda (simétrico al chat
-          de la derecha). Icono solo en mobile; icono + label en sm+. */}
+      {/* Colapsado: botón discreto abajo a la izquierda (simétrico al chat de la
+          derecha). Solo ícono en móvil; ícono + texto desde sm. */}
       {!expanded && (
         <div
           style={{
             position: "fixed",
             left: "1rem",
-            bottom: "calc(1rem + env(safe-area-inset-bottom))",
-            zIndex: 10000, // el chat usa 9999; sin esto queda tapado
+            bottom: "calc(var(--sticky-h, 0px) + 1rem + env(safe-area-inset-bottom))", // sobre la barra fija (StickyCTA)
+            transition: "bottom 0.3s ease",
+            zIndex: 47, // sobre el chat (45-46) y la barra fija (40), bajo la navegación (50) y los modales (100)
           }}
+          className="feedback-widget flex items-center gap-1"
         >
           <button
+            type="button"
             onClick={() => setExpanded(true)}
             title="Califica tu experiencia"
             aria-label="Danos tu opinión"
-            className="flex items-center justify-center gap-2 bg-amber text-black rounded-full shadow-lg h-12 w-12 sm:h-auto sm:w-auto sm:px-4 sm:py-3 hover:brightness-105 active:scale-95 transition-all duration-200"
+            className="btn btn--secondary btn--icon bg-canvas sm:w-auto sm:px-4"
           >
-            <Icon name="sentiment_satisfied" className="text-[20px]" filled />
-            <span className="hidden sm:inline font-black text-[11px] uppercase tracking-widest">
-              Feedback
-            </span>
+            <Icon name="sentiment_satisfied" size="none" />
+            <span className="hidden sm:inline">Tu opinión</span>
           </button>
-          {/* Descartar — oculta el widget (no reaparece por 30 días) */}
+          {/* Descartar: oculta el widget (no reaparece por 30 días) */}
           <button
+            type="button"
             onClick={dismiss}
-            aria-label="Ocultar feedback"
+            aria-label="Ocultar opinión"
             title="Ocultar"
-            className="absolute -top-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full border border-white/10 bg-black text-white/70 shadow-md transition-colors hover:text-white"
+            className="btn btn--secondary btn--icon btn--sm bg-canvas"
           >
-            <Icon name="close" className="text-[14px]" />
+            <Icon name="close" size="none" />
           </button>
         </div>
       )}
 
-      {/* Expanded card — se despliega desde abajo-izquierda, responsive */}
+      {/* Abierto: tarjeta que se despliega desde abajo a la izquierda */}
       {expanded && (
         <div
           style={{
             position: "fixed",
             left: "1rem",
-            bottom: "calc(1rem + env(safe-area-inset-bottom))",
-            zIndex: 10001, // por encima del chat (9999) para que no lo tape
+            bottom: "calc(var(--sticky-h, 0px) + 1rem + env(safe-area-inset-bottom))", // sobre la barra fija (StickyCTA)
+            transition: "bottom 0.3s ease",
+            zIndex: 48, // sobre el chat (45-46), bajo la navegación (50) y los modales (100)
             width: "min(320px, calc(100vw - 2rem))",
             maxHeight: "calc(100dvh - 6rem)", // aire para el teclado del celular
           }}
-          className="bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-y-auto"
+          className="feedback-widget overflow-y-auto rounded-card border border-line bg-surface text-ink shadow-overlay"
         >
           {submitted ? (
             <div className="px-5 py-8 text-center">
-              <Icon name="sentiment_very_satisfied" className="text-[48px] text-emerald-500 block mb-3" filled />
-              <p className="font-headline font-black text-lg">¡Gracias por tu opinión!</p>
-              <p className="text-gray-500 text-sm mt-1 leading-snug">
-                Tu feedback nos ayuda a mejorar la experiencia para todos.
+              <Icon name="sentiment_very_satisfied" className="mb-3 block text-[40px] text-accent" filled />
+              <p className="font-display text-xl font-bold">Gracias por tu opinión</p>
+              <p className="mt-1 text-sm text-ink-2">
+                Nos ayuda a mejorar el sitio para todos.
               </p>
             </div>
           ) : (
             <>
-              {/* Header */}
-              <div className="flex items-center justify-between px-4 py-3 bg-black">
-                <p className="text-white font-bold text-sm">Tu experiencia</p>
+              <div className="flex items-center justify-between border-b border-line py-2 pl-5 pr-2">
+                <p className="text-[15px] font-semibold">Tu experiencia</p>
                 <button
+                  type="button"
                   onClick={dismiss}
-                  className="text-white/50 hover:text-white transition-colors"
+                  className="btn btn--quiet btn--icon btn--sm"
                   aria-label="Cerrar"
                 >
-                  <Icon name="close" className="text-[18px]" />
+                  <Icon name="close" size="none" />
                 </button>
               </div>
 
-              <div className="p-4">
-                <p className="text-sm font-semibold text-gray-800 leading-snug mb-1">
+              <div className="p-5">
+                <p className="text-[15px] font-semibold leading-snug">
                   ¿Cómo fue tu experiencia en Electrificarte?
                 </p>
-                <p className="text-xs text-gray-400 mb-4 leading-relaxed">
-                  Cuéntanos cómo podemos mejorar el sitio para ayudarte mejor.
+                <p className="mt-1 text-sm text-ink-2">
+                  Cuéntanos qué podemos mejorar.
                 </p>
 
-                {/* Caritas — cada una con su color individual, solo se pinta la activa.
+                {/* Caritas: solo se pinta la activa, siempre con el color de acento.
                     onMouseLeave en el contenedor evita parpadeo al cruzar entre botones. */}
                 <div
-                  className="flex mb-3 justify-between"
+                  className="mt-4 flex justify-between"
                   onMouseLeave={() => setHovered(0)}
                 >
                   {FACES.map((face, i) => {
@@ -191,14 +193,13 @@ export function FeedbackWidget() {
                         onMouseEnter={() => setHovered(n)}
                         onClick={() => setRating(n)}
                         aria-label={face.label}
+                        aria-pressed={rating === n}
                         title={face.label}
-                        className="transition-transform hover:scale-125 active:scale-95"
+                        className="rounded-control p-1"
                       >
                         <Icon
                           name={face.icon}
-                          className={`text-[28px] sm:text-[34px] transition-colors ${
-                            isActive ? face.color : "text-gray-300"
-                          }`}
+                          className={`text-[32px] transition-colors ${isActive ? "text-accent" : "text-line-2"}`}
                           filled
                         />
                       </button>
@@ -206,25 +207,28 @@ export function FeedbackWidget() {
                   })}
                 </div>
 
-                {/* Label de la opción activa para guiar al usuario */}
-                <p className="text-center text-xs font-semibold text-gray-500 mb-3 min-h-[1em]">
+                {/* Etiqueta de la opción activa para guiar al usuario */}
+                <p className="mb-3 mt-1 min-h-[1.25em] text-center text-label font-semibold text-ink-2">
                   {hovered ? FACES[hovered - 1].label : rating ? FACES[rating - 1].label : ""}
                 </p>
 
+                <label htmlFor="feedback-comment" className="sr-only">Comentario (opcional)</label>
                 <textarea
+                  id="feedback-comment"
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                   placeholder="¿Qué podríamos mejorar? (opcional)"
                   rows={2}
-                  className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2 resize-none focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all mb-3 placeholder:text-gray-300"
+                  className="input mb-3 h-auto resize-none py-3 text-[15px] leading-normal"
                 />
 
                 <button
+                  type="button"
                   onClick={handleSubmit}
                   disabled={rating === 0 || sending}
-                  className="w-full bg-primary hover:bg-primary-deep text-black font-bold text-sm py-2.5 rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="btn btn--primary btn--block"
                 >
-                  {sending ? "Enviando…" : "Enviar feedback"}
+                  {sending ? "Enviando…" : "Enviar opinión"}
                 </button>
               </div>
             </>

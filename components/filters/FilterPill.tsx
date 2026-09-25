@@ -1,7 +1,5 @@
 "use client";
 
-import { cn } from "@/lib/utils";
-
 interface FilterPillProps {
   active?: boolean;
   disabled?: boolean;
@@ -11,35 +9,21 @@ interface FilterPillProps {
 }
 
 /**
- * Pill de filtro, misma estética que las pills del catálogo:
- * activo = sólido primary-deep; inactivo = blanco con borde gris.
+ * Pill de filtro rápido del sistema de diseño v1 (app/styles/pages.css → .pill): 36 px de
+ * alto, radio 8 y el conteo al lado. Activa = maciza en el acento, nunca translúcida.
+ * Sin autos disponibles queda deshabilitada, salvo que esté activa (para poder quitarla).
  */
-export function FilterPill({ active, disabled, onClick, count, children }: FilterPillProps) {
+export function FilterPill({ active = false, disabled, onClick, count, children }: FilterPillProps) {
   return (
     <button
       type="button"
+      className="pill"
+      aria-pressed={active}
       disabled={disabled && !active}
       onClick={onClick}
-      className={cn(
-        "inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-150 border",
-        active
-          ? "bg-primary-deep text-white border-primary-deep shadow-sm"
-          : disabled
-            ? "bg-white text-text-ghost/50 border-gray-100 cursor-not-allowed"
-            : "bg-white text-text-muted border-gray-200 hover:border-primary/40 hover:text-primary-deep"
-      )}
     >
       {children}
-      {count !== undefined && (
-        <span
-          className={cn(
-            "text-[10px] font-black",
-            active ? "opacity-70" : "text-text-ghost"
-          )}
-        >
-          {count}
-        </span>
-      )}
+      {count !== undefined && <span className="n">{count}</span>}
     </button>
   );
 }

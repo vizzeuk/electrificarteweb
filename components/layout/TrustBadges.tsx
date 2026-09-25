@@ -11,52 +11,36 @@ interface TrustBadgesProps {
 }
 
 const DEFAULT_BADGES: TrustBadgeData[] = [
-  { icon: "verified_user",     title: "Pago seguro",              description: "Tu pago está protegido. Usamos WebPay y encriptación bancaria." },
+  { icon: "credit_card",       title: "Pago seguro",          description: "Tu pago está protegido. Usamos WebPay y encriptación bancaria." },
   // Giro sep-2026: la garantía de devolución era del flujo pagado ($19.990, en standby).
   // OJO: la waitlist solo registra interesados — no prometer una oferta ni decir "gratis".
-  { icon: "shield",            title: "Sin compromiso",           description: "Regístrate en la waitlist y te contactamos cuando haya novedades." },
-  { icon: "lock",              title: "Datos protegidos",         description: "Tu información personal está protegida bajo la Ley 19.628 de Chile." },
+  { icon: "verified_user",     title: "Sin compromiso",       description: "Regístrate en la waitlist y te contactamos cuando haya novedades." },
+  { icon: "lock",              title: "Datos protegidos",     description: "Tu información personal está protegida bajo la Ley 19.628 de Chile." },
   { icon: "workspace_premium", title: "Vendedores oficiales", description: "Solo trabajamos con vendedores autorizados y verificados en Chile." },
 ];
 
+/** "Compras con total confianza": cuatro sellos en fila, separados por hairlines. */
 export function TrustBadges({ badges }: TrustBadgesProps) {
   const displayBadges = badges && badges.length > 0 ? badges : DEFAULT_BADGES;
 
   return (
-    <section className="bg-gray-50 py-16 px-4 md:px-8" aria-label="Sellos de confianza">
-      <div className="max-w-7xl mx-auto">
-
-        <div className="mb-10">
-          <p className="text-xs font-bold uppercase tracking-widest text-primary-deep mb-2">
-            Tu tranquilidad, primero
-          </p>
-          <h2 className="text-2xl md:text-3xl font-headline font-extrabold text-text-main">
-            Compras con total confianza
-          </h2>
+    <section className="section section--rule" aria-labelledby="trust-title">
+      <div className="wrap">
+        <div className="section-head">
+          <div className="section-head__text">
+            <h2 id="trust-title" className="t-h2">Compras con total confianza</h2>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {displayBadges.map((badge, i) => (
-            <div
-              key={badge.title}
-              className="fade-in-up flex items-start gap-5 bg-white border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-primary/20 transition-all duration-300"
-              style={{ animationDelay: `${i * 0.08}s` }}
-            >
-              <div className="flex-shrink-0 w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mt-0.5">
-                <Icon name={badge.icon} className="text-primary-deep" />
-              </div>
-              <div>
-                <h3 className="font-headline font-bold text-text-main text-base mb-1">
-                  {badge.title}
-                </h3>
-                <p className="text-text-muted text-sm leading-relaxed">
-                  {badge.description}
-                </p>
-              </div>
+        <div className="trust">
+          {displayBadges.map((badge) => (
+            <div key={badge.title} className="trust__item">
+              <Icon name={badge.icon} size="none" />
+              <h3 className="trust__title">{badge.title}</h3>
+              <p className="trust__text">{badge.description}</p>
             </div>
           ))}
         </div>
-
       </div>
     </section>
   );

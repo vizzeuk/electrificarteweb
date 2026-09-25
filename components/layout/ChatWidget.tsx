@@ -54,7 +54,7 @@ export function ChatWidget() {
     <ev-chat-widget
       data-api-url=""
       data-bot-name="Francisco Electrificarte"
-      data-primary-color="#00E5E5"
+      data-primary-color="#1d605b"
     />
   );
 }

@@ -8,6 +8,7 @@ import { MarcasGrid } from "./MarcasGrid";
 import type { Brand } from "./MarcasGrid";
 import { Icon } from "@/components/ui/Icon";
 import { OfferCta } from "@/components/waitlist/OfferCta";
+import { ASESORIA_PRICE } from "@/lib/products";
 
 export const revalidate = 3600;
 
@@ -29,83 +30,71 @@ export default async function MarcasPage() {
     brands.map((b) => getBrandCountry(b.slug, b.country)).filter(Boolean),
   ).size;
 
-  return (
-    <>
-      {/* ─── Hero ──────────────────────────────────────────────────────── */}
-      <section className="bg-black pt-20 pb-16 md:pt-28 md:pb-20 overflow-hidden relative">
-        <div className="absolute top-0 left-0 w-[600px] h-[400px] bg-primary/8 rounded-full blur-[140px] pointer-events-none" />
-        <div className="absolute bottom-0 right-0 w-[400px] h-[300px] bg-primary-deep/10 rounded-full blur-[100px] pointer-events-none" />
+  // Cifras del encabezado: se calculan del catálogo, nunca se escriben a mano.
+  const kpis = [
+    { num: String(brands.length), label: "marcas en el catálogo" },
+    { num: String(totalModels), label: "modelos electrificados" },
+    { num: String(uniqueCountries), label: "países de origen" },
+  ].filter((k) => k.num !== "0");
 
-        <div className="max-w-7xl mx-auto px-4 md:px-8 relative z-10">
-          <nav className="flex items-center gap-2 text-white/30 text-xs mb-10">
-            <Link href="/" className="hover:text-white/60 transition-colors">Inicio</Link>
-            <span>/</span>
-            <span className="text-white/60">Marcas</span>
+  return (
+    <div className="page">
+      {/* ─── Encabezado ────────────────────────────────────────────────── */}
+      <section className="page-head">
+        <div className="wrap">
+          <nav className="crumbs" aria-label="Migas de pan">
+            <Link href="/">Inicio</Link>
+            <span aria-hidden="true">/</span>
+            <span aria-current="page">Marcas</span>
           </nav>
 
-          <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full mb-6">
-              <Icon name="verified" className="text-primary text-[16px]" />
-              <span className="text-white/60 text-xs font-semibold uppercase tracking-wider">
-                {brands.length} marcas disponibles
-              </span>
+          <div className="page-head__grid grid-cols-1">
+            <div>
+              <h1 className="t-h1">Todas las marcas</h1>
+              <p className="t-lead">
+                Explora el catálogo completo de marcas eléctricas e híbridas disponibles en Chile y compara sus modelos.
+              </p>
             </div>
+          </div>
 
-            <h1 className="text-5xl md:text-7xl font-headline font-black text-white tracking-tighter leading-[0.9] mb-5">
-              Todas las<br /><span className="text-primary">Marcas</span><span className="text-white">.</span>
-            </h1>
-            <p className="text-white/50 text-base leading-relaxed max-w-lg mb-10">
-              Explora el catálogo completo de marcas eléctricas e híbridas disponibles en Chile. Compara modelos y encuentra el mejor precio con Electrificarte.
-            </p>
-
-            <div className="flex flex-wrap gap-6">
-              {[
-                { value: brands.length, label: "Marcas" },
-                { value: totalModels, label: "Modelos" },
-                { value: uniqueCountries, label: "Países" },
-              ].map((s) => (
-                <div key={s.label}>
-                  <p className="text-3xl font-headline font-black text-primary">{s.value}</p>
-                  <p className="text-white/40 text-xs uppercase tracking-widest">{s.label}</p>
+          {kpis.length > 0 && (
+            <div className="kpis" style={{ "--kpis": kpis.length } as React.CSSProperties}>
+              {kpis.map((k) => (
+                <div className="kpi" key={k.label}>
+                  <p className="kpi__num">{k.num}</p>
+                  <p className="kpi__label">{k.label}</p>
                 </div>
               ))}
             </div>
-          </div>
+          )}
         </div>
       </section>
 
-      {/* ─── Interactive grid (client island) ─────────────────────────── */}
+      {/* ─── Buscador y grilla (isla cliente) ──────────────────────────── */}
       <MarcasGrid brands={brands} />
 
-      {/* ─── CTA bottom ────────────────────────────────────────────────── */}
-      <section className="py-16 bg-black">
-        <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-8">
+      {/* ─── Los dos caminos ───────────────────────────────────────────── */}
+      <section className="section pt-0">
+        <div className="wrap">
+          <div className="soft-block cta-row">
             <div>
-              <p className="text-primary text-xs uppercase tracking-widest font-bold mb-2">¿No encuentras tu marca?</p>
-              <h2 className="text-white font-headline font-black text-2xl md:text-3xl tracking-tight mb-2">
-                Cotizamos cualquier eléctrico o híbrido en Chile
+              <h2 className="t-h2">
+                {totalModels > 1 ? `¿No sabes cuál de los ${totalModels} modelos te conviene?` : "¿No sabes qué auto te conviene?"}
               </h2>
-              <p className="text-white/40 text-sm">Cuéntanos qué auto buscas y negociamos el mejor precio por ti.</p>
+              <p>Te asesoramos por WhatsApp según tu uso, tus kilómetros y tu presupuesto, y comparamos contigo los modelos que calzan.</p>
             </div>
-            <div className="flex flex-col sm:flex-row gap-3 flex-shrink-0">
-              <OfferCta
-                source="plp"
-                className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-8 py-4 rounded-xl transition-colors text-sm whitespace-nowrap"
-              >
-                Quiero mi oferta
-              </OfferCta>
-              <Link
-                href="/comparador"
-                className="inline-flex items-center justify-center gap-2 border border-white/20 hover:border-white/40 text-white font-medium px-8 py-4 rounded-xl transition-colors text-sm whitespace-nowrap"
-              >
-                <Icon name="compare_arrows" className="text-[18px]" />
-                Comparador
+            <div className="cta-row__actions">
+              <Link href="/asesoria" className="btn btn--primary btn--lg">
+                Quiero asesoría por {ASESORIA_PRICE}
+                <Icon name="arrow_forward" size="none" className="arrow" />
               </Link>
+              <OfferCta source="plp" className="btn btn--secondary btn--lg">
+                Únete a la waitlist
+              </OfferCta>
             </div>
           </div>
         </div>
       </section>
-    </>
+    </div>
   );
 }

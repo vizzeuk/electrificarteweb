@@ -50,6 +50,28 @@ export default async function HomePage() {
 
   const hotDealUrgencyLabel: string | null = siteSettings?.hotDealUrgencyLabel ?? null;
 
+  // Cifras del hero: se calculan del catálogo, nunca se escriben a mano.
+  const TECH_ORDER = ["EV", "PHEV", "HEV", "MHEV", "REEV"];
+  const electricTypes: { tag?: string | null; carCount?: number | null }[] = vehicleTypes ?? [];
+  const technologies = Array.from(
+    new Set(
+      electricTypes
+        .map((t) => {
+          const tag = String(t?.tag ?? "").toUpperCase();
+          return tag === "EREV" ? "REEV" : tag;
+        })
+        .filter(Boolean),
+    ),
+  ).sort((a, b) => {
+    const ia = TECH_ORDER.indexOf(a), ib = TECH_ORDER.indexOf(b);
+    return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
+  });
+  const heroFacts = {
+    models: electricTypes.reduce((n, t) => n + (Number(t?.carCount) || 0), 0),
+    brands: (brands ?? []).length,
+    technologies,
+  };
+
   // Manual Sanity curation takes priority; dynamic fallback fills remaining slots
   const mergeAndDedup = (manual: any[], dynamic: any[], limit: number) => {
     const manualIds = new Set((manual ?? []).map((c: any) => c._id));
@@ -70,8 +92,8 @@ export default async function HomePage() {
       name:                 c.name,
       slug:                 toSlug(c.slug),
       brand:                toBrand(c.brand),
-      // El tipo eléctrico ya se muestra con el ribbon de color (ElectricTypeBadge);
-      // no lo duplicamos en el badge blanco de "categoría".
+      // El tipo eléctrico ya se muestra con el chip de la foto (ElectricTypeBadge);
+      // no lo duplicamos en un chip de "categoría".
       imageUrl:             c.imageUrl,
       batteryCapacity:      c.batteryCapacity,
       range:                c.range,
@@ -113,6 +135,7 @@ export default async function HomePage() {
       <HomeStructuredData />
 
       <Hero
+        facts={heroFacts}
         data={page ? {
           badge:           page.heroBadge,
           title:           page.heroTitle,

@@ -52,22 +52,25 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 // ─── Field label ─────────────────────────────────────────────────────────────
-function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
+// Sistema v1: campos .field > .field__label + .input (app/styles/brand.css). Sin
+// asteriscos: lo opcional se marca con "(opcional)", lo demás es obligatorio.
+function FieldLabel({ children, htmlFor }: { children: React.ReactNode; htmlFor?: string }) {
   return (
-    <label className="block text-xs font-bold uppercase tracking-wider text-text-muted mb-1.5 px-1">
-      {children}{required && <span className="text-red-400 ml-1">*</span>}
+    <label htmlFor={htmlFor} className="field__label">
+      {children}
     </label>
   );
 }
 
-// ─── Input base class ─────────────────────────────────────────────────────────
-const INPUT_CLS = "w-full bg-gray-100 rounded-lg py-3 px-4 text-sm text-text-main placeholder-text-ghost focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all";
+function FieldError({ message }: { message?: string }) {
+  return message ? <p className="field__error">{message}</p> : null;
+}
 
 // Chevron para los <select> (estilizados con appearance-none).
 function ChevronDown() {
   return (
     <svg
-      className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-text-ghost"
+      className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-ink-3"
       width="16" height="16" viewBox="0 0 24 24" fill="none"
       stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
       aria-hidden
@@ -114,13 +117,9 @@ function RadioPills<T extends string>({
           <button
             key={opt.value}
             type="button"
+            aria-pressed={active}
             onClick={() => onChange(opt.value)}
-            className={[
-              "py-2.5 px-3 rounded-xl text-sm font-semibold text-center border transition-all duration-150",
-              active
-                ? "bg-primary/10 border-primary/40 text-primary-deep"
-                : "bg-gray-100 border-gray-100 text-text-muted hover:border-gray-300",
-            ].join(" ")}
+            className="pill h-auto min-h-12 justify-center whitespace-normal py-2 text-center"
           >
             {opt.label}
           </button>
@@ -181,9 +180,11 @@ function CarCombobox({
           onChange={(e) => { setQuery(e.target.value); onChange(""); setOpen(true); }}
           onFocus={() => setOpen(true)}
           placeholder="Busca por marca o modelo..."
-          className={[INPUT_CLS, error ? "ring-2 ring-red-300" : ""].join(" ")}
+          aria-label="Auto que buscas"
+          aria-invalid={!!error}
+          className="input pr-10"
         />
-        <Icon name={open ? "expand_less" : "search"} className="absolute right-3 top-1/2 -translate-y-1/2 text-[18px] text-text-ghost pointer-events-none" />
+        <Icon name={open ? "expand_less" : "search"} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[18px] text-ink-3" />
       </div>
 
       <AnimatePresence>
@@ -193,7 +194,7 @@ function CarCombobox({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.12 }}
-            className="absolute z-30 top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden"
+            className="absolute left-0 right-0 top-full z-30 mt-1 overflow-hidden rounded-card border border-line bg-canvas shadow-overlay"
           >
             <div className="max-h-56 overflow-y-auto">
               {filtered.map((opt) => (
@@ -202,8 +203,8 @@ function CarCombobox({
                   type="button"
                   onClick={() => select(opt)}
                   className={[
-                    "w-full text-left px-4 py-2.5 text-sm hover:bg-surface transition-colors",
-                    value === opt ? "bg-primary/5 text-primary-deep font-semibold" : "text-text-main",
+                    "w-full px-4 py-2.5 text-left text-[0.9375rem] transition-colors hover:bg-canvas-2",
+                    value === opt ? "font-semibold text-link" : "text-ink",
                   ].join(" ")}
                 >
                   {opt}
@@ -214,7 +215,7 @@ function CarCombobox({
         )}
       </AnimatePresence>
 
-      {error && <p className="text-red-500 text-xs mt-1 px-1">{error}</p>}
+      {error && <p className="field__error mt-1.5">{error}</p>}
     </div>
   );
 }
@@ -281,16 +282,18 @@ function PhotoUploader({
     <div className="space-y-3">
       {/* Grid preview */}
       {photos.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           {photos.map((src, i) => (
-            <div key={i} className="relative aspect-square rounded-xl overflow-hidden bg-gray-100 group">
-              <img src={src} alt={`Foto ${i + 1}`} className="w-full h-full object-cover" loading="lazy" decoding="async" />
+            <div key={i} className="relative aspect-square overflow-hidden rounded-control bg-canvas-2">
+              <img src={src} alt={`Foto ${i + 1}`} className="h-full w-full object-cover" loading="lazy" decoding="async" />
+              {/* Botón macizo sobre la foto (siempre visible: en móvil no hay hover). */}
               <button
                 type="button"
                 onClick={() => remove(i)}
-                className="absolute top-1 right-1 w-5 h-5 bg-black/60 hover:bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                aria-label={`Quitar foto ${i + 1}`}
+                className="absolute right-1.5 top-1.5 grid h-7 w-7 cursor-pointer place-items-center rounded-control bg-papel text-tinta transition-colors hover:bg-niebla"
               >
-                <Icon name="close" className="text-[12px]" />
+                <Icon name="close" className="text-[16px]" />
               </button>
             </div>
           ))}
@@ -303,22 +306,19 @@ function PhotoUploader({
         onClick={() => inputRef.current?.click()}
         disabled={processing}
         className={[
-          "w-full border-2 border-dashed rounded-xl py-5 flex flex-col items-center gap-1.5 transition-colors",
-          processing ? "opacity-60 cursor-wait" : "",
-          photos.length < 4
-            ? "border-amber/50 bg-amber/5 hover:bg-amber/10"
-            : "border-gray-200 bg-gray-50 hover:bg-gray-100",
+          "flex w-full flex-col items-center gap-1.5 rounded-card border border-dashed border-line-2 py-5 transition-colors",
+          processing ? "cursor-wait text-ink-3" : "cursor-pointer hover:border-ink",
         ].join(" ")}
       >
-        <Icon name={processing ? "hourglass_top" : "add_photo_alternate"} className="text-[28px] text-text-ghost" />
-        <span className="text-sm font-semibold text-text-muted">
+        <Icon name={processing ? "hourglass_top" : "add_photo_alternate"} className="text-[28px] text-ink-3" />
+        <span className="text-[0.9375rem] font-semibold text-ink">
           {processing
             ? "Procesando fotos…"
             : photos.length === 0 ? "Sube fotos de tu auto" : "Agregar más fotos"}
         </span>
-        <span className={["text-[10px] font-bold uppercase tracking-wide", photos.length < 4 ? "text-amber-600" : "text-text-ghost"].join(" ")}>
+        <span className="t-micro">
           {photos.length < 4
-            ? `Mínimo 4 fotos · ${photos.length} de 4`
+            ? `Mínimo 4 fotos: ${photos.length} de 4`
             : `${photos.length} foto${photos.length !== 1 ? "s" : ""} agregada${photos.length !== 1 ? "s" : ""}`}
         </span>
       </button>
@@ -336,15 +336,9 @@ function PhotoUploader({
 }
 
 // ─── Section heading ──────────────────────────────────────────────────────────
-function SectionHeading({ icon, title }: { icon: string; title: string }) {
-  return (
-    <div className="flex items-center gap-2.5 mb-5 pb-3 border-b border-gray-100">
-      <div className="w-7 h-7 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-        <Icon name={icon} className="text-primary-deep text-[16px]" />
-      </div>
-      <h3 className="font-headline font-bold text-base">{title}</h3>
-    </div>
-  );
+// Subtítulo de bloque (Switzer 600) con hairline. Sin ícono en cuadrado de color.
+function SectionHeading({ title }: { title: string }) {
+  return <h3 className="t-h4 mb-5 border-b border-line pb-3">{title}</h3>;
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -436,66 +430,56 @@ export function LeadForm({ carOptions = [], carSlug, carName }: LeadFormProps) {
   // ── Success state ────────────────────────────────────────────────────────────
   if (status === "success") {
     return (
-      <m.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="bg-white rounded-2xl shadow-xl p-10 text-center"
-      >
-        <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-6">
-          <Icon name="check_circle" className="text-primary-dark" size="lg" />
-        </div>
-        <h3 className="text-2xl font-headline font-bold mb-2">¡Solicitud enviada!</h3>
-        <p className="text-text-muted">
+      <div className="rounded-card border border-line p-6 md:p-10" role="status">
+        <Icon name="check_circle" className="text-[32px] text-link" />
+        <h3 className="t-h3 mt-4">¡Solicitud enviada!</h3>
+        <p className="t-body mt-2">
           Nuestro equipo te contactará en 48 a 96 horas con la mejor oferta.
         </p>
-      </m.div>
+      </div>
     );
   }
 
   // ── Form ─────────────────────────────────────────────────────────────────────
   return (
-    <div className="bg-white rounded-2xl shadow-xl p-6 md:p-10 space-y-8">
-      <div>
-        <h2 className="text-2xl md:text-3xl font-headline font-bold text-text-main mb-1">
-          Completa tu solicitud
-        </h2>
-        <p className="text-text-muted text-sm">
-          Toda la información se mantiene privada y solo se usa para preparar tu oferta.
-        </p>
-      </div>
+    <div className="rounded-card border border-line p-6 md:p-10">
+      <h2 className="t-h3">Completa tu solicitud</h2>
+      <p className="t-body mt-2">
+        Toda la información se mantiene privada y solo se usa para preparar tu oferta.
+      </p>
 
-      <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-8">
+      <form onSubmit={handleSubmit(onSubmit)} noValidate className="mt-8 grid gap-10">
 
         {/* ── 1. Datos personales ──────────────────────────────────────── */}
         <div>
-          <SectionHeading icon="person" title="Datos personales" />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <SectionHeading title="Datos personales" />
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
 
-            <div>
-              <FieldLabel required>Nombre completo</FieldLabel>
-              <input {...register("fullName")} type="text" autoComplete="name" placeholder="Juan Pérez" className={INPUT_CLS} />
-              {errors.fullName && <p className="text-red-500 text-xs mt-1 px-1">{errors.fullName.message}</p>}
+            <div className="field">
+              <FieldLabel htmlFor="lf-name">Nombre completo</FieldLabel>
+              <input id="lf-name" {...register("fullName")} type="text" autoComplete="name" placeholder="Juan Pérez" className="input" aria-invalid={!!errors.fullName} />
+              <FieldError message={errors.fullName?.message} />
             </div>
 
-            <div>
-              <FieldLabel required>Email</FieldLabel>
-              <input {...register("email")} type="email" autoComplete="email" placeholder="juan@ejemplo.com" className={INPUT_CLS} />
-              {errors.email && <p className="text-red-500 text-xs mt-1 px-1">{errors.email.message}</p>}
+            <div className="field">
+              <FieldLabel htmlFor="lf-email">Email</FieldLabel>
+              <input id="lf-email" {...register("email")} type="email" autoComplete="email" placeholder="juan@ejemplo.com" className="input" aria-invalid={!!errors.email} />
+              <FieldError message={errors.email?.message} />
             </div>
 
-            <div>
-              <FieldLabel required>Número de teléfono</FieldLabel>
-              <div className="flex">
-                <span className="flex-shrink-0 flex items-center bg-gray-200 text-text-muted text-sm font-semibold px-3 rounded-l-lg border-r border-gray-300 select-none">
-                  +56
-                </span>
+            <div className="field">
+              <FieldLabel htmlFor="lf-phone">Número de teléfono</FieldLabel>
+              <div className="input-group">
+                <span className="input-group__prefix select-none">+56</span>
                 <input
+                  id="lf-phone"
                   {...register("phone")}
                   type="tel"
                   inputMode="numeric"
                   autoComplete="tel-national"
                   placeholder="995760998"
                   maxLength={9}
+                  aria-invalid={!!errors.phone}
                   onInput={(e) => {
                     // RHF's onChange already fired with the raw value — override via setValue
                     let v = e.currentTarget.value.replace(/\D/g, "");
@@ -504,61 +488,65 @@ export function LeadForm({ carOptions = [], carSlug, carName }: LeadFormProps) {
                     e.currentTarget.value = v;
                     setValue("phone", v, { shouldValidate: true });
                   }}
-                  className={`${INPUT_CLS} rounded-l-none`}
+                  className="input"
                 />
               </div>
-              {errors.phone && <p className="text-red-500 text-xs mt-1 px-1">{errors.phone.message}</p>}
+              <FieldError message={errors.phone?.message} />
             </div>
 
-            <div>
-              <FieldLabel required>RUT (sin puntos ni guión)</FieldLabel>
-              <input {...register("rut")} type="text" placeholder="Ej: 12345678K" className={INPUT_CLS} />
-              {errors.rut && <p className="text-red-500 text-xs mt-1 px-1">{errors.rut.message}</p>}
+            <div className="field">
+              <FieldLabel htmlFor="lf-rut">RUT (sin puntos ni guion)</FieldLabel>
+              <input id="lf-rut" {...register("rut")} type="text" placeholder="Ej: 12345678K" className="input" aria-invalid={!!errors.rut} />
+              <FieldError message={errors.rut?.message} />
             </div>
 
-            <div>
-              <FieldLabel required>Región</FieldLabel>
+            <div className="field">
+              <FieldLabel htmlFor="lf-region">Región</FieldLabel>
               <div className="relative">
                 <select
+                  id="lf-region"
                   {...register("region", {
                     // Si cambia la región, limpiamos la comuna porque la
                     // anterior probablemente ya no pertenece a la nueva región.
                     onChange: () => setValue("comuna", ""),
                   })}
-                  className={`${INPUT_CLS} appearance-none pr-10 ${!watch("region") ? "text-text-ghost" : ""}`}
+                  aria-invalid={!!errors.region}
+                  className={`input cursor-pointer appearance-none pr-10 ${!watch("region") ? "text-ink-3" : ""}`}
                   defaultValue=""
                 >
                   <option value="" disabled>Selecciona tu región</option>
                   {REGIONES.map((r) => (
-                    <option key={r.region} value={r.region} className="text-text-main">
+                    <option key={r.region} value={r.region} className="text-ink">
                       {r.region}
                     </option>
                   ))}
                 </select>
                 <ChevronDown />
               </div>
-              {errors.region && <p className="text-red-500 text-xs mt-1 px-1">{errors.region.message}</p>}
+              <FieldError message={errors.region?.message} />
             </div>
 
-            <div>
-              <FieldLabel required>Comuna</FieldLabel>
+            <div className="field">
+              <FieldLabel htmlFor="lf-comuna">Comuna</FieldLabel>
               <div className="relative">
                 <select
+                  id="lf-comuna"
                   {...register("comuna")}
                   disabled={!selectedRegion}
-                  className={`${INPUT_CLS} appearance-none pr-10 ${!watch("comuna") ? "text-text-ghost" : ""} ${!selectedRegion ? "opacity-60 cursor-not-allowed" : ""}`}
+                  aria-invalid={!!errors.comuna}
+                  className={`input appearance-none pr-10 ${!watch("comuna") ? "text-ink-3" : ""} ${!selectedRegion ? "cursor-not-allowed border-line" : "cursor-pointer"}`}
                   defaultValue=""
                 >
                   <option value="" disabled>
                     {selectedRegion ? "Selecciona tu comuna" : "Primero elige la región"}
                   </option>
                   {comunasDeRegion(selectedRegion).map((c) => (
-                    <option key={c} value={c} className="text-text-main">{c}</option>
+                    <option key={c} value={c} className="text-ink">{c}</option>
                   ))}
                 </select>
                 <ChevronDown />
               </div>
-              {errors.comuna && <p className="text-red-500 text-xs mt-1 px-1">{errors.comuna.message}</p>}
+              <FieldError message={errors.comuna?.message} />
             </div>
 
           </div>
@@ -566,7 +554,7 @@ export function LeadForm({ carOptions = [], carSlug, carName }: LeadFormProps) {
 
         {/* ── 2. Auto que buscas ───────────────────────────────────────── */}
         <div>
-          <SectionHeading icon="electric_car" title="Auto que buscas" />
+          <SectionHeading title="Auto que buscas" />
           <Controller
             control={control}
             name="carSearch"
@@ -583,7 +571,7 @@ export function LeadForm({ carOptions = [], carSlug, carName }: LeadFormProps) {
 
         {/* ── 3. Forma de pago ─────────────────────────────────────────── */}
         <div>
-          <SectionHeading icon="payments" title="¿Cómo te gustaría pagar tu próximo vehículo?" />
+          <SectionHeading title="¿Cómo te gustaría pagar tu próximo vehículo?" />
           <Controller
             control={control}
             name="paymentMethod"
@@ -602,12 +590,12 @@ export function LeadForm({ carOptions = [], carSlug, carName }: LeadFormProps) {
               />
             )}
           />
-          {errors.paymentMethod && <p className="text-red-500 text-xs mt-2 px-1">{errors.paymentMethod.message}</p>}
+          {errors.paymentMethod && <p className="field__error mt-2">{errors.paymentMethod.message}</p>}
         </div>
 
         {/* ── 4. Parte de pago ─────────────────────────────────────────── */}
         <div>
-          <SectionHeading icon="directions_car" title="¿Quieres dar un auto en parte de pago?" />
+          <SectionHeading title="¿Quieres dar un auto en parte de pago?" />
           <Controller
             control={control}
             name="tradeIn"
@@ -623,10 +611,11 @@ export function LeadForm({ carOptions = [], carSlug, carName }: LeadFormProps) {
               />
             )}
           />
-          {errors.tradeIn && <p className="text-red-500 text-xs mt-2 px-1">{errors.tradeIn.message}</p>}
+          {errors.tradeIn && <p className="field__error mt-2">{errors.tradeIn.message}</p>}
         </div>
 
         {/* ── 5. Datos del auto a entregar ─────────────────────────────── */}
+        {/* Abrir y cerrar el panel es la única animación que queda (Framer Motion). */}
         <AnimatePresence>
           {tradeIn === "si" && (
             <m.div
@@ -636,126 +625,129 @@ export function LeadForm({ carOptions = [], carSlug, carName }: LeadFormProps) {
               transition={{ duration: 0.25 }}
               className="overflow-hidden"
             >
-              <div className="bg-surface rounded-2xl p-6 border border-gray-100 space-y-6">
-                <SectionHeading icon="sell" title="Datos de tu auto actual" />
+              <div>
+                <SectionHeading title="Datos de tu auto actual" />
+                <div className="grid gap-6">
 
-                {/* Marca, modelo, año */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <FieldLabel>Marca</FieldLabel>
-                    <input {...register("tradeInBrand")} type="text" placeholder="Ej: Toyota" className={INPUT_CLS} />
+                  {/* Marca, modelo, año */}
+                  <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+                    <div className="field">
+                      <FieldLabel htmlFor="lf-ti-brand">Marca</FieldLabel>
+                      <input id="lf-ti-brand" {...register("tradeInBrand")} type="text" placeholder="Ej: Toyota" className="input" />
+                    </div>
+                    <div className="field">
+                      <FieldLabel htmlFor="lf-ti-model">Modelo</FieldLabel>
+                      <input id="lf-ti-model" {...register("tradeInModel")} type="text" placeholder="Ej: Corolla" className="input" />
+                    </div>
+                    <div className="field">
+                      <FieldLabel htmlFor="lf-ti-year">Año</FieldLabel>
+                      <input id="lf-ti-year" {...register("tradeInYear")} type="text" placeholder="Ej: 2020" className="input" />
+                    </div>
                   </div>
-                  <div>
-                    <FieldLabel>Modelo</FieldLabel>
-                    <input {...register("tradeInModel")} type="text" placeholder="Ej: Corolla" className={INPUT_CLS} />
+
+                  {/* Dueños */}
+                  <div className="field">
+                    <FieldLabel>Cantidad de dueños</FieldLabel>
+                    <Controller
+                      control={control}
+                      name="tradeInOwners"
+                      render={({ field }) => (
+                        <RadioPills
+                          options={[
+                            { value: "unico",  label: "Único dueño" },
+                            { value: "2",      label: "2 dueños" },
+                            { value: "3-mas",  label: "3 o más" },
+                          ]}
+                          value={field.value}
+                          onChange={field.onChange}
+                          cols={3}
+                        />
+                      )}
+                    />
                   </div>
-                  <div>
-                    <FieldLabel>Año</FieldLabel>
-                    <input {...register("tradeInYear")} type="text" placeholder="Ej: 2020" className={INPUT_CLS} />
+
+                  {/* Kilometraje */}
+                  <div className="field">
+                    <FieldLabel htmlFor="lf-ti-km">Kilometraje</FieldLabel>
+                    <input id="lf-ti-km" {...register("tradeInKm")} type="text" placeholder="Ej: 45000" className="input" />
                   </div>
-                </div>
 
-                {/* Dueños */}
-                <div>
-                  <FieldLabel>Cantidad de dueños</FieldLabel>
-                  <Controller
-                    control={control}
-                    name="tradeInOwners"
-                    render={({ field }) => (
-                      <RadioPills
-                        options={[
-                          { value: "unico",  label: "Único dueño" },
-                          { value: "2",      label: "2 dueños" },
-                          { value: "3-mas",  label: "3 o más" },
-                        ]}
-                        value={field.value}
-                        onChange={field.onChange}
-                        cols={3}
-                      />
-                    )}
-                  />
-                </div>
+                  {/* Mantenciones */}
+                  <div className="field">
+                    <FieldLabel>Mantenciones</FieldLabel>
+                    <Controller
+                      control={control}
+                      name="tradeInMaintenance"
+                      render={({ field }) => (
+                        <RadioPills
+                          options={[
+                            { value: "todas-marca", label: "Todas en taller de marca" },
+                            { value: "no-todas",    label: "No todas" },
+                          ]}
+                          value={field.value}
+                          onChange={field.onChange}
+                          cols={2}
+                        />
+                      )}
+                    />
+                  </div>
 
-                {/* Kilometraje */}
-                <div>
-                  <FieldLabel>Kilometraje</FieldLabel>
-                  <input {...register("tradeInKm")} type="text" placeholder="Ej: 45000" className={INPUT_CLS} />
-                </div>
+                  {/* Deuda */}
+                  <div className="field">
+                    <FieldLabel>¿Tiene deuda pendiente?</FieldLabel>
+                    <Controller
+                      control={control}
+                      name="tradeInDebt"
+                      render={({ field }) => (
+                        <RadioPills
+                          options={[
+                            { value: "si", label: "Sí" },
+                            { value: "no", label: "No" },
+                          ]}
+                          value={field.value}
+                          onChange={field.onChange}
+                          cols={2}
+                        />
+                      )}
+                    />
+                  </div>
 
-                {/* Mantenciones */}
-                <div>
-                  <FieldLabel>Mantenciones</FieldLabel>
-                  <Controller
-                    control={control}
-                    name="tradeInMaintenance"
-                    render={({ field }) => (
-                      <RadioPills
-                        options={[
-                          { value: "todas-marca", label: "Todas en taller de marca" },
-                          { value: "no-todas",    label: "No todas" },
-                        ]}
-                        value={field.value}
-                        onChange={field.onChange}
-                        cols={2}
-                      />
-                    )}
-                  />
-                </div>
+                  {/* Patente: se muestra en mayúsculas porque así se escriben las patentes. */}
+                  <div className="field">
+                    <FieldLabel htmlFor="lf-ti-plate">Patente del vehículo</FieldLabel>
+                    <input
+                      id="lf-ti-plate"
+                      {...register("tradeInPlate")}
+                      type="text"
+                      placeholder="Ej: ABCD12"
+                      className="input placeholder:normal-case"
+                      style={{ textTransform: "uppercase" }}
+                    />
+                  </div>
 
-                {/* Deuda */}
-                <div>
-                  <FieldLabel>¿Tiene deuda pendiente?</FieldLabel>
-                  <Controller
-                    control={control}
-                    name="tradeInDebt"
-                    render={({ field }) => (
-                      <RadioPills
-                        options={[
-                          { value: "si", label: "Sí" },
-                          { value: "no", label: "No" },
-                        ]}
-                        value={field.value}
-                        onChange={field.onChange}
-                        cols={2}
-                      />
-                    )}
-                  />
-                </div>
+                  {/* Fotos */}
+                  <div className="field">
+                    <FieldLabel>Fotos del auto (mínimo 4)</FieldLabel>
+                    <PhotoUploader photos={photos} onChange={setPhotos} />
+                    <FieldError message={photoError || undefined} />
+                  </div>
 
-                {/* Patente */}
-                <div>
-                  <FieldLabel>Patente del vehículo</FieldLabel>
-                  <input
-                    {...register("tradeInPlate")}
-                    type="text"
-                    placeholder="Ej: ABCD12"
-                    className={INPUT_CLS}
-                    style={{ textTransform: "uppercase" }}
-                  />
                 </div>
-
-                {/* Fotos */}
-                <div>
-                  <FieldLabel>Fotos del auto (mínimo 4)</FieldLabel>
-                  <PhotoUploader photos={photos} onChange={setPhotos} />
-                  {photoError && <p className="text-red-500 text-xs mt-1 px-1">{photoError}</p>}
-                </div>
-
               </div>
             </m.div>
           )}
         </AnimatePresence>
 
         {/* ── Submit ───────────────────────────────────────────────────── */}
-        <div className="pt-2">
+        <div className="grid gap-4">
           <button
             type="submit"
             disabled={status === "loading"}
-            className="w-full bg-primary-container text-black font-headline font-bold py-5 rounded-full text-lg shadow-lg hover:shadow-[0_0_25px_rgba(0,229,209,0.3)] transition-all active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-60"
+            className="btn btn--primary btn--lg btn--block"
           >
             {status === "loading" ? (
               <>
-                <Icon name="progress_activity" className="text-[20px] animate-spin" />
+                <Icon name="progress_activity" size="none" className="animate-spin" />
                 Enviando...
               </>
             ) : (
@@ -766,16 +758,16 @@ export function LeadForm({ carOptions = [], carSlug, carName }: LeadFormProps) {
           </button>
 
           {status === "error" && (
-            <p className="text-center text-red-500 text-sm mt-3">
+            <p className="field__error" role="alert">
               Hubo un error al enviar. Intenta de nuevo.
             </p>
           )}
 
-          <p className="text-center text-[10px] text-text-muted mt-4 uppercase tracking-wider">
+          <p className="t-micro">
             Al hacer clic, aceptas nuestros{" "}
-            <Link href="/terminos" className="underline hover:text-primary-deep transition-colors">términos de servicio</Link>{" "}
+            <Link href="/terminos" className="link">términos de servicio</Link>{" "}
             y{" "}
-            <Link href="/privacidad" className="underline hover:text-primary-deep transition-colors">política de privacidad</Link>.
+            <Link href="/privacidad" className="link">política de privacidad</Link>.
           </p>
         </div>
 

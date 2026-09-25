@@ -21,7 +21,7 @@ interface SearchCar {
 const norm = (s: string) =>
   s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 
-export function NavbarSearch({ transparent }: { transparent: boolean }) {
+export function NavbarSearch() {
   const [open, setOpen]       = useState(false);
   const [query, setQuery]     = useState("");
   const [index, setIndex]     = useState<SearchCar[] | null>(null);
@@ -65,18 +65,13 @@ export function NavbarSearch({ transparent }: { transparent: boolean }) {
   return (
     <>
       <button
+        type="button"
         onClick={() => setOpen((v) => !v)}
-        aria-label="Buscar vehículos"
+        aria-label={open ? "Cerrar buscador" : "Buscar vehículos"}
         aria-expanded={open}
-        className={[
-          "inline-flex items-center justify-center gap-2 h-10 px-3 lg:px-4 rounded-xl text-sm font-semibold transition-all",
-          transparent
-            ? "text-white/80 hover:text-white border border-white/20 hover:border-white/50 hover:bg-white/5"
-            : "text-text-main border border-gray-200 hover:border-primary/40 hover:text-primary hover:bg-surface",
-        ].join(" ")}
+        className="btn btn--quiet btn--icon"
       >
-        <Icon name={open ? "close" : "search"} size="sm" />
-        <span className="hidden lg:inline">{open ? "Cerrar" : "Busca tu auto"}</span>
+        <Icon name={open ? "close" : "search"} size="none" />
       </button>
 
       <AnimatePresence>
@@ -86,28 +81,30 @@ export function NavbarSearch({ transparent }: { transparent: boolean }) {
             <div className="fixed inset-0 z-30" onClick={close} aria-hidden />
 
             <m.div
-              initial={{ opacity: 0, y: -8 }}
+              initial={{ opacity: 0, y: -6 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.18, ease: "easeOut" }}
-              className="fixed left-0 right-0 top-16 md:top-20 z-40"
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.18, ease: [0.2, 0.7, 0.2, 1] }}
+              className="fixed left-0 right-0 top-[72px] z-40"
             >
-              <div className="max-w-7xl mx-auto px-4 md:px-8">
-                <div className="bg-white rounded-b-2xl border border-gray-100 shadow-lg shadow-black/10 overflow-hidden">
+              <div className="wrap">
+                <div className="overflow-hidden rounded-b-card border border-t-0 border-linea bg-papel text-tinta shadow-overlay">
                   {/* Input */}
-                  <div className="flex items-center gap-3 px-4 md:px-5 h-14 border-b border-gray-100">
-                    <Icon name="search" className="text-[20px] text-text-ghost" />
+                  <div className="flex h-14 items-center gap-3 border-b border-linea px-5">
+                    <Icon name="search" className="text-[20px] text-piedra" />
+                    <label htmlFor="navbar-search" className="sr-only">Buscar un modelo o marca</label>
                     <input
+                      id="navbar-search"
                       ref={inputRef}
                       type="text"
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
-                      placeholder="Buscar cualquier modelo…"
-                      className="flex-1 bg-transparent outline-none text-sm md:text-base text-text-main placeholder:text-text-ghost"
+                      placeholder="Busca un modelo o una marca"
+                      className="flex-1 bg-transparent text-base text-tinta outline-none placeholder:text-piedra"
                     />
                     {query && (
-                      <button onClick={() => setQuery("")} aria-label="Limpiar" className="text-text-ghost hover:text-text-main">
-                        <Icon name="close" size="sm" />
+                      <button type="button" onClick={() => setQuery("")} aria-label="Limpiar búsqueda" className="btn btn--quiet btn--icon btn--sm">
+                        <Icon name="close" size="none" />
                       </button>
                     )}
                   </div>
@@ -115,15 +112,15 @@ export function NavbarSearch({ transparent }: { transparent: boolean }) {
                   {/* Resultados */}
                   <div className="max-h-[60vh] overflow-y-auto">
                     {loading && (
-                      <p className="px-5 py-6 text-sm text-text-ghost">Cargando catálogo…</p>
+                      <p className="px-5 py-6 text-sm text-grafito">Cargando catálogo…</p>
                     )}
                     {!loading && query.trim().length < 1 && (
-                      <p className="px-5 py-6 text-sm text-text-ghost">
-                        Escribí el nombre de un modelo o marca.
+                      <p className="px-5 py-6 text-sm text-grafito">
+                        Escribe el nombre de un modelo o de una marca.
                       </p>
                     )}
                     {!loading && query.trim().length >= 1 && results.length === 0 && (
-                      <p className="px-5 py-6 text-sm text-text-ghost">
+                      <p className="px-5 py-6 text-sm text-grafito">
                         Sin resultados para “{query}”.
                       </p>
                     )}
@@ -134,37 +131,30 @@ export function NavbarSearch({ transparent }: { transparent: boolean }) {
                           key={c.slug}
                           href={`/auto/${c.slug}`}
                           onClick={close}
-                          className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-surface transition-colors border-b border-gray-50 last:border-0"
+                          className="flex items-center justify-between gap-4 border-b border-linea px-5 py-3 transition-colors last:border-0 hover:bg-niebla"
                         >
-                          <span className="flex items-center gap-3 min-w-0">
-                            <span className="w-9 h-7 flex items-center justify-center flex-shrink-0">
+                          <span className="flex min-w-0 items-center gap-3">
+                            <span className="flex h-7 w-10 flex-shrink-0 items-center justify-center">
                               {c.brandLogo ? (
+                                // eslint-disable-next-line @next/next/no-img-element
                                 <img
-                                  src={sanityImg(c.brandLogo, { w: 72, q: 80 })}
-                                  alt={c.brand ?? ""}
-                                  className="max-h-7 max-w-9 w-auto object-contain opacity-70"
+                                  src={sanityImg(c.brandLogo, { w: 80, q: 80 })}
+                                  alt=""
+                                  className="max-h-6 w-auto max-w-10 object-contain opacity-60 grayscale"
                                   loading="lazy"
                                   decoding="async"
                                 />
                               ) : (
-                                <Icon name="electric_car" className="text-[18px] text-gray-200" />
+                                <Icon name="electric_car" className="text-[18px] text-piedra" />
                               )}
                             </span>
-                            <span className="flex items-baseline gap-2 min-w-0">
-                              <span className="text-[11px] uppercase tracking-wide text-text-ghost font-semibold flex-shrink-0">
-                                {c.brand}
-                              </span>
-                              <span className="font-semibold text-sm text-text-main truncate">
-                                {c.name}
-                              </span>
-                              {c.type && (
-                                <span className="text-[9px] font-black text-text-ghost bg-surface px-1.5 py-0.5 rounded flex-shrink-0">
-                                  {c.type}
-                                </span>
-                              )}
+                            <span className="flex min-w-0 items-baseline gap-2">
+                              <span className="flex-shrink-0 text-label font-semibold text-piedra">{c.brand}</span>
+                              <span className="truncate text-[15px] font-semibold text-tinta">{c.name}</span>
+                              {c.type && <span className="chip flex-shrink-0">{c.type}</span>}
                             </span>
                           </span>
-                          <span className="text-sm font-headline font-bold text-primary-deep flex-shrink-0">
+                          <span className="flex-shrink-0 text-[15px] font-semibold tabular-nums text-tinta">
                             {formatCLP(price)}
                           </span>
                         </Link>

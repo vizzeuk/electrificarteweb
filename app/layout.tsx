@@ -1,18 +1,29 @@
 import type { Metadata } from "next";
-import { Space_Grotesk, Inter } from "next/font/google";
 import localFont from "next/font/local";
 import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
 import "./globals.css";
 
-const spaceGrotesk = Space_Grotesk({
-  subsets: ["latin"],
-  variable: "--font-headline",
+// Fuentes de marca (sistema de diseño v1): Cabinet Grotesk para titulares y Switzer para
+// texto, interfaz y cifras. Son de Fontshare (ITF Free Font License): la licencia permite
+// auto-hospedarlas pero no redistribuirlas en un repo público, así que no se versionan —
+// scripts/fetch-fonts.mjs las baja a app/fonts/fontshare/ antes de dev y build.
+const cabinet = localFont({
+  src: [
+    { path: "./fonts/fontshare/CabinetGrotesk-700.woff2", weight: "700" },
+    { path: "./fonts/fontshare/CabinetGrotesk-800.woff2", weight: "800" },
+  ],
+  variable: "--font-cabinet",
   display: "swap",
 });
 
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-body",
+const switzer = localFont({
+  src: [
+    { path: "./fonts/fontshare/Switzer-400.woff2", weight: "400" },
+    { path: "./fonts/fontshare/Switzer-500.woff2", weight: "500" },
+    { path: "./fonts/fontshare/Switzer-600.woff2", weight: "600" },
+    { path: "./fonts/fontshare/Switzer-700.woff2", weight: "700" },
+  ],
+  variable: "--font-switzer",
   display: "swap",
 });
 
@@ -33,7 +44,7 @@ export const metadata: Metadata = {
     template: "%s | Electrificarte",
   },
   description:
-    "El mejor precio en autos electrificados de Chile. Negociamos por ti con nuestra red de vendedores oficiales para conseguirte el precio más bajo del mercado en tu próximo vehículo eléctrico o híbrido.",
+    "Autos eléctricos e híbridos en Chile: compara modelos, calcula tu ahorro y recibe asesoría por WhatsApp para elegir bien tu próximo auto electrificado.",
   keywords: [
     "autos electricos chile",
     "vehiculos electricos chile",
@@ -68,13 +79,13 @@ export const metadata: Metadata = {
     siteName: "Electrificarte",
     title: "Electrificarte | Ahorra millones en tu auto electrificado en Chile",
     description:
-      "El mejor precio en autos electrificados de Chile. Negociamos por ti con nuestra red de vendedores oficiales para conseguirte el precio más competitivo del mercado.",
+      "Compara autos eléctricos e híbridos en Chile y recibe asesoría por WhatsApp para elegir bien tu próximo auto electrificado.",
   },
   twitter: {
     card: "summary_large_image",
     title: "Electrificarte | Autos electrificados al mejor precio en Chile",
     description:
-      "Ahorra millones en tu próximo auto electrificado. Negociamos por ti con la mejor red de vendedores oficiales de Chile.",
+      "Ahorra en tu próximo auto electrificado: compara modelos y recibe asesoría por WhatsApp para elegir bien.",
   },
   alternates: {
     canonical: "/",
@@ -96,7 +107,7 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${spaceGrotesk.variable} ${inter.variable} ${materialSymbols.variable}`}
+      className={`${cabinet.variable} ${switzer.variable} ${materialSymbols.variable}`}
     >
       <head>
         {/* Preconnect a Sanity CDN (imágenes). Las fuentes ahora son self-hosted
@@ -104,9 +115,9 @@ export default function RootLayout({
         <link rel="preconnect" href="https://cdn.sanity.io" crossOrigin="" />
 
         {/* Favicon is auto-wired by Next.js from app/icon.svg */}
-        <meta name="theme-color" content="#00E5E5" />
+        <meta name="theme-color" content="#0f1716" />
       </head>
-      <body className="font-body antialiased bg-white text-text-main">
+      <body className="font-sans antialiased bg-canvas text-ink">
         {children}
         <GoogleAnalytics />
       </body>

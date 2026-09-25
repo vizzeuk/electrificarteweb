@@ -1,4 +1,5 @@
 import React from "react";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { client } from "@/lib/sanity/client";
@@ -54,14 +55,35 @@ export default async function CarDetailPage({ params }: PageProps) {
 
   if (!sanity) {
     // Graceful fallback for slugs not in Sanity yet
+    // El slug llega en minúscula: sentenceCase lo dejaría igual, así que solo se sube la inicial.
+    const slugName = slug.replace(/-/g, " ");
+    const fallbackName = slugName.charAt(0).toUpperCase() + slugName.slice(1);
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-6 px-4 text-center">
-        <Icon name="electric_car" className="text-[64px] text-gray-200" />
-        <h1 className="font-headline font-black text-3xl">{slug.replace(/-/g, " ")}</h1>
-        <p className="text-text-muted max-w-sm">Este modelo aún no está disponible en nuestro catálogo digital. Puedes solicitar una oferta de todos modos.</p>
-        <OfferCta carSlug={slug} model={slug.replace(/-/g, " ")} source="pdp" className="bg-primary hover:bg-primary-dark text-black font-bold px-8 py-3 rounded-xl transition-colors">
-          Negociar de todos modos
-        </OfferCta>
+      <div className="page">
+        <section className="section pt-8">
+          <div className="wrap">
+            <nav className="crumbs" aria-label="Migas de pan">
+              <Link href="/">Inicio</Link>
+              <span aria-hidden="true">/</span>
+              <span aria-current="page">{fallbackName}</span>
+            </nav>
+            <div className="mt-10 max-w-[40rem]">
+              <h1 className="t-h1">{fallbackName}</h1>
+              <p className="t-lead mt-6">
+                Este modelo aún no está disponible en nuestro catálogo digital. Puedes solicitar una oferta de todos modos.
+              </p>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <OfferCta carSlug={slug} model={slugName} source="pdp" className="btn btn--primary btn--lg">
+                  Quiero una oferta
+                  <Icon name="arrow_forward" size="none" className="arrow" />
+                </OfferCta>
+                <Link href="/marcas" className="btn btn--secondary btn--lg">
+                  Ver todas las marcas
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
     );
   }
@@ -107,6 +129,17 @@ export default async function CarDetailPage({ params }: PageProps) {
     fuelConsumption:      sanity.fuelConsumption ?? null,
     rendimientoElectrico: sanity.rendimientoElectrico ?? null,
     warranty:        sanity.warranty,
+    // Datos de la ficha y de los chips del bloque de compra (ya vienen en carBySlugQuery).
+    modelYear:          sanity.modelYear ?? null,
+    euroNcap:           sanity.euroNcap ?? null,
+    airbags:            sanity.airbags ?? null,
+    batteryType:        sanity.batteryType ?? null,
+    connectorType:      sanity.connectorType ?? null,
+    maxDCChargingPower: sanity.maxDCChargingPower ?? null,
+    maxACChargingPower: sanity.maxACChargingPower ?? null,
+    transmission:       sanity.transmission ?? null,
+    frunkCapacity:      sanity.frunkCapacity ?? null,
+    groundClearance:    sanity.groundClearance ?? null,
     videoUrl:        sanity.videoUrl,
     videoTitle:      sanity.videoTitle ?? `${sanity.brand?.name ?? ""} ${sanity.name} – Review completo`,
     videoDuration:   sanity.videoDuration,
@@ -140,6 +173,10 @@ export default async function CarDetailPage({ params }: PageProps) {
       electricRangeKm:      v.electricRangeKm ?? sanity.electricRangeKm ?? null,
       fuelConsumption:      v.fuelConsumption ?? sanity.fuelConsumption ?? null,
       rendimientoElectrico: v.rendimientoElectrico ?? sanity.rendimientoElectrico ?? null,
+      maxDCChargingPower:   v.maxDCChargingPower ?? sanity.maxDCChargingPower ?? null,
+      maxACChargingPower:   v.maxACChargingPower ?? sanity.maxACChargingPower ?? null,
+      transmission:         v.transmission ?? sanity.transmission ?? null,
+      cargo:                v.trunkCapacity ?? sanity.cargo ?? null,
     })),
   };
 
@@ -208,7 +245,8 @@ export default async function CarDetailPage({ params }: PageProps) {
         car={car}
         similarCars={similarCars}
         reviewsSlot={
-          <ReviewList reviews={reviews} summary={reviewSummary} carName={`${car.brand} ${car.name}`} />
+          // key: el elemento viaja desde el servidor y React lo valida como hijo de una lista.
+          <ReviewList key="reviews" reviews={reviews} summary={reviewSummary} carName={`${car.brand} ${car.name}`} />
         }
       />
     </>

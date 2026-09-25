@@ -2,11 +2,12 @@
 
 import React, { useState, useMemo } from "react";
 import Link from "next/link";
-import { m } from "framer-motion";
 import type { BlogPreviewPost } from "@/components/layout/BlogPreview";
 import { formatFecha } from "@/lib/utils";
+import { sanityImg } from "@/lib/sanityImage";
 import { Icon } from "@/components/ui/Icon";
 import { OfferCta } from "@/components/waitlist/OfferCta";
+import { ASESORIA_PRICE, OFERTA_STANDBY } from "@/lib/products";
 
 // ─── Static fallback posts ────────────────────────────────────────────────────
 const FALLBACK_POSTS: BlogPreviewPost[] = [
@@ -84,6 +85,7 @@ const FALLBACK_POSTS: BlogPreviewPost[] = [
   },
 ];
 
+// Las categorías ya no tienen un color cada una: todas van en Laguna (.post-cat).
 const CATEGORY_LABELS: Record<string, string> = {
   "guia-compra": "Guía de compra",
   comparativa:   "Comparativa",
@@ -92,16 +94,6 @@ const CATEGORY_LABELS: Record<string, string> = {
   ahorro:        "Ahorro",
   carga:         "Carga",
   legislacion:   "Legislación",
-};
-
-const CATEGORY_COLORS: Record<string, string> = {
-  "guia-compra": "bg-primary/10 text-primary-deep border-primary/20",
-  comparativa:   "bg-purple-50 text-purple-700 border-purple-200",
-  noticias:      "bg-blue-50 text-blue-700 border-blue-200",
-  tecnologia:    "bg-cyan-50 text-cyan-700 border-cyan-200",
-  ahorro:        "bg-green-50 text-green-700 border-green-200",
-  carga:         "bg-amber-50 text-amber-700 border-amber-200",
-  legislacion:   "bg-orange-50 text-orange-700 border-orange-200",
 };
 
 const ALL_CATEGORIES = [
@@ -114,6 +106,37 @@ const ALL_CATEGORIES = [
   { value: "legislacion",  label: "Legislación" },
   { value: "noticias",     label: "Noticias" },
 ];
+
+/** Foto de portada 16:10, radio 12. Sin texto encima; el zoom al hover lo pone .post. */
+function PostMedia({ post, width, eager = false, className = "" }: { post: BlogPreviewPost; width: number; eager?: boolean; className?: string }) {
+  const url = post.coverImage?.asset?.url;
+  return (
+    <div className={`post__media ${className}`}>
+      {url ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={sanityImg(url, { w: width, q: 75 })}
+          alt={post.coverImage?.alt ?? post.title}
+          loading={eager ? "eager" : "lazy"}
+          decoding="async"
+        />
+      ) : (
+        <span className="flex h-full w-full items-center justify-center">
+          <Icon name="article" className="text-[48px] text-line-2" />
+        </span>
+      )}
+    </div>
+  );
+}
+
+function PostMeta({ post }: { post: BlogPreviewPost }) {
+  return (
+    <p className="post-meta">
+      <span>{formatFecha(post.publishedAt, true)}</span>
+      <span>{post.readingTime} min de lectura</span>
+    </p>
+  );
+}
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
@@ -128,193 +151,125 @@ export function BlogListingContent({ posts }: { posts: BlogPreviewPost[] }) {
     [displayPosts, activeCategory]
   );
 
+  // Artículos por categoría, para la cifra de cada filtro.
+  const counts = useMemo(() => {
+    const map: Record<string, number> = { "": displayPosts.length };
+    for (const p of displayPosts) map[p.category] = (map[p.category] ?? 0) + 1;
+    return map;
+  }, [displayPosts]);
+
   const featured = filtered[0];
   const rest     = filtered.slice(1);
 
   return (
-    <>
-      {/* ─── Hero ──────────────────────────────────────────────────────── */}
-      <section className="bg-black pt-20 pb-16 md:pt-24 md:pb-20 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-[500px] h-[300px] bg-primary/8 rounded-full blur-[120px] pointer-events-none" />
-        <div className="max-w-7xl mx-auto px-4 md:px-8 relative z-10">
-          <nav className="flex items-center gap-2 text-white/30 text-xs mb-10">
-            <Link href="/" className="hover:text-white/60 transition-colors">Inicio</Link>
-            <span>/</span>
-            <span className="text-white/60">Blog</span>
+    <div className="page">
+      {/* ─── Encabezado ──────────────────────────────────────────────── */}
+      <section className="page-head">
+        <div className="wrap">
+          <nav className="crumbs" aria-label="Migas de pan">
+            <Link href="/">Inicio</Link>
+            <span aria-hidden="true">/</span>
+            <span aria-current="page">Blog</span>
           </nav>
-          <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full mb-6">
-              <Icon name="article" className="text-primary text-[16px]" />
-              <span className="text-white/60 text-xs font-semibold uppercase tracking-wider">Blog & Guías</span>
-            </div>
-            <h1 className="text-3xl sm:text-5xl md:text-6xl font-headline font-black text-white tracking-tighter leading-[0.95] mb-5">
-              Todo sobre <span className="text-primary">electromovilidad</span> en Chile
-            </h1>
-            <p className="text-white/60 text-base leading-relaxed max-w-xl">
+          <div className="mt-[clamp(32px,4vw,48px)]">
+            <h1 className="t-h1 max-w-[18ch]">Todo sobre electromovilidad en Chile</h1>
+            <p className="t-lead">
               Guías de compra, comparativas, costos reales de carga, legislación y tecnología. Todo lo que necesitas para dar el salto al auto electrificado con confianza.
             </p>
           </div>
         </div>
       </section>
 
-      {/* ─── Category filter ───────────────────────────────────────────── */}
-      <section className="sticky top-16 z-30 bg-white/95 backdrop-blur border-b border-gray-100 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <div className="flex gap-1 overflow-x-auto py-3 scrollbar-hide">
-            {ALL_CATEGORIES.map((cat) => (
-              <button
-                key={cat.value}
-                onClick={() => setActiveCategory(cat.value)}
-                className={`flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-semibold transition-all whitespace-nowrap ${
-                  activeCategory === cat.value
-                    ? "bg-black text-white"
-                    : "text-text-muted hover:text-text-main hover:bg-gray-100"
-                }`}
-              >
-                {cat.label}
-              </button>
-            ))}
+      {/* ─── Artículos ───────────────────────────────────────────────── */}
+      <section className="section pt-section-sm" aria-label="Artículos">
+        <div className="wrap">
+          {/* En pantallas angostas los filtros se deslizan hasta el borde */}
+          <div className="pills -mx-gutter px-gutter lg:mx-0 lg:px-0" role="group" aria-label="Filtrar por categoría">
+            {ALL_CATEGORIES.map((cat) => {
+              const n = counts[cat.value] ?? 0;
+              const active = activeCategory === cat.value;
+              return (
+                <button
+                  key={cat.value}
+                  type="button"
+                  className="pill"
+                  aria-pressed={active}
+                  disabled={!n && !active}
+                  onClick={() => setActiveCategory(cat.value)}
+                >
+                  {cat.label}
+                  <span className="n">{n}</span>
+                </button>
+              );
+            })}
           </div>
-        </div>
-      </section>
-
-      {/* ─── Content ───────────────────────────────────────────────────── */}
-      <section className="py-14 md:py-16">
-        <div className="max-w-7xl mx-auto px-4 md:px-8">
 
           {filtered.length === 0 ? (
-            <div className="py-24 text-center">
-              <Icon name="search_off" className="text-[48px] text-gray-200 block mb-4" />
-              <p className="text-text-muted font-medium">No hay artículos en esta categoría aún.</p>
-            </div>
+            <p className="empty">No hay artículos en esta categoría aún.</p>
           ) : (
             <>
-              {/* Featured */}
+              {/* Destacado: foto a la izquierda, texto a la derecha */}
               {featured && (
-                <m.article
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4 }}
-                  className="group mb-10 bg-black rounded-2xl overflow-hidden relative min-h-[320px] flex flex-col justify-end"
-                >
-                  {featured.coverImage?.asset?.url ? (
-                    <img
-                      src={featured.coverImage.asset.url}
-                      alt={featured.coverImage.alt ?? featured.title}
-                      className="absolute inset-0 w-full h-full object-cover opacity-35 group-hover:opacity-45 transition-opacity duration-500"
-                    />
-                  ) : (
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary-deep/20 via-black to-black" />
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
-
-                  <div className="relative z-10 p-8 md:p-10 max-w-3xl">
-                    <div className="flex flex-wrap items-center gap-3 mb-4">
-                      <span className="text-[10px] font-black uppercase tracking-wide bg-primary text-black px-2.5 py-1 rounded-full">
-                        {CATEGORY_LABELS[featured.category] ?? featured.category}
-                      </span>
-                      <span className="text-white/40 text-xs">{featured.readingTime} min lectura</span>
-                      <span className="text-white/40 text-xs">
-                        {formatFecha(featured.publishedAt, true)}
-                      </span>
-                    </div>
-                    <Link href={`/blog/${featured.slug}`}>
-                      <h2 className="font-headline font-black text-white text-3xl md:text-4xl leading-tight tracking-tight mb-3 group-hover:text-primary transition-colors">
+                <article className="post group relative mt-10 md:grid md:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] md:items-center md:gap-[clamp(32px,4vw,64px)]">
+                  <PostMedia post={featured} width={1200} eager className="md:mb-0" />
+                  <div>
+                    <p className="post-cat">{CATEGORY_LABELS[featured.category] ?? featured.category}</p>
+                    <h2 className="mt-2 font-display text-[clamp(1.625rem,1.2rem+1.4vw,2.25rem)] font-bold leading-[1.1] tracking-[-0.02em] text-balance">
+                      <Link href={`/blog/${featured.slug}`} className="after:absolute after:inset-0">
                         {featured.title}
-                      </h2>
-                    </Link>
-                    <p className="text-white/60 text-sm leading-relaxed mb-6 max-w-2xl">
-                      {featured.excerpt}
-                    </p>
-                    <Link
-                      href={`/blog/${featured.slug}`}
-                      className="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-bold px-6 py-2.5 rounded-xl text-sm transition-colors"
-                    >
+                      </Link>
+                    </h2>
+                    <p className="t-body mt-4">{featured.excerpt}</p>
+                    <PostMeta post={featured} />
+                    <p className="link-arrow mt-6">
                       Leer artículo
-                    </Link>
+                      <Icon name="arrow_forward" size="none" className="group-hover:translate-x-[3px]" />
+                    </p>
                   </div>
-                </m.article>
+                </article>
               )}
 
-              {/* Grid */}
+              {/* Grilla */}
               {rest.length > 0 && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {rest.map((post, i) => (
-                    <m.article
-                      key={post._id}
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.4, delay: i * 0.07 }}
-                      className="group bg-white border border-gray-100 rounded-2xl overflow-hidden hover:border-primary/40 hover:shadow-md transition-all duration-300 flex flex-col"
-                    >
-                      {/* Image */}
-                      <div className="aspect-[16/9] bg-gradient-to-br from-gray-50 to-gray-100 relative overflow-hidden flex-shrink-0">
-                        {post.coverImage?.asset?.url ? (
-                          <img
-                            src={post.coverImage.asset.url}
-                            alt={post.coverImage.alt ?? post.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Icon name="article" className="text-[48px] text-gray-200" />
-                          </div>
-                        )}
-                        <span className={`absolute top-3 left-3 text-[10px] font-bold px-2.5 py-1 rounded-full border ${CATEGORY_COLORS[post.category] ?? "bg-gray-100 text-gray-600 border-gray-200"}`}>
-                          {CATEGORY_LABELS[post.category] ?? post.category}
-                        </span>
-                      </div>
-
-                      {/* Content */}
-                      <div className="p-5 flex flex-col flex-1">
-                        <Link href={`/blog/${post.slug}`}>
-                          <h3 className="font-headline font-bold text-base leading-snug mb-2 group-hover:text-primary-deep transition-colors line-clamp-2">
-                            {post.title}
-                          </h3>
+                <div className="mt-[clamp(48px,6vw,72px)] grid gap-x-grid gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+                  {rest.map((post) => (
+                    <article key={post._id} className="post relative">
+                      <PostMedia post={post} width={800} />
+                      <p className="post-cat">{CATEGORY_LABELS[post.category] ?? post.category}</p>
+                      <h3 className="post__title">
+                        <Link href={`/blog/${post.slug}`} className="after:absolute after:inset-0">
+                          {post.title}
                         </Link>
-                        <p className="text-text-ghost text-xs leading-relaxed line-clamp-3 flex-1 mb-4">
-                          {post.excerpt}
-                        </p>
-                        <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                          <span className="text-text-ghost text-[11px] flex items-center gap-1">
-                            <Icon name="schedule" className="text-[13px]" />
-                            {post.readingTime} min
-                          </span>
-                          <span className="text-text-ghost text-[11px]">
-                            {formatFecha(post.publishedAt, true)}
-                          </span>
-                        </div>
-                      </div>
-                    </m.article>
+                      </h3>
+                      <p className="post__text">{post.excerpt}</p>
+                      <PostMeta post={post} />
+                    </article>
                   ))}
                 </div>
               )}
             </>
           )}
-        </div>
-      </section>
 
-      {/* ─── Bottom CTA ────────────────────────────────────────────────── */}
-      <section className="py-14 bg-surface border-t border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <div className="bg-black rounded-2xl p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-6">
+          {/* ─── CTA final: Asesoría (principal) y waitlist ─────────────── */}
+          <div className="soft-block cta-row mt-section">
             <div>
-              <p className="text-primary text-xs uppercase tracking-widest font-bold mb-2">¿Listo para dar el paso?</p>
-              <h2 className="text-white font-headline font-black text-2xl md:text-3xl tracking-tight">
-                Encuentra el mejor precio en tu electrificado
-              </h2>
-              <p className="text-white/50 text-sm mt-1">Negociamos con toda la red de vendedores oficiales para darte el mejor precio disponible.</p>
+              <h2 className="t-h2">¿No sabes cuál te conviene?</h2>
+              <p>
+                Te asesoramos por WhatsApp según tu uso, tus kilómetros y tu presupuesto, y comparamos contigo los modelos que calzan.
+              </p>
             </div>
-            <OfferCta
-              source="blog"
-              className="flex-shrink-0 inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-black font-black px-8 py-4 rounded-xl transition-colors text-sm whitespace-nowrap"
-            >
-              Quiero mi oferta
-            </OfferCta>
+            <div className="cta-row__actions">
+              <Link href="/asesoria" className="btn btn--primary btn--lg">
+                Quiero asesoría por {ASESORIA_PRICE}
+                <Icon name="arrow_forward" size="none" className="arrow" />
+              </Link>
+              <OfferCta source="blog" className="btn btn--secondary btn--lg">
+                {OFERTA_STANDBY ? "Únete a la waitlist" : "Quiero mi oferta"}
+              </OfferCta>
+            </div>
           </div>
         </div>
       </section>
-    </>
+    </div>
   );
 }

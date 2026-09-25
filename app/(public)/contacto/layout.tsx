@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 export const metadata: Metadata = {
   title: "Contacto",
   description:
-    "¿Tenés dudas sobre tu próximo auto eléctrico o híbrido? Contactá al equipo de Electrificarte y te asesoramos para conseguir el mejor precio del mercado en Chile.",
+    "¿Tienes dudas sobre tu próximo auto eléctrico o híbrido? Escríbele al equipo de Electrificarte y te ayudamos a elegir bien.",
   alternates: { canonical: "/contacto" },
 };
 

@@ -69,6 +69,13 @@ export default async function BrandPage({ params }: PageProps) {
     isHotDeal:    c.isHotDeal ?? false,
     isTopSeller:  c.isTopSeller ?? false,
     imageUrl:     c.mainImage ? urlFor(c.mainImage).width(800).auto("format").url() : undefined,
+    // Specs numéricas para CarCard (mismas que usan las PLP de tipo y de tecnología).
+    batteryCapacity:      c.batteryCapacity ?? null,
+    powerCv:              c.power ?? null,
+    maxVersionRange:      c.maxVersionRange ?? null,
+    electricRangeKm:      c.electricRangeKm ?? null,
+    fuelConsumption:      c.fuelConsumption ?? null,
+    rendimientoElectrico: c.rendimientoElectrico ?? null,
     specs: {
       battery:     `${c.batteryCapacity} kWh`,
       charge0to80: c.chargeTimeDC ?? "–",

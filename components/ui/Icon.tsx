@@ -4,7 +4,8 @@ import { ICON_CODEPOINTS } from "@/lib/icon-codepoints";
 interface IconProps {
   name: string;
   className?: string;
-  size?: "sm" | "md" | "lg" | "xl";
+  /** "none" = sin clase de tamaño: lo decide el CSS del componente (.btn, .qa, .chip...). */
+  size?: "sm" | "md" | "lg" | "xl" | "none";
   filled?: boolean;
   /** Para color/tamaño calculados en runtime (ej. el acento de una categoría). */
   style?: React.CSSProperties;
@@ -15,6 +16,7 @@ const sizeStyles = {
   md: "text-2xl",
   lg: "text-4xl",
   xl: "text-6xl",
+  none: "",
 };
 
 /**
@@ -48,7 +50,7 @@ export function Icon({ name, className, size = "md", filled = false, style }: Ic
       aria-hidden
       translate="no"
       className={cn("material-symbols-outlined", sizeStyles[size], className)}
-      style={filled ? { ...style, fontVariationSettings: "'FILL' 1" } : style}
+      style={filled ? { ...style, fontVariationSettings: "'FILL' 1, 'wght' 300, 'GRAD' 0, 'opsz' 24" } : style}
     >
       {codepoint}
     </span>
