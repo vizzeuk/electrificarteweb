@@ -8,6 +8,7 @@ import {
   electricTypesForHomeQuery,
   newCarsForHomeQuery,
   featuredCarsForHomeQuery,
+  cheapestCarPriceQuery,
 } from "@/lib/queries/car";
 import { collectionsForHomeQuery } from "@/lib/queries/collections";
 
@@ -20,6 +21,7 @@ import { HotDeal }          from "@/components/layout/HotDeal";
 import { HOT_DEALS_ENABLED } from "@/lib/products";
 import { getTopReviews } from "@/lib/reviews/queries";
 import { Opportunities }    from "@/components/layout/Opportunities";
+import { HomeReviewPrompt } from "@/components/reviews/HomeReviewPrompt";
 import { HomeStructuredData } from "@/components/layout/StructuredData";
 
 // Below-the-fold sections are bundled into a client wrapper that lazy-loads
@@ -32,7 +34,7 @@ import { ParaVendedores }   from "@/components/layout/ParaVendedores";
 export const revalidate = 60;
 
 export default async function HomePage() {
-  const [page, blogPosts, brands, collections, hotDeals, topReviews, vehicleTypes, newCars, featuredCars, siteSettings] =
+  const [page, blogPosts, brands, collections, hotDeals, topReviews, vehicleTypes, newCars, featuredCars, siteSettings, fromPrice] =
     await Promise.all([
       client.fetch(homePageQuery, {}, { next: { tags: ["homePage"] } }).catch(() => null),
       client.fetch(latestBlogPostsQuery, { count: 3 }, { next: { tags: ["blogPost"] } }).catch(() => []),
@@ -46,6 +48,7 @@ export default async function HomePage() {
       client.fetch(newCarsForHomeQuery, {}, { next: { tags: ["car"] } }).catch(() => []),
       client.fetch(featuredCarsForHomeQuery, {}, { next: { tags: ["car"] } }).catch(() => []),
       client.fetch(hotDealUrgencyLabelQuery, {}, { next: { tags: ["siteSettings"] } }).catch(() => null),
+      client.fetch<number | null>(cheapestCarPriceQuery, {}, { next: { tags: ["car"] } }).catch(() => null),
     ]);
 
   const hotDealUrgencyLabel: string | null = siteSettings?.hotDealUrgencyLabel ?? null;
@@ -69,6 +72,7 @@ export default async function HomePage() {
   const heroFacts = {
     models: electricTypes.reduce((n, t) => n + (Number(t?.carCount) || 0), 0),
     brands: (brands ?? []).length,
+    fromPrice: typeof fromPrice === "number" ? fromPrice : null,
     technologies,
   };
 
@@ -162,6 +166,8 @@ export default async function HomePage() {
           intrinsic-size hint so the scrollbar is honest. */}
       <LatestLaunches title={page?.latestLaunchesTitle} cars={latestCars} />
       <VehicleTypeGrid types={vehicleTypes ?? []} />
+      {/* Invitación a reseñar (cualquier auto) → /resenas → /resenas/escribir. */}
+      <HomeReviewPrompt />
       {HOT_DEALS_ENABLED && (
         <HotDeal
           cars={hotDeals?.length ? hotDeals : (page?.hotDealCar ? [page.hotDealCar] : null)}

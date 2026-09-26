@@ -3,6 +3,7 @@ import { Icon } from "@/components/ui/Icon";
 import { HeroBgVideo } from "@/components/layout/HeroBgVideo";
 import { OfferCta } from "@/components/waitlist/OfferCta";
 import { OFERTA_STANDBY } from "@/lib/products";
+import { formatCLP } from "@/lib/utils";
 
 export interface HeroData {
   badge?: string;
@@ -34,6 +35,8 @@ export interface HeroData {
 export interface HeroFacts {
   models: number;
   brands: number;
+  /** Precio del electrificado más accesible del catálogo (reemplaza la cifra de marcas: las marcas ya se ven en el carrusel). */
+  fromPrice?: number | null;
   /** Siglas de los tipos eléctricos del catálogo, en el orden del sitio (EV, PHEV...). */
   technologies: string[];
 }
@@ -74,7 +77,9 @@ export function Hero({ data, facts }: HeroProps) {
   const cells = facts
     ? [
         { num: String(facts.models), label: "modelos electrificados en el catálogo" },
-        { num: String(facts.brands), label: "marcas en un solo lugar" },
+        facts.fromPrice
+          ? { num: formatCLP(facts.fromPrice), label: "el electrificado más accesible del catálogo" }
+          : { num: String(facts.brands), label: "marcas en un solo lugar" },
         { num: String(facts.technologies.length), label: `tecnologías: ${joinList(facts.technologies)}` },
         { num: "10 días", label: "de asesoría por WhatsApp" },
       ].filter((c) => c.num !== "0")

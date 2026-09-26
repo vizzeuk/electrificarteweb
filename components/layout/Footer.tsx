@@ -50,6 +50,7 @@ const footerSections: { title: string; links: FooterLink[] }[] = [
     links: [
       { label: "Quiénes somos",    href: "/nosotros" },
       { label: "Nuestro servicio", href: "/#como-funciona" },
+      { label: "Reseñas de dueños", href: "/resenas" },
       { label: "Cómo negociamos",  href: "/negociacion" },
       { label: "Blog",             href: "/blog" },
     ],

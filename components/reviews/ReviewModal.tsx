@@ -1,74 +1,16 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { useEffect, useRef } from "react";
 import { AnimatePresence, m } from "framer-motion";
-import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
-import { StarRating } from "./StarRating";
-import { PhotoPicker, type PickedPhoto } from "./PhotoPicker";
-import { REVIEW_MAX_CHARS, REVIEW_MIN_CHARS } from "@/lib/reviews/config";
+import { ReviewForm } from "./ReviewForm";
 import type { ReviewPrefill } from "./ReviewProvider";
 
 /**
- * Formulario de reseña. Misma cáscara que el popup de waitlist del sistema v1
- * (app/styles/home.css → .modal): velo Tinta detrás, card Papel con sombra de overlay,
- * campos .field/.input de 48 px con foco sólido. Sin glow, sin orbes, sin blur.
- * Se abre desde la PDP y desde el home (ReviewProvider vive en el layout público).
+ * Popup de reseña (ficha de cada auto y deep-link ?resena=1). Solo la cáscara: velo Tinta,
+ * card Papel con sombra de overlay, Escape y foco. El formulario es ReviewForm, el mismo que
+ * usa la página /resenas/escribir.
  */
-
-const schema = z.object({
-  rating: z.number().int().min(1, "Elige una calificación").max(5),
-  firstName: z.string().min(2, "Ingresa tu nombre"),
-  lastName: z.string().min(2, "Ingresa tu apellido"),
-  email: z.string().email("Ingresa un email válido"),
-  phone: z.string().regex(/^9\d{8}$/, "Ingresa los 9 dígitos").or(z.literal("")).optional(),
-  body: z.string().min(REVIEW_MIN_CHARS, `Cuéntanos al menos ${REVIEW_MIN_CHARS} caracteres`).max(REVIEW_MAX_CHARS),
-  carBrand: z.string().optional(),
-  carModel: z.string().optional(),
-  carYear: z.string().optional(),
-  carColor: z.string().optional(),
-  carVersion: z.string().optional(),
-});
-
-type FormValues = z.infer<typeof schema>;
-
-/**
- * Sube las fotos directo al bucket con URLs firmadas y devuelve las RUTAS (no URLs)
- * para guardarlas en la BD. Nunca pasan por /api/*: Vercel corta el body en 4,5 MB.
- * Si algo falla devuelve [] : preferimos publicar la reseña sin fotos antes que perderla.
- */
-async function uploadPhotos(photos: PickedPhoto[]): Promise<string[]> {
-  if (photos.length === 0) return [];
-  try {
-    const res = await fetch("/api/reviews/upload-url", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ count: photos.length }),
-    });
-    if (!res.ok) return [];
-    const { slots } = (await res.json()) as {
-      slots: { cardKey: string; fullKey: string; card: { url: string }; full: { url: string } }[];
-    };
-
-    const keys: string[] = [];
-    await Promise.all(
-      photos.map(async (p, i) => {
-        const slot = slots[i];
-        if (!slot) return;
-        const put = (url: string, blob: Blob) =>
-          fetch(url, { method: "PUT", body: blob, headers: { "Content-Type": "image/jpeg" } });
-        const [a, b] = await Promise.all([put(slot.card.url, p.card), put(slot.full.url, p.full)]);
-        if (a.ok && b.ok) keys.push(slot.cardKey, slot.fullKey);
-      }),
-    );
-    return keys;
-  } catch {
-    return [];
-  }
-}
 
 interface ReviewModalProps {
   isOpen: boolean;
@@ -77,39 +19,7 @@ interface ReviewModalProps {
 }
 
 export function ReviewModal({ isOpen, onClose, prefill }: ReviewModalProps) {
-  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
-  const [rating, setRating] = useState(0);
-  const [photos, setPhotos] = useState<PickedPhoto[]>([]);
-  // true = se envió sin fotos y quedó publicada; false = trae fotos y queda en revisión.
-  const [published, setPublished] = useState(false);
-  const submitting = useRef(false);
   const cardRef = useRef<HTMLDivElement>(null);
-
-  const {
-    register,
-    handleSubmit,
-    reset,
-    setValue,
-    watch,
-    formState: { errors },
-  } = useForm<FormValues>({ resolver: zodResolver(schema), mode: "onTouched" });
-
-  const bodyValue = watch("body") ?? "";
-
-  useEffect(() => {
-    if (!isOpen) return;
-    setStatus("idle");
-    const pre = prefill.rating && prefill.rating >= 1 && prefill.rating <= 5 ? prefill.rating : 0;
-    setRating(pre);
-    setPhotos([]);
-    submitting.current = false;
-    reset({
-      rating: pre, firstName: "", lastName: "", email: "", phone: "", body: "",
-      carBrand: prefill.carBrand ?? "", carModel: prefill.carModel ?? "",
-      carYear: "", carColor: "", carVersion: "",
-    });
-  }, [isOpen, prefill.carBrand, prefill.carModel, prefill.rating, reset]);
-
   useEffect(() => {
     if (!isOpen) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -132,55 +42,6 @@ export function ReviewModal({ isOpen, onClose, prefill }: ReviewModalProps) {
       trigger?.focus?.({ preventScroll: true });
     };
   }, [isOpen]);
-
-  function pickRating(n: number) {
-    setRating(n);
-    setValue("rating", n, { shouldValidate: true });
-  }
-
-  async function onSubmit(data: FormValues) {
-    if (submitting.current) return;
-    submitting.current = true;
-    setStatus("loading");
-    try {
-      // Las fotos se suben ACÁ (no al elegirlas): si la persona abandona el formulario
-      // no dejamos archivos huérfanos en el bucket.
-      const photoKeys = await uploadPhotos(photos);
-
-      const year = data.carYear ? Number(data.carYear) : undefined;
-      const res = await fetch("/api/reviews", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          firstName: data.firstName,
-          lastName: data.lastName,
-          email: data.email,
-          phone: data.phone ? `+56 ${data.phone}` : undefined,
-          rating: data.rating,
-          body: data.body,
-          carSlug: prefill.carSlug,
-          carSanityId: prefill.carSanityId,
-          carBrand: data.carBrand || undefined,
-          carModel: data.carModel || undefined,
-          carYear: Number.isFinite(year) ? year : undefined,
-          carColor: data.carColor || undefined,
-          carVersion: data.carVersion || undefined,
-          photos: photoKeys,
-          source: prefill.source ?? "web",
-        }),
-      });
-      if (!res.ok) throw new Error();
-      setPublished(photoKeys.length === 0);
-      setStatus("success");
-    } catch {
-      setStatus("error");
-    } finally {
-      submitting.current = false;
-    }
-  }
-
-  const autoLabel = [prefill.carBrand, prefill.carModel].filter(Boolean).join(" ");
-  const loading = status === "loading";
 
   return (
     <AnimatePresence>
@@ -218,196 +79,7 @@ export function ReviewModal({ isOpen, onClose, prefill }: ReviewModalProps) {
               <Icon name="close" size="none" />
             </button>
 
-            {status === "success" ? (
-              <div className="modal__done">
-                <div className="done-mark">
-                  <Icon name="check" className="text-[24px]" />
-                </div>
-                <h2 id="review-title" className="modal__title text-balance">¡Gracias por tu reseña!</h2>
-                <p className="modal__text">
-                  {published
-                    ? "Ya está publicada en la ficha del auto. Nos ayuda muchísimo a que otros compradores decidan mejor."
-                    : "Como trae fotos, la revisamos antes de publicarla. Nos ayuda muchísimo a que otros compradores decidan mejor."}
-                </p>
-                <button type="button" onClick={onClose} className="btn btn--secondary btn--lg btn--block mt-6">
-                  Cerrar
-                </button>
-              </div>
-            ) : (
-              <>
-                <h2 id="review-title" className="modal__title text-balance">
-                  {autoLabel ? `¿Cómo ha sido tu ${autoLabel}?` : "Cuéntanos sobre tu auto"}
-                </h2>
-                <p className="modal__text">
-                  Tu reseña ayuda a otros compradores a decidir. Si agregas fotos, las revisamos antes de
-                  publicarla.
-                </p>
-
-                <form onSubmit={handleSubmit(onSubmit)} noValidate>
-                  {/* Estrellas */}
-                  <div className="field">
-                    <span className="field__label">Tu calificación</span>
-                    <div className="flex items-center gap-3">
-                      <StarRating value={rating} onChange={pickRating} size={28} />
-                      {rating > 0 && <span className="t-small">{rating} de 5</span>}
-                    </div>
-                    <input type="hidden" {...register("rating", { valueAsNumber: true })} />
-                    {errors.rating && <p className="field__error">{errors.rating.message}</p>}
-                  </div>
-
-                  {/* Reseña */}
-                  <div className="field">
-                    <label className="field__label" htmlFor="rv-body">Tu reseña</label>
-                    <textarea
-                      id="rv-body"
-                      {...register("body")}
-                      rows={4}
-                      placeholder="¿Cómo ha sido la experiencia? Autonomía real, carga, manejo, lo bueno y lo malo…"
-                      aria-invalid={errors.body ? true : undefined}
-                      className="input h-auto min-h-[120px] resize-none py-3 leading-[1.5]"
-                    />
-                    <div className="flex items-start justify-between gap-3">
-                      {errors.body ? <p className="field__error">{errors.body.message}</p> : <span />}
-                      <span className="t-micro num flex-none">{bodyValue.length}/{REVIEW_MAX_CHARS}</span>
-                    </div>
-                  </div>
-
-                  {/* Fotos */}
-                  <div className="field">
-                    <span className="field__label">
-                      Fotos de tu auto <span className="opt">(opcional)</span>
-                    </span>
-                    <PhotoPicker photos={photos} onChange={setPhotos} disabled={loading} />
-                  </div>
-
-                  {/* Datos del auto: se precargan desde la PDP */}
-                  {!prefill.carSlug && (
-                    <div className="row2">
-                      <div className="field">
-                        <label className="field__label" htmlFor="rv-brand">Marca</label>
-                        <input id="rv-brand" {...register("carBrand")} placeholder="BYD" className="input" />
-                      </div>
-                      <div className="field">
-                        <label className="field__label" htmlFor="rv-model">Modelo</label>
-                        <input id="rv-model" {...register("carModel")} placeholder="Dolphin" className="input" />
-                      </div>
-                    </div>
-                  )}
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="field">
-                      <label className="field__label" htmlFor="rv-year">Año</label>
-                      <input id="rv-year" {...register("carYear")} inputMode="numeric" maxLength={4} placeholder="2025" className="input" />
-                    </div>
-                    <div className="field">
-                      <label className="field__label" htmlFor="rv-color">Color</label>
-                      <input id="rv-color" {...register("carColor")} placeholder="Blanco" className="input" />
-                    </div>
-                    <div className="field">
-                      <label className="field__label" htmlFor="rv-version">Versión</label>
-                      <input id="rv-version" {...register("carVersion")} placeholder="GS" className="input" />
-                    </div>
-                  </div>
-
-                  {/* Persona */}
-                  <div className="row2">
-                    <div className="field">
-                      <label className="field__label" htmlFor="rv-first">Nombre</label>
-                      <input
-                        id="rv-first"
-                        {...register("firstName")}
-                        autoComplete="given-name"
-                        placeholder="Juan"
-                        aria-invalid={errors.firstName ? true : undefined}
-                        className="input"
-                      />
-                      {errors.firstName && <p className="field__error">{errors.firstName.message}</p>}
-                    </div>
-                    <div className="field">
-                      <label className="field__label" htmlFor="rv-last">Apellido</label>
-                      <input
-                        id="rv-last"
-                        {...register("lastName")}
-                        autoComplete="family-name"
-                        placeholder="Pérez"
-                        aria-invalid={errors.lastName ? true : undefined}
-                        className="input"
-                      />
-                      {errors.lastName && <p className="field__error">{errors.lastName.message}</p>}
-                    </div>
-                  </div>
-                  <p className="t-micro -mt-2">
-                    Publicamos solo tu nombre y la inicial del apellido (ej. &ldquo;Juan P.&rdquo;).
-                  </p>
-
-                  <div className="field">
-                    <label className="field__label" htmlFor="rv-email">Email</label>
-                    <input
-                      id="rv-email"
-                      {...register("email")}
-                      type="email"
-                      autoComplete="email"
-                      placeholder="juan@ejemplo.com"
-                      aria-invalid={errors.email ? true : undefined}
-                      className="input"
-                    />
-                    {errors.email && <p className="field__error">{errors.email.message}</p>}
-                  </div>
-
-                  <div className="field">
-                    <label className="field__label" htmlFor="rv-phone">
-                      WhatsApp <span className="opt">(opcional)</span>
-                    </label>
-                    <div className="input-group">
-                      <span className="input-group__prefix">+56</span>
-                      <input
-                        id="rv-phone"
-                        {...register("phone")}
-                        type="tel"
-                        inputMode="numeric"
-                        maxLength={9}
-                        placeholder="995760998"
-                        aria-invalid={errors.phone ? true : undefined}
-                        onInput={(e) => {
-                          let v = e.currentTarget.value.replace(/\D/g, "");
-                          if (v.length > 9 && v.startsWith("56")) v = v.slice(2);
-                          v = v.slice(0, 9);
-                          e.currentTarget.value = v;
-                          setValue("phone", v, { shouldValidate: true });
-                        }}
-                        className="input"
-                      />
-                    </div>
-                    {errors.phone && <p className="field__error">{errors.phone.message}</p>}
-                  </div>
-
-                  <button
-                    type="submit"
-                    aria-busy={loading || undefined}
-                    className={`btn btn--primary btn--lg btn--block mt-2${loading ? " pointer-events-none" : ""}`}
-                  >
-                    {loading ? (
-                      <>
-                        <Icon name="progress_activity" size="none" className="animate-spin" />
-                        Enviando...
-                      </>
-                    ) : (
-                      "Enviar mi reseña"
-                    )}
-                  </button>
-
-                  {status === "error" && (
-                    <p className="field__error text-center" role="alert">
-                      Hubo un error al enviar tu reseña. Intenta de nuevo.
-                    </p>
-                  )}
-
-                  <p className="t-micro">
-                    Al enviar aceptas nuestra{" "}
-                    <Link href="/privacidad" className="link">política de privacidad</Link>.
-                  </p>
-                </form>
-              </>
-            )}
+            <ReviewForm prefill={prefill} variant="modal" active={isOpen} titleId="review-title" onClose={onClose} />
           </m.div>
         </m.div>
       )}

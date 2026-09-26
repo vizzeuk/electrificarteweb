@@ -586,3 +586,9 @@ export const featuredBrandsQuery = groq`
     "models": coalesce(navbarLabel, array::join(*[_type == "car" && brand._ref == ^._id && hidden != true] | order(coalesce(discountPrice, basePrice) desc)[0...3].name, " · "))
   }
 `;
+
+/** Precio del electrificado más accesible publicado (con descuento si lo tiene). Cifra del hero. */
+export const cheapestCarPriceQuery = `
+  *[_type == "car" && hidden != true && coalesce(discountPrice, basePrice) > 0]
+    | order(coalesce(discountPrice, basePrice) asc)[0]{ "price": coalesce(discountPrice, basePrice) }.price
+`;

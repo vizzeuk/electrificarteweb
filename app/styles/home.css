@@ -336,14 +336,14 @@
 .modal__close { position: absolute; top: var(--space-3); right: var(--space-3); }
 .modal__title { font-family: var(--font-display); font-weight: 700; font-size: 1.75rem; line-height: 1.08; letter-spacing: -0.02em; padding-right: var(--space-10); }
 .modal__text { margin-top: var(--space-3); color: var(--ink-2); }
-.modal form { margin-top: var(--space-6); display: grid; gap: var(--space-4); }
-.modal .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+.modal form, .review-form form { margin-top: var(--space-6); display: grid; gap: var(--space-4); }
+.modal .row2, .review-form .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
 .modal .t-micro { margin-top: var(--space-1); }
 .modal__done { text-align: left; }
-.modal__done .done-mark { width: 48px; height: 48px; display: grid; place-items: center; border-radius: var(--radius-control); background: var(--color-glaciar); color: var(--color-laguna); margin-bottom: var(--space-5); }
+.modal__done .done-mark, .review-form .done-mark { width: 48px; height: 48px; display: grid; place-items: center; border-radius: var(--radius-control); background: var(--color-glaciar); color: var(--color-laguna); margin-bottom: var(--space-5); }
 .modal__card--video { width: min(1040px, 100%); padding: 0; background: var(--color-tinta); aspect-ratio: 16 / 9; overflow: hidden; }
 .modal__card--video video { width: 100%; height: 100%; object-fit: cover; }
 .modal__card--video .modal__close { z-index: 1; color: var(--color-niebla); border-color: var(--line-2-on-media); background: var(--color-tinta); }
-@media (max-width: 480px) { .modal__card { padding: var(--space-6); } .modal .row2 { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 480px) { .modal__card { padding: var(--space-6); } .modal .row2, .review-form .row2 { grid-template-columns: minmax(0, 1fr); } }
 .nav .btn--quiet { color: var(--ink); }
 }

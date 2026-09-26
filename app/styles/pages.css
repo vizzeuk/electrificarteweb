@@ -356,3 +356,10 @@
   .specband--in { order: 4; }
 }
 }
+
+/* /resenas/escribir: formulario (card) + columna de consejos. */
+.review-write { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 4fr); gap: clamp(32px, 5vw, 72px); align-items: start; }
+.review-write .review-form { padding: var(--panel-pad); }
+.review-write .review-form form { margin-top: 0; }
+.review-write__side { position: sticky; top: 104px; }
+@media (max-width: 899px) { .review-write { grid-template-columns: minmax(0, 1fr); } .review-write__side { position: static; } }
