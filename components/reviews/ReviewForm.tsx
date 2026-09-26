@@ -100,12 +100,17 @@ export function ReviewForm({ prefill, carOptions, variant, active = true, titleI
   // true = se envió sin fotos y quedó publicada; false = trae fotos y queda en revisión.
   const [published, setPublished] = useState(false);
   const submitting = useRef(false);
-  // Selectores del catálogo (solo cuando no viene un auto fijo y hay catálogo).
-  const pickFromCatalog = !prefill.carSlug && !!carOptions?.length;
+  // Marca y modelo SIEMPRE desde el catálogo, en el popup y en la página: así cada reseña queda
+  // atada a un modelo real y verificable. La página trae el catálogo del servidor (carOptions);
+  // el popup lo pide a /api/reviews/cars recién al abrirse. Desde una ficha, llegan preseleccionados.
+  const [fetched, setFetched] = useState<ReviewCarOption[] | null>(null);
+  const options = carOptions ?? fetched ?? [];
+  const loadingCars = !carOptions && fetched === null;
+  const pickFromCatalog = options.length > 0;
   const [pickedBrand, setPickedBrand] = useState("");
   const [pickedSlug, setPickedSlug] = useState("");
-  const brands = [...new Set((carOptions ?? []).map((c) => c.brand))];
-  const models = (carOptions ?? []).filter((c) => c.brand === pickedBrand);
+  const brands = [...new Set(options.map((c) => c.brand))];
+  const models = options.filter((c) => c.brand === pickedBrand);
   const freeBrand = pickedBrand === OTRO;
   const freeModel = freeBrand || pickedSlug === OTRO;
 
@@ -121,21 +126,48 @@ export function ReviewForm({ prefill, carOptions, variant, active = true, titleI
 
   const bodyValue = watch("body") ?? "";
 
+  // Deja elegido el auto de la ficha (si vino uno y está en el catálogo).
+  const preselect = (list: ReviewCarOption[]) => {
+    const car = prefill.carSlug ? list.find((c) => c.slug === prefill.carSlug) : undefined;
+    setPickedBrand(car ? car.brand : "");
+    setPickedSlug(car ? car.slug : "");
+    if (car) {
+      setValue("carBrand", car.brand);
+      setValue("carModel", car.name);
+    }
+  };
+
+  // El popup pide el catálogo la primera vez que se abre.
+  useEffect(() => {
+    if (carOptions || !active || fetched !== null) return;
+    let cancel = false;
+    fetch("/api/reviews/cars")
+      .then((r) => (r.ok ? r.json() : []))
+      .catch(() => [])
+      .then((list: ReviewCarOption[]) => {
+        if (cancel) return;
+        setFetched(list);
+        preselect(list);
+      });
+    return () => { cancel = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active, carOptions, fetched]);
+
   useEffect(() => {
     if (!active) return;
     setStatus("idle");
     const pre = prefill.rating && prefill.rating >= 1 && prefill.rating <= 5 ? prefill.rating : 0;
     setRating(pre);
     setPhotos([]);
-    setPickedBrand("");
-    setPickedSlug("");
     submitting.current = false;
     reset({
       rating: pre, firstName: "", lastName: "", email: "", phone: "", body: "",
       carBrand: prefill.carBrand ?? "", carModel: prefill.carModel ?? "",
       carYear: "", carColor: "", carVersion: "",
     });
-  }, [active, prefill.carBrand, prefill.carModel, prefill.rating, reset]);
+    preselect(options);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active, prefill.carSlug, prefill.carBrand, prefill.carModel, prefill.rating, reset]);
 
   function pickRating(n: number) {
     setRating(n);
@@ -151,14 +183,16 @@ export function ReviewForm({ prefill, carOptions, variant, active = true, titleI
 
   function chooseModel(slug: string) {
     setPickedSlug(slug);
-    const car = carOptions?.find((c) => c.slug === slug);
+    const car = options.find((c) => c.slug === slug);
     setValue("carModel", car ? car.name : "", { shouldValidate: !!car });
   }
 
   async function onSubmit(data: FormValues) {
     if (submitting.current) return;
-    // Sin auto fijo, la reseña necesita marca y modelo: sin eso no hay ficha donde mostrarla.
-    if (!prefill.carSlug && (!data.carBrand?.trim() || !data.carModel?.trim())) {
+    // Toda reseña necesita marca y modelo: sin eso no hay ficha donde mostrarla ni forma de verificarla.
+    // (Solo si el catálogo no cargó y venimos de una ficha, alcanza con el auto de la ficha.)
+    const conAutoDeFicha = !pickFromCatalog && !!prefill.carSlug;
+    if (!conAutoDeFicha && (!data.carBrand?.trim() || !data.carModel?.trim())) {
       setError("carModel", { message: "Indica la marca y el modelo de tu auto" });
       return;
     }
@@ -180,7 +214,7 @@ export function ReviewForm({ prefill, carOptions, variant, active = true, titleI
           phone: data.phone ? `+56 ${data.phone}` : undefined,
           rating: data.rating,
           body: data.body,
-          carSlug: prefill.carSlug ?? (pickedSlug && pickedSlug !== OTRO ? pickedSlug : undefined),
+          carSlug: pickFromCatalog ? (pickedSlug && pickedSlug !== OTRO ? pickedSlug : undefined) : prefill.carSlug,
           carSanityId: prefill.carSanityId,
           carBrand: data.carBrand || undefined,
           carModel: data.carModel || undefined,
@@ -281,13 +315,13 @@ export function ReviewForm({ prefill, carOptions, variant, active = true, titleI
             </div>
 
             {/* Datos del auto: se precargan desde la PDP */}
-            {pickFromCatalog && (
+            {(pickFromCatalog || loadingCars) && (
           <div className="row2">
             <div className="field">
               <label className="field__label" htmlFor="rv-brand-pick">Marca</label>
               <div className="relative">
-                <select id="rv-brand-pick" value={pickedBrand} onChange={(e) => chooseBrand(e.target.value)} className="input appearance-none pr-10">
-                  <option value="">Elige la marca</option>
+                <select id="rv-brand-pick" value={pickedBrand} onChange={(e) => chooseBrand(e.target.value)} disabled={loadingCars} className="input appearance-none pr-10">
+                  <option value="">{loadingCars ? "Cargando marcas…" : "Elige la marca"}</option>
                   {brands.map((b) => <option key={b} value={b}>{b}</option>)}
                   <option value={OTRO}>Otra marca</option>
                 </select>
@@ -309,7 +343,7 @@ export function ReviewForm({ prefill, carOptions, variant, active = true, titleI
             )}
           </div>
         )}
-        {(!prefill.carSlug && (!pickFromCatalog || freeModel)) && (
+        {((pickFromCatalog && freeModel) || (!pickFromCatalog && !loadingCars && !prefill.carSlug)) && (
           <div className="row2">
             {(!pickFromCatalog || freeBrand) && (
               <div className="field">
