@@ -24,8 +24,6 @@ export interface TestimonialData {
   quote: string;
   rating: number;
   imageUrl?: string;
-  /** Marca "Compra verificada" cuando la reseña vino por invitación. */
-  verified?: boolean;
 }
 
 interface TestimonialsProps {
@@ -42,15 +40,6 @@ function Avatar({ name }: { name: string }) {
   return (
     <span aria-hidden className="avatar grid place-items-center bg-canvas-2 text-small font-semibold text-ink-2">
       {initials}
-    </span>
-  );
-}
-
-function VerifiedChip({ onMedia }: { onMedia?: boolean }) {
-  return (
-    <span className={onMedia ? "chip chip--media" : "chip"}>
-      <Icon name="check" size="none" className="text-[16px]" />
-      Compra verificada
     </span>
   );
 }
@@ -95,18 +84,16 @@ export function Testimonials({ title = TESTIMONIALS_TITLE, testimonials, summary
                   <div className="review__media">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={sanityImg(t.imageUrl, { w: 640, q: 75 })} alt={t.car} loading="lazy" decoding="async" />
-                    {t.verified && <VerifiedChip onMedia />}
                   </div>
                 )}
 
                 <div className="review__body">
-                  {/* min-h = alto del chip: la cita parte a la misma altura en todas las cards. */}
+                  {/* Nota arriba de la cita, a la misma altura en todas las cards. */}
                   <div className="flex min-h-6 items-center justify-between gap-3">
                     <div className="flex items-center gap-2">
                       <StarRating value={t.rating} size={16} />
                       <span className="text-small font-semibold num">{formatNota(t.rating)}</span>
                     </div>
-                    {!t.imageUrl && t.verified && <VerifiedChip />}
                   </div>
                   <blockquote className="review__quote line-clamp-6">{t.quote}</blockquote>
 

@@ -74,12 +74,6 @@ function ReviewItem({
             </p>
           )}
         </div>
-        {r.compraVerificada && (
-          <span className="chip chip--soft rv__chip">
-            <Icon name="verified" size="none" className="text-[14px]" />
-            Compra verificada
-          </span>
-        )}
       </header>
 
       <div className="rv__meta">

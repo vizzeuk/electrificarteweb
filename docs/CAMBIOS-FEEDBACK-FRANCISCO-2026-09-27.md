@@ -68,6 +68,9 @@ Oferta $19.990 y la red de vendedores en pausa). Este feedback ajusta cómo se p
   nota, categorías, texto, lo bueno, lo que mejoraría y **fotos grandes** que abren un visor con
   flechas.
 - **Estrellas en Laguna (#1d605b)** en todo el sitio.
+- **Sin badge "Compra verificada"** (28-sep): no hay forma de verificar la compra, así que no se muestra
+  en ninguna parte. La columna `compra_verificada` sigue en la base para cuando exista una
+  verificación real (por ejemplo, reseñas solo por invitación a quien compró).
 - Sigue la regla de siempre: las reseñas solo con texto se publican solas; las que traen fotos
   esperan la aprobación de Francisco en el panel.
 

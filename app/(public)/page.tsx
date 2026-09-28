@@ -213,7 +213,6 @@ export default async function HomePage() {
             quote: r.body,
             rating: r.rating,
             imageUrl: r.photoUrls[0],
-            verified: r.compraVerificada,
           })),
           summary: reviewSummary ? { promedio: reviewSummary.promedio, total: reviewSummary.total } : null,
         }}
