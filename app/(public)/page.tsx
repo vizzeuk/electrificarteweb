@@ -18,9 +18,10 @@ import { LatestLaunches }   from "@/components/layout/LatestLaunches";
 import { VehicleTypeGrid }  from "@/components/layout/VehicleTypeGrid";
 import { HotDeal }          from "@/components/layout/HotDeal";
 import { HOT_DEALS_ENABLED } from "@/lib/products";
-import { getTopReviews } from "@/lib/reviews/queries";
+import { getAllReviews, summarize, topReviews } from "@/lib/reviews/queries";
 import { Opportunities }    from "@/components/layout/Opportunities";
 import { HomeReviewPrompt } from "@/components/reviews/HomeReviewPrompt";
+import { TESTIMONIALS_TITLE } from "@/components/layout/Testimonials";
 import { HomeStructuredData } from "@/components/layout/StructuredData";
 
 // Below-the-fold sections are bundled into a client wrapper that lazy-loads
@@ -33,16 +34,16 @@ import { ParaVendedores }   from "@/components/layout/ParaVendedores";
 export const revalidate = 60;
 
 export default async function HomePage() {
-  const [page, blogPosts, brands, collections, hotDeals, topReviews, vehicleTypes, newCars, featuredCars, siteSettings] =
+  const [page, blogPosts, brands, collections, hotDeals, allReviews, vehicleTypes, newCars, featuredCars, siteSettings] =
     await Promise.all([
       client.fetch(homePageQuery, {}, { next: { tags: ["homePage"] } }).catch(() => null),
       client.fetch(latestBlogPostsQuery, { count: 3 }, { next: { tags: ["blogPost"] } }).catch(() => []),
       client.fetch(allBrandsStripQuery, {}, { next: { tags: ["brand"] } }).catch(() => []),
       client.fetch(collectionsForHomeQuery, {}, { next: { tags: ["collection"] } }).catch(() => []),
       client.fetch(allHotDealsQuery, {}, { next: { tags: ["car"] } }).catch(() => []),
-      // Reseñas aprobadas para la sección de testimonios. Fail-soft: si no hay
-      // ninguna todavía, se usan los testimonios de Sanity como antes.
-      getTopReviews(3),
+      // Reseñas aprobadas: alimentan la franja de reseñas y los testimonios. Fail-soft: [] si
+      // Supabase no responde, y ambas secciones quedan en la invitación a escribir.
+      getAllReviews(),
       client.fetch(electricTypesForHomeQuery, {}, { next: { tags: ["electricType"] } }).catch(() => []),
       client.fetch(newCarsForHomeQuery, {}, { next: { tags: ["car"] } }).catch(() => []),
       client.fetch(featuredCarsForHomeQuery, {}, { next: { tags: ["car"] } }).catch(() => []),
@@ -50,6 +51,20 @@ export default async function HomePage() {
     ]);
 
   const hotDealUrgencyLabel: string | null = siteSettings?.hotDealUrgencyLabel ?? null;
+
+  // Reseñas: resumen de TODAS (nota y total reales), las 3 mejores para los testimonios y, para
+  // la franja, la más reciente que no esté ya entre esas 3 (así no se repite en la misma página).
+  const reviewSummary = summarize(allReviews);
+  const featuredReviews = topReviews(allReviews, 3);
+  const latestReview = allReviews.find((r) => !featuredReviews.some((f) => f.id === r.id)) ?? null;
+  // El título de Sanity todavía dice "Lo que dicen nuestros clientes", pero quienes opinan son
+  // dueños de autos electrificados (cualquiera puede), no clientes: ese texto viejo se ignora.
+  // Cualquier otro título que se escriba en Sanity sí manda.
+  const LEGACY_TESTIMONIALS_TITLE = "Lo que dicen nuestros clientes";
+  const testimonialsTitle =
+    page?.testimonialsTitle && page.testimonialsTitle.trim() !== LEGACY_TESTIMONIALS_TITLE
+      ? page.testimonialsTitle
+      : TESTIMONIALS_TITLE;
 
   // Cifras del hero: se calculan del catálogo, nunca se escriben a mano.
   const TECH_ORDER = ["EV", "PHEV", "HEV", "MHEV", "REEV"];
@@ -162,9 +177,10 @@ export default async function HomePage() {
           for these sections while they're off-screen. Combined with an
           intrinsic-size hint so the scrollbar is honest. */}
       <LatestLaunches title={page?.latestLaunchesTitle} cars={latestCars} />
+      {/* Invitación a reseñar (cualquier auto) con la nota real → /resenas → /resenas/escribir.
+          Blanca entre "Últimos lanzamientos" (Niebla) y los tipos (blanca, con hairline arriba). */}
+      <HomeReviewPrompt summary={reviewSummary} latest={latestReview} />
       <VehicleTypeGrid types={vehicleTypes ?? []} />
-      {/* Invitación a reseñar (cualquier auto) → /resenas → /resenas/escribir. */}
-      <HomeReviewPrompt />
       {HOT_DEALS_ENABLED && (
         <HotDeal
           cars={hotDeals?.length ? hotDeals : (page?.hotDealCar ? [page.hotDealCar] : null)}
@@ -188,20 +204,18 @@ export default async function HomePage() {
         }}
         trustBadges={page?.trustBadges}
         testimonials={{
-          title: page?.testimonialsTitle,
-          // Las reseñas REALES aprobadas mandan. Si todavía no hay ninguna, caen los
-          // testimonios de Sanity — así la sección nunca queda vacía.
-          items:
-            topReviews.length > 0
-              ? topReviews.map((r) => ({
-                  name: r.autor,
-                  car: [r.carBrand, r.carModel, r.carYear].filter(Boolean).join(" "),
-                  carSlug: r.carSlug ?? undefined,
-                  quote: r.body,
-                  rating: r.rating,
-                  verified: r.compraVerificada,
-                }))
-              : page?.testimonials,
+          title: testimonialsTitle,
+          // Solo reseñas REALES aprobadas. Sin ninguna, la sección queda en la invitación.
+          items: featuredReviews.map((r) => ({
+            name: r.autor,
+            car: [r.carBrand, r.carModel, r.carYear].filter(Boolean).join(" "),
+            carSlug: r.carSlug ?? undefined,
+            quote: r.body,
+            rating: r.rating,
+            imageUrl: r.photoUrls[0],
+            verified: r.compraVerificada,
+          })),
+          summary: reviewSummary ? { promedio: reviewSummary.promedio, total: reviewSummary.total } : null,
         }}
         blogPosts={blogPosts ?? []}
         faq={{ title: page?.faqTitle, faqs: page?.faqs }}

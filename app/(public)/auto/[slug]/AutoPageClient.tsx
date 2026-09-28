@@ -7,7 +7,6 @@ import { sanityImg } from "@/lib/sanityImage";
 import { Icon } from "@/components/ui/Icon";
 import { ElectricTypeBadge } from "@/components/car/ElectricTypeBadge";
 import { OfferCta } from "@/components/waitlist/OfferCta";
-import { PdpReviewPrompt } from "@/components/reviews/PdpReviewPrompt";
 import { ASESORIA_PRICE, HOT_DEALS_ENABLED } from "@/lib/products";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -738,14 +737,8 @@ export default function AutoPageClient({ car, similarCars, reviewsSlot }: AutoPa
         </div>
       </section>
 
-      {/* ─── Reseñas: pegadas al bloque de compra (decisión de master) ──── */}
-      <PdpReviewPrompt
-        carSlug={car.slug}
-        carBrand={car.brand}
-        carModel={car.name}
-        carName={model}
-      />
-
+      {/* ─── Reseñas: pegadas al bloque de compra (decisión de master). Sin reseñas, la franja
+           que invita a escribir; con reseñas, la sección completa (components/reviews/CarReviews). */}
       {reviewsSlot}
 
       {/* ─── Destacados (foto + texto, alternados) ─────────────────────── */}

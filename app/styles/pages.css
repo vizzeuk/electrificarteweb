@@ -366,3 +366,102 @@
 .review-write .review-form form { margin-top: 0; }
 .review-write__side { position: sticky; top: 104px; }
 @media (max-width: 899px) { .review-write { grid-template-columns: minmax(0, 1fr); } .review-write__side { position: static; } }
+
+/* =================================================================== RESEÑAS
+   Formulario (4 categorías), resumen estilo Google, lista con fotos, visor y franja del home.
+   Estrellas y barras en Laguna vía --link (Glaciar dentro de .theme-dark). */
+@layer components {
+/* ---- Formulario: calificación por categoría ---- */
+.rate__list { border: var(--border-hairline) solid var(--line); border-radius: var(--radius-card); }
+.rate__row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--space-2) var(--space-4); padding: var(--space-3) var(--space-4); }
+.rate__row + .rate__row { border-top: var(--border-hairline) solid var(--line); }
+.rate__label { font-weight: 600; font-size: 0.9375rem; color: var(--ink); }
+.rate__hint { font-size: var(--text-label); line-height: 1.35; color: var(--ink-3); }
+.rate__row[data-invalid] .rate__label { color: var(--danger); }
+.rate__total { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); min-height: 32px; margin-top: var(--space-1); }
+.rate__total-label { font-size: var(--text-small); color: var(--ink-2); }
+.rate__total-num { font-weight: 600; font-size: 1.25rem; line-height: 1; font-variant-numeric: tabular-nums; color: var(--ink); }
+@media (max-width: 380px) { .rate__row { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---- Resumen: nota, distribución 5→1 y categorías ---- */
+.rv-sum { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-6); padding: var(--space-6); }
+.rv-sum__top { display: flex; align-items: center; gap: var(--space-4); }
+.rv-sum__num { font-weight: 600; font-size: 3.25rem; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: var(--ink); }
+.rv-sum__count { margin-top: 6px; font-size: var(--text-small); color: var(--ink-2); }
+.rv-sum__bars { display: grid; gap: 6px; }
+.rv-sum__bars li { display: grid; grid-template-columns: 12px minmax(0, 1fr) 24px; align-items: center; gap: var(--space-3); font-size: var(--text-label); color: var(--ink-2); }
+.rv-sum__n { text-align: right; }
+.rv-bar { display: block; height: 8px; border-radius: var(--radius-chip); background: var(--line); overflow: hidden; }
+.rv-bar > span { display: block; height: 100%; border-radius: inherit; background: var(--link); }
+.rv-sum__cats { display: grid; gap: var(--space-3); padding-top: var(--space-5); border-top: var(--border-hairline) solid var(--line); }
+.rv-sum__cats > div { display: grid; grid-template-columns: 84px minmax(0, 1fr); align-items: center; gap: var(--space-3); }
+.rv-sum__cats dt { font-size: var(--text-small); color: var(--ink-2); }
+.rv-sum__cats dd { margin: 0; display: grid; grid-template-columns: minmax(0, 1fr) 28px; align-items: center; gap: var(--space-3); font-size: var(--text-label); font-weight: 600; text-align: right; color: var(--ink); }
+.rv-sum__actions { display: grid; gap: var(--space-4); justify-items: start; padding-top: var(--space-5); border-top: var(--border-hairline) solid var(--line); }
+.rv-sum__actions .btn--block { justify-self: stretch; }
+
+/* ---- Resumen a la izquierda, lista a la derecha (PDP y /resenas/todas) ---- */
+.rv-layout { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: var(--grid-gap); align-items: start; }
+.rv-layout__side { position: sticky; top: 96px; display: grid; gap: var(--grid-gap); }
+@media (max-width: 899px) { .rv-layout { grid-template-columns: minmax(0, 1fr); } .rv-layout__side { position: static; } }
+
+/* ---- Lista de reseñas ---- */
+.rv { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-3); padding: var(--space-6) clamp(20px, 3vw, 32px); }
+.rv-list > .rv + .rv { border-top: var(--border-hairline) solid var(--line); }
+.rv__head { display: flex; align-items: center; gap: var(--space-3); }
+.rv__head > .min-w-0 { flex: 1; }
+.rv__avatar { display: grid; place-items: center; background: var(--canvas-2); color: var(--ink-2); font-size: var(--text-small); font-weight: 600; }
+.rv__car { margin-top: 2px; font-size: var(--text-label); color: var(--ink-2); }
+.rv__chip { flex: none; }
+.rv__meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); margin-top: var(--space-1); }
+.rv__nota { font-weight: 600; font-size: 0.9375rem; color: var(--ink); }
+.rv__date { font-size: var(--text-label); color: var(--ink-3); }
+.rv__cats { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-5); font-size: var(--text-label); }
+.rv__cats > div { display: flex; gap: 6px; }
+.rv__cats dt { color: var(--ink-2); }
+.rv__cats dd { margin: 0; font-weight: 600; color: var(--ink); }
+.rv__text { font-size: 1rem; line-height: 1.6; color: var(--ink); text-wrap: pretty; white-space: pre-line; }
+.rv__more { justify-self: start; font-size: var(--text-small); font-weight: 600; }
+.rv__pc { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4) var(--space-6); padding-top: var(--space-2); }
+.rv__pc > div { display: grid; gap: var(--space-1); align-content: start; }
+.rv__pc-t { display: flex; align-items: center; gap: 6px; font-size: var(--text-label); font-weight: 600; color: var(--ink); }
+.rv__pc-t .material-symbols-outlined { font-size: 16px; color: var(--link); }
+.rv__pc p:not(.rv__pc-t) { font-size: 0.9375rem; line-height: 1.55; color: var(--ink-2); white-space: pre-line; }
+@media (max-width: 599px) { .rv__pc { grid-template-columns: minmax(0, 1fr); } }
+.rv__photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(176px, 1fr)); gap: var(--space-2); max-width: 760px; margin-top: var(--space-2); }
+@media (max-width: 599px) { .rv__photos { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.rv__photo { display: block; width: 100%; aspect-ratio: 4 / 3; overflow: hidden; border: var(--border-hairline) solid var(--line); border-radius: var(--radius-control); background: var(--canvas-2); cursor: zoom-in; transition: border-color var(--duration-base) var(--ease); }
+.rv__photo:hover { border-color: var(--ink-3); }
+.rv__photo img { width: 100%; height: 100%; object-fit: cover; }
+.rv-list__more { padding: var(--space-5) clamp(20px, 3vw, 32px) var(--space-6); border-top: var(--border-hairline) solid var(--line); }
+
+/* ---- Filtros de /resenas/todas ---- */
+.rv-filters { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-3) var(--space-4); padding: var(--space-5) clamp(20px, 3vw, 32px); border-bottom: var(--border-hairline) solid var(--line); }
+.rv-filters .field { flex: 1 1 150px; }
+.rv-filters__meta { flex-basis: 100%; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2) var(--space-4); font-size: var(--text-small); color: var(--ink-2); }
+
+/* ---- Visor de fotos ---- */
+.lightbox { padding: clamp(8px, 3vw, 32px); }
+.lightbox__card { position: relative; width: min(1100px, 100%); display: flex; flex-direction: column; background: var(--canvas); color: var(--ink); border-radius: var(--radius-card); box-shadow: var(--shadow-overlay); overflow: hidden; }
+.lightbox__stage { position: relative; height: min(78svh, 760px); background: var(--canvas); }
+.lightbox__img { display: block; width: 100%; height: 100%; object-fit: contain; background-size: contain; background-position: center; background-repeat: no-repeat; }
+.lightbox__nav { position: absolute; top: 50%; transform: translateY(-50%); background: var(--canvas); }
+.lightbox__nav--prev { left: var(--space-3); }
+.lightbox__nav--next { right: var(--space-3); }
+.lightbox__bar { display: flex; align-items: center; gap: var(--space-4); padding: var(--space-2) var(--space-3) var(--space-2) var(--space-5); border-top: var(--border-hairline) solid var(--line); }
+.lightbox__caption { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-small); color: var(--ink-2); }
+.lightbox__count { font-size: var(--text-label); color: var(--ink-3); }
+@media (max-width: 599px) { .lightbox__stage { height: min(58svh, 520px); } }
+
+/* ---- Franja del home: invitación + nota real ---- */
+.rv-strip { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); gap: clamp(28px, 5vw, 72px); align-items: center; }
+.rv-strip__text p { margin-top: var(--space-3); color: var(--ink-2); max-width: 36rem; }
+.rv-strip__actions { margin-top: var(--space-6); display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3) var(--space-6); }
+.rv-strip__card { display: grid; gap: var(--space-5); padding: var(--space-6); }
+.rv-strip__score { display: flex; align-items: center; gap: var(--space-4); }
+.rv-strip__score .rv-sum__num { font-size: 2.75rem; }
+.rv-strip__quote { padding-top: var(--space-5); border-top: var(--border-hairline) solid var(--line); }
+.rv-strip__quote blockquote { font-size: 0.9375rem; line-height: 1.55; color: var(--ink); }
+.rv-strip__quote p { margin-top: var(--space-2); font-size: var(--text-label); color: var(--ink-2); }
+@media (max-width: 899px) { .rv-strip { grid-template-columns: minmax(0, 1fr); } }
+}

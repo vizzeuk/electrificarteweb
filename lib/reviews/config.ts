@@ -21,6 +21,9 @@ export const REVIEWS_REQUIRE_INVITE = false;
 export const REVIEW_MIN_CHARS = 30;
 export const REVIEW_MAX_CHARS = 1500;
 
+/** Largo máximo de "Lo bueno" (pros) y "Lo que mejoraría" (contras). Ambos son opcionales. */
+export const REVIEW_EXTRA_MAX_CHARS = 600;
+
 /** Tope de fotos por reseña. */
 export const REVIEW_MAX_PHOTOS = 5;
 

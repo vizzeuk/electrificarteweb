@@ -8,7 +8,8 @@ import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
 import { StarRating } from "./StarRating";
 import { PhotoPicker, type PickedPhoto } from "./PhotoPicker";
-import { REVIEW_MAX_CHARS, REVIEW_MIN_CHARS } from "@/lib/reviews/config";
+import { REVIEW_EXTRA_MAX_CHARS, REVIEW_MAX_CHARS, REVIEW_MIN_CHARS } from "@/lib/reviews/config";
+import { REVIEW_CATEGORIES, formatNota, promedioNotas, type ReviewCategoryField } from "@/lib/reviews/categories";
 import type { ReviewPrefill } from "./ReviewProvider";
 
 /**
@@ -19,15 +20,26 @@ import type { ReviewPrefill } from "./ReviewProvider";
  *     Pide marca y modelo.
  * Ambos mandan exactamente lo mismo a /api/reviews → mismo webhook de n8n, mismos correos y
  * misma moderación. Campos .field/.input del sistema v1.
+ *
+ * Calificación (27-sep-2026): 4 categorías obligatorias (autonomía, confort, agilidad, calidad)
+ * de 1 a 5. La nota final es su promedio con un decimal: se muestra en vivo, pero la que vale la
+ * calcula el servidor. "Lo bueno" y "Lo que mejoraría" son opcionales.
  */
 
+const nota = z.number({ message: "Falta" }).int().min(1, "Falta").max(5);
+
 const schema = z.object({
-  rating: z.number().int().min(1, "Elige una calificación").max(5),
+  ratingAutonomia: nota,
+  ratingConfort: nota,
+  ratingAgilidad: nota,
+  ratingCalidad: nota,
   firstName: z.string().min(2, "Ingresa tu nombre"),
   lastName: z.string().min(2, "Ingresa tu apellido"),
   email: z.string().email("Ingresa un email válido"),
   phone: z.string().regex(/^9\d{8}$/, "Ingresa los 9 dígitos").or(z.literal("")).optional(),
   body: z.string().min(REVIEW_MIN_CHARS, `Cuéntanos al menos ${REVIEW_MIN_CHARS} caracteres`).max(REVIEW_MAX_CHARS),
+  pros: z.string().max(REVIEW_EXTRA_MAX_CHARS, `Máximo ${REVIEW_EXTRA_MAX_CHARS} caracteres`).optional(),
+  contras: z.string().max(REVIEW_EXTRA_MAX_CHARS, `Máximo ${REVIEW_EXTRA_MAX_CHARS} caracteres`).optional(),
   carBrand: z.string().optional(),
   carModel: z.string().optional(),
   carYear: z.string().optional(),
@@ -81,6 +93,14 @@ export interface ReviewCarOption {
 
 const OTRO = "__otro__";
 
+type Notas = Record<ReviewCategoryField, number>;
+const SIN_NOTAS: Notas = { ratingAutonomia: 0, ratingConfort: 0, ratingAgilidad: 0, ratingCalidad: 0 };
+
+/** "autonomía", "autonomía y confort", "autonomía, confort y calidad". */
+function enumerar(items: string[]): string {
+  return items.length <= 1 ? items.join("") : `${items.slice(0, -1).join(", ")} y ${items[items.length - 1]}`;
+}
+
 interface ReviewFormProps {
   prefill: ReviewPrefill;
   /** Catálogo para los selectores de marca y modelo. Sin esto (popup), marca y modelo son texto. */
@@ -95,7 +115,7 @@ interface ReviewFormProps {
 
 export function ReviewForm({ prefill, carOptions, variant, active = true, titleId = "review-title", onClose }: ReviewFormProps) {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
-  const [rating, setRating] = useState(0);
+  const [notas, setNotas] = useState<Notas>(SIN_NOTAS);
   const [photos, setPhotos] = useState<PickedPhoto[]>([]);
   // true = se envió sin fotos y quedó publicada; false = trae fotos y queda en revisión.
   const [published, setPublished] = useState(false);
@@ -125,6 +145,13 @@ export function ReviewForm({ prefill, carOptions, variant, active = true, titleI
   } = useForm<FormValues>({ resolver: zodResolver(schema), mode: "onTouched" });
 
   const bodyValue = watch("body") ?? "";
+  const prosValue = watch("pros") ?? "";
+  const contrasValue = watch("contras") ?? "";
+
+  // Nota en vivo: promedio de las categorías ya elegidas (la definitiva la calcula el servidor).
+  const elegidas = REVIEW_CATEGORIES.filter((c) => notas[c.field] > 0);
+  const notaEnVivo = promedioNotas(elegidas.map((c) => notas[c.field]));
+  const faltan = REVIEW_CATEGORIES.filter((c) => errors[c.field]).map((c) => c.label.toLowerCase());
 
   // Deja elegido el auto de la ficha (si vino uno y está en el catálogo).
   const preselect = (list: ReviewCarOption[]) => {
@@ -156,22 +183,22 @@ export function ReviewForm({ prefill, carOptions, variant, active = true, titleI
   useEffect(() => {
     if (!active) return;
     setStatus("idle");
-    const pre = prefill.rating && prefill.rating >= 1 && prefill.rating <= 5 ? prefill.rating : 0;
-    setRating(pre);
+    setNotas(SIN_NOTAS);
     setPhotos([]);
     submitting.current = false;
     reset({
-      rating: pre, firstName: "", lastName: "", email: "", phone: "", body: "",
+      ...SIN_NOTAS, firstName: "", lastName: "", email: "", phone: "", body: "", pros: "", contras: "",
       carBrand: prefill.carBrand ?? "", carModel: prefill.carModel ?? "",
       carYear: "", carColor: "", carVersion: "",
     });
     preselect(options);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active, prefill.carSlug, prefill.carBrand, prefill.carModel, prefill.rating, reset]);
+  }, [active, prefill.carSlug, prefill.carBrand, prefill.carModel, reset]);
 
-  function pickRating(n: number) {
-    setRating(n);
-    setValue("rating", n, { shouldValidate: true });
+  function pickNota(field: ReviewCategoryField, n: number) {
+    setNotas((prev) => ({ ...prev, [field]: n }));
+    // Valida al tiro solo si ya se mostró el error: así se apaga apenas la persona elige.
+    setValue(field, n, { shouldValidate: !!errors[field] });
   }
 
   function chooseBrand(brand: string) {
@@ -212,8 +239,14 @@ export function ReviewForm({ prefill, carOptions, variant, active = true, titleI
           lastName: data.lastName,
           email: data.email,
           phone: data.phone ? `+56 ${data.phone}` : undefined,
-          rating: data.rating,
+          // La nota final (promedio) la calcula /api/reviews; acá solo van las cuatro categorías.
+          ratingAutonomia: data.ratingAutonomia,
+          ratingConfort: data.ratingConfort,
+          ratingAgilidad: data.ratingAgilidad,
+          ratingCalidad: data.ratingCalidad,
           body: data.body,
+          pros: data.pros?.trim() || undefined,
+          contras: data.contras?.trim() || undefined,
           carSlug: pickFromCatalog ? (pickedSlug && pickedSlug !== OTRO ? pickedSlug : undefined) : prefill.carSlug,
           carSanityId: prefill.carSanityId,
           carBrand: data.carBrand || undefined,
@@ -278,15 +311,46 @@ export function ReviewForm({ prefill, carOptions, variant, active = true, titleI
           )}
 
           <form onSubmit={handleSubmit(onSubmit)} noValidate>
-            {/* Estrellas */}
-            <div className="field">
-              <span className="field__label">Tu calificación</span>
-              <div className="flex items-center gap-3">
-                <StarRating value={rating} onChange={pickRating} size={28} />
-                {rating > 0 && <span className="t-small">{rating} de 5</span>}
+            {/* Calificación: 4 categorías obligatorias, la nota es su promedio */}
+            <div className="field rate" role="group" aria-labelledby="rv-rate-label">
+              <p className="field__label" id="rv-rate-label">Califica tu auto</p>
+              <div className="rate__list">
+                {REVIEW_CATEGORIES.map((c) => (
+                  <div key={c.key} className="rate__row" data-invalid={errors[c.field] ? "" : undefined}>
+                    <div className="min-w-0">
+                      <p className="rate__label">{c.label}</p>
+                      <p className="rate__hint">{c.hint}</p>
+                    </div>
+                    <StarRating
+                      value={notas[c.field]}
+                      onChange={(n) => pickNota(c.field, n)}
+                      size={24}
+                      label={c.label}
+                      invalid={!!errors[c.field]}
+                    />
+                    <input type="hidden" {...register(c.field, { valueAsNumber: true })} />
+                  </div>
+                ))}
               </div>
-              <input type="hidden" {...register("rating", { valueAsNumber: true })} />
-              {errors.rating && <p className="field__error">{errors.rating.message}</p>}
+              <div className="rate__total" aria-live="polite">
+                {notaEnVivo === null ? (
+                  <span className="t-small">Elige de 1 a 5 estrellas en cada una. Tu nota es el promedio.</span>
+                ) : (
+                  <>
+                    <span className="rate__total-label">Tu nota</span>
+                    <strong className="rate__total-num">{formatNota(notaEnVivo)}</strong>
+                    <StarRating value={notaEnVivo} size={16} />
+                    {elegidas.length < REVIEW_CATEGORIES.length && (
+                      <span className="t-small">
+                        Faltan {REVIEW_CATEGORIES.length - elegidas.length} por calificar
+                      </span>
+                    )}
+                  </>
+                )}
+              </div>
+              {faltan.length > 0 && (
+                <p className="field__error" role="alert">Te falta calificar {enumerar(faltan)}.</p>
+              )}
             </div>
 
             {/* Reseña */}
@@ -296,13 +360,51 @@ export function ReviewForm({ prefill, carOptions, variant, active = true, titleI
                 id="rv-body"
                 {...register("body")}
                 rows={4}
-                placeholder="¿Cómo ha sido la experiencia? Autonomía real, carga, manejo, lo bueno y lo malo…"
+                placeholder="¿Cómo ha sido la experiencia? Autonomía real, dónde cargas, cómo se maneja…"
                 aria-invalid={errors.body ? true : undefined}
                 className="input h-auto min-h-[120px] resize-none py-3 leading-[1.5]"
               />
               <div className="flex items-start justify-between gap-3">
                 {errors.body ? <p className="field__error">{errors.body.message}</p> : <span />}
                 <span className="t-micro num flex-none">{bodyValue.length}/{REVIEW_MAX_CHARS}</span>
+              </div>
+            </div>
+
+            {/* Lo bueno y lo que mejoraría: opcionales */}
+            <div className="field">
+              <label className="field__label" htmlFor="rv-pros">
+                Lo bueno <span className="opt">(opcional)</span>
+              </label>
+              <textarea
+                id="rv-pros"
+                {...register("pros")}
+                rows={2}
+                maxLength={REVIEW_EXTRA_MAX_CHARS}
+                placeholder="Lo que más te gusta de tu auto"
+                aria-invalid={errors.pros ? true : undefined}
+                className="input h-auto min-h-[76px] resize-none py-3 leading-[1.5]"
+              />
+              <div className="flex items-start justify-between gap-3">
+                {errors.pros ? <p className="field__error">{errors.pros.message}</p> : <span />}
+                <span className="t-micro num flex-none">{prosValue.length}/{REVIEW_EXTRA_MAX_CHARS}</span>
+              </div>
+            </div>
+            <div className="field">
+              <label className="field__label" htmlFor="rv-contras">
+                Lo que mejoraría <span className="opt">(opcional)</span>
+              </label>
+              <textarea
+                id="rv-contras"
+                {...register("contras")}
+                rows={2}
+                maxLength={REVIEW_EXTRA_MAX_CHARS}
+                placeholder="Lo que cambiarías o te gustaría saber antes de comprar"
+                aria-invalid={errors.contras ? true : undefined}
+                className="input h-auto min-h-[76px] resize-none py-3 leading-[1.5]"
+              />
+              <div className="flex items-start justify-between gap-3">
+                {errors.contras ? <p className="field__error">{errors.contras.message}</p> : <span />}
+                <span className="t-micro num flex-none">{contrasValue.length}/{REVIEW_EXTRA_MAX_CHARS}</span>
               </div>
             </div>
 

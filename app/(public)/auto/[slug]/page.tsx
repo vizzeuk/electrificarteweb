@@ -6,8 +6,8 @@ import { client } from "@/lib/sanity/client";
 import { carBySlugQuery, similarCarsQuery } from "@/lib/queries/car";
 import { stripBrandSuffix } from "@/lib/utils";
 import AutoPageClient, { type CarData, type SimilarCarData } from "./AutoPageClient";
-import { getReviewsForCar, getReviewSummary } from "@/lib/reviews/queries";
-import { ReviewList } from "@/components/reviews/ReviewList";
+import { getReviewsForCar, summarize } from "@/lib/reviews/queries";
+import { CarReviews } from "@/components/reviews/CarReviews";
 import { CarStructuredData } from "@/components/car/CarStructuredData";
 import { Icon } from "@/components/ui/Icon";
 import { OfferCta } from "@/components/waitlist/OfferCta";
@@ -217,10 +217,9 @@ export default async function CarDetailPage({ params }: PageProps) {
 
   // Reseñas aprobadas de este auto. Fail-soft: si Supabase no responde devuelve []
   // y la PDP se renderiza igual. Se refresca con el ISR de 60 s de la página.
-  const [reviews, reviewSummary] = await Promise.all([
-    getReviewsForCar(car.slug),
-    getReviewSummary(car.slug),
-  ]);
+  // Una sola lectura: el resumen (promedio, distribución, categorías) sale de las mismas filas.
+  const reviews = await getReviewsForCar(car.slug);
+  const reviewSummary = summarize(reviews);
 
   return (
     <>
@@ -246,7 +245,15 @@ export default async function CarDetailPage({ params }: PageProps) {
         similarCars={similarCars}
         reviewsSlot={
           // key: el elemento viaja desde el servidor y React lo valida como hijo de una lista.
-          <ReviewList key="reviews" reviews={reviews} summary={reviewSummary} carName={`${car.brand} ${car.name}`} />
+          <CarReviews
+            key="reviews"
+            reviews={reviews}
+            summary={reviewSummary}
+            carSlug={car.slug}
+            carBrand={car.brand}
+            carModel={car.name}
+            carName={`${car.brand} ${car.name}`}
+          />
         }
       />
     </>

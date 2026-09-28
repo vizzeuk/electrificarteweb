@@ -14,7 +14,7 @@ interface HomeDeferredProps {
   servicios:       unknown[] | undefined;
   howItWorks:      { title?: string; subtitle?: string; steps?: unknown[]; videoDesktopUrl?: string; videoMobileUrl?: string };
   trustBadges:     unknown[] | undefined;
-  testimonials:    { title?: string; items?: unknown[] };
+  testimonials:    { title?: string; items?: unknown[]; summary?: { promedio: number; total: number } | null };
   blogPosts:       unknown[];
   faq:             { title?: string; faqs?: unknown[] };
   hotDealCar:      unknown;
@@ -35,7 +35,7 @@ export function HomeDeferred(p: HomeDeferredProps) {
         videoMobileUrl={p.howItWorks.videoMobileUrl}
       />
       <TrustBadges badges={p.trustBadges as any} />
-      <Testimonials title={p.testimonials.title} testimonials={p.testimonials.items as any} />
+      <Testimonials title={p.testimonials.title} testimonials={p.testimonials.items as any} summary={p.testimonials.summary} />
       <BlogPreview posts={p.blogPosts as any} />
       <FAQ title={p.faq.title} faqs={p.faq.faqs as any} />
       <StickyCTA />

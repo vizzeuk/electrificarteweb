@@ -18,8 +18,6 @@ export interface ReviewPrefill {
   carSanityId?: string;
   carBrand?: string;
   carModel?: string;
-  /** Calificación pre-elegida (ej. la persona tocó 4 estrellas en la PDP). */
-  rating?: number;
   /** De dónde se abrió (pdp, home, resenas…), para medir qué convierte. */
   source?: string;
 }
