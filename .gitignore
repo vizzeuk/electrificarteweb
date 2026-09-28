@@ -79,3 +79,12 @@ n8n/.backups/
 
 # Guía visual generada (8 MB, se regenera con node scripts/gen-guia-diseno.mjs)
 docs/design/guia-diseno.html
+
+# video explicativo (HyperFrames): se regeneran con video/explicativo/build.mjs.
+# Llevan las fuentes Fontshare, que no se pueden redistribuir (ver scripts/fetch-fonts.mjs).
+/video/explicativo/horizontal/
+/video/explicativo/vertical/
+/video/explicativo/renders/
+/video/explicativo/.cache/
+/video/explicativo/src/voz.*
+/video/explicativo/.venv/

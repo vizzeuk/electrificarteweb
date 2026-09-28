@@ -1,0 +1,152 @@
+{
+  "_doc": "Guion del video, frase por frase. `text` es el subtítulo; `say` (opcional) es cómo se lee en voz alta, con números en palabras. `scene` = escena donde suena. `marks` = palabras que disparan animaciones (índice de frase + palabra de `say`). align.mjs usa este archivo para calzar la voz real.",
+  "lines": [
+    {
+      "scene": "s1",
+      "text": "¿Quieres pasarte a un auto eléctrico o híbrido,"
+    },
+    {
+      "scene": "s1",
+      "text": "pero no sabes cuál elegir?"
+    },
+    {
+      "scene": "s1",
+      "text": "Explora más de 160 modelos, compáralos y calcula cuánto ahorras.",
+      "say": "Explora más de ciento sesenta modelos, compáralos y calcula cuánto ahorras."
+    },
+    {
+      "scene": "s2",
+      "text": "Y si aún no te decides, está la Asesoría de Electrificarte."
+    },
+    {
+      "scene": "s2",
+      "text": "Por $4.990, Francisco IA te acompaña",
+      "say": "Por cuatro mil novecientos noventa pesos, Francisco IA te acompaña"
+    },
+    {
+      "scene": "s2",
+      "text": "por WhatsApp durante 10 días.",
+      "say": "por WhatsApp durante diez días."
+    },
+    {
+      "scene": "s3",
+      "text": "Le cuentas cómo usas el auto:"
+    },
+    {
+      "scene": "s3",
+      "text": "cuántos kilómetros haces, dónde vas a cargar"
+    },
+    {
+      "scene": "s3",
+      "text": "y cuánto quieres gastar."
+    },
+    {
+      "scene": "s3",
+      "text": "Francisco IA conoce cada ficha del catálogo,"
+    },
+    {
+      "scene": "s3",
+      "text": "compara modelos sin sesgo"
+    },
+    {
+      "scene": "s3",
+      "text": "y te explica el porqué de cada recomendación."
+    },
+    {
+      "scene": "s4",
+      "text": "Sin apps y sin presión:"
+    },
+    {
+      "scene": "s4",
+      "text": "es una conversación, no una venta."
+    },
+    {
+      "scene": "s4",
+      "text": "Terminas sabiendo exactamente qué auto es para ti."
+    },
+    {
+      "scene": "s5",
+      "text": "¿Ya elegiste tu auto?"
+    },
+    {
+      "scene": "s5",
+      "text": "En su ficha, toca “Quiero este modelo”",
+      "say": "En su ficha, toca Quiero este modelo"
+    },
+    {
+      "scene": "s5",
+      "text": "y súmate gratis a la lista de espera."
+    },
+    {
+      "scene": "s5",
+      "text": "Pronto abriremos la negociación con vendedores oficiales,"
+    },
+    {
+      "scene": "s5",
+      "text": "y te avisamos primero"
+    },
+    {
+      "scene": "s5",
+      "text": "cuando esté disponible para tu modelo."
+    },
+    {
+      "scene": "s6",
+      "text": "Electrificarte: primero decides con claridad,"
+    },
+    {
+      "scene": "s6",
+      "text": "después llegas primero a tu auto."
+    },
+    {
+      "scene": "s6",
+      "text": "Entra a electrificarte.com.",
+      "say": "Entra a electrificarte punto com."
+    }
+  ],
+  "marks": {
+    "compara": [
+      2,
+      "compáralos"
+    ],
+    "calcula": [
+      2,
+      "calcula"
+    ],
+    "km": [
+      7,
+      "kilómetros"
+    ],
+    "cargar": [
+      7,
+      "dónde"
+    ],
+    "gastar": [
+      8,
+      "cuánto"
+    ],
+    "apps": [
+      12,
+      "apps"
+    ],
+    "presion": [
+      12,
+      "presión"
+    ],
+    "quiero": [
+      16,
+      "quiero"
+    ],
+    "lista": [
+      17,
+      "lista"
+    ],
+    "negociacion": [
+      18,
+      "negociación"
+    ],
+    "avisamos": [
+      19,
+      "avisamos"
+    ]
+  }
+}

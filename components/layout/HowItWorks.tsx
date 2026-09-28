@@ -98,12 +98,16 @@ function Steps({ steps }: { steps: HowItWorksStep[] }) {
 
 const FALLBACK_16x9 = "/hero-video/explicativo-16x9.mp4";
 const FALLBACK_9x16 = "/hero-video/explicativo-9x16.mp4";
+const POSTER = "/hero-video/explicativo-poster.jpg";
 const SEEN_KEY = "ea_how_video_seen";
 
 export function HowItWorks({ title = "Cómo funciona Electrificarte", steps, videoDesktopUrl, videoMobileUrl }: HowItWorksProps) {
   const VIDEO_16x9 = videoDesktopUrl ?? FALLBACK_16x9;
   const VIDEO_9x16 = videoMobileUrl ?? FALLBACK_9x16;
   const [modalOpen, setModalOpen] = useState(false);
+  // Si el popup se abre solo (primera visita), el navegador no deja reproducir con sonido sin un
+  // clic: arranca silenciado. El video trae subtítulos, así que se entiende igual.
+  const [autoOpened, setAutoOpened] = useState(false);
   const [mobileVideoOpen, setMobileVideoOpen] = useState(false);
 
   const waitlistSteps = steps && steps.length > 0 ? steps : OFERTA_STEPS;
@@ -115,6 +119,7 @@ export function HowItWorks({ title = "Cómo funciona Electrificarte", steps, vid
     // Only auto-open on desktop — mobile uses inline video to avoid iOS fixed-position bugs
     if (window.innerWidth < 640) return;
     const timer = setTimeout(() => {
+      setAutoOpened(true);
       setModalOpen(true);
       localStorage.setItem(SEEN_KEY, "1");
     }, 5000);
@@ -137,6 +142,7 @@ export function HowItWorks({ title = "Cómo funciona Electrificarte", steps, vid
   }
 
   function openModal() {
+    setAutoOpened(false);
     setModalOpen(true);
     if (typeof window !== "undefined") {
       localStorage.setItem(SEEN_KEY, "1");
@@ -231,6 +237,7 @@ export function HowItWorks({ title = "Cómo funciona Electrificarte", steps, vid
               <video
                 key="mobile-video"
                 src={VIDEO_9x16}
+                poster={POSTER}
                 className="block w-full"
                 autoPlay
                 controls
@@ -247,19 +254,40 @@ export function HowItWorks({ title = "Cómo funciona Electrificarte", steps, vid
           className="modal is-open z-[200] hidden sm:grid"
           role="dialog"
           aria-modal="true"
-          aria-label="Video explicativo"
+          aria-labelledby="video-modal-title"
           onClick={closeModal}
         >
           <div className="modal__card modal__card--video" onClick={(e) => e.stopPropagation()}>
-            <video src={VIDEO_16x9} autoPlay controls playsInline />
-            <button
-              type="button"
-              onClick={closeModal}
-              className="btn btn--secondary btn--icon btn--sm modal__close"
-              aria-label="Cerrar video"
-            >
-              <Icon name="close" size="none" />
-            </button>
+            <div className="video-modal__head">
+              <div>
+                <h2 id="video-modal-title" className="video-modal__title">Cómo funciona, en un minuto</h2>
+                <p className="video-modal__text">La asesoría por WhatsApp y la lista de espera, de principio a fin.</p>
+              </div>
+              <button
+                type="button"
+                onClick={closeModal}
+                className="btn btn--secondary btn--icon btn--sm"
+                aria-label="Cerrar video"
+              >
+                <Icon name="close" size="none" />
+              </button>
+            </div>
+            <div className="video-modal__media">
+              <video src={VIDEO_16x9} poster={POSTER} autoPlay muted={autoOpened} controls playsInline />
+            </div>
+            <div className="video-modal__foot">
+              <p>¿Aún no sabes qué auto elegir?</p>
+              <div className="video-modal__actions">
+                {/* Sin lista de espera acá: suelta no se entiende (feedback 28-sep); vive en las fichas. */}
+                <Link href="/marcas" className="btn btn--secondary" onClick={closeModal}>
+                  Ver el catálogo
+                </Link>
+                <Link href="/asesoria" className="btn btn--primary" onClick={closeModal}>
+                  Quiero asesoría por {ASESORIA_PRICE}
+                  <Icon name="arrow_forward" size="none" className="arrow" />
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       )}
