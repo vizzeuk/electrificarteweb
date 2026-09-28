@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
+import { ReviewSummaryPanel } from "@/components/reviews/ReviewSummary";
+import { ReviewFeed } from "@/components/reviews/ReviewFeed";
+import { REVIEW_CATEGORIES } from "@/lib/reviews/categories";
+import { getAllReviews, summarize } from "@/lib/reviews/queries";
 
 /**
  * /resenas: página explicativa de las reseñas de dueños.
@@ -10,14 +14,17 @@ import { Icon } from "@/components/ui/Icon";
  * más rápido y ya trae el auto puesto. Los dos usan el mismo formulario (ReviewForm) y el mismo
  * envío a n8n.
  *
- * Si la persona tocó una estrella en el home, llega con ?calificacion=N y ese valor sigue hasta
- * el formulario, que se abre con la calificación ya puesta.
+ * Cada reseña se califica en 4 categorías (autonomía, confort, agilidad, calidad) y la nota es su
+ * promedio; "lo bueno" y "lo que mejoraría" son opcionales. Las reseñas publicadas se leen en
+ * /resenas/todas (acá, un adelanto con las más recientes).
  */
+
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Reseñas de dueños de autos electrificados",
   description:
-    "Cómo funcionan las reseñas de Electrificarte: opiniones de personas que ya manejan un auto eléctrico o híbrido en Chile. Autonomía real, carga y costos del día a día.",
+    "Cómo funcionan las reseñas de Electrificarte: dueños de autos eléctricos e híbridos en Chile califican autonomía, confort, agilidad y calidad, y cuentan cómo les ha ido.",
   alternates: { canonical: "/resenas" },
 };
 
@@ -29,17 +36,24 @@ const PARA_QUE = [
 ];
 
 const PASOS = [
-  { title: "Califica y cuenta", text: "Elige de 1 a 5 estrellas y escribe cómo te ha ido. Si quieres, suma fotos de tu auto. Toma un par de minutos." },
+  { title: "Califica y cuenta", text: "Pon de 1 a 5 estrellas en autonomía, confort, agilidad y calidad, y escribe cómo te ha ido. Si quieres, suma lo bueno, lo que mejorarías y fotos." },
   { title: "Se publica", text: "Si tu reseña es solo texto, se publica al instante. Si trae fotos, el equipo las revisa antes de mostrarlas." },
-  { title: "Queda en la ficha", text: "Tu reseña aparece en la ficha de tu modelo, y las mejor evaluadas también en el inicio del sitio." },
+  { title: "Queda en la ficha", text: "Tu reseña aparece en la ficha de tu modelo y en la página con todas las reseñas. Las mejor evaluadas, también en el inicio." },
 ];
+
+/** Íconos de las 4 categorías (del subset de Material Symbols ya generado). */
+const ICONO_CATEGORIA: Record<string, string> = {
+  autonomia: "battery_charging_full",
+  confort: "airline_seat_recline_extra",
+  agilidad: "speed",
+  calidad: "workspace_premium",
+};
 
 const IDEAS = [
   "Cuántos kilómetros haces con una carga, en ciudad y en carretera",
   "Dónde cargas y cuánto se demora",
   "Cuánto gastas al mes comparado con tu auto anterior",
   "Cómo se maneja, el espacio y la comodidad",
-  "Lo que más te gusta y lo que cambiarías",
   "Cómo ha sido la mantención y el servicio",
 ];
 
@@ -52,12 +66,12 @@ const FAQS = [
   { q: "¿Puedo editar o borrar mi reseña?", a: "Sí. Escríbenos a contacto@electrificarte.com desde el correo que usaste y la ajustamos." },
 ];
 
-type PageProps = { searchParams: Promise<{ calificacion?: string }> };
+const escribir = "/resenas/escribir";
 
-export default async function ResenasPage({ searchParams }: PageProps) {
-  const { calificacion } = await searchParams;
-  const n = Number(calificacion);
-  const escribir = Number.isInteger(n) && n >= 1 && n <= 5 ? `/resenas/escribir?calificacion=${n}` : "/resenas/escribir";
+export default async function ResenasPage() {
+  // Adelanto de las reseñas publicadas. Fail-soft: sin reseñas (o sin Supabase) la sección no se muestra.
+  const reviews = await getAllReviews();
+  const summary = summarize(reviews);
 
   return (
     <div className="page">
@@ -79,6 +93,9 @@ export default async function ResenasPage({ searchParams }: PageProps) {
                 <Link href={escribir} className="btn btn--primary btn--lg">
                   Escribir mi reseña
                   <Icon name="arrow_forward" size="none" className="arrow" />
+                </Link>
+                <Link href="/resenas/todas" className="btn btn--secondary btn--lg">
+                  Leer las reseñas
                 </Link>
                 <a href="#como-funciona" className="btn btn--quiet">
                   Cómo funcionan
@@ -132,8 +149,36 @@ export default async function ResenasPage({ searchParams }: PageProps) {
         </div>
       </section>
 
+      {/* ── Qué se califica ── */}
+      <section className="section" aria-labelledby="califica-t">
+        <div className="wrap">
+          <div className="section-head">
+            <div className="section-head__text">
+              <h2 className="t-h2" id="califica-t">Qué se califica</h2>
+              <p className="t-lead">
+                Cuatro categorías de 1 a 5 estrellas. La nota de tu reseña es el promedio de las cuatro.
+              </p>
+            </div>
+          </div>
+          <div className="trust">
+            {REVIEW_CATEGORIES.map((c) => (
+              <div key={c.key} className="trust__item">
+                <Icon name={ICONO_CATEGORIA[c.key]} size="none" />
+                <h3 className="trust__title">{c.label}</h3>
+                <p className="trust__text">{c.hint}.</p>
+              </div>
+            ))}
+          </div>
+          <p className="t-small mt-6">
+            Además puedes contar, si quieres, <strong className="font-semibold text-ink">lo bueno</strong> y{" "}
+            <strong className="font-semibold text-ink">lo que mejorarías</strong>. Es lo que más buscan quienes
+            están decidiendo.
+          </p>
+        </div>
+      </section>
+
       {/* ── Qué contar (el bloque destacado de la página) ── */}
-      <section className="section" aria-labelledby="ideas-t">
+      <section className="section section--rule" aria-labelledby="ideas-t">
         <div className="wrap">
           <div className="soft-block price-block">
             <div>
@@ -170,7 +215,7 @@ export default async function ResenasPage({ searchParams }: PageProps) {
               <h3 className="t-h3">Lo que se publica</h3>
               <ul>
                 <li><Icon name="check" size="none" /><span>Tu nombre y la inicial de tu apellido, por ejemplo <strong>Juan P.</strong></span></li>
-                <li><Icon name="check" size="none" /><span>Tu calificación y lo que escribiste.</span></li>
+                <li><Icon name="check" size="none" /><span>Tus notas por categoría, lo que escribiste, lo bueno y lo que mejorarías.</span></li>
                 <li><Icon name="check" size="none" /><span>El auto: marca, modelo, año, versión y color.</span></li>
                 <li><Icon name="check" size="none" /><span>Tus fotos, una vez revisadas.</span></li>
               </ul>
@@ -187,8 +232,43 @@ export default async function ResenasPage({ searchParams }: PageProps) {
         </div>
       </section>
 
-      {/* ── Preguntas frecuentes ── */}
-      <section className="section section--subtle" aria-labelledby="faq-t">
+      {/* ── Adelanto de las reseñas publicadas (Niebla) ── */}
+      {summary && (
+        <section className="section section--subtle" aria-labelledby="ultimas-t">
+          <div className="wrap">
+            <div className="section-head">
+              <div className="section-head__text">
+                <h2 className="t-h2" id="ultimas-t">Lo que ya contaron</h2>
+                <p className="t-lead">Las reseñas más recientes de dueños de autos electrificados.</p>
+              </div>
+            </div>
+            <div className="rv-layout">
+              <aside className="rv-layout__side" aria-label="Resumen de las reseñas">
+                <ReviewSummaryPanel summary={summary} className="card">
+                  <Link href="/resenas/todas" className="link-arrow">
+                    Ver todas las reseñas
+                    <Icon name="arrow_forward" size="none" />
+                  </Link>
+                </ReviewSummaryPanel>
+              </aside>
+              <div className="card rv-layout__list">
+                <ReviewFeed reviews={reviews.slice(0, 3)} pageSize={3} showCar />
+                {reviews.length > 3 && (
+                  <div className="rv-list__more">
+                    <Link href="/resenas/todas" className="btn btn--secondary">
+                      Ver las {reviews.length} reseñas
+                      <Icon name="arrow_forward" size="none" className="arrow" />
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ── Preguntas frecuentes: blanca si la sección anterior es Niebla ── */}
+      <section className={summary ? "section section--rule" : "section section--subtle"} aria-labelledby="faq-t">
         <div className="wrap faq-2">
           <div>
             <h2 className="t-h2" id="faq-t">Preguntas frecuentes</h2>
@@ -220,7 +300,7 @@ export default async function ResenasPage({ searchParams }: PageProps) {
               Escribir mi reseña
               <Icon name="arrow_forward" size="none" className="arrow" />
             </Link>
-            <Link href="/marcas" className="link">Ver el catálogo</Link>
+            <Link href="/resenas/todas" className="link">Leer las reseñas</Link>
           </div>
         </div>
       </section>

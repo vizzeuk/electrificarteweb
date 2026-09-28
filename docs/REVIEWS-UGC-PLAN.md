@@ -497,7 +497,9 @@ propio criterio.
 Tabla `reviews` en Supabase, **RLS activo**:
 - `id`, `created_at`
 - `first_name`, `last_name`, `email`, `phone` — **PII, nunca se expone en público**
-- `rating` (1-5), `body` (texto)
+- `rating` numeric(2,1) = **promedio** de las 4 categorías (27-sep-2026, ver abajo), `body` (texto)
+- `rating_autonomia`, `rating_confort`, `rating_agilidad`, `rating_calidad` (smallint 1-5, null en
+  las reseñas anteriores al cambio); `pros`, `contras` (texto opcional, "Lo bueno" y "Lo que mejoraría")
 - `car_slug` + `car_sanity_id` — el slug es la llave que ya usa todo el sitio; el `_id` protege
   ante renombres
 - `car_brand`, `car_model`, `car_year`, `car_color`, `car_version` — **texto libre**: en Sanity
@@ -563,7 +565,17 @@ build. Ya existe `app/api/revalidate/route.ts` para eso.
 - ⬜ **Moderación en el dashboard** → contrato en `docs/DASHBOARD_REVIEWS_MODERACION.md`
   (otro repo). **Sin esto nada se publica.**
 - ⬜ **Fotos.** Buckets + `StorageAdapter` + subida directa con URL firmada (§4b/§4c).
-- ⬜ **Home alimentada por reseñas reales** (`getTopReviews`) en vez de los testimonios de Sanity.
+- ✅ **Home alimentada por reseñas reales** (resumen general + 3 mejores; sin reseñas, solo la
+  invitación: los testimonios de ejemplo se quitaron).
+- ✅ **4 categorías + pros/contras (27-sep-2026, feedback de Francisco).** El formulario
+  (`ReviewForm`, popup y `/resenas/escribir`) exige Autonomía, Confort, Agilidad y Calidad de 1 a 5
+  (`lib/reviews/categories.ts`). `/api/reviews` calcula `rating` = promedio con 1 decimal (no confía
+  en el cliente) y reenvía a n8n: los campos de siempre + `rating`, `ratingAutonomia`,
+  `ratingConfort`, `ratingAgilidad`, `ratingCalidad` (enteros) y `pros`, `contras` (texto o `null`).
+  Migración: `scripts/sql/2026-09-27_resenas_categorias_y_waitlist_vendedores.sql`.
+- ✅ **Display estilo Google.** PDP: resumen (nota, distribución 5→1, promedio por categoría) +
+  lista con fotos grandes y visor (`CarReviews`, `ReviewFeed`, `ReviewLightbox`). Página
+  `/resenas/todas` con filtros por marca y modelo y orden. Estrellas en Laguna (`--link`).
 - ⬜ **Rating en las cards de PLP** (⚠️ 4 implementaciones distintas de card).
 - ⬜ **Video** (Mux, §5).
 
