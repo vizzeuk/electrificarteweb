@@ -8,7 +8,6 @@ import {
   electricTypesForHomeQuery,
   newCarsForHomeQuery,
   featuredCarsForHomeQuery,
-  cheapestCarPriceQuery,
 } from "@/lib/queries/car";
 import { collectionsForHomeQuery } from "@/lib/queries/collections";
 
@@ -34,7 +33,7 @@ import { ParaVendedores }   from "@/components/layout/ParaVendedores";
 export const revalidate = 60;
 
 export default async function HomePage() {
-  const [page, blogPosts, brands, collections, hotDeals, topReviews, vehicleTypes, newCars, featuredCars, siteSettings, fromPrice] =
+  const [page, blogPosts, brands, collections, hotDeals, topReviews, vehicleTypes, newCars, featuredCars, siteSettings] =
     await Promise.all([
       client.fetch(homePageQuery, {}, { next: { tags: ["homePage"] } }).catch(() => null),
       client.fetch(latestBlogPostsQuery, { count: 3 }, { next: { tags: ["blogPost"] } }).catch(() => []),
@@ -48,7 +47,6 @@ export default async function HomePage() {
       client.fetch(newCarsForHomeQuery, {}, { next: { tags: ["car"] } }).catch(() => []),
       client.fetch(featuredCarsForHomeQuery, {}, { next: { tags: ["car"] } }).catch(() => []),
       client.fetch(hotDealUrgencyLabelQuery, {}, { next: { tags: ["siteSettings"] } }).catch(() => null),
-      client.fetch<number | null>(cheapestCarPriceQuery, {}, { next: { tags: ["car"] } }).catch(() => null),
     ]);
 
   const hotDealUrgencyLabel: string | null = siteSettings?.hotDealUrgencyLabel ?? null;
@@ -72,7 +70,6 @@ export default async function HomePage() {
   const heroFacts = {
     models: electricTypes.reduce((n, t) => n + (Number(t?.carCount) || 0), 0),
     brands: (brands ?? []).length,
-    fromPrice: typeof fromPrice === "number" ? fromPrice : null,
     technologies,
   };
 

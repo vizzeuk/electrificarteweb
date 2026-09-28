@@ -326,7 +326,7 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
                       {specs && <p className="t-small">{specs}</p>}
                       <div className="deal-card__actions">
                         <OfferCta carSlug={car.slug} model={model} source="plp" className="btn btn--primary">
-                          Quiero esta oferta
+                          Quiero este modelo
                         </OfferCta>
                         <Link href={`/auto/${car.slug}`} className="btn btn--secondary">
                           Ver auto
@@ -492,7 +492,10 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
       )}
 
       {/* ─── Otros tipos + los dos caminos ───────────────────────────── */}
-      <section className="section" aria-labelledby={others.length > 0 ? "ot-t" : undefined}>
+      <section
+        className={cn("section", !(meta.pros.length > 0 || meta.cons.length > 0 || meta.idealFor) && "section--rule")}
+        aria-labelledby={others.length > 0 ? "ot-t" : undefined}
+      >
         <div className="wrap">
           {others.length > 0 && (
             <>

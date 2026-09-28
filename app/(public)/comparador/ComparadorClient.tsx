@@ -555,8 +555,8 @@ function CarSlot({ car, onRemove, onAdd }: { car: Car | undefined; onRemove: () 
         source="comparador"
         className="btn btn--secondary btn--sm btn--block mt-auto"
       >
-        <span className="md:hidden">Solicitar</span>
-        <span className="hidden md:inline">Quiero mi oferta</span>
+        <span className="md:hidden">Lo quiero</span>
+        <span className="hidden md:inline">Quiero este modelo</span>
       </OfferCta>
     </div>
   );

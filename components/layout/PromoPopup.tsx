@@ -133,7 +133,7 @@ export function PromoPopup({ car, urgencyLabel }: PromoPopupProps) {
                 onClick={close}
                 className="btn btn--primary btn--lg btn--block mt-6"
               >
-                Quiero esta oferta
+                Quiero este modelo
               </OfferCta>
 
               <button type="button" onClick={close} className="btn btn--quiet btn--block mt-2">

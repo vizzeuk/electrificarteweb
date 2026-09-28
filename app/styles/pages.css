@@ -46,6 +46,9 @@
 .cta-row .t-h2 { max-width: 20ch; }
 .cta-row p { margin-top: var(--space-3); color: var(--ink-2); max-width: 46ch; }
 .cta-row__actions { display: flex; flex-wrap: wrap; gap: var(--space-3); flex: none; }
+.cta-row--outline { padding: var(--panel-pad); border: var(--border-hairline) solid var(--line); border-radius: var(--radius-card); }
+.cta-row--outline .t-h3 { max-width: 28ch; }
+.cta-row--outline p { max-width: 60ch; }
 @media (max-width: 899px) { .cta-row { flex-direction: column; align-items: flex-start; } }
 
 /* ---- Banda final oscura ---- */

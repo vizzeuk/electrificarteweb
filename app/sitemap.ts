@@ -22,6 +22,8 @@ const STATIC_ROUTES: { path: string; changeFrequency: MetadataRoute.Sitemap[numb
   { path: "/calculadora",         changeFrequency: "monthly", priority: 0.7 },
   { path: "/blog",                changeFrequency: "weekly",  priority: 0.7 },
   { path: "/negociacion",         changeFrequency: "monthly", priority: 0.6 },
+  { path: "/vendedores",          changeFrequency: "monthly", priority: 0.5 },
+  { path: "/vendedores/unirme",   changeFrequency: "monthly", priority: 0.4 },
   { path: "/nosotros",            changeFrequency: "monthly", priority: 0.5 },
   { path: "/contacto",            changeFrequency: "yearly",  priority: 0.5 },
   { path: "/terminos",            changeFrequency: "yearly",  priority: 0.3 },

@@ -673,7 +673,7 @@ export default function CalculadoraContent({ cars }: Props) {
       </section>
 
       {/* ─── Comparación con tu perfil ──────────────────────────────── */}
-      <section className="section" aria-labelledby="calc-list-t">
+      <section className="section section--subtle" aria-labelledby="calc-list-t">
         <div className="wrap">
           <div className="section-head">
             <div className="section-head__text">
@@ -777,9 +777,14 @@ export default function CalculadoraContent({ cars }: Props) {
               <p className="t-small">Selecciona el auto que te interesa para ver su ahorro exacto</p>
             </div>
           )}
+        </div>
+      </section>
 
-          {/* ─── CTA final: Asesoría (principal) y waitlist ─────────────── */}
-          <div className="soft-block cta-row mt-section">
+      {/* ─── CTA final: Asesoría (principal) y waitlist ─────────────── */}
+      {/* Sección propia, blanca tras la lista en Niebla (ritmo de bandas del sitio). */}
+      <section className="section" aria-label="Asesoría y waitlist">
+        <div className="wrap">
+          <div className="soft-block cta-row">
             <div>
               <h2 className="t-h2">{ctaTitle}</h2>
               <p>

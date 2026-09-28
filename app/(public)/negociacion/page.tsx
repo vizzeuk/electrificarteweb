@@ -1,89 +1,128 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
 import { OfferCta } from "@/components/waitlist/OfferCta";
+import { ASESORIA_PRICE } from "@/lib/products";
 
 export const revalidate = 60;
 
-// El precio de la Oferta ($19.990) ya no se muestra en esta página: el flujo pagado
-// está en standby (ver docs/PIVOT-WAITLIST-PLAN.md). Al reactivarlo, volver a leer
-// `offerPrice` desde Sanity (productPricesQuery) como hacía antes.
-//
-// Giro sep-2026: además, sin "negociamos por ti" y sin prometer "tu mejor precio" o "la
-// mejor oferta" a la persona. La waitlist solo registra interesados.
+// Página explicativa del servicio de negociación con vendedores oficiales, que se abrirá
+// pronto (giro sep-2026, ver docs/PIVOT-WAITLIST-PLAN.md). Mientras dure el standby:
+// - NO se muestra el precio del servicio ($19.990): se dice que se informará al abrir.
+// - Sin "negociamos por ti", sin prometer descuentos, plazos ni devoluciones.
+// - La única acción es sumarse a la waitlist (OfferCta abre el popup).
+// Al reactivar la Oferta, esta página se vuelve a escribir con el flujo pagado.
 
-export async function generateMetadata(): Promise<Metadata> {
-  return {
-    title: "Negociación de ofertas",
-    description:
-      "Ya sabes qué auto quieres. Súmate a la waitlist y te avisamos cuando abramos el acceso para tu modelo.",
-    alternates: { canonical: "/negociacion" },
-    openGraph: {
-      title: "Negociación de ofertas | Electrificarte",
-      description:
-        "Ya sabes qué auto quieres. Súmate a la waitlist y te avisamos cuando abramos el acceso para tu modelo.",
-      url: "/negociacion",
-      type: "website",
-    },
-  };
-}
+const TITLE = "Negociación con vendedores oficiales";
+const DESCRIPTION =
+  "Pronto abriremos un servicio para buscar, dentro de nuestra red de vendedores oficiales, un precio mejor que el de lista para el auto electrificado que elegiste. Únete a la waitlist.";
 
-// Giro sep-2026: la Oferta ($19.990) está en standby. Los pasos describen el camino
-// de la WAITLIST — sin precio, sin plazos prometidos y sin garantía de devolución.
+export const metadata: Metadata = {
+  title: `${TITLE}, próximamente`,
+  description: DESCRIPTION,
+  alternates: { canonical: "/negociacion" },
+  openGraph: {
+    title: `${TITLE}, próximamente | Electrificarte`,
+    description: DESCRIPTION,
+    url: "/negociacion",
+    type: "website",
+  },
+};
+
 const STEPS = [
   {
-    title: "Elige tu modelo",
-    description: "Ya sabes qué auto quieres. Dinos el modelo desde el catálogo o el buscador.",
+    title: "Eliges tu modelo",
+    description: "Buscas en el catálogo el auto electrificado que quieres y nos dices cuál es.",
   },
   {
-    title: "Súmate a la waitlist",
-    description: "Déjanos tus datos y quedas registrado como interesado en ese modelo.",
+    title: "Consultamos a la red",
+    description:
+      "Le preguntamos a los vendedores oficiales de nuestra red si pueden mejorar el precio de lista de ese modelo.",
   },
   {
-    title: "Te avisamos",
-    description: "Te contactamos cuando abramos el acceso y tengamos novedades para tu modelo.",
+    title: "Recibes la propuesta",
+    description:
+      "Si un vendedor oficial mejora el precio, te llega su propuesta por WhatsApp y conversas directo con él.",
   },
   {
-    title: "Estrena tu auto",
-    description: "Coordinas con el vendedor oficial los últimos detalles y retiras tu vehículo nuevo.",
+    title: "Tú decides",
+    description:
+      "Ves el auto, haces la prueba de manejo y compras solo si te conviene. La compra la cierras con el vendedor.",
   },
 ];
 
-const RAZONES = [
+const HOY = [
   {
-    icon: "hub",
-    title: "Red exclusiva",
-    description: "Trabajamos con vendedores oficiales y distribuidores certificados en todo Chile, no con avisos sueltos.",
+    icon: "groups",
+    title: "Únete a la waitlist",
+    text: "Deja tus datos y el modelo que te interesa. Te avisamos apenas abra el servicio para que seas de los primeros en usarlo.",
   },
   {
-    icon: "trending_down",
-    title: "Poder de volumen",
-    description: "Al agrupar múltiples solicitudes de compra negociamos descuentos por volumen y bonos que no están publicados.",
+    icon: "compare_arrows",
+    title: "Compara y calcula",
+    text: "Revisa fichas, compara hasta tres modelos lado a lado y calcula cuánto ahorras frente a la bencina.",
   },
   {
-    icon: "verified",
-    title: "La oferta real",
-    description: "Accedemos a ofertas de inventario y condiciones que no encuentras al público general: la oferta real, no la de vidriera.",
+    icon: "chat",
+    title: "Resuelve tus dudas",
+    text: `Si todavía no sabes qué auto elegir, te asesoramos por WhatsApp por ${ASESORIA_PRICE}.`,
   },
 ];
 
-const STATS = [
-  { value: "$800 mil a $6 millones", label: "rango de ahorro de clientes" },
-  { value: "+15",                    label: "vendedores oficiales en la red" },
-  { value: "+500",                   label: "personas ya confiaron" },
-  { value: "100%",                   label: "vendedores verificados" },
+const FAQS: { q: string; a: ReactNode }[] = [
+  {
+    q: "¿Cuándo abre el servicio?",
+    a: "Todavía no tenemos fecha. Estamos armando la red de vendedores oficiales y juntando a las personas interesadas. Cuando esté listo, avisamos primero a quienes estén en la waitlist.",
+  },
+  {
+    q: "¿Cuánto va a costar?",
+    a: "El precio del servicio lo informaremos al abrir. Unirte a la waitlist no tiene costo y no te compromete a contratar nada.",
+  },
+  {
+    q: "¿Me aseguran un descuento?",
+    a: "No. Vamos a buscar un precio mejor que el de lista entre los vendedores oficiales de la red, pero el resultado depende del modelo, del stock y de cada vendedor. Te contaremos todas las condiciones antes de que decidas.",
+  },
+  {
+    q: "¿A quién le compro el auto?",
+    a: "Al vendedor oficial, directamente. Electrificarte te pone en contacto; la compra, el financiamiento y la entrega los acuerdas con él.",
+  },
+  {
+    q: "¿Qué datos piden en la waitlist?",
+    a: (
+      <>
+        Nombre, apellido, email, WhatsApp y, si quieres, el modelo que te interesa. Los usamos para avisarte cuando
+        abra el servicio. Más detalle en nuestra{" "}
+        <Link href="/privacidad" className="link">
+          política de privacidad
+        </Link>
+        .
+      </>
+    ),
+  },
+  {
+    q: "¿Y si todavía no sé qué auto quiero?",
+    a: (
+      <>
+        Parte por el{" "}
+        <Link href="/marcas" className="link">
+          catálogo
+        </Link>{" "}
+        y el{" "}
+        <Link href="/comparador" className="link">
+          comparador
+        </Link>
+        . Si prefieres que alguien te guíe, la{" "}
+        <Link href="/asesoria" className="link">
+          asesoría por WhatsApp
+        </Link>{" "}
+        te ayuda a decidir según tu uso, tus kilómetros y tu presupuesto.
+      </>
+    ),
+  },
 ];
 
-const INCLUYE = [
-  "Búsqueda en nuestra red exclusiva de vendedores oficiales",
-  "Negociación de bonos y descuentos por volumen",
-  "Opciones de financiamiento preaprobadas",
-  "Comparativa de precios reales del mercado",
-  "Acompañamiento hasta la entrega del vehículo",
-  "Acceso prioritario cuando abramos el servicio",
-];
-
-export default async function NegociacionPage() {
+export default function NegociacionPage() {
   return (
     <div className="page">
       {/* ── Encabezado claro ── */}
@@ -92,31 +131,35 @@ export default async function NegociacionPage() {
           <nav className="crumbs" aria-label="Migas de pan">
             <Link href="/">Inicio</Link>
             <span aria-hidden="true">/</span>
-            <span aria-current="page">Negociación de ofertas</span>
+            <span aria-current="page">Negociación</span>
           </nav>
 
           <div className="mt-header">
-            <h1 className="t-h1">Negociación de ofertas</h1>
+            <span className="chip">Próximamente</span>
+            <h1 className="t-h1 mt-5">{TITLE}</h1>
             <p className="t-lead">
-              Ya sabes qué auto quieres. Súmate a la waitlist y te avisamos cuando abramos el acceso para tu
-              modelo.
+              Estamos preparando un servicio para quienes ya saben qué auto quieren: buscar, dentro de nuestra red de
+              vendedores oficiales, un precio mejor que el de lista para ese modelo. Todavía no está abierto.
             </p>
             <div className="page-head__actions">
               <OfferCta source="negociacion" className="btn btn--primary btn--lg">
                 Únete a la waitlist
               </OfferCta>
-              <p className="t-small">Sin costo ni compromiso al registrarte</p>
+              <p className="t-small">Sin costo ni compromiso</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── Cómo funciona ── */}
+      {/* ── Cómo va a funcionar ── */}
       <section className="section" aria-labelledby="how-t">
         <div className="wrap">
           <div className="section-head">
             <div className="section-head__text">
-              <h2 className="t-h2" id="how-t">Del modelo elegido a tu auto en cuatro pasos</h2>
+              <h2 className="t-h2" id="how-t">Cómo va a funcionar</h2>
+              <p className="t-lead">
+                Electrificarte no vende autos: te conecta con vendedores oficiales que quieren mover su inventario.
+              </p>
             </div>
           </div>
           <ol className="steps-row sm:grid-cols-2 lg:grid-cols-4">
@@ -131,77 +174,81 @@ export default async function NegociacionPage() {
         </div>
       </section>
 
-      {/* ── Por qué conseguimos mejores precios ── */}
-      <section className="section section--subtle" aria-labelledby="why-t">
+      {/* ── Qué hacer hoy ── */}
+      <section className="section section--subtle" aria-labelledby="hoy-t">
         <div className="wrap">
           <div className="section-head">
             <div className="section-head__text">
-              <h2 className="t-h2" id="why-t">Por qué conseguimos mejores precios</h2>
-              <p className="t-lead">
-                No revendemos autos. Al concentrar la demanda de cientos de compradores, movemos los precios a
-                tu favor.
-              </p>
+              <h2 className="t-h2" id="hoy-t">Qué puedes hacer hoy</h2>
+              <p className="t-lead">Mientras abrimos el servicio, el resto del sitio ya funciona.</p>
             </div>
           </div>
           <div className="trust lg:grid-cols-3">
-            {RAZONES.map((r) => (
+            {HOY.map((r) => (
               <div className="trust__item" key={r.title}>
                 <Icon name={r.icon} size="none" />
                 <h3 className="trust__title">{r.title}</h3>
-                <p className="trust__text">{r.description}</p>
+                <p className="trust__text">{r.text}</p>
               </div>
             ))}
           </div>
-          <div className="kpis">
-            {STATS.map((st) => (
-              <div className="kpi" key={st.label}>
-                <p className="kpi__num">{st.value}</p>
-                <p className="kpi__label">{st.label}</p>
-              </div>
+          <div className="mt-8 flex flex-wrap gap-x-8 gap-y-3">
+            <Link href="/marcas" className="link-arrow">
+              Ver el catálogo
+              <Icon name="arrow_forward" size="none" />
+            </Link>
+            <Link href="/comparador" className="link-arrow">
+              Ir al comparador
+              <Icon name="arrow_forward" size="none" />
+            </Link>
+            <Link href="/calculadora" className="link-arrow">
+              Calcular mi ahorro
+              <Icon name="arrow_forward" size="none" />
+            </Link>
+            <Link href="/asesoria" className="link-arrow">
+              Conocer la asesoría
+              <Icon name="arrow_forward" size="none" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Preguntas frecuentes ── */}
+      <section className="section" aria-labelledby="faq-t">
+        <div className="wrap faq-2">
+          <div>
+            <h2 className="t-h2" id="faq-t">Preguntas frecuentes</h2>
+            <p className="t-lead">Lo que más nos preguntan sobre el servicio.</p>
+          </div>
+          <div>
+            {FAQS.map((f, i) => (
+              <details className="qa" key={f.q} open={i === 0}>
+                <summary>
+                  {f.q}
+                  <Icon name="add" size="none" />
+                </summary>
+                <p className="qa__a">{f.a}</p>
+              </details>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── Qué incluye ── */}
-      <section className="section" aria-labelledby="incluye-t">
-        <div className="wrap">
-          <div className="section-head">
-            <div className="section-head__text">
-              <h2 className="t-h2" id="incluye-t">Qué incluye</h2>
-              <p className="t-lead">
-                Ideal si ya tienes claro qué modelo quieres y buscas el mejor precio posible, sin dar vueltas por
-                tu cuenta.
-              </p>
-            </div>
+      {/* ── Cierre claro con hairline arriba (el footer ya es oscuro) ── */}
+      <section className="band section--rule" aria-labelledby="band-t">
+        <div className="wrap band__in">
+          <div>
+            <h2 className="t-h2" id="band-t">Sé de los primeros en usarlo</h2>
+            <p>Únete a la waitlist y te avisamos cuando abramos la negociación con vendedores oficiales.</p>
           </div>
-          <ul className="checklist md:grid-cols-2 md:gap-x-12">
-            {INCLUYE.map((item) => (
-              <li key={item}>
-                <Icon name="check" size="none" />
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
-
-      {/* ── Cierre: el bloque Glaciar con la llamada principal, sobre fondo claro ── */}
-      <section className="section section--rule" aria-labelledby="cta-t">
-        <div className="wrap">
-          <div className="soft-block cta-row">
-            <div>
-              <h2 className="t-h2" id="cta-t">¿Ya sabes qué auto quieres?</h2>
-              <p>Déjanos tus datos y quedas registrado como interesado. Te avisamos cuando abramos el acceso.</p>
-            </div>
-            <div className="cta-row__actions">
-              <OfferCta source="negociacion" className="btn btn--primary btn--lg">
-                Únete a la waitlist
-              </OfferCta>
-              <Link href="/asesoria" className="btn btn--secondary btn--lg">
-                Empieza con la asesoría
-              </Link>
-            </div>
+          <div className="band__actions">
+            <OfferCta source="negociacion" className="btn btn--primary btn--lg">
+              Únete a la waitlist
+              <Icon name="arrow_forward" size="none" className="arrow" />
+            </OfferCta>
+            <Link href="/asesoria" className="link">
+              ¿Aún no eliges? Asesoría por {ASESORIA_PRICE}
+            </Link>
           </div>
         </div>
       </section>

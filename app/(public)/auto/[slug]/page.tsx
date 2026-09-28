@@ -70,11 +70,11 @@ export default async function CarDetailPage({ params }: PageProps) {
             <div className="mt-10 max-w-[40rem]">
               <h1 className="t-h1">{fallbackName}</h1>
               <p className="t-lead mt-6">
-                Este modelo aún no está disponible en nuestro catálogo digital. Puedes solicitar una oferta de todos modos.
+                Este modelo aún no está disponible en nuestro catálogo digital. Si te interesa, déjanos tus datos y te avisamos cuando tengamos novedades de este modelo.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <OfferCta carSlug={slug} model={slugName} source="pdp" className="btn btn--primary btn--lg">
-                  Quiero una oferta
+                  Quiero este modelo
                   <Icon name="arrow_forward" size="none" className="arrow" />
                 </OfferCta>
                 <Link href="/marcas" className="btn btn--secondary btn--lg">

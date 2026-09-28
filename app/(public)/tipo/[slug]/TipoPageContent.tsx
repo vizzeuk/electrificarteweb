@@ -290,7 +290,7 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes, adCar, p
                       {specs && <p className="t-small">{specs}</p>}
                       <div className="deal-card__actions">
                         <OfferCta carSlug={car.slug} model={model} source="plp" className="btn btn--primary">
-                          Quiero esta oferta
+                          Quiero este modelo
                         </OfferCta>
                         <Link href={`/auto/${car.slug}`} className="btn btn--secondary">
                           Ver auto
@@ -414,27 +414,30 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes, adCar, p
         </div>
       </section>
 
-      {/* ─── Otros tipos + los dos caminos ───────────────────────────── */}
-      <section className="section section--rule" aria-labelledby={others.length > 0 ? "ot-t" : undefined}>
-        <div className="wrap">
-          {others.length > 0 && (
-            <>
-              <div className="section-head">
-                <div className="section-head__text">
-                  <h2 className="t-h2" id="ot-t">Otros tipos de vehículo</h2>
-                </div>
+      {/* ─── Otros tipos: franja Niebla entre el catálogo y el cierre ─── */}
+      {others.length > 0 && (
+        <section className="section section--subtle section--tight" aria-labelledby="ot-t">
+          <div className="wrap">
+            <div className="section-head">
+              <div className="section-head__text">
+                <h2 className="t-h2" id="ot-t">Otros tipos de vehículo</h2>
               </div>
-              <div className="type-links">
-                {others.map((t) => (
-                  <Link key={t.slug} href={`/tipo/${t.slug}`} className="type-link">
-                    {sentenceCase(t.label)}
-                  </Link>
-                ))}
-              </div>
-            </>
-          )}
+            </div>
+            <div className="type-links">
+              {others.map((t) => (
+                <Link key={t.slug} href={`/tipo/${t.slug}`} className="type-link">
+                  {sentenceCase(t.label)}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
-          <div className={cn("soft-block cta-row", others.length > 0 && "mt-section")}>
+      {/* ─── Los dos caminos (blanco; hairline si viene justo tras el catálogo) ─── */}
+      <section className={cn("section", others.length === 0 && "section--rule")} aria-label="Asesoría y waitlist">
+        <div className="wrap">
+          <div className="soft-block cta-row">
             <div>
               <h2 className="t-h2">{ctaTitle}</h2>
               <p>Te asesoramos por WhatsApp según tu uso, tus kilómetros y tu presupuesto, y comparamos contigo los modelos que calzan.</p>
