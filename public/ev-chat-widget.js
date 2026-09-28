@@ -666,10 +666,9 @@ ${MENU_BLOCK}`;
   const CONTACT_MENU = `Te conectamos con nuestro equipo. ¿Qué prefieres?
 
 [MENU]
-1. Súmate a la waitlist de ofertas → /?waitlist=1
-2. Asesoría personalizada por WhatsApp → ${UPSELL_URL}
-3. Enviar mensaje al equipo → /contacto
-4. Volver al menú principal #menu
+1. Asesoría personalizada por WhatsApp → ${UPSELL_URL}
+2. Enviar mensaje al equipo → /contacto
+3. Volver al menú principal #menu
 [/MENU]`;
 
   const ERROR_MENU = `Lo siento, hubo un problema al conectar. Por favor intenta nuevamente.

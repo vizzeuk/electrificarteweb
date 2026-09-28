@@ -1,4 +1,5 @@
 import { Redis } from "@upstash/redis";
+import { ASESORIA_CHECKOUT_URL } from "@/lib/products";
 
 // ─── Tope global diario del chatbot del sitio ─────────────────────────────────
 // El rate limit por IP (20/min) acota a UN visitante, pero no al total: el chatbot está
@@ -59,6 +60,6 @@ export const CHAT_QUOTA_MESSAGE =
   `Igual puedes avanzar por acá:\n\n` +
   `[MENU]\n` +
   `1. Ver el catálogo completo → /marcas\n` +
-  `2. Súmate a la waitlist de ofertas → /?waitlist=1\n` +
+  `2. Asesoría por WhatsApp ($4.990) → ${ASESORIA_CHECKOUT_URL}\n` +
   `3. Escribirnos directamente → /contacto\n` +
   `[/MENU]`;

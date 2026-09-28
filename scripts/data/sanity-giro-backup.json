@@ -1,0 +1,104 @@
+{
+  "homePage": {
+    "heroBadge": "Más de 100 compras negociadas en Chile",
+    "heroSubtitle": "Por solo $19.990 negociamos con nuestra red de vendedores y te traemos la mejor oferta del mercado en 48-96 horas. Si no ahorras, te devolvemos el dinero.",
+    "heroTitle": "Ahorra millones en tu próximo",
+    "heroTitleHighlight": "auto electrificado",
+    "testimonialsTitle": "Lo que dicen nuestros clientes"
+  },
+  "6IFqLXQK07mFWbhNIg4fNC": {
+    "description": "Autos eléctricos e híbridos en Chile a menos de $20.000.000 con precios negociados por Electrificarte."
+  },
+  "drafts.6IFqLXQK07mFWbhNIg4fNC": {
+    "description": "Autos eléctricos e híbridos en Chile a menos de $20.000.000 con precios negociados por Electrificarte."
+  },
+  "6IFqLXQK07mFWbhNIg4fsh": {
+    "description": "Toda la gama BYD disponible en Chile: Seal, Atto 3, Yuan Plus, Dolphin y más. Precios negociados exclusivos."
+  },
+  "drafts.6IFqLXQK07mFWbhNIg4fsh": {
+    "description": "Toda la gama BYD disponible en Chile: Seal, Atto 3, Yuan Plus, Dolphin y más. Precios negociados exclusivos."
+  },
+  "Azr6jnPnblfJFZmxpyV8He": {
+    "description": "Los mejores SUV eléctricos e híbridos con 7 asientos disponibles en Chile. Precio negociado, entrega en concesionario."
+  },
+  "Vls8ret4Yd1rRWA2HiukWP": {
+    "hcibgq1bjyk": {
+      "_key": "hcibgq1bjyk",
+      "_type": "block",
+      "children": [
+        {
+          "_key": "hcibgq1bjyks",
+          "_type": "span",
+          "marks": [],
+          "text": "El precio de lista rara vez es el precio real. En Electrificarte negociamos directamente con la red de concesionarios para conseguir el mejor precio del mercado. Nuestro proceso es simple:"
+        }
+      ],
+      "markDefs": [],
+      "style": "normal"
+    },
+    "snp8m5j5l4": {
+      "_key": "snp8m5j5l4",
+      "_type": "callout",
+      "text": "Nuestro ahorro promedio por cliente es de $4.200.000 CLP. El máximo registrado fue de $8.500.000 CLP en un Tesla Model Y negociado en diciembre de 2024.",
+      "type": "info"
+    },
+    "w2pk19ieahc": {
+      "_key": "w2pk19ieahc",
+      "_type": "block",
+      "children": [
+        {
+          "_key": "w2pk19ieahcs",
+          "_type": "span",
+          "marks": [],
+          "text": "El mejor auto eléctrico para ti depende de tu presupuesto, tus kilómetros diarios y qué tanto valoras la tecnología vs. el precio. No existe una respuesta única, pero con esta guía tienes los criterios para tomar una decisión informada. Si quieres que te ayudemos a negociar el mejor precio, ingresa tu solicitud en Electrificarte y te respondemos en 24 horas."
+        }
+      ],
+      "markDefs": [],
+      "style": "normal"
+    }
+  },
+  "Vls8ret4Yd1rRWA2HiulJD": {
+    "wjqmvvo8r8i": {
+      "_key": "wjqmvvo8r8i",
+      "_type": "callout",
+      "text": "En Electrificarte hemos procesado más de 500 solicitudes de compra en 2024. Los modelos más solicitados fueron BYD Yuan Plus (28%), MG Marvel R (18%), Hyundai IONIQ 5 (17%) y BYD Seal (14%). El ahorro promedio negociado fue de $4.200.000 CLP sobre el precio de lista.",
+      "type": "info"
+    },
+    "gzwvfogrjv": {
+      "_key": "gzwvfogrjv",
+      "_type": "block",
+      "children": [
+        {
+          "_key": "gzwvfogrjvs",
+          "_type": "span",
+          "marks": [],
+          "text": "No hay una respuesta universal: las tres marcas son buenas opciones dependiendo de tu perfil. Si tienes dudas, en Electrificarte te ayudamos a comparar modelos específicos según tus necesidades y a negociar el mejor precio disponible en el mercado chileno. Haz tu solicitud y te respondemos en menos de 24 horas."
+        }
+      ],
+      "markDefs": [],
+      "style": "normal"
+    }
+  },
+  "drafts.Vls8ret4Yd1rRWA2HiulJD": {
+    "wjqmvvo8r8i": {
+      "_key": "wjqmvvo8r8i",
+      "_type": "callout",
+      "text": "En Electrificarte hemos procesado más de 500 solicitudes de compra en 2024. Los modelos más solicitados fueron BYD Yuan Plus (28%), MG Marvel R (18%), Hyundai IONIQ 5 (17%) y BYD Seal (14%). El ahorro promedio negociado fue de $4.200.000 CLP sobre el precio de lista.",
+      "type": "info"
+    },
+    "gzwvfogrjv": {
+      "_key": "gzwvfogrjv",
+      "_type": "block",
+      "children": [
+        {
+          "_key": "gzwvfogrjvs",
+          "_type": "span",
+          "marks": [],
+          "text": "No hay una respuesta universal: las tres marcas son buenas opciones dependiendo de tu perfil. Si tienes dudas, en Electrificarte te ayudamos a comparar modelos específicos según tus necesidades y a negociar el mejor precio disponible en el mercado chileno. Haz tu solicitud y te respondemos en menos de 24 horas."
+        }
+      ],
+      "markDefs": [],
+      "style": "normal"
+    }
+  }
+}

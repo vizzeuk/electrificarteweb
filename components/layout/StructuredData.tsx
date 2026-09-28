@@ -9,7 +9,7 @@ export function HomeStructuredData() {
     url: "https://www.electrificarte.com",
     logo: "https://www.electrificarte.com/logos-electrificarte/logo-elec-sin%20auto.webp",
     description:
-      "Servicio de negociación de autos electrificados en Chile. Intermediario entre compradores y vendedores oficiales que consigue el mejor precio del mercado.",
+      "Catalogo y asesoria para elegir autos electrificados en Chile: fichas tecnicas y precios de lista, comparador de modelos, calculadora de ahorro y asesoria por WhatsApp.",
     foundingDate: "2023",
     address: {
       "@type": "PostalAddress",
@@ -79,18 +79,18 @@ export function HomeStructuredData() {
     mainEntity: [
       {
         "@type": "Question",
-        name: "Como puedo obtener un descuento en un auto electrico en Chile?",
+        name: "Que ofrece Electrificarte?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Electrificarte negocia directamente con vendedores oficiales para conseguir el mejor precio posible. El servicio aun no esta abierto al publico: puedes sumarte a la lista de espera sin costo y te avisamos cuando abramos el acceso.",
+          text: "Un catalogo de autos electrificados en Chile con fichas tecnicas y precios de lista, un comparador de modelos, una calculadora de ahorro frente a la bencina y una asesoria por WhatsApp de $4.990 CLP que te ayuda a decidir que auto comprar.",
         },
       },
       {
         "@type": "Question",
-        name: "Como logra Electrificarte los descuentos?",
+        name: "Electrificarte consigue descuentos en autos electricos?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Trabajamos con una red de vendedores oficiales verificados en Chile. Agrupamos solicitudes para negociar descuentos por volumen, acceder a bonos exclusivos y ofertas de inventario no disponibles al publico.",
+          text: "Todavia no. Estamos preparando un servicio para buscar, dentro de una red de vendedores oficiales, un precio mejor que el de lista para el modelo que elijas. Aun no esta abierto: puedes dejar tus datos en la lista de espera, sin costo, para enterarte cuando abra.",
         },
       },
       {
@@ -106,7 +106,7 @@ export function HomeStructuredData() {
         name: "Puedo ver el auto antes de comprarlo?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Si. Te conectamos con el vendedor oficial que ofrezca el mejor precio para que puedas visitarlo, hacer test drive y verificar todo antes de decidir.",
+          text: "Si. La compra la haces directamente con el vendedor oficial de la marca: puedes visitarlo, hacer una prueba de manejo y revisar el auto antes de decidir.",
         },
       },
     ],
@@ -115,9 +115,9 @@ export function HomeStructuredData() {
   const howToSchema = {
     "@context": "https://schema.org",
     "@type": "HowTo",
-    name: "Como comprar un auto electrico al mejor precio en Chile con Electrificarte",
+    name: "Como elegir un auto electrificado en Chile con Electrificarte",
     description:
-      "Guia paso a paso para obtener el mejor precio en un vehiculo electrico en Chile.",
+      "Guia paso a paso para elegir el auto electrico o hibrido que mas te conviene en Chile.",
     estimatedCost: {
       "@type": "MonetaryAmount",
       currency: "CLP",
@@ -127,26 +127,26 @@ export function HomeStructuredData() {
       {
         "@type": "HowToStep",
         position: 1,
-        name: "Elige tu auto",
-        text: "Explora el catalogo o dinos que modelo te interesa.",
+        name: "Explora el catalogo",
+        text: "Revisa las fichas tecnicas y los precios de lista de los autos electrificados disponibles en Chile.",
       },
       {
         "@type": "HowToStep",
         position: 2,
-        name: "Sumate a la lista de espera",
-        text: "Deja tus datos sin costo y quedas registrado como interesado en ese modelo.",
+        name: "Compara modelos",
+        text: "Pon hasta 3 modelos lado a lado: autonomia, bateria, potencia, carga y precio.",
       },
       {
         "@type": "HowToStep",
         position: 3,
-        name: "Te avisamos",
-        text: "Te contactamos cuando abramos el acceso y tengamos novedades para tu modelo.",
+        name: "Calcula tu ahorro",
+        text: "Estima cuanto ahorras frente a la bencina segun tus kilometros.",
       },
       {
         "@type": "HowToStep",
         position: 4,
-        name: "Estrena tu auto",
-        text: "Te acompanamos en todo el proceso hasta que retires tu vehiculo.",
+        name: "Resuelve tus dudas",
+        text: "Si todavia no sabes cual elegir, la asesoria por WhatsApp te ayuda a decidir segun tu uso y tu presupuesto.",
       },
     ],
   };
@@ -156,7 +156,7 @@ export function HomeStructuredData() {
     "@type": "AutoDealer",
     name: "Electrificarte",
     description:
-      "Servicio de negociación de autos eléctricos en Chile con asesoría personalizada para obtener el mejor precio del mercado.",
+      "Catalogo y asesoria para elegir autos electrificados en Chile: fichas tecnicas y precios de lista, comparador de modelos, calculadora de ahorro y asesoria por WhatsApp.",
     url: "https://www.electrificarte.com",
     address: {
       "@type": "PostalAddress",

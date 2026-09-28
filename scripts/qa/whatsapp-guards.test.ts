@@ -10,7 +10,7 @@
 
 import assert from "node:assert/strict";
 import { containsSystemLeak, detectInjection, isOffTopic } from "@/lib/chat/guards";
-import { validateOutput } from "@/lib/chat/output-validator";
+import { quitarNegociacionComoActual, validateOutput } from "@/lib/chat/output-validator";
 import { RESPUESTA_SEGURA, sanearParaWhatsApp } from "@/lib/whatsapp/output-guard";
 import { ASESORIA_URL, CONTACTO_URL, MENSAJE_DERIVACION, MENSAJE_ERROR, mensajeAsesoriaVencida, mensajeBienvenida } from "@/lib/whatsapp/mensajes";
 import { vencimientoDeUltimaAsesoria } from "@/lib/whatsapp/subscription";
@@ -136,6 +136,24 @@ test("precio real sin 'CLP' → sin aviso", () => {
 });
 test("el nombre de la tool de derivación cuenta como fuga", () => {
   assert.equal(containsSystemLeak("Voy a usar derivar_a_humano para esto"), true);
+});
+
+console.log("\nchatbot web: negociación solo como algo futuro:");
+test("saca la oración que presenta la negociación como actual", () => {
+  const r = quitarNegociacionComoActual("El Seal es muy eficiente. Negociamos con vendedores oficiales el mejor precio. Mira su ficha.");
+  assert.equal(r, "El Seal es muy eficiente. Mira su ficha.");
+});
+test("deja pasar la mención a futuro con /negociacion", () => {
+  const t = "Estamos preparando un servicio de negociación que abrirá pronto. Puedes ver cómo va a funcionar en /negociacion.";
+  assert.equal(quitarNegociacionComoActual(t), t);
+});
+test("saca $19.990, oferta exclusiva y 'te conseguimos un descuento'", () => {
+  const r = quitarNegociacionComoActual("Hola.\n- Por $19.990 buscamos tu oferta\n- Oferta exclusiva para ti\n- Te conseguimos un descuento en el precio\n- Mira el [catálogo](/marcas)");
+  assert.equal(r, "Hola.\n- Mira el [catálogo](/marcas)");
+});
+test("respuesta sin nada del giro sale igual", () => {
+  const t = "**BYD Dolphin**: 427 km de autonomía.\n\n[MENU]\n1. Ver catálogo → /marcas\n[/MENU]";
+  assert.equal(quitarNegociacionComoActual(t), t);
 });
 
 console.log("\nmensajes fijos:");

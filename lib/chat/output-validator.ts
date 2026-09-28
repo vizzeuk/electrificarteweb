@@ -78,3 +78,35 @@ export function validateOutput(
 
   return result;
 }
+
+/**
+ * Giro sep-2026: el servicio de negociación NO existe todavía. El chatbot de la web puede
+ * nombrarlo como algo que abrirá pronto, pero nunca como algo que ya funciona. El prompt lo
+ * pide; esto lo hace cumplir. Saca la oración entera (no solo la frase), igual que el filtro
+ * del asesor de WhatsApp (lib/whatsapp/output-guard.ts, que es más estricto: allá no se nombra).
+ */
+const NEGOCIACION_COMO_ACTUAL: RegExp[] = [
+  /19[.,]?990/,
+  /\bpago\s+[úu]nico\b/i,
+  /\bnegociamos\b/i,
+  /\b(estamos|seguimos)\s+negociando\b/i,
+  /\bnegocia(r|remos)?\s+por\s+ti\b/i,
+  /\bprecios?\s+negociados?\b/i,
+  /\bgarant[íi]a\s+de\s+devoluci[óo]n\b/i,
+  /\bte\s+(devolvemos|reembolsamos)\b/i,
+  /\boferta\s+exclusiva\b/i,
+  /\bte\s+consegui(mos|remos)\b[^.\n]{0,40}\b(precio|descuento|oferta)/i,
+];
+
+export function quitarNegociacionComoActual(text: string): string {
+  const lineas: string[] = [];
+  for (const linea of text.split("\n")) {
+    const oraciones = linea.split(/(?<=[.!?])\s+(?=\S)/);
+    const quedan = oraciones.filter((o) => !NEGOCIACION_COMO_ACTUAL.some((re) => re.test(o)));
+    if (quedan.length < oraciones.length && quedan.join("").trim() === "") continue; // línea borrada entera
+    const nueva = quedan.join(" ");
+    if (/^\s*(?:[-*]|\d+\.)\s*$/.test(nueva)) continue; // quedó solo la viñeta
+    lineas.push(nueva);
+  }
+  return lineas.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+}

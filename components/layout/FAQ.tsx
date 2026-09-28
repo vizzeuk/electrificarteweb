@@ -15,10 +15,10 @@ interface FAQProps {
 }
 
 const DEFAULT_FAQS: FAQItem[] = [
-  { icon: "savings",        question: "¿Cuánto ahorro realmente usando Electrificarte?", answer: "El ahorro depende del modelo y del momento de compra. Negociamos con nuestra red de vendedores oficiales para conseguirte la mejor oferta disponible, incluyendo bonos y descuentos que no están al alcance del público general. Nuestros clientes han ahorrado desde $800.000 hasta más de $6.000.000." },
-  { icon: "groups",         question: "¿Cómo logran esos descuentos?",                   answer: "Trabajamos con una amplia red de vendedores oficiales en Chile. Al agrupar múltiples solicitudes de compra, podemos negociar descuentos por volumen, acceder a bonos exclusivos y encontrar ofertas de inventario que no están disponibles al público general." },
+  { icon: "savings",        question: "¿Cuánto ahorro con un auto electrificado?",       answer: "Depende de cuántos kilómetros haces y del modelo: un eléctrico gasta mucho menos por kilómetro que un auto a bencina, y un híbrido también reduce el consumo. En la calculadora de ahorro pones tus kilómetros y te muestra la diferencia frente a la bencina." },
+  { icon: "groups",         question: "¿Electrificarte consigue descuentos?",            answer: "Todavía no. Estamos preparando un servicio para buscar, dentro de una red de vendedores oficiales, un precio mejor que el de lista para el modelo que elijas. Aún no está abierto: si quieres enterarte cuando abra, puedes dejar tus datos en la waitlist, sin costo." },
   { icon: "payments",       question: "¿Tiene algún costo para mí?",                     answer: "Sumarte a la waitlist no tiene costo: solo dejas tus datos y quedas registrado como interesado. Si además quieres ayuda para decidir qué auto comprar, la asesoría por WhatsApp tiene un valor de $4.990." },
-  { icon: "directions_car", question: "¿Tengo que comprar sin ver el auto?",             answer: "Para nada. Te conectamos con el vendedor oficial y puedes visitarlo, hacer test drive y revisar el vehículo antes de tomar cualquier decisión. La oferta final siempre es tuya para aceptar o rechazar." },
+  { icon: "directions_car", question: "¿Tengo que comprar sin ver el auto?",             answer: "Para nada. La compra la haces directamente con el vendedor oficial de la marca: puedes visitarlo, hacer una prueba de manejo y revisar el auto antes de decidir." },
   { icon: "shield",         question: "¿Qué pasa después de sumarme a la waitlist?",     answer: "Quedas registrado como interesado en el modelo que nos indicaste. Te contactamos cuando abramos el acceso y tengamos novedades para ti. No adquieres ningún compromiso al registrarte." },
 ];
 

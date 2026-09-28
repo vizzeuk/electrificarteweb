@@ -51,7 +51,7 @@ const footerSections: { title: string; links: FooterLink[] }[] = [
       { label: "Quiénes somos",    href: "/nosotros" },
       { label: "Nuestro servicio", href: "/#como-funciona" },
       { label: "Reseñas de dueños", href: "/resenas" },
-      { label: "Cómo negociamos",  href: "/negociacion" },
+      { label: "Negociación, próximamente", href: "/negociacion" },
       { label: "Blog",             href: "/blog" },
     ],
   },
@@ -148,7 +148,7 @@ export function Footer() {
               <Logo variant="lockup" className="w-[232px]" />
             </Link>
             <p className="footer__about">
-              Te ayudamos a elegir y comprar tu auto electrificado en Chile, con una red de vendedores oficiales.
+              Te ayudamos a elegir tu auto electrificado en Chile.
             </p>
             <div className="socials">
               {socialLinks.map((s) => (

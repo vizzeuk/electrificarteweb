@@ -16,10 +16,10 @@ const DEFAULT_BADGES: TrustBadgeData[] = [
   // OJO: la waitlist solo registra interesados — no prometer una oferta ni decir "gratis".
   { icon: "verified_user",     title: "Sin compromiso",       description: "Regístrate en la waitlist y te contactamos cuando haya novedades." },
   { icon: "lock",              title: "Datos protegidos",     description: "Tu información personal está protegida bajo la Ley 19.628 de Chile." },
-  { icon: "workspace_premium", title: "Vendedores oficiales", description: "Solo trabajamos con vendedores autorizados y verificados en Chile." },
+  { icon: "workspace_premium", title: "Datos de fuentes oficiales", description: "Fichas técnicas y precios de lista tomados de cada marca, sin inventar nada." },
 ];
 
-/** "Compras con total confianza": cuatro sellos en fila, separados por hairlines. */
+/** "Decide con total confianza": cuatro sellos en fila, separados por hairlines. */
 export function TrustBadges({ badges }: TrustBadgesProps) {
   const displayBadges = badges && badges.length > 0 ? badges : DEFAULT_BADGES;
 
@@ -28,7 +28,7 @@ export function TrustBadges({ badges }: TrustBadgesProps) {
       <div className="wrap">
         <div className="section-head">
           <div className="section-head__text">
-            <h2 id="trust-title" className="t-h2">Compras con total confianza</h2>
+            <h2 id="trust-title" className="t-h2">Decide con total confianza</h2>
           </div>
         </div>
 

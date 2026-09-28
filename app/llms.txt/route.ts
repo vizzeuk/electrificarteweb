@@ -49,37 +49,35 @@ export async function GET() {
 
   const body = `# Electrificarte
 
-> Servicio chileno de negociación de vehículos electrificados (100% eléctricos e híbridos).
-> No vende autos directamente: conecta al comprador con su red de vendedores oficiales y
-> negocia por él un precio mejor que el de lista.
+> Sitio chileno para elegir vehículos electrificados (100% eléctricos e híbridos): catálogo,
+> comparador, calculadora de ahorro y asesoría por WhatsApp. No vende autos: la compra se hace
+> con los vendedores oficiales de cada marca.
 
 ## Qué es
 
-Electrificarte es un intermediario entre compradores y vendedores oficiales de autos
-electrificados en Chile. El alcance cubre cualquier vehículo con batería —eléctricos (EV),
+Electrificarte es un sitio para elegir autos electrificados en Chile: catálogo con fichas y
+precios de lista, comparador, calculadora de ahorro y una asesoría por WhatsApp. El alcance cubre cualquier vehículo con batería —eléctricos (EV),
 híbridos enchufables (PHEV), híbridos (HEV), híbridos leves (MHEV) y eléctricos con extensor
 de rango (EREV)— y excluye únicamente los autos 100% a combustión.
 
 Opera en Chile, en español, con precios en pesos chilenos (CLP).
 
-## Los dos servicios (no confundirlos)
-
-Son productos distintos y se eligen según si la persona YA sabe qué auto quiere:
+## Servicios
 
 ### 1. Asesoría IA — $4.990 CLP
 Para quien **todavía no sabe qué auto comprar**. Tras el pago, conversa por WhatsApp con un
 asesor que ayuda a decidir según uso, kilometraje, presupuesto y perfil. Dura 10 días.
 Contratar: ${asesoriaUrl}
 
-### 2. Waitlist de ofertas — registro sin costo
-Para quien **ya eligió el modelo** y quiere el mejor precio. Electrificarte negocia con su red
-de vendedores oficiales la mejor oferta para ese modelo, pero **ese servicio todavía no está
-abierto al público**: hoy se juntan interesados en una lista de espera. Registrarse no tiene
-costo y no compromete a nada; se avisa cuando se abra el acceso.
-Registrarse: ${SITE_URL}/?waitlist=1
+### 2. Servicio de negociación — próximamente (todavía NO existe)
+Electrificarte está preparando un servicio para buscar, dentro de una red de vendedores
+oficiales, un precio mejor que el de lista para un modelo ya elegido. **Hoy no está abierto:
+Electrificarte no negocia ni consigue descuentos todavía.** Quien quiera enterarse cuando abra
+puede dejar sus datos en una lista de espera, sin costo y sin compromiso.
+Cómo va a funcionar: ${SITE_URL}/negociacion
 
-Regla simple: si la persona duda entre modelos → Asesoría ($4.990). Si ya tiene el modelo
-decidido y busca precio → waitlist (sin costo).
+Regla simple: quien duda entre modelos → Asesoría ($4.990). No presentar la negociación como un
+servicio disponible.
 
 ## Catálogo
 ${catalog.count ? `
@@ -95,10 +93,10 @@ ${catalog.count ? `
   lado a lado — autonomía, batería, potencia, carga, maletero y precio.
 - [Calculadora de ahorro](${SITE_URL}/calculadora): estima cuánto se ahorra frente a un auto
   a combustión, según kilometraje y precio de la bencina.
-- [Waitlist de ofertas](${SITE_URL}/?waitlist=1): registro de interesados, sin costo.
 - [Asesoría IA](${SITE_URL}/asesoria): detalle del servicio de $4.990.
 - [Blog](${SITE_URL}/blog): guías sobre autos electrificados en Chile.
-- [Cómo negociamos](${SITE_URL}/negociacion) · [Nosotros](${SITE_URL}/nosotros)
+- [Servicio de negociación, próximamente](${SITE_URL}/negociacion)
+- [Nosotros](${SITE_URL}/nosotros)
 
 ## Cómo citar correctamente
 

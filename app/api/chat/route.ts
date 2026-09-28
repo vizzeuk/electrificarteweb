@@ -10,7 +10,7 @@ import {
   INJECTION_RESPONSE,
   OFFTOPIC_RESPONSE,
 } from "@/lib/chat/guards";
-import { validateOutput } from "@/lib/chat/output-validator";
+import { quitarNegociacionComoActual, validateOutput } from "@/lib/chat/output-validator";
 import { exceedsGlobalChatQuota, CHAT_QUOTA_MESSAGE } from "@/lib/chat/spend-cap";
 import { ASESORIA_CHECKOUT_URL } from "@/lib/products";
 
@@ -33,8 +33,9 @@ const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 // ─── Productos ────────────────────────────────────────────────────────────────
 // Asesoría personalizada ($4.990, por WhatsApp) → formulario /asesoria/contratar.
-// Waitlist de ofertas (giro sep-2026) → popup vía /?waitlist=1. El flujo pagado
-// de negociación ($19.990 → /solicitar) está en STANDBY, no se ofrece.
+// Servicio de negociación → STANDBY (giro sep-2026): hoy NO existe. El bot solo puede
+// nombrarlo como algo que abrirá pronto, y solo si la persona pregunta por precio o
+// descuentos: explica /negociacion y ofrece la waitlist (/?waitlist=1) para enterarse.
 // La URL vive en lib/products.ts para compartirse con la página /asesoria.
 const ASESORIA_URL = ASESORIA_CHECKOUT_URL;
 
@@ -224,7 +225,7 @@ async function handleRecommendation(body: {
 
 [MENU]
 1. Ver catálogo completo → /marcas
-2. Súmate a la waitlist de ofertas → /?waitlist=1
+2. Asesoría por WhatsApp ($4.990) → ${ASESORIA_URL}
 3. Volver al inicio
 [/MENU]`;
 }
@@ -314,7 +315,7 @@ async function handleChat(messages: ChatMessage[]): Promise<string> {
     .map((c) => c.discountPrice ?? c.basePrice)
     .filter((p): p is number => typeof p === "number" && p > 0);
 
-  const systemPrompt = `Eres Francisco, el asistente virtual de Electrificarte — el servicio de negociación de autos eléctricos e híbridos #1 de Chile. Eres amable, experto y conciso.
+  const systemPrompt = `Eres Francisco, el asistente virtual de Electrificarte, el sitio para elegir autos eléctricos e híbridos en Chile: catálogo con fichas y precios de lista, comparador, calculadora de ahorro y asesoría por WhatsApp. Eres amable, experto y conciso.
 
 MARCAS DISPONIBLES: ${allBrands.map((b) => b.name).join(", ")}
 
@@ -329,18 +330,22 @@ ${carsToText(longRangeCars)}
 
 ${matchedBrand ? `MODELOS ${matchedBrand.name.toUpperCase()}:\n${brandCars.length > 0 ? carsToText(brandCars) : "Sin modelos disponibles"}` : ""}
 
-DOS PRODUCTOS (no los confundas):
-1. **Asesoría personalizada** — $4.990, atención directa por WhatsApp con un experto que ayuda a DECIDIR qué auto comprar. Enlace de pago: ${ASESORIA_URL}. Úsalo cuando la persona pide ayuda para decidir, orientación, o quiere hablar con un experto y aún no tiene claro el modelo.
-2. **Waitlist de ofertas** — GRATIS registrarse. Negociamos con vendedores oficiales el mejor precio de un modelo ya elegido, pero ese servicio AÚN NO está abierto: hoy juntamos interesados en una lista de espera. Enlace: /?waitlist=1. Úsalo SOLO cuando la persona ya sabe qué modelo quiere y busca conseguir el mejor precio.
-- NUNCA envíes la asesoría personalizada a la waitlist, ni la waitlist a ${ASESORIA_URL}.
-- ⚠️ Sobre la waitlist NUNCA: menciones un precio para el servicio de negociación, prometas una oferta, des plazos, ni digas que ese servicio es o será gratis. Lo único sin costo es REGISTRARSE en la lista.
+LO QUE OFRECE ELECTRIFICARTE HOY:
+- **Asesoría personalizada** — $4.990, 10 días de atención por WhatsApp con un experto que ayuda a DECIDIR qué auto comprar. Enlace: ${ASESORIA_URL}. Es el servicio principal: recomiéndalo cuando la persona pide ayuda para decidir, orientación, o no tiene claro el modelo.
+- Gratis en el sitio: catálogo (/marcas), comparador (/comparador) y calculadora de ahorro (/calculadora).
+
+LO QUE TODAVÍA NO EXISTE — servicio de negociación con vendedores oficiales:
+- Electrificarte HOY NO negocia, NO consigue precios, descuentos ni ofertas. Nunca digas "negociamos", "te conseguimos", "nuestra red te ofrece" ni nada que lo presente como algo que ya funciona.
+- Solo si la persona pregunta por el mejor precio, descuentos u ofertas de un modelo: cuéntale que estamos preparando un servicio para eso que **abrirá pronto**, que puede leer cómo va a funcionar en /negociacion y, si quiere enterarse cuando abra, dejar sus datos en la waitlist (/?waitlist=1). No lo ofrezcas por iniciativa propia.
+- Sobre ese servicio NUNCA: menciones un precio, prometas descuentos u ofertas, des plazos ni digas que es o será gratis. Lo único sin costo es dejar los datos en la waitlist.
+- NUNCA mandes a la waitlist a quien pide ayuda para decidir: eso es la asesoría.
 
 REGLAS:
 - Responde siempre en español chileno, tono cercano
 - Máximo 3-4 párrafos, sé directo
 - Usa markdown: **negrita**, listas con guiones
 - Incluye links clickeables: [Nombre del auto](/auto/slug) o [Ver catálogo](/marcas)
-- Rutas útiles: /marcas (catálogo) · /?waitlist=1 (waitlist de ofertas) · /contacto · /auto/[slug]. Para la asesoría personalizada por WhatsApp usa ${ASESORIA_URL} (el enlace de arriba).
+- Rutas útiles: /marcas (catálogo) · /comparador · /calculadora · /contacto · /auto/[slug]. Para la asesoría personalizada por WhatsApp usa ${ASESORIA_URL} (el enlace de arriba).
 - Al final sugiere 2-3 acciones con links
 - NUNCA inventes precios ni especificaciones fuera de los datos aquí indicados
 - Si no tienes info suficiente, di "no tengo esa información en este momento" y sugiere /contacto
@@ -361,7 +366,12 @@ REGLAS:
     ? block.text
     : "Lo siento, no pude procesar tu consulta. Intenta de nuevo.";
 
-  return validateOutput(rawText, validSlugs, validPrices);
+  const limpio = quitarNegociacionComoActual(rawText);
+  return validateOutput(
+    limpio || "Déjame orientarte mejor: ¿buscas ayuda para elegir modelo o datos de uno en particular? Puedes ver el [catálogo](/marcas) o contratar la [asesoría por WhatsApp](" + ASESORIA_URL + ").",
+    validSlugs,
+    validPrices,
+  );
 }
 
 // ─── Route handler ────────────────────────────────────────────────────────────
@@ -438,5 +448,5 @@ function fallbackMessage(err: unknown): string {
     ? "Estoy recibiendo muchas consultas en este momento y no pude procesar la tuya 🙏."
     : "Tuve un problema procesando tu consulta.";
 
-  return `${base}\n\nMientras tanto puedes:\n\n[MENU]\n1. Ver el catálogo completo → /marcas\n2. Súmate a la waitlist de ofertas → /?waitlist=1\n3. Escribirnos directamente → /contacto\n[/MENU]`;
+  return `${base}\n\nMientras tanto puedes:\n\n[MENU]\n1. Ver el catálogo completo → /marcas\n2. Asesoría por WhatsApp ($4.990) → ${ASESORIA_URL}\n3. Escribirnos directamente → /contacto\n[/MENU]`;
 }

@@ -15,12 +15,12 @@ export const revalidate = 60;
 export const metadata: Metadata = {
   title: "Quiénes somos",
   description:
-    "Te ayudamos a elegir y comprar tu auto electrificado en Chile. Conectamos a compradores con nuestra red de vendedores oficiales, sin vueltas ni presión de venta.",
+    "Te ayudamos a elegir tu auto electrificado en Chile: catálogo, comparador, calculadora de ahorro y asesoría por WhatsApp, sin vueltas ni presión de venta.",
   alternates: { canonical: "/nosotros" },
   openGraph: {
     title: "Quiénes somos | Electrificarte",
     description:
-      "Te ayudamos a elegir y comprar tu auto electrificado en Chile, con una red de vendedores oficiales.",
+      "Te ayudamos a elegir tu auto electrificado en Chile, sin vueltas ni presión de venta.",
     url: "/nosotros",
     type: "website",
   },
@@ -59,10 +59,11 @@ export default async function NosotrosPage() {
   const price: string = prices?.advisoryPrice ?? ASESORIA_PRICE;
 
   const stats = [
-    { value: "+500", label: "compras ya negociadas en Chile" },
+    // Solo cifras verificables hoy (giro sep-2026: nada de compras "negociadas" ni de la red
+    // de vendedores, que está en preparación).
     ...(brandCount > 0 ? [{ value: String(brandCount), label: "marcas en el catálogo" }] : []),
-    { value: "+15", label: "vendedores oficiales en la red" },
-    { value: "100%", label: "vendedores verificados" },
+    { value: "5", label: "tecnologías electrificadas: EV, PHEV, HEV, MHEV y REEV" },
+    { value: "10 días", label: "de asesoría por WhatsApp" },
   ];
 
   return (
@@ -182,7 +183,7 @@ export default async function NosotrosPage() {
                   Únete a la waitlist
                 </OfferCta>
                 <Link href="/negociacion" className="btn btn--quiet">
-                  Cómo negociamos
+                  Cómo va a funcionar
                 </Link>
               </div>
             </div>
