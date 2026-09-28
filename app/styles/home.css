@@ -70,8 +70,8 @@
 .fact--link { display: block; }
 .fact--link .fact__num { transition: color var(--duration-base) var(--ease); }
 .fact--link:hover .fact__num { color: var(--link); }
-.fact__cta { margin-top: var(--space-3); font-size: var(--text-small); }
-.fact--link:hover .fact__cta .arrow { transform: translateX(3px); }
+.fact__arrow { margin-left: var(--space-1); font-size: 1.15em; line-height: 1; vertical-align: -0.2em; transition: transform var(--duration-base) var(--ease); }
+.fact--link:hover .fact__arrow { transform: translateX(3px); }
 @media (max-width: 767px) {
   .hero__in { padding-top: 112px; }
   .hero__actions { flex-direction: column; align-items: stretch; margin-top: var(--space-8); }

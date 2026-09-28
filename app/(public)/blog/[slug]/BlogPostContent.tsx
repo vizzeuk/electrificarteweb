@@ -481,7 +481,7 @@ export function BlogPostContent({ post }: { post: BlogPost }) {
       </div>
 
       {/* ─── CTA final: Asesoría (principal) y waitlist ─────────────── */}
-      <section className="section section--rule" aria-label="Asesoría y waitlist">
+      <section className="section section--subtle" aria-label="Asesoría y waitlist">
         <div className="wrap">
           <div className="soft-block cta-row">
             <div>

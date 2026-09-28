@@ -23,12 +23,11 @@ const STEPS = [
 
 export function ParaVendedores() {
   return (
-    <section className="section section--subtle" aria-labelledby="vendedores-title">
+    <section className="section" aria-labelledby="vendedores-title">
       <div className="wrap">
         <div className="sellers">
           <div>
-            <span className="chip">Próximamente</span>
-            <h2 id="vendedores-title" className="t-h2 mt-5">¿Vendes autos electrificados?</h2>
+            <h2 id="vendedores-title" className="t-h2">¿Vendes autos electrificados?</h2>
             <p className="t-lead">
               Estamos preparando una red de vendedores oficiales para conectarte con personas interesadas en los
               modelos que vendes. Todavía no está disponible: deja tus datos y te llamamos cuando esté funcionando.

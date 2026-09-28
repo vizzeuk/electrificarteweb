@@ -30,7 +30,7 @@ export function FAQ({ title = "Preguntas frecuentes", faqs }: FAQProps) {
   const displayFaqs = faqs && faqs.length > 0 ? faqs : DEFAULT_FAQS;
 
   return (
-    <section className="section section--rule" aria-labelledby="faq-title">
+    <section className="section section--subtle" aria-labelledby="faq-title">
       <div className="wrap faq">
         {/* ── Izquierda: acordeón ── */}
         <div>

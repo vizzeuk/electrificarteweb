@@ -37,7 +37,7 @@ export function VehicleTypeGrid({ types }: ElectricTypeGridProps) {
 
   // Hairline arriba: la franja de reseñas del home, justo antes, también es blanca.
   return (
-    <section className="section section--rule" aria-labelledby="electric-types-title">
+    <section className="section section--subtle" aria-labelledby="electric-types-title">
       <div className="wrap">
         <div className="section-head">
           <div className="section-head__text">

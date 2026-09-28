@@ -96,8 +96,7 @@ export default function VendedoresPage() {
           </nav>
 
           <div className="mt-header">
-            <span className="chip">En preparación</span>
-            <h1 className="t-h1 mt-5">Red de vendedores oficiales</h1>
+            <h1 className="t-h1">Red de vendedores oficiales</h1>
             <p className="t-lead">
               Estamos preparando un servicio para quienes venden autos electrificados: recibir el contacto de personas
               interesadas en los modelos que vendes. Todavía no está funcionando; deja tus datos y te llamamos
@@ -115,7 +114,7 @@ export default function VendedoresPage() {
       </section>
 
       {/* ── Cómo va a funcionar ── */}
-      <section className="section" aria-labelledby="how-t">
+      <section className="section section--subtle" aria-labelledby="how-t">
         <div className="wrap">
           <div className="section-head">
             <div className="section-head__text">
@@ -138,7 +137,7 @@ export default function VendedoresPage() {
       </section>
 
       {/* ── Para quién es y cuánto cuesta ── */}
-      <section className="section section--subtle" aria-labelledby="para-t">
+      <section className="section" aria-labelledby="para-t">
         <div className="wrap">
           <div className="grid gap-12 md:grid-cols-2 md:gap-16">
             <div>
@@ -165,7 +164,7 @@ export default function VendedoresPage() {
       </section>
 
       {/* ── Preguntas frecuentes ── */}
-      <section className="section" aria-labelledby="faq-t">
+      <section className="section section--subtle" aria-labelledby="faq-t">
         <div className="wrap faq-2">
           <div>
             <h2 className="t-h2" id="faq-t">Preguntas frecuentes</h2>
@@ -186,7 +185,7 @@ export default function VendedoresPage() {
       </section>
 
       {/* ── Cierre claro con hairline arriba (el footer ya es oscuro) ── */}
-      <section className="band section--rule" aria-labelledby="band-t">
+      <section className="band" aria-labelledby="band-t">
         <div className="wrap band__in">
           <div>
             <h2 className="t-h2" id="band-t">Te llamamos cuando esté funcionando</h2>

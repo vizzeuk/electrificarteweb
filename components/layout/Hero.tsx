@@ -71,14 +71,13 @@ export function Hero({ data, facts }: HeroProps) {
 
   // Cifras reales del catálogo + una celda que invita a la calculadora de ahorro
   // (sin cifra: el ahorro depende del auto y de los kilómetros de cada persona).
-  const cells: { num: string; label: string; href?: string; cta?: string }[] = facts
+  const cells: { num: string; label: string; href?: string }[] = facts
     ? [
         { num: String(facts.models), label: "modelos electrificados en el catálogo" },
         {
           num: "Tu ahorro",
-          label: "Calcula cuánto te ahorras frente a la bencina según tus kilómetros.",
+          label: "frente a la bencina, en la calculadora",
           href: "/calculadora",
-          cta: "Ir a la calculadora",
         },
         { num: String(facts.technologies.length), label: `tecnologías: ${joinList(facts.technologies)}` },
         { num: "10 días", label: "de asesoría por WhatsApp" },
@@ -114,11 +113,10 @@ export function Hero({ data, facts }: HeroProps) {
               c.href ? (
                 <Link className="fact fact--link" href={c.href} key={c.label}>
                   <p className="fact__num">{c.num}</p>
-                  <p className="fact__label">{c.label}</p>
-                  <span className="link-arrow fact__cta">
-                    {c.cta}
-                    <Icon name="arrow_forward" size="none" className="arrow" />
-                  </span>
+                  <p className="fact__label">
+                    {c.label}
+                    <Icon name="arrow_forward" size="none" className="arrow fact__arrow" />
+                  </p>
                 </Link>
               ) : (
                 <div className="fact" key={c.label}>

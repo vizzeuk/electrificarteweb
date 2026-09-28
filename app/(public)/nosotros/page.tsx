@@ -111,7 +111,7 @@ export default async function NosotrosPage() {
       </section>
 
       {/* ── Misión ── */}
-      <section className="section" aria-labelledby="mision-t">
+      <section className="section section--subtle" aria-labelledby="mision-t">
         <div className="wrap grid gap-6 lg:grid-cols-12 lg:gap-16">
           <h2 className="t-h2 lg:col-span-5" id="mision-t">Que la movilidad eléctrica sea para todos</h2>
           <p className="t-lead lg:col-span-7">
@@ -123,7 +123,7 @@ export default async function NosotrosPage() {
       </section>
 
       {/* ── Cómo trabajamos ── */}
-      <section className="section section--subtle" aria-labelledby="valores-t">
+      <section className="section" aria-labelledby="valores-t">
         <div className="wrap">
           <div className="section-head">
             <div className="section-head__text">
@@ -143,7 +143,7 @@ export default async function NosotrosPage() {
       </section>
 
       {/* ── Dos caminos: el bloque Glaciar de la página es el de la Asesoría ── */}
-      <section className="section" aria-labelledby="caminos-t">
+      <section className="section section--subtle" aria-labelledby="caminos-t">
         <div className="wrap">
           <div className="section-head">
             <div className="section-head__text">
@@ -191,7 +191,7 @@ export default async function NosotrosPage() {
       </section>
 
       {/* ── Cierre claro, con hairline arriba ── */}
-      <section className="band section--rule" aria-labelledby="band-t">
+      <section className="band" aria-labelledby="band-t">
         <div className="wrap band__in">
           <div>
             <h2 className="t-h2" id="band-t">¿Listo para estrenar?</h2>

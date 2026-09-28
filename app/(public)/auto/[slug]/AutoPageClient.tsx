@@ -538,8 +538,12 @@ export default function AutoPageClient({ car, similarCars, reviewsSlot }: AutoPa
     .filter((g) => g.rows.length > 0);
 
   // Hairline solo entre dos secciones blancas seguidas (regla del sistema).
-  const equipRule = !showVersionTable;
-  const fichaRule = equipGroups.length > 0 || !showVersionTable;
+  // Ritmo de fondos: después de "Lo destacado" (blanca), las secciones alternan Niebla y
+  // blanco según cuáles se muestren (versiones y equipamiento son opcionales). Así nunca quedan
+  // varias blancas seguidas ni dos Niebla juntas.
+  const afterAbout = [showVersionTable && "ver", equipGroups.length > 0 && "eq", "ficha", "nego", "sim"]
+    .filter(Boolean) as string[];
+  const tone = (k: string) => (afterAbout.indexOf(k) % 2 === 0 ? "section--subtle" : undefined);
   const hasSimilar = similarCars.length > 0;
 
   return (
@@ -772,7 +776,7 @@ export default function AutoPageClient({ car, similarCars, reviewsSlot }: AutoPa
 
       {/* ─── Compara las versiones ──────────────────────────────────────── */}
       {showVersionTable && (
-        <section className="section section--subtle" aria-labelledby="pdp-ver-t">
+        <section className={cn("section", tone("ver"))} aria-labelledby="pdp-ver-t">
           <div className="wrap">
             <div className="section-head">
               <div className="section-head__text">
@@ -815,7 +819,7 @@ export default function AutoPageClient({ car, similarCars, reviewsSlot }: AutoPa
 
       {/* ─── Equipamiento ───────────────────────────────────────────────── */}
       {equipGroups.length > 0 && (
-        <section className={cn("section", equipRule && "section--rule")} aria-labelledby="pdp-eq-t">
+        <section className={cn("section", tone("eq"))} aria-labelledby="pdp-eq-t">
           <div className="wrap">
             <div className="section-head">
               <div className="section-head__text">
@@ -847,7 +851,7 @@ export default function AutoPageClient({ car, similarCars, reviewsSlot }: AutoPa
       )}
 
       {/* ─── Ficha técnica ──────────────────────────────────────────────── */}
-      <section className={cn("section", fichaRule && "section--rule")} aria-labelledby="pdp-ficha-t">
+      <section className={cn("section", tone("ficha"))} aria-labelledby="pdp-ficha-t">
         <div className="wrap">
           <div className="section-head">
             <div className="section-head__text">
@@ -884,12 +888,11 @@ export default function AutoPageClient({ car, similarCars, reviewsSlot }: AutoPa
       {/* ─── Próximamente: negociación con vendedores oficiales ─────────── */}
       {/* Sobrio a propósito (hairline, sin Glaciar): el servicio todavía no abre. Sin precio
           ni plazos; la acción es sumarse a la waitlist con el modelo precargado. */}
-      <section className="section section--tight section--rule" aria-labelledby="pdp-nego-t">
+      <section className={cn("section section--tight", tone("nego"))} aria-labelledby="pdp-nego-t">
         <div className="wrap">
           <div className="cta-row cta-row--outline">
             <div>
-              <span className="chip">Próximamente</span>
-              <h2 className="t-h3 mt-4" id="pdp-nego-t">Negociación con vendedores oficiales</h2>
+              <h2 className="t-h3" id="pdp-nego-t">Negociación con vendedores oficiales</h2>
               <p>
                 Pronto abriremos un servicio en el que buscamos, dentro de nuestra red de vendedores oficiales, un
                 precio mejor que el de lista para el modelo que elegiste. Únete a la waitlist y te avisamos cuando
@@ -910,7 +913,7 @@ export default function AutoPageClient({ car, similarCars, reviewsSlot }: AutoPa
       </section>
 
       {/* ─── Similares y bloque Glaciar final ──────────────────────────── */}
-      <section className="section section--rule" aria-labelledby={hasSimilar ? "pdp-sim-t" : "pdp-cta-t"}>
+      <section className={cn("section", tone("sim"))} aria-labelledby={hasSimilar ? "pdp-sim-t" : "pdp-cta-t"}>
         <div className="wrap">
           {hasSimilar && (
             <>

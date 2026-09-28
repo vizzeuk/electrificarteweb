@@ -108,7 +108,7 @@ export default async function ResenasPage() {
       </section>
 
       {/* ── Para qué sirven ── */}
-      <section className="section" aria-labelledby="para-que-t">
+      <section className="section section--subtle" aria-labelledby="para-que-t">
         <div className="wrap">
           <div className="section-head">
             <div className="section-head__text">
@@ -129,7 +129,7 @@ export default async function ResenasPage() {
       </section>
 
       {/* ── Cómo funcionan ── */}
-      <section className="section section--subtle" id="como-funciona" aria-labelledby="como-t">
+      <section className="section" id="como-funciona" aria-labelledby="como-t">
         <div className="wrap">
           <div className="section-head">
             <div className="section-head__text">
@@ -150,7 +150,7 @@ export default async function ResenasPage() {
       </section>
 
       {/* ── Qué se califica ── */}
-      <section className="section" aria-labelledby="califica-t">
+      <section className="section section--subtle" aria-labelledby="califica-t">
         <div className="wrap">
           <div className="section-head">
             <div className="section-head__text">
@@ -178,7 +178,7 @@ export default async function ResenasPage() {
       </section>
 
       {/* ── Qué contar (el bloque destacado de la página) ── */}
-      <section className="section section--rule" aria-labelledby="ideas-t">
+      <section className="section" aria-labelledby="ideas-t">
         <div className="wrap">
           <div className="soft-block price-block">
             <div>
@@ -202,7 +202,7 @@ export default async function ResenasPage() {
       </section>
 
       {/* ── Privacidad ── */}
-      <section className="section section--rule" aria-labelledby="privacidad-t">
+      <section className="section section--subtle" aria-labelledby="privacidad-t">
         <div className="wrap">
           <div className="section-head">
             <div className="section-head__text">
@@ -234,7 +234,7 @@ export default async function ResenasPage() {
 
       {/* ── Adelanto de las reseñas publicadas (Niebla) ── */}
       {summary && (
-        <section className="section section--subtle" aria-labelledby="ultimas-t">
+        <section className="section" aria-labelledby="ultimas-t">
           <div className="wrap">
             <div className="section-head">
               <div className="section-head__text">
@@ -268,7 +268,7 @@ export default async function ResenasPage() {
       )}
 
       {/* ── Preguntas frecuentes: blanca si la sección anterior es Niebla ── */}
-      <section className={summary ? "section section--rule" : "section section--subtle"} aria-labelledby="faq-t">
+      <section className={summary ? "section section--subtle" : "section"} aria-labelledby="faq-t">
         <div className="wrap faq-2">
           <div>
             <h2 className="t-h2" id="faq-t">Preguntas frecuentes</h2>
@@ -289,7 +289,7 @@ export default async function ResenasPage() {
       </section>
 
       {/* ── Cierre claro (el footer ya es oscuro) ── */}
-      <section className="band section--rule" aria-labelledby="band-t">
+      <section className={summary ? "band" : "band section--subtle"} aria-labelledby="band-t">
         <div className="wrap band__in">
           <div>
             <h2 className="t-h2" id="band-t">¿Tienes un auto electrificado?</h2>

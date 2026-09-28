@@ -41,8 +41,7 @@ export default function VendedoresUnirmePage() {
 
           <div className="page-head__grid page-head__grid--top">
             <div>
-              <span className="chip">En preparación</span>
-              <h1 className="t-h1 mt-5">Te llamamos cuando esté funcionando</h1>
+              <h1 className="t-h1">Te llamamos cuando esté funcionando</h1>
               <p className="t-lead">
                 La red de vendedores oficiales de Electrificarte todavía no está abierta. Deja tus datos y te
                 contactamos apenas lo esté.

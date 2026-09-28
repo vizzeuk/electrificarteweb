@@ -145,7 +145,7 @@ export function HowItWorks({ title = "Cómo funciona Electrificarte", steps, vid
 
   return (
     <>
-      <section id="como-funciona" className="section" aria-labelledby="howitworks-title">
+      <section id="como-funciona" className="section section--subtle" aria-labelledby="howitworks-title">
         <div className="wrap">
           <div className="section-head">
             <div className="section-head__text">

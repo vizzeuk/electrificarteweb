@@ -24,7 +24,7 @@ export function TrustBadges({ badges }: TrustBadgesProps) {
   const displayBadges = badges && badges.length > 0 ? badges : DEFAULT_BADGES;
 
   return (
-    <section className="section section--rule" aria-labelledby="trust-title">
+    <section className="section" aria-labelledby="trust-title">
       <div className="wrap">
         <div className="section-head">
           <div className="section-head__text">

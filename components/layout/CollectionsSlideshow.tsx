@@ -52,7 +52,7 @@ export function CollectionsSlideshow({ collections }: CollectionsSlideshowProps)
   const items = collections && collections.length > 0 ? collections : FALLBACK;
 
   return (
-    <section className="section section--rule" aria-labelledby="collections-title">
+    <section className="section section--subtle" aria-labelledby="collections-title">
       <div className="wrap">
         <div className="section-head">
           <div className="section-head__text">

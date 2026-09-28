@@ -135,8 +135,7 @@ export default function NegociacionPage() {
           </nav>
 
           <div className="mt-header">
-            <span className="chip">Próximamente</span>
-            <h1 className="t-h1 mt-5">{TITLE}</h1>
+            <h1 className="t-h1">{TITLE}</h1>
             <p className="t-lead">
               Estamos preparando un servicio para quienes ya saben qué auto quieren: buscar, dentro de nuestra red de
               vendedores oficiales, un precio mejor que el de lista para ese modelo. Todavía no está abierto.
@@ -152,7 +151,7 @@ export default function NegociacionPage() {
       </section>
 
       {/* ── Cómo va a funcionar ── */}
-      <section className="section" aria-labelledby="how-t">
+      <section className="section section--subtle" aria-labelledby="how-t">
         <div className="wrap">
           <div className="section-head">
             <div className="section-head__text">
@@ -175,7 +174,7 @@ export default function NegociacionPage() {
       </section>
 
       {/* ── Qué hacer hoy ── */}
-      <section className="section section--subtle" aria-labelledby="hoy-t">
+      <section className="section" aria-labelledby="hoy-t">
         <div className="wrap">
           <div className="section-head">
             <div className="section-head__text">
@@ -214,7 +213,7 @@ export default function NegociacionPage() {
       </section>
 
       {/* ── Preguntas frecuentes ── */}
-      <section className="section" aria-labelledby="faq-t">
+      <section className="section section--subtle" aria-labelledby="faq-t">
         <div className="wrap faq-2">
           <div>
             <h2 className="t-h2" id="faq-t">Preguntas frecuentes</h2>
@@ -235,7 +234,7 @@ export default function NegociacionPage() {
       </section>
 
       {/* ── Cierre claro con hairline arriba (el footer ya es oscuro) ── */}
-      <section className="band section--rule" aria-labelledby="band-t">
+      <section className="band" aria-labelledby="band-t">
         <div className="wrap band__in">
           <div>
             <h2 className="t-h2" id="band-t">Sé de los primeros en usarlo</h2>

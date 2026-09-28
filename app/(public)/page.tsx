@@ -178,7 +178,7 @@ export default async function HomePage() {
           intrinsic-size hint so the scrollbar is honest. */}
       <LatestLaunches title={page?.latestLaunchesTitle} cars={latestCars} />
       {/* Invitación a reseñar (cualquier auto) con la nota real → /resenas → /resenas/escribir.
-          Blanca entre "Últimos lanzamientos" (Niebla) y los tipos (blanca, con hairline arriba). */}
+          Blanca entre "Últimos lanzamientos" y los tipos, las dos en Niebla: el home alterna fondos. */}
       <HomeReviewPrompt summary={reviewSummary} latest={latestReview} />
       <VehicleTypeGrid types={vehicleTypes ?? []} />
       {HOT_DEALS_ENABLED && (

@@ -4,7 +4,6 @@ import { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import { Icon } from "@/components/ui/Icon";
 import { CarCard } from "@/components/car/CarCard";
 import { useInViewport } from "@/lib/useInViewport";
-import { HOT_DEALS_ENABLED } from "@/lib/products";
 
 export interface OpportunityCarData {
   _id?: string;
@@ -142,12 +141,9 @@ export function Opportunities({ title = "Destacados Electrificarte", cars }: Opp
     }
   }
 
-  // Con la Oferta destacada apagada, esta sección queda pegada a la de tipos (ambas en
-  // blanco): una línea fina las separa. Con la banda oscura de por medio no hace falta.
-  const sectionClass = HOT_DEALS_ENABLED ? "section" : "section section--rule";
-
   return (
-    <section ref={sectionRef} className={sectionClass} aria-labelledby="opportunities-title">
+    // Blanca entre los tipos (Niebla) y las colecciones (Niebla): el home alterna fondos.
+    <section ref={sectionRef} className="section" aria-labelledby="opportunities-title">
       <div className="wrap section-head">
         <div className="section-head__text">
           <p className="chip mb-4">Publicidad</p>

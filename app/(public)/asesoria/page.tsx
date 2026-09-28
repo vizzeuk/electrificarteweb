@@ -254,7 +254,7 @@ export default async function AsesoriaPage() {
       </section>
 
       {/* ── Cómo funciona ── */}
-      <section className="section" id="como-funciona" aria-labelledby="how-t">
+      <section className="section section--subtle" id="como-funciona" aria-labelledby="how-t">
         <div className="wrap">
           <div className="section-head">
             <div className="section-head__text">
@@ -275,7 +275,7 @@ export default async function AsesoriaPage() {
       </section>
 
       {/* ── Precio y qué incluye: el bloque Glaciar de la página ── */}
-      <section className="section section--rule" aria-labelledby="price-t">
+      <section className="section" aria-labelledby="price-t">
         <div className="wrap">
           <div className="soft-block price-block">
             <div>
@@ -386,7 +386,7 @@ export default async function AsesoriaPage() {
       </section>
 
       {/* ── Cierre claro, con hairline arriba (el footer ya es oscuro) ── */}
-      <section className="band section--rule" aria-labelledby="band-t">
+      <section className="band section--subtle" aria-labelledby="band-t">
         <div className="wrap band__in">
           <div>
             <h2 className="t-h2" id="band-t">Empieza hoy tu asesoría</h2>

@@ -501,7 +501,7 @@ export default function BrandPageContent({ slug, brand, hotDealUrgencyLabel }: B
       )}
 
       {/* ─── La marca en cifras (stats de Sanity) + los dos caminos ─── */}
-      <section className={cn("section", !hasVideos && "section--rule")} aria-labelledby={stats.length > 0 ? "cifras-t" : undefined}>
+      <section className={cn("section", !hasVideos && "section--subtle")} aria-labelledby={stats.length > 0 ? "cifras-t" : undefined}>
         <div className="wrap">
           {stats.length > 0 && (
             <>

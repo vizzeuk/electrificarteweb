@@ -42,7 +42,7 @@ export function ServiciosExtras({ items }: ServiciosExtrasProps) {
   const cards = (items && items.length > 0 ? items : DEFAULTS).slice(0, 2);
 
   return (
-    <section className="section section--subtle" aria-labelledby="servicios-title">
+    <section className="section" aria-labelledby="servicios-title">
       <div className="wrap">
         <div className="section-head">
           <div className="section-head__text">
