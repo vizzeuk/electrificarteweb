@@ -888,6 +888,34 @@ export default function AutoPageClient({ car, similarCars, reviewsSlot }: AutoPa
         </div>
       </section>
 
+      {/* ─── Próximamente: negociación con vendedores oficiales ─────────── */}
+      {/* Sobrio a propósito (hairline, sin Glaciar): el servicio todavía no abre. Sin precio
+          ni plazos; la acción es sumarse a la waitlist con el modelo precargado. */}
+      <section className="section section--tight section--rule" aria-labelledby="pdp-nego-t">
+        <div className="wrap">
+          <div className="cta-row cta-row--outline">
+            <div>
+              <span className="chip">Próximamente</span>
+              <h2 className="t-h3 mt-4" id="pdp-nego-t">Negociación con vendedores oficiales</h2>
+              <p>
+                Pronto abriremos un servicio en el que buscamos, dentro de nuestra red de vendedores oficiales, un
+                precio mejor que el de lista para el modelo que elegiste. Únete a la waitlist y te avisamos cuando
+                esté disponible para el {model}.
+              </p>
+            </div>
+            <div className="cta-row__actions items-center">
+              <OfferCta carSlug={car.slug} model={model} source="pdp-negociacion" className="btn btn--secondary btn--lg">
+                Únete a la waitlist
+              </OfferCta>
+              <Link href="/negociacion" className="link-arrow">
+                Cómo va a funcionar
+                <Icon name="arrow_forward" size="none" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ─── Similares y bloque Glaciar final ──────────────────────────── */}
       <section className="section section--rule" aria-labelledby={hasSimilar ? "pdp-sim-t" : "pdp-cta-t"}>
         <div className="wrap">
