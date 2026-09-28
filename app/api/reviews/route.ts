@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { REVIEW_MAX_CHARS, REVIEW_MIN_CHARS } from "@/lib/reviews/config";
+import { REVIEW_EXTRA_MAX_CHARS, REVIEW_MAX_CHARS, REVIEW_MIN_CHARS } from "@/lib/reviews/config";
+import { promedioNotas } from "@/lib/reviews/categories";
 import { n8nHeaders } from "@/lib/n8n";
 
 /**
@@ -18,7 +19,27 @@ import { n8nHeaders } from "@/lib/n8n";
  * El estado lo decide n8n a partir de `photos` (no confía en el `status` del payload, que va
  * solo como referencia). n8n responde recién después de guardar la fila, así que un 2xx
  * significa "guardada": ahí se revalida la ficha para que la reseña sin fotos aparezca ya.
+ *
+ * Calificación (27-sep-2026): 4 categorías obligatorias de 1 a 5 (autonomía, confort, agilidad,
+ * calidad). La nota final `rating` es su promedio con un decimal y la calcula ESTE servidor: si
+ * el cliente manda su propio `rating`, zod lo descarta (no está en el esquema).
+ *
+ * Contrato con n8n (lo que se reenvía):
+ *   firstName, lastName, email, phone?, body, carSlug?, carSanityId?, carBrand?, carModel?,
+ *   carYear?, carColor?, carVersion?, photos?, source, status, timestamp,
+ *   rating (número, 1 decimal), ratingAutonomia, ratingConfort, ratingAgilidad, ratingCalidad
+ *   (enteros 1-5), pros, contras (texto o null).
  */
+
+const nota = z.number().int().min(1).max(5);
+
+/** Texto opcional: vacío o solo espacios cuenta como "no lo escribió". */
+const extra = z
+  .string()
+  .trim()
+  .max(REVIEW_EXTRA_MAX_CHARS)
+  .optional()
+  .transform((v) => (v ? v : undefined));
 
 const schema = z.object({
   firstName: z.string().min(2, "Nombre inválido").max(80),
@@ -26,8 +47,13 @@ const schema = z.object({
   email: z.string().email("Email inválido"),
   phone: z.string().regex(/^\+56 9\d{8}$/, "Teléfono inválido").optional(),
 
-  rating: z.number().int().min(1).max(5),
+  ratingAutonomia: nota,
+  ratingConfort: nota,
+  ratingAgilidad: nota,
+  ratingCalidad: nota,
   body: z.string().min(REVIEW_MIN_CHARS).max(REVIEW_MAX_CHARS),
+  pros: extra,
+  contras: extra,
 
   // Datos del auto. `carSlug` viene cuando la reseña se abre desde una PDP.
   carSlug: z.string().max(120).optional(),
@@ -65,16 +91,23 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Webhook no configurado" }, { status: 500 });
   }
 
-  const hasPhotos = (parsed.data.photos?.length ?? 0) > 0;
+  const d = parsed.data;
+  const hasPhotos = (d.photos?.length ?? 0) > 0;
+  // Nunca es null acá: las cuatro notas son obligatorias en el esquema.
+  const rating = promedioNotas([d.ratingAutonomia, d.ratingConfort, d.ratingAgilidad, d.ratingCalidad]) as number;
 
   try {
     const res = await fetch(webhookUrl, {
       method: "POST",
       headers: n8nHeaders(),
       body: JSON.stringify({
-        ...parsed.data,
+        ...d,
+        rating,
+        // null explícito (y no ausente): así el nodo de n8n siempre encuentra la llave.
+        pros: d.pros ?? null,
+        contras: d.contras ?? null,
         status: hasPhotos ? "pendiente" : "aprobada",
-        source: parsed.data.source || "web",
+        source: d.source || "web",
         timestamp: new Date().toISOString(),
       }),
       // n8n responde después de guardar la fila; bajo ráfagas tarda ~2-3 s. Con 5 s de margen
@@ -88,8 +121,9 @@ export async function POST(request: Request) {
 
   // Sin fotos = publicada: se refresca la ficha (ISR) para que aparezca de inmediato.
   if (!hasPhotos) {
-    if (parsed.data.carSlug) revalidatePath(`/auto/${parsed.data.carSlug}`);
+    if (d.carSlug) revalidatePath(`/auto/${d.carSlug}`);
     revalidatePath("/");
+    revalidatePath("/resenas/todas");
   }
 
   return NextResponse.json({ success: true, published: !hasPhotos });

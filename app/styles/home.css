@@ -220,7 +220,7 @@
 
 /* ------------------------------------------------------------ RESEÑAS ---- */
 .rating { display: flex; align-items: center; gap: var(--space-3); }
-.stars { display: flex; gap: 2px; color: var(--ink); }
+.stars { display: flex; gap: 2px; color: var(--link); }
 .stars .material-symbols-outlined { font-size: 16px; }
 .rating__num { font-weight: 600; font-size: 1.125rem; font-variant-numeric: tabular-nums; }
 .rating__count { font-size: var(--text-small); color: var(--ink-2); }
