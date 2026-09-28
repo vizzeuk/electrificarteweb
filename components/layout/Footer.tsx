@@ -66,8 +66,8 @@ const footerSections: { title: string; links: FooterLink[] }[] = [
   {
     title: "Vendedores",
     links: [
-      { label: "Cómo funciona", href: "https://vendedores.electrificarte.com", external: true },
-      { label: "Únete",         href: "https://vendedores.electrificarte.com/unirse", external: true },
+      { label: "Cómo va a funcionar", href: "/vendedores" },
+      { label: "Deja tus datos",      href: "/vendedores/unirme" },
     ],
   },
 ];
