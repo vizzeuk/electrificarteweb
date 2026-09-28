@@ -341,7 +341,7 @@ export default function BrandPageContent({ slug, brand, hotDealUrgencyLabel }: B
                       {specs && <p className="t-small">{specs}</p>}
                       <div className="deal-card__actions">
                         <OfferCta carSlug={deal.carSlug} model={model} source="plp" className="btn btn--primary">
-                          Quiero esta oferta
+                          Quiero este modelo
                         </OfferCta>
                         <Link href={`/auto/${deal.carSlug}`} className="btn btn--secondary">
                           Ver auto

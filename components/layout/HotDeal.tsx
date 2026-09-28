@@ -105,7 +105,7 @@ function DealSlide({ c, index, total, active }: {
         </dl>
         <div className="deal__actions">
           <OfferCta carSlug={c.slug} model={model} source="hotdeal" className="btn btn--primary btn--lg">
-            Quiero esta oferta
+            Quiero este modelo
             <Icon name="arrow_forward" size="none" className="arrow" />
           </OfferCta>
           <Link href={`/auto/${c.slug}`} className="btn btn--secondary btn--lg">

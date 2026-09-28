@@ -721,7 +721,7 @@ export default function AutoPageClient({ car, similarCars, reviewsSlot }: AutoPa
 
               <div ref={buyActionsRef} className="buy__actions">
                 <OfferCta carSlug={car.slug} model={model} source="pdp" className="btn btn--primary btn--lg">
-                  Quiero esta oferta
+                  Quiero este modelo
                   <Icon name="arrow_forward" size="none" className="arrow" />
                 </OfferCta>
                 <Link href={compareHref} className="btn btn--secondary btn--lg">
@@ -979,7 +979,7 @@ export default function AutoPageClient({ car, similarCars, reviewsSlot }: AutoPa
               Comparar
             </Link>
             <OfferCta carSlug={car.slug} model={model} source="pdp" className="btn btn--primary">
-              Quiero esta oferta
+              Quiero este modelo
             </OfferCta>
           </div>
         </div>
