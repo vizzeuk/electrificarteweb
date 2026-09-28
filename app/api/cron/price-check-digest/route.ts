@@ -37,7 +37,7 @@ interface FlaggedCar {
   catalogFindings?: Finding[];
 }
 
-export function buildDigestMessage(
+function buildDigestMessage(
   cars: FlaggedCar[],
   coverage: Coverage,
   publicados: number,
