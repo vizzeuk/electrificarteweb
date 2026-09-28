@@ -334,8 +334,9 @@ Bloqueantes de lanzamiento (detalle en `docs/HANDOFF-CONDUCTOR.md` §8):
 🔴 **Feedback de Francisco (27-sep-2026)** — detalle en `docs/CAMBIOS-FEEDBACK-FRANCISCO-2026-09-27.md`:
 - ✅ SQL de categorías + `waitlist_vendedores` aplicado; n8n sincronizado y probado punta a punta.
 - `N8N_VENDOR_WAITLIST_URL=https://n8n.cadre.cl/webhook/waitlist-vendedores` en Vercel.
-- Sanity: `homePage.testimonialsTitle` ("Lo que dicen nuestros clientes") y la 1.ª FAQ del home
-  ("Negociamos con nuestra red…") chocan con el giro.
+- ✅ Sanity y chatbots alineados al giro (28-sep). Respaldo de los textos originales de Sanity en
+  `scripts/data/sanity-giro-backup.json`. Pendiente: `/terminos` aún describe la negociación y el
+  $19.990 (legal, que lo revise Francisco) y la key de Anthropic (chatbot web cae al respaldo).
 - Por decidir: waitlist en páginas genéricas (home "Cómo funciona"/FAQ, `/marcas`, `/nosotros`) y
   si el asesor de WhatsApp sigue enseñando a cotizar.
 

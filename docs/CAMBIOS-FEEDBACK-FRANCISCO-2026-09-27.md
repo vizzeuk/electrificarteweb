@@ -162,19 +162,32 @@ comparador y la calculadora.
 
 ---
 
-## 7. Pendientes y decisiones abiertas
+## 7. Chatbots y contenido (28-sep)
 
-- **Sanity (contenido):**
-  - `homePage.testimonialsTitle` sigue diciendo "Lo que dicen nuestros clientes" (el sitio ya no
-    lo muestra, pero conviene cambiarlo).
-  - La **primera pregunta frecuente del home** dice "Negociamos con nuestra red de vendedores
-    oficiales para conseguirte la mejor oferta" y cifras de ahorro: choca con el giro.
-  - El artículo guía del blog todavía dice "negociamos con concesionarios".
+- **Chatbot de la web:** ya no se presenta como "servicio de negociación". Ofrece la asesoría
+  como servicio principal y el catálogo, comparador y calculadora. La negociación solo aparece
+  como algo que **abrirá pronto**, y solo si la persona pregunta por precio o descuentos (lleva a
+  `/negociacion` y a la waitlist). Un filtro en código saca cualquier frase que la presente como
+  algo que ya funciona. Los menús fijos del chat ofrecen la asesoría en vez de la waitlist.
+- **Asesor de WhatsApp:** ya cumplía (no nombra la negociación); sin cambios.
+- **Sanity:** hero y título de testimonios del home, 3 colecciones y 2 artículos del blog
+  reescritos al estado actual (sin "negociamos", sin cifras de ahorro "negociado", sin
+  "concesionarios"). Los textos originales quedaron respaldados en
+  `scripts/data/sanity-giro-backup.json` para cuando se reactive la Oferta.
+- **Sitio:** preguntas frecuentes del home, datos para Google y asistentes de IA (structured
+  data y `llms.txt`), cifras de `/nosotros`, footer, sellos de confianza y el título de la
+  pestaña de cada ficha (antes decía "Oferta exclusiva").
+
+## 8. Pendientes y decisiones abiertas
+
+- **Chatbot de la web sin IA:** en producción responde el mensaje de respaldo. La key de Anthropic
+  del entorno local no tiene crédito; hay que revisar la facturación de Anthropic y la key
+  `ANTHROPIC_API_KEY` en Vercel (si es la misma, también afecta al asesor pagado de WhatsApp).
+- **Términos y condiciones** (`/terminos`): todavía describen el servicio de negociación y su
+  precio de $19.990. Es texto legal: conviene que lo revise Francisco antes de cambiarlo.
 - **Waitlist en páginas genéricas:** además de las fichas, sigue como botón en "Cómo funciona" y
-  preguntas frecuentes del home, en `/marcas` y en el cierre de `/nosotros`. Francisco pidió que viva
-  en las fichas; falta decidir si se saca también de ahí.
-- **Asesor de WhatsApp:** todavía le enseña a la persona a cotizar con vendedores oficiales (comparar
-  precio de lista con bonos, pedir la cotización por escrito). Si tampoco debe tocar la compra, se
-  ajusta en `lib/whatsapp/advisor.ts`.
-- La ficha de auto usa "Oferta exclusiva" en el título de la pestaña del navegador.
+  preguntas frecuentes del home, en `/marcas` y en `/nosotros`. Falta decidir si se saca.
+- **Asesor de WhatsApp:** enseña a cotizar con vendedores oficiales (comparar precio de lista con
+  bonos, pedir la cotización por escrito). Es orientación de compra, no el servicio de
+  negociación; se dejó así.
 - 3 pruebas automáticas del marketplace de subasta (en pausa) fallan desde antes de estos cambios.

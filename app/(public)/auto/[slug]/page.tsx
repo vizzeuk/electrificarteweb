@@ -37,8 +37,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!car || car.hidden) return { title: "Auto no encontrado" };
   const brandName = car.brand?.name ?? "";
   return {
-    title: stripBrandSuffix(car.metaTitle ?? `${brandName} ${car.name} | Oferta exclusiva`),
-    description: car.metaDescription ?? car.tagline ?? `Consigue el mejor precio en el ${brandName} ${car.name} en Chile.`,
+    title: stripBrandSuffix(car.metaTitle ?? `${brandName} ${car.name}: precio y ficha técnica`),
+    description: car.metaDescription ?? car.tagline ?? `Precio de lista, versiones, autonomía y ficha técnica del ${brandName} ${car.name} en Chile.`,
     alternates: { canonical: `/auto/${slug}` },
   };
 }
