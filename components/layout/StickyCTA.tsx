@@ -2,8 +2,11 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { OfferCta } from "@/components/waitlist/OfferCta";
 
+/**
+ * Barra fija del home (aparece al pasar el hero). Acompaña al hero: solo la Asesoría.
+ * La waitlist vive en las fichas de auto y lo ligado a un modelo, no acá.
+ */
 export function StickyCTA() {
   const [visible, setVisible] = useState(false);
 
@@ -52,9 +55,6 @@ export function StickyCTA() {
           <span>Te asesoramos por WhatsApp según tu uso y tu presupuesto.</span>
         </p>
         <div className="sticky-bar__actions">
-          <OfferCta source="sticky" className="btn btn--secondary">
-            Únete a la waitlist
-          </OfferCta>
           <Link href="/asesoria" className="btn btn--primary" tabIndex={visible ? undefined : -1}>
             Quiero asesoría
           </Link>
