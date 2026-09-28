@@ -123,7 +123,7 @@ const promo = ({ title, text, price, href, cta }) => `
 const ASESORIA_PROMO = promo({
   title: "¿No sabes cuál te conviene?",
   price: "$4.990",
-  text: "Un asesor experto te acompaña por WhatsApp durante 10 días: entiende cómo usas el auto, te recomienda hasta 3 modelos del catálogo y te explica cómo cotizarlos con vendedores oficiales.",
+  text: "Un asesor experto te acompaña por WhatsApp durante 10 días: entiende cómo usas el auto, te recomienda hasta 3 modelos del catálogo y resuelve tus dudas hasta que tengas claro cuál elegir.",
   href: `${SITE}/asesoria`,
   cta: "Conocer la asesoría",
 });
@@ -244,9 +244,40 @@ const waitlistFrancisco = layout({
 const RV = (k) => field("Webhook reseñas", `body.${k}`);
 const carName = `[${RV("carBrand")}, ${RV("carModel")}].filter(Boolean).join(' ')`;
 const carFull = `[${RV("carBrand")}, ${RV("carModel")}, ${RV("carYear")}].filter(Boolean).join(' ')`;
-const ratingN = `Math.max(0, Math.min(5, Number(${RV("rating")}) || 0))`;
+// La nota final es el promedio de las 4 categorías, con un decimal (sep-2026). Se muestra con
+// coma decimal ("4,3/5") y las estrellas se redondean a la más cercana.
+const ratingN = `Math.max(0, Math.min(5, Math.round(Number(${RV("rating")}) || 0)))`;
 const stars = `{{ '★'.repeat(${ratingN}) + '☆'.repeat(5 - ${ratingN}) }}`;
+const nota = `{{ (Number(${RV("rating")}) || 0).toFixed(1).replace('.', ',') }}/5`;
+const notaHtml = `${stars} <span style="font-size:15px;font-weight:600;">${nota}</span>`;
 const pdpUrl = `{{ ${RV("carSlug")} ? '${SITE}/auto/' + String(${RV("carSlug")}).replace(/[^a-z0-9-]/gi, '') : '${SITE}/marcas' }}`;
+
+/** Las 4 categorías en una fila de celdas: etiqueta arriba, nota abajo. Son números, no texto libre. */
+const CATEGORIAS = [["Autonomía", "ratingAutonomia"], ["Confort", "ratingConfort"], ["Agilidad", "ratingAgilidad"], ["Calidad", "ratingCalidad"]];
+const categorias = () => `
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;border-top:1px solid ${C.linea};border-bottom:1px solid ${C.linea};">
+  <tr>
+${CATEGORIAS.map(([label, k]) => `    <td width="25%" style="padding:12px 8px 12px 0;vertical-align:top;font-family:${FONT};">
+      <span style="display:block;font-size:13px;line-height:1.4;color:${C.grafito};">${label}</span>
+      <span style="display:block;margin-top:2px;font-size:17px;font-weight:600;line-height:1.3;color:${C.tinta};">{{ Math.round(Number(${RV(k)})) >= 1 ? Math.min(5, Math.round(Number(${RV(k)}))) + '/5' : 'Sin nota' }}</span>
+    </td>`).join("\n")}
+  </tr>
+</table>`;
+
+/**
+ * Pros y contras: campos opcionales. Cada fila existe solo si la persona escribió algo; si no
+ * escribió ninguno, la tabla queda vacía y no se ve. El texto pasa por el mismo escapado.
+ */
+const escRaw = (expr) => `String((${expr}) ?? '').trim().replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';')`;
+const optionalRow = (label, k) => {
+  const open = `<tr><td style="padding:12px 16px 12px 0;border-top:1px solid ${C.linea};font-family:${FONT};font-size:13px;line-height:1.4;color:${C.grafito};vertical-align:top;width:34%;">${label}</td><td style="padding:12px 0;border-top:1px solid ${C.linea};font-family:${FONT};font-size:15px;line-height:1.5;color:${C.tinta};vertical-align:top;white-space:pre-line;">`;
+  return `{{ String((${RV(k)}) ?? '').trim() ? ${JSON.stringify(open)} + ${escRaw(RV(k))} + '</td></tr>' : '' }}`;
+};
+const prosContras = () => `
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;border-bottom:1px solid ${C.linea};">
+  ${optionalRow("Lo bueno", "pros")}
+  ${optionalRow("Lo que mejoraría", "contras")}
+</table>`;
 
 const SHARE = promo({
   title: "¿Alguien cerca está pensando en cambiarse?",
@@ -255,10 +286,12 @@ const SHARE = promo({
   cta: "Ir a electrificarte.com",
 });
 
-/** Lo que escribió la persona, citado: su calificación y su texto. */
+/** Lo que escribió la persona, citado: su nota, las 4 categorías, su texto y sus pros y contras. */
 const suResena = () => [
-  highlight(`Tu reseña del ${esc(carName, "auto")}`, `${stars} <span style="font-size:15px;font-weight:600;">${esc(RV("rating"))}/5</span>`),
+  highlight(`Tu reseña del ${esc(carName, "auto")}`, notaHtml),
+  categorias(),
   quote(esc(RV("body"))),
+  prosContras(),
 ].join("\n");
 
 const resenaEnRevision = layout({
@@ -266,7 +299,8 @@ const resenaEnRevision = layout({
   reason: "Recibes este correo porque dejaste una reseña en electrificarte.com.",
   doc: `  RESEÑAS (con fotos): agradecimiento a quien la dejó. Queda en revisión hasta que Francisco
   la apruebe en el dashboard. Lee del nodo "Webhook reseñas": firstName, carBrand, carModel,
-  rating, body.`,
+  rating (promedio con 1 decimal), ratingAutonomia, ratingConfort, ratingAgilidad,
+  ratingCalidad, body, pros, contras (estos dos opcionales).`,
   body: [
     title("Gracias por compartir tu experiencia"),
     p(`Hola ${strong(esc(RV("firstName")))}, recibimos tu reseña y tus fotos. Como trae imágenes, la revisamos antes de publicarla: te avisaremos si hay algo que ajustar.`),
@@ -281,7 +315,8 @@ const resenaPublicada = layout({
   preheader: "Tu reseña ya está publicada.",
   reason: "Recibes este correo porque dejaste una reseña en electrificarte.com.",
   doc: `  RESEÑAS (sin fotos): se publican solas. Agradecimiento con el link a la ficha del auto.
-  Lee del nodo "Webhook reseñas": firstName, carBrand, carModel, carSlug, rating, body.`,
+  Lee del nodo "Webhook reseñas": firstName, carBrand, carModel, carSlug, rating, las 4
+  categorías (rating*), body, pros, contras.`,
   body: [
     title("Tu reseña ya está publicada"),
     p(`Hola ${strong(esc(RV("firstName")))}, gracias por tomarte el tiempo. Tu opinión ya aparece en la ficha del auto y va a ayudar a la próxima persona a elegir bien.`),
@@ -296,8 +331,10 @@ const resenaPublicada = layout({
 const francisco = ({ titulo, intro, cta, fotos = true }) => [
   title(titulo),
   p(intro),
-  highlight(esc(carFull, "Auto sin indicar"), `${stars} <span style="font-size:15px;font-weight:600;">${esc(RV("rating"))}/5</span>`),
+  highlight(esc(carFull, "Auto sin indicar"), notaHtml),
+  categorias(),
   quote(esc(RV("body"))),
+  prosContras(),
   specs([
     ["Quién la dejó", `${esc(RV("firstName"))} ${esc(RV("lastName"))}`],
     ["Email", esc(RV("email"))],
@@ -344,7 +381,8 @@ const asesoriaConfirmada = layout({
   reason: "Recibes este correo porque contrataste la asesoría de electrificarte.com.",
   doc: `  ASESORÍA: confirmación de pago a la persona.
   Lee del nodo Set "Datos correo asesoría": nombre, telefono.
-  ⚠️ Copy del giro: la asesoría NO negocia ni consigue ofertas. No mencionar $19.990.`,
+  ⚠️ Copy del giro: la asesoría NO negocia, no consigue ofertas y no acompaña la compra con
+  vendedores (sep-2026, Francisco). Solo ayuda a elegir. No mencionar $19.990.`,
   body: [
     title("Tu asesoría está confirmada"),
     p(`Hola ${strong(esc(AS("nombre")))}, recibimos tu pago. Durante los próximos 10 días tienes un asesor experto por WhatsApp para ayudarte a elegir tu auto electrificado según tu uso, tu presupuesto y dónde vas a cargar.`),
@@ -353,7 +391,7 @@ const asesoriaConfirmada = layout({
     specs([
       ["1. Diagnóstico", "Cómo usas el auto, cuántos km haces y con qué presupuesto."],
       ["2. Recomendación", "Hasta 3 modelos del catálogo, con datos reales de cada ficha."],
-      ["3. Compra", "Cómo cotizar con vendedores oficiales y qué revisar antes de firmar."],
+      ["3. Decisión", "Resolvemos tus dudas de carga, costos y versiones hasta que tengas claro cuál elegir."],
     ]),
     h3("Para aprovecharla al máximo"),
     p("Ten a mano tu presupuesto aproximado, cuántos kilómetros haces al día y si tienes dónde cargar (casa, trabajo o solo carga pública). Con eso la primera respuesta ya es útil."),
@@ -443,6 +481,62 @@ const nuevoVendedorFrancisco = layout({
   ].join("\n"),
 });
 
+// ─── WAITLIST DE VENDEDORES (sep-2026) ────────────────────────────────────────
+// La red de vendedores está en STANDBY: la página de suscripción existe pero no se ofrece. Los
+// vendedores interesados dejan sus datos en electrificarte.com/vendedores/unirme y quedan en la
+// tabla waitlist_vendedores. Nada de precios ni plazos: solo "te llamamos cuando abramos".
+const WV = (k) => field("Webhook waitlist vendedores", `body.${k}`);
+const WAITLIST_VENDOR_LINKS = [["Para vendedores", `${SITE}/vendedores`], ["Catálogo", `${SITE}/marcas`], ["Blog", `${SITE}/blog`]];
+
+const waitlistVendedorConfirmacion = layout({
+  preheader: "Recibimos tus datos. Te llamamos cuando abramos la red de vendedores.",
+  reason: "Recibes este correo porque dejaste tus datos como vendedor en electrificarte.com.",
+  footerLinks: WAITLIST_VENDOR_LINKS,
+  doc: `  WAITLIST DE VENDEDORES: confirmación al vendedor que dejó sus datos.
+  Lee del nodo "Webhook waitlist vendedores": body.firstName, puntoVenta, marcas.
+  ⚠️ La red NO está funcionando: no prometer clientes, precios ni plazos. Terminología:
+  "punto de venta" / "vendedores oficiales", nunca "concesionario".`,
+  body: [
+    title("Recibimos tus datos"),
+    p(`Hola ${strong(esc(WV("firstName")))}, gracias por tu interés en la red de vendedores oficiales de Electrificarte. Todavía la estamos preparando: cuando abramos, te llamamos antes que a nadie para contarte cómo funciona.`),
+    highlight("Tu punto de venta", esc(WV("puntoVenta"), "Sin indicar")),
+    specs([
+      ["Marcas", esc(WV("marcas"), "Sin indicar")],
+      ["Teléfono", esc(WV("phone"))],
+    ]),
+    h3("Qué pasa ahora"),
+    specs([
+      ["1", "Quedas en la lista de vendedores interesados."],
+      ["2", "Cuando la red esté lista, te llamamos para explicarte cómo funciona."],
+      ["3", "Tú decides si te sumas. Registrarte no te compromete a nada."],
+    ], "8%"),
+    p(`¿Algún dato está mal? Escríbenos a <a href="mailto:vendedores@electrificarte.com" style="color:${C.laguna};">vendedores@electrificarte.com</a>.`, "font-size:14px;"),
+    button(`${SITE}/vendedores`, "Conocer la red de vendedores", "secondary"),
+  ].join("\n"),
+});
+
+const waitlistVendedorFrancisco = layout({
+  internal: true,
+  preheader: "Un vendedor dejó sus datos para la red.",
+  doc: `  WAITLIST DE VENDEDORES: aviso interno a Francisco.
+  Lee del nodo "Webhook waitlist vendedores": body.firstName, lastName, email, phone,
+  puntoVenta, marcas, region, comuna, mensaje, source.`,
+  body: [
+    title("Un vendedor quiere sumarse a la red"),
+    p("Dejó sus datos en la página de vendedores. Queda en la waitlist de vendedores del dashboard."),
+    specs([
+      ["Vendedor", `${esc(WV("firstName"))} ${esc(WV("lastName"))}`],
+      ["Punto de venta", esc(WV("puntoVenta"), "Sin indicar")],
+      ["Marcas", esc(WV("marcas"), "Sin indicar")],
+      ["Ubicación", `{{ [${WV("comuna")}, ${WV("region")}].filter(Boolean).join(', ').replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';') || 'Sin indicar' }}`],
+      ["Teléfono", esc(WV("phone"))],
+      ["Email", esc(WV("email"))],
+      ["Mensaje", esc(WV("mensaje"), "Sin mensaje")],
+    ]),
+    button(`https://wa.me/${digits(WV("phone"))}`, "Escribir por WhatsApp"),
+  ].join("\n"),
+});
+
 // ─── OFERTA EXCLUSIVA $19.990 (🟡 STANDBY) ────────────────────────────────────
 // No se envían hoy (nodos desactivados). Quedan listas para cuando se reactive la Oferta.
 // Leen de un Set "Datos correo oferta": nombre, email, telefono, auto, comuna, region. (Los
@@ -499,6 +593,8 @@ const out = {
   "asesoria-francisco.html": asesoriaFrancisco,
   "registro-vendedor.html": registroVendedor,
   "nuevo-vendedor-francisco.html": nuevoVendedorFrancisco,
+  "waitlist-vendedor-confirmacion.html": waitlistVendedorConfirmacion,
+  "waitlist-vendedor-francisco.html": waitlistVendedorFrancisco,
   "pago-confirmado-cliente.html": pagoConfirmadoCliente,
   "nuevo-lead-francisco.html": nuevoLeadFrancisco,
 };

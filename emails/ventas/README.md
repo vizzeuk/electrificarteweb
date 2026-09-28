@@ -26,6 +26,8 @@ sobre fondo oscuro. Ambos PNG viven en `public/` y se sirven desde `www`.
 |---|---|---|---|
 | `waitlist-confirmacion.html` | Alguien se registra en la waitlist | La persona | `n8n/waitlist.json` |
 | `waitlist-francisco.html` | (mismo evento) | **Francisco** (interno) | `n8n/waitlist.json` |
+| `waitlist-vendedor-confirmacion.html` | Un vendedor deja sus datos en `/vendedores/unirme` | El vendedor | `n8n/waitlist-vendedores.json` |
+| `waitlist-vendedor-francisco.html` | (mismo evento) | **Francisco** (interno) | `n8n/waitlist-vendedores.json` |
 | `nueva-resena-francisco.html` | Reseña **con fotos** (queda pendiente) | **Francisco** (interno) | `n8n/reviews.json` |
 | `resena-en-revision.html` | (mismo evento) | Quien dejó la reseña | `n8n/reviews.json` |
 | `resena-publicada-francisco.html` | Reseña **sin fotos** (se publica sola) | **Francisco** (interno) | `n8n/reviews.json` |
@@ -33,7 +35,7 @@ sobre fondo oscuro. Ambos PNG viven en `public/` y se sirven desde `www`.
 | `asesoria-confirmada.html` | Reveniu confirma el pago de la Asesoría | La persona | `n8n/asesoria-correos.json` |
 | `asesoria-francisco.html` | (mismo evento) | **Francisco** (interno) | `n8n/asesoria-correos.json` |
 
-**Estos 8 se generan con `scripts/gen-emails.mjs` (sistema de diseño v1): no se editan a mano.**
+**Estos 10 se generan con `scripts/gen-emails.mjs` (sistema de diseño v1): no se editan a mano.**
 Todo dato que escribe el usuario va escapado para HTML (una reseña con `<a href>` llega como
 texto, no como link). Flujo de edición:
 ```bash

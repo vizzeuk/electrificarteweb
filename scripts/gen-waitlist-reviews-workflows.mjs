@@ -1,4 +1,4 @@
-// Genera n8n/waitlist.json, n8n/reviews.json y n8n/asesoria-correos.json embebiendo los HTML
+// Genera n8n/waitlist.json, n8n/waitlist-vendedores.json, n8n/reviews.json y n8n/asesoria-correos.json embebiendo los HTML
 // de emails/ventas/ (que a su vez salen de scripts/gen-emails.mjs).
 // Correr tras editar cualquiera de esos correos:  node scripts/gen-waitlist-reviews-workflows.mjs
 import { readFileSync, writeFileSync } from "node:fs";
@@ -91,6 +91,8 @@ const to = (node, i = 0) => ({ node, type: "main", index: i });
 
 const F = "francisco@electrificarte.com";
 const B = (k) => `={{ $json.body.${k} }}`;
+/** Opcional: si no vino, manda null (un "" en una columna numérica hace fallar el insert). */
+const BN = (k) => `={{ $json.body.${k} === undefined || $json.body.${k} === '' ? null : $json.body.${k} }}`;
 
 // ─── WAITLIST ────────────────────────────────────────────────────────────────
 const wlNodes = [
@@ -126,6 +128,45 @@ writeFileSync("n8n/waitlist.json", JSON.stringify({
 }, null, 2));
 console.log(`✓ n8n/waitlist.json — ${wlNodes.length} nodos`);
 
+// ─── WAITLIST DE VENDEDORES ──────────────────────────────────────────────────
+// Vendedores que dejan sus datos en electrificarte.com/vendedores/unirme mientras la red está
+// en standby. Mismo patrón que la waitlist de compradores.
+const wvNodes = [
+  webhook("wv-webhook", "Webhook waitlist vendedores", "waitlist-vendedores", [0, 300],
+    "La Production URL de este nodo va en Vercel como N8N_VENDOR_WAITLIST_URL."),
+  ifNode("wv-valid", "¿Datos válidos? (waitlist vendedores)",
+    [cond(B("firstName"), "notEmpty"), cond(B("lastName"), "notEmpty"), cond(B("email"), "notEmpty"), cond(B("phone"), "notEmpty")], [220, 300],
+    "Si falta un dato obligatorio responde 422 y no guarda nada (la web ya valida lo mismo con zod)."),
+  supabase("wv-supabase", "Guardar waitlist vendedores", "waitlist_vendedores", [
+    { fieldId: "first_name",  fieldValue: B("firstName") },
+    { fieldId: "last_name",   fieldValue: B("lastName") },
+    { fieldId: "email",       fieldValue: B("email") },
+    { fieldId: "phone",       fieldValue: B("phone") },
+    { fieldId: "punto_venta", fieldValue: BN("puntoVenta") },
+    { fieldId: "marcas",      fieldValue: BN("marcas") },
+    { fieldId: "region",      fieldValue: BN("region") },
+    { fieldId: "comuna",      fieldValue: BN("comuna") },
+    { fieldId: "mensaje",     fieldValue: BN("mensaje") },
+    { fieldId: "source",      fieldValue: B("source") },
+  ], [440, 240], "Si el insert falla, el flujo corta aquí y n8n le responde 500 a la web."),
+  respond("wv-ok", "Responder OK (waitlist vendedores)", 200, { ok: true }, [680, 60]),
+  respond("wv-bad", "Responder 422 (waitlist vendedores)", 422, { ok: false, error: "datos incompletos" }, [440, 460]),
+  resend("wv-mail-vendedor", "Correo confirmación (vendedor waitlist)",
+    "={{ $('Webhook waitlist vendedores').item.json.body.email }}",
+    "Recibimos tus datos", "waitlist-vendedor-confirmacion.html", [680, 240]),
+  resend("wv-mail-francisco", "Correo vendedor en waitlist (Francisco)",
+    F, "Un vendedor quiere sumarse a la red", "waitlist-vendedor-francisco.html", [680, 420]),
+];
+const wvConnections = {
+  "Webhook waitlist vendedores": { main: [[to("¿Datos válidos? (waitlist vendedores)")]] },
+  "¿Datos válidos? (waitlist vendedores)": { main: [[to("Guardar waitlist vendedores")], [to("Responder 422 (waitlist vendedores)")]] },
+  "Guardar waitlist vendedores": { main: [[to("Responder OK (waitlist vendedores)"), to("Correo confirmación (vendedor waitlist)"), to("Correo vendedor en waitlist (Francisco)")]] },
+};
+writeFileSync("n8n/waitlist-vendedores.json", JSON.stringify({
+  name: "Waitlist de vendedores (captación + correos)", nodes: wvNodes, connections: wvConnections, settings: {}, pinData: {},
+}, null, 2));
+console.log(`✓ n8n/waitlist-vendedores.json — ${wvNodes.length} nodos`);
+
 // ─── RESEÑAS ─────────────────────────────────────────────────────────────────
 // Solo se moderan las reseñas CON fotos (sep-2026). El estado lo decide n8n desde `photos`,
 // no desde el payload.
@@ -143,7 +184,13 @@ const rvNodes = [
     { fieldId: "email",         fieldValue: B("email") },
     { fieldId: "phone",         fieldValue: B("phone") },
     { fieldId: "rating",        fieldValue: B("rating") },
+    { fieldId: "rating_autonomia", fieldValue: BN("ratingAutonomia") },
+    { fieldId: "rating_confort",   fieldValue: BN("ratingConfort") },
+    { fieldId: "rating_agilidad",  fieldValue: BN("ratingAgilidad") },
+    { fieldId: "rating_calidad",   fieldValue: BN("ratingCalidad") },
     { fieldId: "body",          fieldValue: B("body") },
+    { fieldId: "pros",          fieldValue: BN("pros") },
+    { fieldId: "contras",       fieldValue: BN("contras") },
     { fieldId: "car_slug",      fieldValue: B("carSlug") },
     { fieldId: "car_sanity_id", fieldValue: B("carSanityId") },
     { fieldId: "car_brand",     fieldValue: B("carBrand") },
@@ -155,7 +202,7 @@ const rvNodes = [
     { fieldId: "source",        fieldValue: B("source") },
     { fieldId: "status",        fieldValue: `={{ ${HAS_PHOTOS} ? 'pendiente' : 'aprobada' }}` },
   ], [440, 240],
-    "status: con fotos 'pendiente' (Francisco la modera), sin fotos 'aprobada' (se publica sola)."),
+    "status: con fotos 'pendiente' (Francisco la modera), sin fotos 'aprobada' (se publica sola). rating = promedio de las 4 categorías (lo calcula la web)."),
   respond("rv-ok", "Responder OK (reseña)", 200, { ok: true }, [680, 40]),
   respond("rv-bad", "Responder 422 (reseña)", 422, { ok: false, error: "datos incompletos" }, [440, 560]),
   ifNode("rv-photos", "¿Trae fotos?", [cond("={{ (($('Webhook reseñas').item.json.body.photos) || []).length }}", "gt", "number", 0)], [680, 300],

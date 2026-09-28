@@ -1,4 +1,5 @@
-// Sincroniza los tramos de WAITLIST y RESEÑAS del repo (n8n/waitlist.json, n8n/reviews.json)
+// Sincroniza los tramos de WAITLIST, WAITLIST DE VENDEDORES y RESEÑAS del repo
+// (n8n/waitlist.json, n8n/waitlist-vendedores.json, n8n/reviews.json)
 // dentro del workflow central de n8n, vía la API pública. El repo es la fuente de verdad.
 //
 //   node --env-file=.env.local scripts/n8n-sync-central.mjs [--dry-run]
@@ -49,6 +50,8 @@ console.log(`respaldo: ${backup}`);
 
 const tramos = [
   { file: "n8n/waitlist.json", path: "waitlist", legacy: ["Webhook waitlist1", "Guardar en Supabase1", "¿Datos válidos? (waitlist)", "Correo confirmación (persona)", "Correo nueva inscripción (Francisco)"] },
+  // Tramo nuevo (sep-2026): si el webhook aún no existe en n8n, se crea debajo de todo el canvas.
+  { file: "n8n/waitlist-vendedores.json", path: "waitlist-vendedores", legacy: [], create: true },
   { file: "n8n/reviews.json", path: "reviews", legacy: ["Webhook reseñas1", "Guardar reseña (pendiente)1", "¿Datos válidos? (reseña)", "Correo por moderar (Francisco)1", "Correo agradecimiento (autor)1"] },
 ];
 
@@ -60,9 +63,18 @@ if (!supabaseCred || !resendCred) throw new Error("No encontré las credenciales
 let nodes = wf.nodes, connections = wf.connections;
 for (const t of tramos) {
   const gen = JSON.parse(readFileSync(t.file, "utf8"));
-  const liveHook = nodes.find((n) => n.type.endsWith(".webhook") && n.parameters.path === t.path);
-  if (!liveHook) throw new Error(`No hay webhook con path "${t.path}" en el workflow central`);
+  let liveHook = nodes.find((n) => n.type.endsWith(".webhook") && n.parameters.path === t.path);
+  if (!liveHook && !t.create) throw new Error(`No hay webhook con path "${t.path}" en el workflow central`);
   const genHook = gen.nodes.find((n) => n.type.endsWith(".webhook"));
+  if (!liveHook) {
+    // Tramo que no existe todavía: va debajo del nodo más bajo, alineado con los otros webhooks.
+    const hooks = nodes.filter((n) => n.type.endsWith(".webhook"));
+    liveHook = {
+      name: genHook.name, webhookId: uuid(`webhook:${t.path}`),
+      position: [Math.min(...hooks.map((n) => n.position[0])), Math.max(...nodes.map((n) => n.position[1])) + 400],
+    };
+    console.log(`tramo nuevo: webhook "${t.path}" en ${liveHook.position.join(",")}`);
+  }
   const dx = liveHook.position[0] - genHook.position[0], dy = liveHook.position[1] - genHook.position[1];
 
   const remove = new Set([...t.legacy, liveHook.name, ...gen.nodes.map((n) => n.name)]);
@@ -104,7 +116,7 @@ for (const [src, c] of Object.entries(connections)) {
   if (!names.includes(src)) throw new Error(`Conexión desde un nodo que no existe: ${src}`);
   for (const outs of c.main ?? []) for (const o of outs ?? []) if (!names.includes(o.node)) throw new Error(`Conexión a un nodo que no existe: ${src} → ${o.node}`);
 }
-const stale = JSON.stringify(nodes).match(/\$\('(Webhook (?:waitlist|reseñas)1)'\)/);
+const stale = JSON.stringify(nodes).match(/\$\('(Webhook (?:waitlist|reseñas|waitlist vendedores)1)'\)/);
 if (stale) throw new Error(`Queda una referencia a un nodo viejo: ${stale[1]}`);
 
 const ALLOWED = ["executionOrder", "errorWorkflow", "callerPolicy", "saveDataErrorExecution", "saveDataSuccessExecution", "saveManualExecutions", "saveExecutionProgress", "executionTimeout", "timezone"];
