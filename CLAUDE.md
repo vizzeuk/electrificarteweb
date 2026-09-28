@@ -329,6 +329,17 @@ Bloqueantes de lanzamiento (detalle en `docs/HANDOFF-CONDUCTOR.md` §8):
 - **`NEXT_PUBLIC_GA_ID`** en Vercel, o GA4 no carga
 - Decidir www vs no-www (canonical usa no-www, Reveniu retorna a www)
 
+🔴 **Feedback de Francisco (27-sep-2026)** — reseñas por categorías, waitlist de vendedores:
+- Correr `scripts/sql/2026-09-27_resenas_categorias_y_waitlist_vendedores.sql` en Supabase **antes**
+  de desplegar la web y de `n8n-sync-central.mjs` (si no, `rating` decimal choca con smallint y las
+  reseñas fallan).
+- Después: `node --env-file=.env.local scripts/n8n-sync-central.mjs` (crea el tramo
+  `waitlist-vendedores`) y `N8N_VENDOR_WAITLIST_URL=https://n8n.cadre.cl/webhook/waitlist-vendedores`
+  en Vercel.
+- Sanity: `homePage.testimonialsTitle` aún dice "Lo que dicen nuestros clientes" (el código lo ignora).
+- La red de vendedores ahora se presenta como "próximamente" en `/vendedores` y `/vendedores/unirme`;
+  nada del sitio enlaza a vendedores.electrificarte.com.
+
 Otros:
 - 🔧 **Flujo de VENTAS en n8n (25-sep-2026)** — `scripts/n8n-patch-ventas.mjs` (corrige la rama de
   pagos) + `scripts/qa/ventas-sim.mts` (simula alta + aviso de pago de Reveniu, sin cobrar).
