@@ -2,17 +2,28 @@ import Link from "next/link";
 import { sanityImg } from "@/lib/sanityImage";
 import { Icon } from "@/components/ui/Icon";
 import { ReviewCta } from "@/components/reviews/ReviewCta";
+import { StarRating } from "@/components/reviews/StarRating";
+import { cuentaResenas, formatNota } from "@/lib/reviews/categories";
+
+/**
+ * Reseñas destacadas del home.
+ *
+ * Quiénes opinan (feedback de Francisco, 27-sep-2026): son DUEÑOS de autos electrificados que
+ * dejaron su reseña (cualquiera puede), no "clientes" de Electrificarte. El título y la bajada
+ * lo dicen, y el resumen de arriba es el de TODAS las reseñas publicadas, no el de las tres
+ * tarjetas.
+ *
+ * Solo reseñas reales. Si todavía no hay ninguna publicada, la sección queda en la invitación a
+ * escribir la primera (antes caían testimonios de ejemplo escritos a mano: se quitaron).
+ */
 
 export interface TestimonialData {
   name: string;
   car: string;
   carSlug?: string;
-  /** Ahorro logrado. Opcional: las reseñas de usuarios no lo traen. */
-  savings?: string;
   quote: string;
   rating: number;
   imageUrl?: string;
-  personImageUrl?: string;
   /** Marca "Compra verificada" cuando la reseña vino por invitación. */
   verified?: boolean;
 }
@@ -20,51 +31,14 @@ export interface TestimonialData {
 interface TestimonialsProps {
   title?: string;
   testimonials?: TestimonialData[];
+  /** Resumen de todas las reseñas publicadas (nota promedio y total). */
+  summary?: { promedio: number; total: number } | null;
 }
 
-const DEFAULT_TESTIMONIALS: TestimonialData[] = [
-  { name: "Rodrigo M.", car: "Tesla Model 3",  carSlug: "tesla-model-3", savings: "$5.200.000", rating: 5, imageUrl: "/images/testimonial-tesla-model3.webp", personImageUrl: "/images/testimonial-person-1.jpg", quote: "Llevaba meses mirando el Model 3. Electrificarte consiguió un precio que no encontré por mi cuenta. En dos semanas ya manejaba con 500 km de autonomía." },
-  { name: "Sofía R.",     car: "Kia EV6",        carSlug: "kia-ev6",       savings: "$3.800.000", rating: 5, imageUrl: "/images/testimonial-kia-ev6.webp",      personImageUrl: "/images/testimonial-person-2.jpg", quote: "Quería carga rápida para el día a día y autonomía para los fines de semana. Me trajeron una oferta con bono incluido que no habría conseguido negociando sola." },
-  { name: "Pablo V.",     car: "BYD Tang Pro",   carSlug: "byd-tang",      savings: "$6.100.000", rating: 5, imageUrl: "/images/testimonial-byd-tang.webp",     personImageUrl: "/images/testimonial-person-3.jpg", quote: "Para un auto de ese precio esperaba un proceso largo. Todo lo contrario: sin pisar una sola sucursal. El ahorro en un auto así es muy significativo." },
-];
+export const TESTIMONIALS_TITLE = "Opiniones de dueños de autos electrificados";
 
-/** Estrellas en Tinta (macizas las ganadas, en contorno las que faltan). */
-function Stars({ value, label }: { value: number; label?: string }) {
-  const filled = Math.max(0, Math.min(5, Math.round(value)));
-  return (
-    <div
-      className="stars"
-      role={label ? "img" : undefined}
-      aria-label={label}
-      aria-hidden={label ? undefined : true}
-    >
-      {Array.from({ length: 5 }, (_, i) => (
-        <Icon
-          key={i}
-          name="star"
-          size="none"
-          filled={i < filled}
-          className={i < filled ? undefined : "text-ink-3"}
-        />
-      ))}
-    </div>
-  );
-}
-
-function Avatar({ name, imageUrl }: { name: string; imageUrl?: string }) {
-  if (imageUrl) {
-    return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={sanityImg(imageUrl, { w: 96, q: 85 })}
-        alt=""
-        className="avatar"
-        loading="lazy"
-        decoding="async"
-      />
-    );
-  }
-  const initials = (name ?? "").split(" ").map(n => n[0]).filter(Boolean).slice(0, 2).join("").toUpperCase();
+function Avatar({ name }: { name: string }) {
+  const initials = (name ?? "").split(" ").map((n) => n[0]).filter(Boolean).slice(0, 2).join("").toUpperCase();
   return (
     <span aria-hidden className="avatar grid place-items-center bg-canvas-2 text-small font-semibold text-ink-2">
       {initials}
@@ -81,97 +55,93 @@ function VerifiedChip({ onMedia }: { onMedia?: boolean }) {
   );
 }
 
-export function Testimonials({ title = "Lo que dicen nuestros clientes", testimonials }: TestimonialsProps) {
-  const items = testimonials && testimonials.length > 0 ? testimonials : DEFAULT_TESTIMONIALS;
-
-  // Resumen agregado: es la prueba social más fuerte y lo que después alimenta
-  // el AggregateRating de structured data.
-  const promedio = items.length
-    ? Math.round((items.reduce((acc, t) => acc + (t.rating || 0), 0) / items.length) * 10) / 10
-    : 0;
+export function Testimonials({ title = TESTIMONIALS_TITLE, testimonials, summary }: TestimonialsProps) {
+  const items = testimonials ?? [];
 
   return (
     <section className="section section--subtle" aria-labelledby="testimonials-title">
       <div className="wrap">
-        {/* ── Encabezado con resumen agregado ── */}
+        {/* ── Encabezado: quiénes opinan + resumen de todas las reseñas ── */}
         <div className="section-head">
           <div className="section-head__text">
             <h2 id="testimonials-title" className="t-h2">{title}</h2>
+            <p className="t-lead">
+              Personas que ya manejan un eléctrico o un híbrido en Chile cuentan cómo les ha ido. Cualquier dueño
+              puede dejar la suya.
+            </p>
           </div>
-          {promedio > 0 && (
-            <div className="rating">
-              <Stars value={promedio} />
-              <span className="rating__num">{promedio.toFixed(1).replace(".", ",")}</span>
-              <span className="rating__count">
-                {items.length} {items.length === 1 ? "reseña" : "reseñas"}
-              </span>
+          {summary && summary.total > 0 && (
+            <div className="section-head__side flex-col items-start gap-3 md:items-end">
+              <div className="rating">
+                <StarRating value={summary.promedio} size={16} />
+                <span className="rating__num">{formatNota(summary.promedio)}</span>
+                <span className="rating__count">{cuentaResenas(summary.total)}</span>
+              </div>
+              <Link href="/resenas/todas" className="link-arrow">
+                Ver todas las reseñas
+                <Icon name="arrow_forward" size="none" />
+              </Link>
             </div>
           )}
         </div>
 
         {/* ── Tarjetas (en móvil, carrusel horizontal desde el CSS) ── */}
-        <div className="reviews">
-          {items.map((t, i) => (
-            <article key={`${t.name}-${i}`} className="card review">
-              {/* La foto es opcional: las reseñas de usuarios llegan sin ella. */}
-              {t.imageUrl && (
-                <div className="review__media">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={sanityImg(t.imageUrl, { w: 640, q: 75 })}
-                    alt={t.car}
-                    loading="lazy"
-                    decoding="async"
-                  />
-                  {t.verified && <VerifiedChip onMedia />}
-                </div>
-              )}
+        {items.length > 0 && (
+          <div className="reviews">
+            {items.map((t, i) => (
+              <article key={`${t.name}-${i}`} className="card review">
+                {/* La foto es opcional: solo si la reseña trae. */}
+                {t.imageUrl && (
+                  <div className="review__media">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={sanityImg(t.imageUrl, { w: 640, q: 75 })} alt={t.car} loading="lazy" decoding="async" />
+                    {t.verified && <VerifiedChip onMedia />}
+                  </div>
+                )}
 
-              <div className="review__body">
-                {/* min-h = alto del chip: la cita parte a la misma altura en todas las cards. */}
-                <div className="flex min-h-6 items-center justify-between gap-3">
-                  <Stars value={t.rating} label={`${t.rating} de 5 estrellas`} />
-                  {!t.imageUrl && t.verified && <VerifiedChip />}
-                </div>
-                <blockquote className="review__quote">{t.quote}</blockquote>
+                <div className="review__body">
+                  {/* min-h = alto del chip: la cita parte a la misma altura en todas las cards. */}
+                  <div className="flex min-h-6 items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <StarRating value={t.rating} size={16} />
+                      <span className="text-small font-semibold num">{formatNota(t.rating)}</span>
+                    </div>
+                    {!t.imageUrl && t.verified && <VerifiedChip />}
+                  </div>
+                  <blockquote className="review__quote line-clamp-6">{t.quote}</blockquote>
 
-                <div className="review__foot">
-                  <div className="person">
-                    <Avatar name={t.name} imageUrl={t.personImageUrl} />
-                    <div className="min-w-0">
-                      <p className="person__name truncate">{t.name}</p>
-                      {t.carSlug ? (
-                        <Link href={`/auto/${t.carSlug}`} className="person__car">
-                          {t.car}
-                        </Link>
-                      ) : (
-                        <p className="person__car no-underline">{t.car}</p>
-                      )}
+                  <div className="review__foot">
+                    <div className="person">
+                      <Avatar name={t.name} />
+                      <div className="min-w-0">
+                        <p className="person__name truncate">{t.name}</p>
+                        {t.carSlug ? (
+                          <Link href={`/auto/${t.carSlug}`} className="person__car">
+                            {t.car}
+                          </Link>
+                        ) : (
+                          <p className="person__car no-underline">{t.car}</p>
+                        )}
+                      </div>
                     </div>
                   </div>
-                  {t.savings && (
-                    <p className="review__save">
-                      <span className="t-label">Ahorro</span>
-                      <strong>{t.savings}</strong>
-                    </p>
-                  )}
                 </div>
-              </div>
-            </article>
-          ))}
-        </div>
+              </article>
+            ))}
+          </div>
+        )}
 
         {/* ── CTA: dejar una reseña ── */}
         <div className="review-cta">
           <div>
             <h3 className="t-h3">¿Ya tienes tu auto electrificado?</h3>
             <p>
-              Cuéntanos tu experiencia real: autonomía, carga y manejo. Ayudas a que el próximo
+              Cuéntanos tu experiencia real: autonomía, confort, manejo y calidad. Ayudas a que el próximo
               comprador decida mejor.
             </p>
           </div>
           <ReviewCta source="home" className="btn btn--secondary btn--lg">
-            <Icon name="star" size="none" filled />
+            <Icon name="edit_note" size="none" />
             Escribir mi reseña
           </ReviewCta>
         </div>

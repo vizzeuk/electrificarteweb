@@ -6,14 +6,15 @@ import { StarIcon } from "./StarRating";
 import { useReview } from "./ReviewProvider";
 
 /**
- * Franja de la PDP que invita a reseñar ESTE auto.
+ * Franja de la PDP que invita a reseñar ESTE auto cuando todavía no tiene reseñas (con reseñas,
+ * la invitación vive en el resumen de CarReviews).
  *
  * Va justo debajo del bloque de compra, así que es deliberadamente BAJA: una sola línea
- * en desktop. Tiene que estar presente sin robarle protagonismo a la ficha. Sistema v1:
- * franja Niebla (`section--tight section--subtle`), estrellas en Tinta, botón secundario.
+ * en desktop. Sistema v1: franja Niebla (`section--tight section--subtle`), estrellas en
+ * Laguna, botón secundario.
  *
- * Truco de conversión: las estrellas son el disparador. Al elegir una, el popup
- * abre ya con esa calificación puesta: la persona siente que "ya empezó".
+ * Las estrellas son solo la invitación: cualquiera abre el popup. Ya no precargan una nota,
+ * porque la reseña se califica en 4 categorías (autonomía, confort, agilidad, calidad).
  */
 
 interface PdpReviewPromptProps {
@@ -27,46 +28,36 @@ interface PdpReviewPromptProps {
 
 export function PdpReviewPrompt({ carSlug, carSanityId, carBrand, carModel, carName }: PdpReviewPromptProps) {
   const { open } = useReview();
-  const [hovered, setHovered] = useState(0);
+  const [hover, setHover] = useState(false);
 
-  const prefill = { carSlug, carSanityId, carBrand, carModel, source: "pdp" };
+  const abrir = () => open({ carSlug, carSanityId, carBrand, carModel, source: "pdp" });
 
   return (
     <section className="section section--tight section--subtle" aria-labelledby="pdp-review-title">
       <div className="wrap flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between md:gap-8">
         <p id="pdp-review-title" className="t-body">
           <strong className="font-semibold text-ink">¿Tienes un {carName}?</strong>{" "}
-          Cuéntanos tu experiencia y ayuda al próximo comprador.
+          Sé el primero en contar cómo te ha ido y ayuda al próximo comprador.
         </p>
 
         <div className="flex flex-wrap items-center gap-4">
-          <div
-            className="flex items-center gap-1 text-ink"
-            onMouseLeave={() => setHovered(0)}
-            onBlur={(e) => {
-              if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setHovered(0);
-            }}
+          <button
+            type="button"
+            onClick={abrir}
+            onMouseEnter={() => setHover(true)}
+            onMouseLeave={() => setHover(false)}
+            onFocus={() => setHover(true)}
+            onBlur={() => setHover(false)}
+            aria-label={`Calificar el ${carName}`}
+            className="flex items-center gap-1 rounded-chip p-0.5 text-link"
           >
-            {Array.from({ length: 5 }).map((_, i) => {
-              const n = i + 1;
-              return (
-                <button
-                  key={n}
-                  type="button"
-                  aria-label={`Calificar con ${n} ${n === 1 ? "estrella" : "estrellas"}`}
-                  onMouseEnter={() => setHovered(n)}
-                  onFocus={() => setHovered(n)}
-                  onClick={() => open({ ...prefill, rating: n })}
-                  className="rounded-chip p-0.5"
-                >
-                  <StarIcon filled={n <= hovered} size={24} />
-                </button>
-              );
-            })}
-          </div>
+            {Array.from({ length: 5 }).map((_, i) => (
+              <StarIcon key={i} filled={hover} size={24} />
+            ))}
+          </button>
 
-          <button type="button" onClick={() => open(prefill)} className="btn btn--secondary">
-            <Icon name="star" size="none" filled />
+          <button type="button" onClick={abrir} className="btn btn--secondary">
+            <Icon name="edit_note" size="none" />
             Escribir una reseña
           </button>
         </div>

@@ -35,8 +35,9 @@ export function VehicleTypeGrid({ types }: ElectricTypeGridProps) {
   const n = types.length;
   const lead = `${NUMBER_WORDS[n] ?? n} ${n === 1 ? "tecnología" : "tecnologías"} y una misma meta: gastar menos en moverte. Parte por la que calza con tu rutina.`;
 
+  // Hairline arriba: la franja de reseñas del home, justo antes, también es blanca.
   return (
-    <section className="section" aria-labelledby="electric-types-title">
+    <section className="section section--rule" aria-labelledby="electric-types-title">
       <div className="wrap">
         <div className="section-head">
           <div className="section-head__text">
