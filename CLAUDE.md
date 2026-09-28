@@ -300,6 +300,8 @@ Más n8n (VPS de Matías) y Supabase. Un cambio en el modelo de leads toca a los
 - `docs/REVIEWS-UGC-PLAN.md` — sistema de reseñas UGC: arquitectura, costos y estado por fase.
 - `docs/COSTOS-PARA-FRANCISCO.md` — **explicación de costos sin tecnicismos**, para Francisco.
 - `docs/CAMBIOS-PARA-FRANCISCO.md` — resumen no técnico de todos los cambios del giro.
+- `docs/CAMBIOS-FEEDBACK-FRANCISCO-2026-09-27.md` — feedback del 27-sep: reseñas por categorías,
+  vendedores "próximamente", negociación, panel BI; incluye qué escenas de los videos cambian.
 - `docs/FLUJOS-PARA-FRANCISCO.md` — diagramas simples de los flujos de reseñas y waitlist.
 - `docs/DASHBOARD_REVIEWS_MODERACION.md` — contrato de la pantalla de moderación (otro repo).
 - `docs/PROMPT-DASHBOARD-RESENAS.md` — prompt autocontenido para arrancar esa pantalla.
@@ -329,16 +331,13 @@ Bloqueantes de lanzamiento (detalle en `docs/HANDOFF-CONDUCTOR.md` §8):
 - **`NEXT_PUBLIC_GA_ID`** en Vercel, o GA4 no carga
 - Decidir www vs no-www (canonical usa no-www, Reveniu retorna a www)
 
-🔴 **Feedback de Francisco (27-sep-2026)** — reseñas por categorías, waitlist de vendedores:
-- Correr `scripts/sql/2026-09-27_resenas_categorias_y_waitlist_vendedores.sql` en Supabase **antes**
-  de desplegar la web y de `n8n-sync-central.mjs` (si no, `rating` decimal choca con smallint y las
-  reseñas fallan).
-- Después: `node --env-file=.env.local scripts/n8n-sync-central.mjs` (crea el tramo
-  `waitlist-vendedores`) y `N8N_VENDOR_WAITLIST_URL=https://n8n.cadre.cl/webhook/waitlist-vendedores`
-  en Vercel.
-- Sanity: `homePage.testimonialsTitle` aún dice "Lo que dicen nuestros clientes" (el código lo ignora).
-- La red de vendedores ahora se presenta como "próximamente" en `/vendedores` y `/vendedores/unirme`;
-  nada del sitio enlaza a vendedores.electrificarte.com.
+🔴 **Feedback de Francisco (27-sep-2026)** — detalle en `docs/CAMBIOS-FEEDBACK-FRANCISCO-2026-09-27.md`:
+- ✅ SQL de categorías + `waitlist_vendedores` aplicado; n8n sincronizado y probado punta a punta.
+- `N8N_VENDOR_WAITLIST_URL=https://n8n.cadre.cl/webhook/waitlist-vendedores` en Vercel.
+- Sanity: `homePage.testimonialsTitle` ("Lo que dicen nuestros clientes") y la 1.ª FAQ del home
+  ("Negociamos con nuestra red…") chocan con el giro.
+- Por decidir: waitlist en páginas genéricas (home "Cómo funciona"/FAQ, `/marcas`, `/nosotros`) y
+  si el asesor de WhatsApp sigue enseñando a cotizar.
 
 Otros:
 - 🔧 **Flujo de VENTAS en n8n (25-sep-2026)** — `scripts/n8n-patch-ventas.mjs` (corrige la rama de
