@@ -67,6 +67,11 @@
 .fact + .fact { padding-left: var(--space-6); border-left: var(--border-hairline) solid var(--line-on-media); }
 .fact__num { font-weight: 600; font-size: var(--text-stat); line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: var(--ink); }
 .fact__label { margin-top: var(--space-2); font-size: var(--text-small); line-height: 1.45; color: var(--ink-2); max-width: 24ch; }
+.fact--link { display: block; }
+.fact--link .fact__num { transition: color var(--duration-base) var(--ease); }
+.fact--link:hover .fact__num { color: var(--link); }
+.fact__cta { margin-top: var(--space-3); font-size: var(--text-small); }
+.fact--link:hover .fact__cta .arrow { transform: translateX(3px); }
 @media (max-width: 767px) {
   .hero__in { padding-top: 112px; }
   .hero__actions { flex-direction: column; align-items: stretch; margin-top: var(--space-8); }

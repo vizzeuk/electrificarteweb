@@ -1,9 +1,7 @@
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
 import { HeroBgVideo } from "@/components/layout/HeroBgVideo";
-import { OfferCta } from "@/components/waitlist/OfferCta";
 import { OFERTA_STANDBY } from "@/lib/products";
-import { formatCLP } from "@/lib/utils";
 
 export interface HeroData {
   badge?: string;
@@ -35,8 +33,6 @@ export interface HeroData {
 export interface HeroFacts {
   models: number;
   brands: number;
-  /** Precio del electrificado más accesible del catálogo (reemplaza la cifra de marcas: las marcas ya se ven en el carrusel). */
-  fromPrice?: number | null;
   /** Siglas de los tipos eléctricos del catálogo, en el orden del sitio (EV, PHEV...). */
   technologies: string[];
 }
@@ -58,28 +54,32 @@ function joinList(items: string[]): string {
  */
 export function Hero({ data, facts }: HeroProps) {
   // Giro sep-2026 (ver docs/PIVOT-WAITLIST-PLAN.md): el hero ya NO vende la Oferta
-  // ($19.990, en standby). La acción principal es la **Asesoría $4.990** y la
-  // secundaria abre el popup de **waitlist**. Por eso el título y el subtítulo de
-  // Sanity (que describen el flujo pagado: "Ahorra millones...") se ignoran mientras
+  // ($19.990, en standby). La única acción es la **Asesoría $4.990**; la waitlist vive
+  // en las fichas de auto y en lo ligado a un modelo, no acá. El título y el subtítulo
+  // de Sanity (que describen el flujo pagado: "Ahorra millones...") se ignoran mientras
   // dure el standby; al apagar OFERTA_STANDBY vuelven los de Sanity.
-  // OJO con el wording: la waitlist NO promete una oferta ni implica que el servicio
-  // sea gratis — solo registra a los interesados.
+  // La bajada resume todo el sitio: catálogo, comparador, calculadora y asesoría.
   const sanityTitle = [data?.title, data?.titleHighlight].filter(Boolean).join(" ");
   const title = OFERTA_STANDBY || !sanityTitle ? "Elige bien tu próximo auto electrificado." : sanityTitle;
   const subtitle = OFERTA_STANDBY || !data?.subtitle
-    ? "¿No sabes cuál te conviene? Te asesoramos por WhatsApp según tu uso, tus kilómetros y tu presupuesto."
+    ? "Explora el catálogo de autos electrificados en Chile, compara modelos y calcula cuánto ahorras frente a la bencina. Si no sabes cuál elegir, te asesoramos por WhatsApp."
     : data.subtitle;
 
   // Flujo principal — Asesoría ($4.990)
   const advCtaHref = data?.advisoryCtaHref ?? "/asesoria";
   const advPrice   = data?.advisoryPrice   ?? "$4.990";
 
-  const cells = facts
+  // Cifras reales del catálogo + una celda que invita a la calculadora de ahorro
+  // (sin cifra: el ahorro depende del auto y de los kilómetros de cada persona).
+  const cells: { num: string; label: string; href?: string; cta?: string }[] = facts
     ? [
         { num: String(facts.models), label: "modelos electrificados en el catálogo" },
-        facts.fromPrice
-          ? { num: formatCLP(facts.fromPrice), label: "el electrificado más accesible del catálogo" }
-          : { num: String(facts.brands), label: "marcas en un solo lugar" },
+        {
+          num: "Tu ahorro",
+          label: "Calcula cuánto te ahorras frente a la bencina según tus kilómetros.",
+          href: "/calculadora",
+          cta: "Ir a la calculadora",
+        },
         { num: String(facts.technologies.length), label: `tecnologías: ${joinList(facts.technologies)}` },
         { num: "10 días", label: "de asesoría por WhatsApp" },
       ].filter((c) => c.num !== "0")
@@ -102,9 +102,6 @@ export function Hero({ data, facts }: HeroProps) {
             Quiero asesoría por {advPrice}
             <Icon name="arrow_forward" size="none" className="arrow" />
           </Link>
-          <OfferCta source="hero" className="btn btn--secondary btn--lg">
-            Únete a la waitlist
-          </OfferCta>
           <a className="hero__how" href="#como-funciona">
             Cómo funciona
             <Icon name="expand_more" size="none" />
@@ -113,12 +110,23 @@ export function Hero({ data, facts }: HeroProps) {
 
         {cells.length > 0 && (
           <div className="facts">
-            {cells.map((c) => (
-              <div className="fact" key={c.label}>
-                <p className="fact__num">{c.num}</p>
-                <p className="fact__label">{c.label}</p>
-              </div>
-            ))}
+            {cells.map((c) =>
+              c.href ? (
+                <Link className="fact fact--link" href={c.href} key={c.label}>
+                  <p className="fact__num">{c.num}</p>
+                  <p className="fact__label">{c.label}</p>
+                  <span className="link-arrow fact__cta">
+                    {c.cta}
+                    <Icon name="arrow_forward" size="none" className="arrow" />
+                  </span>
+                </Link>
+              ) : (
+                <div className="fact" key={c.label}>
+                  <p className="fact__num">{c.num}</p>
+                  <p className="fact__label">{c.label}</p>
+                </div>
+              ),
+            )}
           </div>
         )}
       </div>
