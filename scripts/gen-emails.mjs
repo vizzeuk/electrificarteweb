@@ -135,7 +135,7 @@ const footerBand = (reason, links = SITE_LINKS, contacto = "contacto@electrifica
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${C.tinta};border-radius:12px;">
             <tr><td style="padding:28px 32px;">
               <img src="${SITE}/brand/email-wordmark-niebla.png" alt="Electrificarte" width="190" height="14" style="display:block;border:0;width:190px;height:14px;">
-              <p style="margin:12px 0 20px;font-family:${FONT};font-size:14px;line-height:1.5;color:${C.nocheTexto2};">El marketplace de autos electrificados de Chile. Conéctate a una nueva movilidad.</p>
+              <p style="margin:12px 0 20px;font-family:${FONT};font-size:14px;line-height:1.5;color:${C.nocheTexto2};">Elige tu auto electrificado en Chile: catálogo, comparador, calculadora y asesoría. Conéctate a una nueva movilidad.</p>
               <table role="presentation" cellpadding="0" cellspacing="0"><tr>
                 ${links
                   .map(([t, h]) => `<td style="padding:0 16px 8px 0;"><a href="${h}" style="font-family:${FONT};font-size:13px;font-weight:600;color:${C.glaciar};text-decoration:none;">${t}</a></td>`).join("")}

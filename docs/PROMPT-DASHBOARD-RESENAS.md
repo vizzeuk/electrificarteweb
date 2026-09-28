@@ -10,7 +10,7 @@ una pantalla de **moderación de reseñas** en la vista de **ADMIN** (no la de v
 
 ## Contexto del negocio
 
-Electrificarte es un marketplace chileno de autos electrificados. Acabamos de lanzar un
+Electrificarte es un sitio chileno para elegir autos electrificados. Acabamos de lanzar un
 sistema de **reseñas de vehículos hechas por usuarios** (con fotos) en la web principal
 (`electrificarteweb`, otro repo, ya desplegado en producción).
 

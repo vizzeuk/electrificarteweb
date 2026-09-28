@@ -190,4 +190,4 @@ comparador y la calculadora.
 - **Asesor de WhatsApp:** enseña a cotizar con vendedores oficiales (comparar precio de lista con
   bonos, pedir la cotización por escrito). Es orientación de compra, no el servicio de
   negociación; se dejó así.
-- 3 pruebas automáticas del marketplace de subasta (en pausa) fallan desde antes de estos cambios.
+- 3 pruebas automáticas de la subasta de ofertas (en pausa) fallan desde antes de estos cambios.

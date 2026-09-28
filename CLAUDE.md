@@ -16,7 +16,7 @@ ofrece al usuario** — se retomará cuando Francisco lo reactive. **No borrar n
 ### Qué cambia
 
 1. **La Oferta Exclusiva $19.990 pasa a STANDBY.** Ya no se vende. Con ella se congela todo
-   el marketplace de subasta inversa (pujas, scoring, ranking, cierre, recuperación, OOS),
+   la subasta inversa de ofertas (pujas, scoring, ranking, cierre, recuperación, OOS),
    sus flujos de n8n y el dashboard de vendedores.
 2. **Entra una WAITLIST (gratis).** En vez de cobrar $19.990 por buscar la oferta, ahora se
    junta una **base grande de gente interesada** en recibir ofertas de autos. Cuando esa base
@@ -47,7 +47,8 @@ una waitlist gratis maximiza el volumen de leads interesados.
 
 ## Modelo de negocio
 
-Electrificarte es un marketplace de vehículos **electrificados**: 100% eléctricos e híbridos en
+Electrificarte es un sitio para elegir vehículos **electrificados** (no es ni fue un marketplace:
+no usar esa palabra para describirlo en ningún texto): 100% eléctricos e híbridos en
 cualquiera de sus variantes (BEV, PHEV, HEV, MHEV, REEV). El alcance excluye únicamente autos
 100% a combustión (sin ningún tipo de batería) — todo lo demás (cualquier auto con batería) sí
 aplica. Esto ya está bien reflejado en el código actual (calculadora, PDPs, filtros); no cambiar
@@ -310,7 +311,7 @@ Más n8n (VPS de Matías) y Supabase. Un cambio en el modelo de leads toca a los
   repo); los evals mandan correos reales a quien los corre. Ver `emails/ventas/README.md`.
 - `docs/QA-FLUJOS-MANUAL.md` — cómo testear los flujos (`npm test`, simulador n8n, webhooks de
   ventas) y los hallazgos de idempotencia.
-- `docs/HANDOFF-CONDUCTOR.md` — 🟡 **STANDBY** — estado y fase del marketplace de ofertas de
+- `docs/HANDOFF-CONDUCTOR.md` — 🟡 **STANDBY** — estado y fase de la subasta de ofertas de
   vendedores (congelado por el giro; sirve para retomar).
 - `docs/ADMIN_WHATSAPP_RESEARCH_SPEC.md` — spec completa del motor de investigación de PDP.
 - `docs/HANDOFF.md` — traspaso de julio 2026 (Fase 1.2, ya completada; histórico).

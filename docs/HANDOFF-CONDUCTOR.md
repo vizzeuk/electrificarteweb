@@ -1,7 +1,7 @@
 # Traspaso de contexto — Electrificarte
 
 > ## 🟡 STANDBY desde septiembre 2026
-> Francisco reestructuró el negocio: la **Oferta Exclusiva $19.990** y todo el **marketplace de
+> Francisco reestructuró el negocio: la **Oferta Exclusiva $19.990** y toda la **subasta de
 > subasta inversa** que describe este documento quedaron **congelados**. El código sigue completo
 > y testeado (`npm test` → 10/10) — **no borrar nada** — pero no se le ofrece al usuario.
 >
@@ -55,7 +55,7 @@ Lo que el código de la web principal sí sabe de ella:
      del vendedor.
 - Cifras publicadas: 48-96 h de entrega del lead, "100% leads con intención".
 
-Ese punto 2 —*competir por ser la mejor oferta*— es exactamente el marketplace de ofertas de
+Ese punto 2 —*competir por ser la mejor oferta*— es exactamente la subasta de ofertas de
 la sección 7, y confirma que el cliente compara varias ofertas, no solo una.
 
 `docs/ADMIN_WHATSAPP_RESEARCH_SPEC.md` es la especificación completa del motor de
@@ -66,7 +66,7 @@ la VPS y así esquivar el límite de duración de funciones de Vercel.
 
 ## 2. Negocio en una página
 
-Marketplace chileno de vehículos **electrificados** (todo lo que tenga batería: EV, PHEV, HEV,
+Sitio chileno para elegir vehículos **electrificados** (todo lo que tenga batería: EV, PHEV, HEV,
 MHEV, EREV; se excluye solo el 100% combustión). Electrificarte no vende autos: intermedia
 entre comprador y **vendedores oficiales** y negocia un precio mejor que el de lista.
 
@@ -192,7 +192,7 @@ sampling con error 400**, así que subir ese modelo sin quitar esa línea rompe 
 
 ---
 
-## 7. FASE SIGUIENTE — Marketplace de ofertas de vendedores
+## 7. FASE SIGUIENTE — Subasta de ofertas de vendedores
 
 Esto es lo que hay que construir. **Todavía no existe nada de esto en código**: el dashboard
 de vendedor tiene la UI con datos mock (`OfertarDialog` muestra un toast y no envía nada).

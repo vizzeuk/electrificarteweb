@@ -1,7 +1,7 @@
 # Giro a Waitlist + Asesoría-first — plan y estado
 
 > **Documento vigente.** Septiembre 2026. Reestructuración decidida por Francisco tras feedback
-> externo. Reemplaza como prioridad al marketplace de subasta inversa
+> externo. Reemplaza como prioridad a la subasta inversa de ofertas
 > (`docs/HANDOFF-CONDUCTOR.md`), que queda en **STANDBY**.
 
 ## Por qué

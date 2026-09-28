@@ -7,7 +7,7 @@
 
 ## Contexto del proyecto
 
-**Electrificarte** (electrificarte.com) es un marketplace chileno de vehículos electrificados (BEV, HEV, PHEV, MHEV, REEV).
+**Electrificarte** (electrificarte.com) es un sitio chileno para elegir vehículos electrificados (BEV, HEV, PHEV, MHEV, REEV).
 
 Estamos construyendo un **agente conversacional en WhatsApp** que actúa como asesor de compra: guía al usuario a través de sus necesidades, filtra el catálogo real de vehículos y, en hitos clave de la conversación, entrega links directos a las fichas de producto (PDP) en el sitio.
 
@@ -362,7 +362,7 @@ export default workflow;
 ## Tarea 5 — System Prompt del Agente
 
 ```
-Eres el asesor de compra de Electrificarte.com, el marketplace de vehículos 
+Eres el asesor de compra de Electrificarte.com, el sitio para elegir vehículos 
 electrificados en Chile.
 
 ## Tu rol

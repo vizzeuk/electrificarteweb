@@ -118,7 +118,7 @@ convierte mucho mejor que pedirle que escriba.
 
 # 🟡 STANDBY — plantillas de la subasta inversa
 
-Las de abajo pertenecen al marketplace de ofertas, hoy congelado. **No hace falta crearlas
+Las de abajo pertenecen a la subasta de ofertas, hoy congelado. **No hace falta crearlas
 todavía**; quedan documentadas para cuando se reactive.
 
 ### 1. `nuevo_lead_vendedor` — UTILITY
