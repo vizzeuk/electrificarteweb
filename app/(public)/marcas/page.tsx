@@ -74,7 +74,7 @@ export default async function MarcasPage() {
       <MarcasGrid brands={brands} />
 
       {/* ─── Los dos caminos ───────────────────────────────────────────── */}
-      <section className="section pt-0">
+      <section className="section section--rule" aria-label="Asesoría y waitlist">
         <div className="wrap">
           <div className="soft-block cta-row">
             <div>
