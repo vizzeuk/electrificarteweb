@@ -295,7 +295,8 @@ Más n8n (VPS de Matías) y Supabase. Un cambio en el modelo de leads toca a los
   fases, inventario de qué cambia, estado y tareas manuales. **Empezar por acá.**
 - `docs/FLUJO-PDP-N8N.md` — los dos flujos de PDP en n8n (creación desde Sheet + re-check
   semanal de precios). Directrices, contratos de endpoint, reparto web/n8n/Claude Console y
-  orden de fases. Implementa el board de Miro "FLUJO PDP's".
+  orden de fases. Implementa el board de Miro "FLUJO PDP's". Desde oct-2026 el input de creación es
+  el panel (§3.0), no el Sheet.
 - `docs/N8N-SEGURIDAD.md` — header secreto `x-electrificarte-secret` en los webhooks de n8n: estado,
   cómo activarlo en n8n (primero desplegar la web) y qué no cubre (webhook de Reveniu).
 - `docs/REVIEWS-UGC-PLAN.md` — sistema de reseñas UGC: arquitectura, costos y estado por fase.
@@ -304,6 +305,9 @@ Más n8n (VPS de Matías) y Supabase. Un cambio en el modelo de leads toca a los
 - `docs/CAMBIOS-FEEDBACK-FRANCISCO-2026-09-27.md` — feedback del 27-sep: reseñas por categorías,
   vendedores "próximamente", negociación, panel BI; incluye qué escenas de los videos cambian.
 - `docs/FLUJOS-PARA-FRANCISCO.md` — diagramas simples de los flujos de reseñas y waitlist.
+- `docs/DASHBOARD_PDP_CREACION.md` — **instrucciones para Vicente**: formulario del panel para
+  pedir PDPs nuevas (reemplaza la fila `listo` del Sheet) + lista de estados. Contrato de los
+  endpoints `/api/admin/pdp/{opciones,solicitudes}`.
 - `docs/DASHBOARD_REVIEWS_MODERACION.md` — contrato de la pantalla de moderación (otro repo).
 - `docs/PROMPT-DASHBOARD-RESENAS.md` — prompt autocontenido para arrancar esa pantalla.
 - `scripts/n8n-sync-central.mjs` + `scripts/qa/n8n-evals.mts` — el repo es la fuente de verdad de

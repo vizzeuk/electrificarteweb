@@ -501,8 +501,8 @@ async function main(): Promise<void> {
     const key = `${c.brand}${c.name}`.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
     const deSemilla = semilla.get(key) ?? "";
     return [
-      // Vacío a propósito: el cron del Flujo v2 solo toma las filas en "listo".
-      // Estas 182 ya existen como PDP; no hay que volver a crearlas.
+      // Vacío a propósito. Desde oct-2026 las PDPs nuevas se piden en el panel
+      // (docs/DASHBOARD_PDP_CREACION.md), no marcando "listo" acá.
       "",
       c.id,
       c.brand,
@@ -537,7 +537,7 @@ async function main(): Promise<void> {
   // ── instrucciones ────────────────────────────────────────────────────────
   const instrucciones: unknown[][] = [
       ["Columna", "Quién la llena", "Qué va"],
-      ["estado", "n8n", 'Vacío = la fila no se procesa. Poner "listo" SOLO para crear una PDP nueva. Las 182 filas precargadas ya existen como PDP: dejar vacío.'],
+      ["estado", "—", 'YA NO SE USA PARA CREAR. Las PDPs nuevas se piden desde el formulario del panel (dashboard). Poner "listo" acá no hace nada: dejar vacío.'],
       ["pdp_id", "automático", "ID del documento en Sanity. Lleno = el auto ya existe (solo se le actualiza la fuente). Vacío = PDP nueva por crear."],
       ["marca / modelo / anio / tipo / electrificacion", "Francisco", "Tienen que existir como referencias en Sanity. Una fila = un modelo = una PDP, nunca una fila por versión."],
       ["url_oficial", "Francisco", "LA COLUMNA IMPORTANTE. Página oficial de precios, configurador o ficha de venta. Nunca un newsroom, nota de prensa ni artículo: de ahí salen cifras que no son el precio de lista."],
