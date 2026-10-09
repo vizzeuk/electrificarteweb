@@ -12,6 +12,7 @@ import assert from "node:assert/strict";
 import { armarEncargo, hostDe, parseVersiones, toolsConHost, type FilaSheet } from "@/lib/pdp-creacion/encargo";
 import { camposAplicables, importantes, medirLlenado, MIN_CAMPOS, vitales, type BasePdp, type ContratoPdp } from "@/lib/pdp-creacion/contrato";
 import { armarDocumentoCar, armarVersiones, slugify } from "@/lib/pdp-creacion/sanity-doc";
+import { filaDeSolicitud, filaDesdeEntrada, MINUTOS_TRABADA, sePuedeReintentar } from "@/lib/pdp-creacion/solicitudes";
 
 let passed = 0;
 let failed = 0;
@@ -268,6 +269,50 @@ test("armarVersiones: un delta con nombre que no calza no borra ni inventa versi
 test("armarVersiones: los _key son unicos (Sanity los exige en arrays)", () => {
   const vs = armarVersiones(parseVersiones("A|1000, B|2000, C|3000"), [], {});
   assert.equal(new Set(vs.map((v) => v._key)).size, 3);
+});
+
+// ─── panel → solicitud (docs/DASHBOARD_PDP_CREACION.md) ───────────────────────
+
+test("parseVersiones: acepta el arreglo del panel, y un nombre con coma no se parte", () => {
+  assert.deepEqual(parseVersiones([{ nombre: "Long Range, AWD", precio: 39990000 }]), [
+    { nombre: "Long Range, AWD", precio: 39990000 },
+  ]);
+  assert.throws(() => parseVersiones([{ nombre: "", precio: 1 }]), /sin nombre/);
+  assert.throws(() => parseVersiones([{ nombre: "GLX", precio: 0 }]), /Precio invalido/);
+});
+
+test("filaDesdeEntrada: normaliza tipos del formulario (anio string, precio con puntos, tag en minuscula)", () => {
+  const f = filaDesdeEntrada({
+    marca: " GWM ", modelo: "Ora 03", anio: "2026", tipo: "City Car", electrificacion: "ev",
+    url_oficial: "https://www.gwm.cl/vehiculo/ora/ora-03/ ",
+    versiones: [{ nombre: "ORA 03 SR", precio: "17.990.000" }],
+  });
+  assert.equal(f.marca, "GWM");
+  assert.equal(f.anio, 2026);
+  assert.equal(f.electrificacion, "EV");
+  assert.equal(f.url_oficial, "https://www.gwm.cl/vehiculo/ora/ora-03/");
+  assert.deepEqual(f.versiones, [{ nombre: "ORA 03 SR", precio: 17990000 }]);
+});
+
+test("filaDeSolicitud: la fila de Supabase arma el MISMO documento que la fila del Sheet", () => {
+  const desdePanel = filaDeSolicitud({ ...FILA, versiones: parseVersiones(FILA.versiones) });
+  const contrato = { estado: "completo", base: {} } as unknown as ContratoPdp;
+  const a = armarDocumentoCar(FILA, contrato, REFS);
+  const b = armarDocumentoCar(desdePanel, contrato, REFS);
+  assert.deepEqual(b.versions, a.versions);
+  assert.equal(b.basePrice, a.basePrice);
+  assert.equal(armarEncargo(desdePanel), armarEncargo(FILA));
+});
+
+test("sePuedeReintentar: fallidas si, terminadas bien no, activas solo si estan trabadas", () => {
+  const ahora = Date.now();
+  const hace = (min: number) => new Date(ahora - min * 60_000).toISOString();
+  assert.equal(sePuedeReintentar({ estado: "error", updated_at: hace(0) }, ahora), true);
+  assert.equal(sePuedeReintentar({ estado: "sin_datos", updated_at: hace(0) }, ahora), true);
+  assert.equal(sePuedeReintentar({ estado: "listo_para_revisar", updated_at: hace(999) }, ahora), false);
+  assert.equal(sePuedeReintentar({ estado: "borrador_incompleto", updated_at: hace(999) }, ahora), false);
+  assert.equal(sePuedeReintentar({ estado: "procesando", updated_at: hace(5) }, ahora), false);
+  assert.equal(sePuedeReintentar({ estado: "en cola", updated_at: hace(MINUTOS_TRABADA + 1) }, ahora), true);
 });
 
 console.log(`\n${failed === 0 ? "✓" : "✗"} ${passed} pasaron, ${failed} fallaron\n`);

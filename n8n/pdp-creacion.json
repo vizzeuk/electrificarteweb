@@ -1,11 +1,11 @@
 {
   "id": "ecPdpCreacionV2",
-  "name": "Electrificarte — Creación de PDP desde el Sheet (Flujo v2)",
+  "name": "Electrificarte — Creación de PDP desde el panel (Flujo v2)",
   "nodes": [
     {
       "parameters": {
-        "content": "## Flujo v2 — Creación de PDP desde el Sheet\n\nCada 15 min lee la hoja **AUTOS** y toma las filas con `estado = listo`.\nPor cada una: valida sin IA → abre una sesión del Managed Agent → espera → crea el\nborrador **oculto** en Sanity → escribe el resultado en la fila y avisa por WhatsApp.\n\n### Reglas del board que este flujo hace cumplir\n- **R6 · todo nace `hidden:true`.** Publicar es siempre acto humano.\n- **R8 · idempotencia por slug.** Si la PDP ya existe, no se crea: se avisa duplicado.\n- **El borrador SIEMPRE se crea.** El umbral de llenado decide el mensaje y el estado de\n  la fila, no si se crea. Lo único que impide crear es la validación sin IA o el slug.\n\n### Antes de activar\n1. **Nodo Config**: pegá `sheetId` (el de *AUTOS ELECTRIFICARTE*) y confirmá `siteBase`.\n2. **Credenciales**: `Electrificarte Admin` (Header Auth, name `x-admin-secret`) y\n   `Sheets Cadre` (Google Sheets OAuth2). Las dos ya existen en esta instancia.\n3. **En Vercel**: `ADMIN_API_SECRET` (el mismo de la credencial), `ANTHROPIC_API_KEY`,\n   `PDP_AGENT_ID` y `PDP_ENVIRONMENT_ID` — los dos últimos los imprime\n   `npx tsx --env-file=.env.local scripts/claude-agents-apply.ts --aplicar`.\n\n### Por qué n8n no habla con Anthropic\nEste stack de Portainer es compartido con ~30 workflows de Retoma, CADRE y frank. La key\nde Anthropic y la de Sanity viven en Vercel; acá solo va el `x-admin-secret`. Es la misma\nDirectriz 1 que sigue el Flujo C.\n\n### Estados de la columna `estado`\n`listo` → **`en cola`** (reservada al leer el lote) → `procesando` → resultado.\nNinguno de los estados finales es `listo`, así que una fila nunca se re-procesa sola.\nSi una ejecución se corta a la mitad, la fila queda en `en cola` o `procesando` y se ve:\npara reintentarla, ponela de vuelta en `listo`.\n\n### La espera\nTres corridas medidas: **155–185 s**, **US$0,26–0,31**. El loop consulta cada 30 s hasta\n24 veces (**12 min de techo**, 4× el peor caso medido). n8n no tiene límite de ejecución\n(`EXECUTIONS_TIMEOUT = -1`), así que esperar es gratis — pero el techo sí importa por otra\nrazón: las filas se procesan de a una, así que una fila trabada retrasa a las que siguen.\n\n⚠️ **El corte de 60 s de Vercel sigue existiendo** para `/api/admin/pdp/*`, que son\nfunciones de Vercel. Lo que esta arquitectura saca del medio es hacer *la investigación*\nahí: cada llamada individual del loop tarda 2–15 s. Los timeouts internos (Sanity 25 s,\nfotos 30 s, Firecrawl 45 s) reparten ese presupuesto de 60 s, no el de n8n.",
-        "height": 760,
+        "content": "## Flujo v2 — Creación de PDP desde el panel\n\nEl formulario del **panel** (dashboard) crea una solicitud en `pdp_solicitudes` a través\nde la web y despierta este workflow por webhook. El cron de 15 min es la red de seguridad\npor si el webhook no llegó.\n\nPor cada solicitud: valida sin IA → abre una sesión del Managed Agent → espera → crea el\nborrador **oculto** en Sanity → la web escribe el resultado en la solicitud (lo ve el\npanel) → aviso por WhatsApp.\n\n### Reglas del board que este flujo hace cumplir\n- **R6 · todo nace `hidden:true`.** Publicar es siempre acto humano.\n- **R8 · idempotencia por slug.** Si la PDP ya existe, no se crea. Además la tabla no\n  admite dos solicitudes activas del mismo auto.\n- **El borrador SIEMPRE se crea.** El umbral de llenado decide el mensaje y el estado,\n  no si se crea. Lo único que impide crear es la validación sin IA o el slug.\n\n### Antes de activar\n1. **Supabase**: correr `scripts/sql/2026-10-08_pdp_solicitudes.sql`.\n2. **Nodo Config**: confirmar `siteBase`.\n3. **Credenciales** (las dos ya existen en esta instancia):\n   - `Electrificarte Admin` (`x-admin-secret`) en los HTTP hacia la web.\n   - `Web Electrificarte (x-electrificarte-secret)` en el webhook de entrada, igual que\n     waitlist y reseñas (docs/N8N-SEGURIDAD.md). Si dice REEMPLAZAR, elegirla a mano.\n4. **En Vercel**: `ADMIN_API_SECRET` (el mismo de la credencial), `ANTHROPIC_API_KEY`,\n   `PDP_AGENT_ID`, `PDP_ENVIRONMENT_ID`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` y\n   `N8N_PDP_CREACION_URL` = la URL de producción del webhook de este workflow.\n\n### n8n no tiene ninguna key salvo `x-admin-secret`\nNi Anthropic, ni Sanity, ni Supabase. La reserva del lote, la validación y la escritura\ndel resultado las hace la web. Es la Directriz 1 y la 4 del doc.\n\n### Estados (columna `estado` de `pdp_solicitudes`)\n`listo` → **`en cola`** (reserva atómica) → `procesando` → `listo_para_revisar` ·\n`borrador_incompleto` · `sin_datos` · `rechazada` · `error`.\nNinguno final es `listo`: nada se re-procesa solo. Para reintentar, botón en el panel.\n\n### La espera\nTres corridas medidas: **155–185 s**, **US$0,26–0,31**. El loop consulta cada 30 s hasta\n24 veces (**12 min de techo**). n8n no tiene límite de ejecución, pero las solicitudes\nvan de a una: una trabada retrasa a las que siguen.\n\n⚠️ **El corte de 60 s de Vercel sigue existiendo** para `/api/admin/pdp/*`. Cada llamada\ndel loop tarda 2–15 s; la investigación de 3 min corre en la infra de Anthropic.",
+        "height": 820,
         "width": 560,
         "color": 5
       },
@@ -17,6 +17,31 @@
         -660,
         60
       ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "electrificarte-pdp-creacion",
+        "authentication": "headerAuth",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "webhook",
+      "name": "Panel: solicitud nueva",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -60,
+        200
+      ],
+      "webhookId": "8d2f4b1e-6c3a-4e7d-9a51-ec7d0c9b2a11",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Web Electrificarte (x-electrificarte-secret)"
+        }
+      },
+      "notes": "Lo llama la web (N8N_PDP_CREACION_URL) cada vez que el panel crea o reintenta una solicitud. No trae datos: el workflow igual reserva desde la cola, así que da lo mismo si llegan dos avisos juntos."
     },
     {
       "parameters": {
@@ -35,9 +60,9 @@
       "typeVersion": 1.2,
       "position": [
         -60,
-        300
+        400
       ],
-      "notes": "El board pide 15 min. Una fila tarda ~3 min, así que no hay riesgo de pisarse: el Sheet marca 'procesando' antes de empezar."
+      "notes": "Red de seguridad: toma lo que el webhook no alcanzó a disparar (n8n caído un rato, N8N_PDP_CREACION_URL sin configurar)."
     },
     {
       "parameters": {
@@ -46,14 +71,14 @@
             {
               "id": "c-site",
               "name": "siteBase",
-              "value": "https://electrificarte.com",
+              "value": "https://www.electrificarte.com",
               "type": "string"
             },
             {
-              "id": "c-sheet",
-              "name": "sheetId",
-              "value": "1QYqaKy3pRkGhAe4K4VnV0uUa5G1sOWNMvkyWQxTiGd8",
-              "type": "string"
+              "id": "c-lote",
+              "name": "lote",
+              "value": 5,
+              "type": "number"
             },
             {
               "id": "c-int",
@@ -79,118 +104,86 @@
         160,
         300
       ],
-      "notes": "Lo no-secreto y editable sin tocar la VPS. sheetId = AUTOS ELECTRIFICARTE."
+      "notes": "Lo no-secreto y editable sin tocar la VPS. `lote` = cuántas solicitudes toma por corrida. siteBase va con www: el dominio sin www responde 308 y un redirect en el medio es un riesgo gratis."
     },
     {
       "parameters": {
-        "documentId": {
-          "__rl": true,
-          "value": "={{ $('Config').first().json.sheetId }}",
-          "mode": "id"
-        },
-        "sheetName": {
-          "__rl": true,
-          "value": "AUTOS",
-          "mode": "name"
-        },
-        "filtersUI": {
-          "values": [
-            {
-              "lookupColumn": "estado",
-              "lookupValue": "listo"
-            }
-          ]
-        },
+        "method": "POST",
+        "url": "={{ $('Config').first().json.siteBase }}/api/admin/pdp/reservar",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ limit: $('Config').first().json.lote }) }}",
         "options": {
-          "returnAllMatches": true
+          "timeout": 90000
         }
       },
-      "id": "leer",
-      "name": "Filas marcadas listo",
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.5,
+      "id": "reservar",
+      "name": "Reservar solicitudes",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
       "position": [
         380,
         300
       ],
       "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "rwCyQeH6TnQJDJkS",
-          "name": "Sheets Cadre"
+        "httpHeaderAuth": {
+          "id": "V9iMtS3nXUravFD5",
+          "name": "Electrificarte Admin"
         }
       },
-      "notes": "Paso 4 del diagrama. Solo `estado = listo`. Las 182 filas precargadas van con estado vacío a propósito: ya existen como PDP."
+      "notes": "Pasa a 'en cola' hasta `lote` solicitudes 'listo' de una sola vez, de forma atómica (for update skip locked). Una corrida simultánea (cron + webhook) nunca toma la misma solicitud."
     },
     {
       "parameters": {
-        "operation": "update",
-        "documentId": {
-          "__rl": true,
-          "value": "={{ $('Config').first().json.sheetId }}",
-          "mode": "id"
-        },
-        "sheetName": {
-          "__rl": true,
-          "value": "AUTOS",
-          "mode": "name"
-        },
-        "columns": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "row_number": "={{ $json.row_number }}",
-            "estado": "en cola",
-            "detalle": "=Tomada {{ $now.setZone('America/Santiago').toFormat('dd/MM HH:mm') }}"
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
           },
-          "matchingColumns": [
-            "row_number"
-          ],
-          "schema": [
+          "conditions": [
             {
-              "id": "row_number",
-              "displayName": "row_number",
-              "required": false,
-              "defaultMatch": true,
-              "display": true,
-              "type": "number",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "estado",
-              "displayName": "estado",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "detalle",
-              "displayName": "detalle",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
+              "id": "hay-c1",
+              "leftValue": "={{ ($json.solicitudes ?? []).length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
             }
-          ]
+          ],
+          "combinator": "and"
         },
+        "looseTypeValidation": true,
         "options": {}
       },
-      "id": "reservar",
-      "name": "Reservar el lote",
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.5,
+      "id": "hay",
+      "name": "¿Hay solicitudes?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
       "position": [
         490,
         300
       ],
-      "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "rwCyQeH6TnQJDJkS",
-          "name": "Sheets Cadre"
-        }
+      "notes": "Cola vacía = la ejecución termina acá. Sin este IF, según la versión de n8n, el Split Out de una lista vacía puede emitir un item vacío y mandar un aviso de error cada 15 min."
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "solicitudes",
+        "options": {}
       },
-      "notes": "Marca TODAS las filas del lote antes de empezar, no una por una.\n\nSin esto: el cron corre cada 15 min y una fila tarda ~3 min. La corrida de las 10:00 toma [A,B,C], marca A y se pone a trabajar; a las 10:15 arranca otra corrida que sigue viendo B y C en `listo` y las toma también. Las dos terminan creando la misma PDP — la segunda la rebota R8, pero recién después de gastar ~US$0,30 y 3 minutos. Reservando el lote entero, la corrida siguiente no ve nada."
+      "id": "split",
+      "name": "Una por solicitud",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        600,
+        300
+      ],
+      "notes": "Un item por solicitud reservada."
     },
     {
       "parameters": {
@@ -199,85 +192,14 @@
         }
       },
       "id": "loop",
-      "name": "Una fila a la vez",
+      "name": "Una solicitud a la vez",
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
       "position": [
-        600,
+        820,
         300
       ],
-      "notes": "De a una: cada fila abre una sesión propia y la web escribe en Sanity. En paralelo no se gana nada (la espera es del agente) y se pierde trazabilidad."
-    },
-    {
-      "parameters": {
-        "operation": "update",
-        "documentId": {
-          "__rl": true,
-          "value": "={{ $('Config').first().json.sheetId }}",
-          "mode": "id"
-        },
-        "sheetName": {
-          "__rl": true,
-          "value": "AUTOS",
-          "mode": "name"
-        },
-        "columns": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "row_number": "={{ $('Una fila a la vez').first().json.row_number }}",
-            "estado": "procesando",
-            "detalle": "=Arrancó {{ $now.setZone('America/Santiago').toFormat('dd/MM HH:mm') }}"
-          },
-          "matchingColumns": [
-            "row_number"
-          ],
-          "schema": [
-            {
-              "id": "row_number",
-              "displayName": "row_number",
-              "required": false,
-              "defaultMatch": true,
-              "display": true,
-              "type": "number",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "estado",
-              "displayName": "estado",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "detalle",
-              "displayName": "detalle",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "marcar",
-      "name": "Marcar procesando",
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.5,
-      "position": [
-        820,
-        420
-      ],
-      "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "rwCyQeH6TnQJDJkS",
-          "name": "Sheets Cadre"
-        }
-      },
-      "notes": "'en cola' → 'procesando'. Si el flujo se cae a la mitad, la fila queda así y se ve en el Sheet — mejor que volver a 'listo' y re-procesarse sola cada 15 min."
+      "notes": "De a una: cada solicitud abre una sesión propia y la web escribe en Sanity. En paralelo no se gana nada (la espera es del agente) y se pierde trazabilidad."
     },
     {
       "parameters": {
@@ -287,7 +209,7 @@
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\n      marca: $('Una fila a la vez').first().json.marca,\n      modelo: $('Una fila a la vez').first().json.modelo,\n      anio: Number($('Una fila a la vez').first().json.anio),\n      tipo: $('Una fila a la vez').first().json.tipo,\n      electrificacion: $('Una fila a la vez').first().json.electrificacion,\n      url_oficial: $('Una fila a la vez').first().json.url_oficial,\n      versiones: String($('Una fila a la vez').first().json.versiones ?? '')\n    }) }}",
+        "jsonBody": "={{ JSON.stringify({ solicitudId: $('Una solicitud a la vez').first().json.solicitudId }) }}",
         "options": {
           "timeout": 90000
         }
@@ -306,7 +228,7 @@
           "name": "Electrificarte Admin"
         }
       },
-      "notes": "Pasos 5 a 10. La web valida sin IA (URL viva, refs en Sanity, slug libre, precios > 0) y, si pasa, abre la sesión del Managed Agent. Devuelve en segundos: el trabajo corre en la infra de Anthropic."
+      "notes": "Pasos 5 a 10. La web lee la solicitud, la marca 'procesando', valida sin IA (URL viva, refs en Sanity, slug libre, precios > 0) y abre la sesión del Managed Agent. Devuelve en segundos."
     },
     {
       "parameters": {
@@ -341,78 +263,7 @@
         1260,
         420
       ],
-      "notes": "Rama falsa = pasos 6 a 8 del diagrama: el error se escribe en la fila y sale un aviso corto."
-    },
-    {
-      "parameters": {
-        "operation": "update",
-        "documentId": {
-          "__rl": true,
-          "value": "={{ $('Config').first().json.sheetId }}",
-          "mode": "id"
-        },
-        "sheetName": {
-          "__rl": true,
-          "value": "AUTOS",
-          "mode": "name"
-        },
-        "columns": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "row_number": "={{ $('Una fila a la vez').first().json.row_number }}",
-            "estado": "error",
-            "detalle": "={{ $('Validar y abrir sesión').first().json.errores.join(' | ') }}"
-          },
-          "matchingColumns": [
-            "row_number"
-          ],
-          "schema": [
-            {
-              "id": "row_number",
-              "displayName": "row_number",
-              "required": false,
-              "defaultMatch": true,
-              "display": true,
-              "type": "number",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "estado",
-              "displayName": "estado",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "detalle",
-              "displayName": "detalle",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "fila-err",
-      "name": "Fila · error de validación",
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.5,
-      "position": [
-        1480,
-        620
-      ],
-      "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "rwCyQeH6TnQJDJkS",
-          "name": "Sheets Cadre"
-        }
-      },
-      "notes": "El detalle es accionable: qué columna corregir."
+      "notes": "Rama falsa = pasos 6 a 8: la web ya dejó la solicitud en 'error' con el detalle; acá solo se avisa."
     },
     {
       "parameters": {
@@ -422,7 +273,7 @@
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={ \"text\": {{ '⚠️ Fila ' + $('Una fila a la vez').first().json.row_number + ' del Sheet (' + $('Una fila a la vez').first().json.marca + ' ' + $('Una fila a la vez').first().json.modelo + '):\\n\\n• ' + $('Validar y abrir sesión').first().json.errores.join('\\n• ') }} }",
+        "jsonBody": "={ \"text\": {{ '⚠️ Solicitud del panel (' + $('Validar y abrir sesión').first().json.nombre + '):\\n\\n• ' + $('Validar y abrir sesión').first().json.errores.join('\\n• ') + '\\n\\nCorrígela y reintenta desde el panel.' }} }",
         "options": {
           "timeout": 90000
         }
@@ -432,7 +283,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1700,
+        1480,
         620
       ],
       "credentials": {
@@ -441,7 +292,7 @@
           "name": "Electrificarte Admin"
         }
       },
-      "notes": "Aviso corto, como pide el board. El detalle completo ya quedó en la fila."
+      "notes": "Aviso corto, como pide el board. El detalle completo ya quedó en la solicitud."
     },
     {
       "parameters": {
@@ -467,7 +318,7 @@
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\n      sessionId: $('Validar y abrir sesión').first().json.sessionId,\n      host: $('Validar y abrir sesión').first().json.host,\n      fila: {\n        marca: $('Una fila a la vez').first().json.marca,\n        modelo: $('Una fila a la vez').first().json.modelo,\n        anio: Number($('Una fila a la vez').first().json.anio),\n        tipo: $('Una fila a la vez').first().json.tipo,\n        electrificacion: $('Una fila a la vez').first().json.electrificacion,\n        url_oficial: $('Una fila a la vez').first().json.url_oficial,\n        versiones: String($('Una fila a la vez').first().json.versiones ?? '')\n      }\n    }) }}",
+        "jsonBody": "={{ JSON.stringify({\n      sessionId: $('Validar y abrir sesión').first().json.sessionId,\n      host: $('Validar y abrir sesión').first().json.host,\n      solicitudId: $('Una solicitud a la vez').first().json.solicitudId\n    }) }}",
         "options": {
           "timeout": 90000
         }
@@ -486,11 +337,11 @@
           "name": "Electrificarte Admin"
         }
       },
-      "notes": "Pasos 11 a 21. Si la sesión sigue corriendo devuelve {estado:'corriendo'} y el loop vuelve a esperar. Si terminó: mide el llenado N/M, sube la portada, crea el borrador oculto y le asigna lote de re-check."
+      "notes": "Pasos 11 a 21. Si la sesión sigue corriendo devuelve {estado:'corriendo'} y el loop vuelve a esperar. Si terminó: mide el llenado N/M, sube las fotos, crea el borrador oculto, le asigna lote de re-check y escribe el resultado en la solicitud."
     },
     {
       "parameters": {
-        "jsCode": "// `$runIndex` es cuántas veces corrió ESTE nodo en ESTA ejecución: 0 en la\n// primera vuelta, 1 en la segunda… Es el contador correcto para un ciclo.\n// El flujo anterior usaba $getWorkflowStaticData('global'), que es global al\n// workflow y se pisa entre ejecuciones concurrentes — por eso su propia nota\n// pedía 'worker concurrency 1'.\nconst max = Number($('Config').first().json.maxConsultas ?? 20);\nconst r = $input.first().json;\nconst corriendo = r.estado === 'corriendo';\nconst agotado = corriendo && $runIndex + 1 >= max;\nreturn [{ json: { ...r, corriendo: corriendo && !agotado, agotado, vuelta: $runIndex + 1, max } }];"
+        "jsCode": "// `$runIndex` es cuántas veces corrió ESTE nodo en ESTA ejecución: 0 en la\n// primera vuelta, 1 en la segunda… Es el contador correcto para un ciclo.\n// El flujo anterior usaba $getWorkflowStaticData('global'), que es global al\n// workflow y se pisa entre ejecuciones concurrentes.\nconst max = Number($('Config').first().json.maxConsultas ?? 20);\nconst r = $input.first().json;\nconst corriendo = r.estado === 'corriendo';\nconst agotado = corriendo && $runIndex + 1 >= max;\nreturn [{ json: { ...r, corriendo: corriendo && !agotado, agotado, vuelta: $runIndex + 1, max } }];"
       },
       "id": "contar",
       "name": "¿Seguir esperando?",
@@ -570,118 +421,7 @@
         2140,
         460
       ],
-      "notes": "Separa 'la sesión entregó' de 'nos cansamos de esperar'. Sin esto las dos ramas escribirían en la misma fila."
-    },
-    {
-      "parameters": {
-        "operation": "update",
-        "documentId": {
-          "__rl": true,
-          "value": "={{ $('Config').first().json.sheetId }}",
-          "mode": "id"
-        },
-        "sheetName": {
-          "__rl": true,
-          "value": "AUTOS",
-          "mode": "name"
-        },
-        "columns": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "row_number": "={{ $('Una fila a la vez').first().json.row_number }}",
-            "estado": "={{ $('¿Terminó? Cerrar y crear').first().json.estado }}",
-            "detalle": "={{ $('¿Terminó? Cerrar y crear').first().json.detalleFila || '' }}",
-            "pdp_id": "={{ $('¿Terminó? Cerrar y crear').first().json.carId || '' }}",
-            "link_studio": "={{ $('¿Terminó? Cerrar y crear').first().json.studioUrl || '' }}",
-            "lote": "={{ $('¿Terminó? Cerrar y crear').first().json.lote || '' }}",
-            "publicado": "no"
-          },
-          "matchingColumns": [
-            "row_number"
-          ],
-          "schema": [
-            {
-              "id": "row_number",
-              "displayName": "row_number",
-              "required": false,
-              "defaultMatch": true,
-              "display": true,
-              "type": "number",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "estado",
-              "displayName": "estado",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "detalle",
-              "displayName": "detalle",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "pdp_id",
-              "displayName": "pdp_id",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "link_studio",
-              "displayName": "link_studio",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "lote",
-              "displayName": "lote",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "publicado",
-              "displayName": "publicado",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "fila-ok",
-      "name": "Fila · resultado",
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.5,
-      "position": [
-        2380,
-        560
-      ],
-      "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "rwCyQeH6TnQJDJkS",
-          "name": "Sheets Cadre"
-        }
-      },
-      "notes": "`estado` queda en 'listo_para_revisar', 'borrador_incompleto', 'sin_datos' o 'rechazada'. Ninguno es 'listo', así que la fila no se re-procesa sola."
+      "notes": "Separa 'la sesión entregó' de 'nos cansamos de esperar'."
     },
     {
       "parameters": {
@@ -701,7 +441,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        2600,
+        2380,
         560
       ],
       "credentials": {
@@ -710,78 +450,36 @@
           "name": "Electrificarte Admin"
         }
       },
-      "notes": "Pasos 16 a 21. El mensaje lo arma la web: trae el N/M, los faltantes y el link directo a Studio."
+      "notes": "Pasos 16 a 21. El mensaje lo arma la web (N/M, faltantes, link a Studio) y ya quedó también en la solicitud."
     },
     {
       "parameters": {
-        "operation": "update",
-        "documentId": {
-          "__rl": true,
-          "value": "={{ $('Config').first().json.sheetId }}",
-          "mode": "id"
-        },
-        "sheetName": {
-          "__rl": true,
-          "value": "AUTOS",
-          "mode": "name"
-        },
-        "columns": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "row_number": "={{ $('Una fila a la vez').first().json.row_number }}",
-            "estado": "error",
-            "detalle": "={{ 'La sesión ' + $('Validar y abrir sesión').first().json.sessionId + ' no terminó en ' + Math.round($('Config').first().json.segundosEntreConsultas * $('Config').first().json.maxConsultas / 60) + ' min' }}"
-          },
-          "matchingColumns": [
-            "row_number"
-          ],
-          "schema": [
-            {
-              "id": "row_number",
-              "displayName": "row_number",
-              "required": false,
-              "defaultMatch": true,
-              "display": true,
-              "type": "number",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "estado",
-              "displayName": "estado",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "detalle",
-              "displayName": "detalle",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            }
-          ]
-        },
-        "options": {}
+        "method": "POST",
+        "url": "={{ $('Config').first().json.siteBase }}/api/admin/pdp/marcar",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n      solicitudId: $('Una solicitud a la vez').first().json.solicitudId,\n      estado: 'error',\n      detalle: 'La sesión ' + $('Validar y abrir sesión').first().json.sessionId + ' no terminó en ' + Math.round($('Config').first().json.segundosEntreConsultas * $('Config').first().json.maxConsultas / 60) + ' min'\n    }) }}",
+        "options": {
+          "timeout": 90000
+        }
       },
-      "id": "fila-timeout",
-      "name": "Fila · se agotó la espera",
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.5,
+      "id": "marcar-timeout",
+      "name": "Solicitud · se agotó la espera",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
       "position": [
         2380,
         360
       ],
       "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "rwCyQeH6TnQJDJkS",
-          "name": "Sheets Cadre"
+        "httpHeaderAuth": {
+          "id": "V9iMtS3nXUravFD5",
+          "name": "Electrificarte Admin"
         }
       },
-      "notes": "La sesión sigue viva en Console: se puede mirar ahí qué pasó antes de volver a marcar la fila."
+      "notes": "La sesión sigue viva en Console: se puede mirar ahí qué pasó antes de reintentar desde el panel."
     },
     {
       "parameters": {
@@ -791,7 +489,7 @@
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={ \"text\": {{ '⏱️ ' + $('Una fila a la vez').first().json.marca + ' ' + $('Una fila a la vez').first().json.modelo + ': la investigación no terminó a tiempo.\\n\\nSesión: ' + $('Validar y abrir sesión').first().json.sessionId }} }",
+        "jsonBody": "={ \"text\": {{ '⏱️ ' + $('Validar y abrir sesión').first().json.nombre + ': la investigación no terminó a tiempo.\\n\\nSesión: ' + $('Validar y abrir sesión').first().json.sessionId }} }",
         "options": {
           "timeout": 90000
         }
@@ -815,17 +513,28 @@
     {
       "parameters": {},
       "id": "volver",
-      "name": "Siguiente fila",
+      "name": "Siguiente solicitud",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
         2820,
         460
       ],
-      "notes": "Devuelve el control al loop para la fila que sigue."
+      "notes": "Devuelve el control al loop para la solicitud que sigue."
     }
   ],
   "connections": {
+    "Panel: solicitud nueva": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Cada 15 minutos": {
       "main": [
         [
@@ -841,49 +550,50 @@
       "main": [
         [
           {
-            "node": "Filas marcadas listo",
+            "node": "Reservar solicitudes",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Filas marcadas listo": {
+    "Reservar solicitudes": {
       "main": [
         [
           {
-            "node": "Reservar el lote",
+            "node": "¿Hay solicitudes?",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Reservar el lote": {
+    "¿Hay solicitudes?": {
       "main": [
         [
           {
-            "node": "Una fila a la vez",
+            "node": "Una por solicitud",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Una por solicitud": {
+      "main": [
+        [
+          {
+            "node": "Una solicitud a la vez",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Una fila a la vez": {
+    "Una solicitud a la vez": {
       "main": [
         [],
-        [
-          {
-            "node": "Marcar procesando",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Marcar procesando": {
-      "main": [
         [
           {
             "node": "Validar y abrir sesión",
@@ -915,17 +625,6 @@
         ],
         [
           {
-            "node": "Fila · error de validación",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Fila · error de validación": {
-      "main": [
-        [
-          {
             "node": "Avisar error de validación",
             "type": "main",
             "index": 0
@@ -937,7 +636,7 @@
       "main": [
         [
           {
-            "node": "Siguiente fila",
+            "node": "Siguiente solicitud",
             "type": "main",
             "index": 0
           }
@@ -999,22 +698,11 @@
       "main": [
         [
           {
-            "node": "Fila · se agotó la espera",
+            "node": "Solicitud · se agotó la espera",
             "type": "main",
             "index": 0
           }
         ],
-        [
-          {
-            "node": "Fila · resultado",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Fila · resultado": {
-      "main": [
         [
           {
             "node": "Avisar resultado",
@@ -1028,14 +716,14 @@
       "main": [
         [
           {
-            "node": "Siguiente fila",
+            "node": "Siguiente solicitud",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Fila · se agotó la espera": {
+    "Solicitud · se agotó la espera": {
       "main": [
         [
           {
@@ -1050,18 +738,18 @@
       "main": [
         [
           {
-            "node": "Siguiente fila",
+            "node": "Siguiente solicitud",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Siguiente fila": {
+    "Siguiente solicitud": {
       "main": [
         [
           {
-            "node": "Una fila a la vez",
+            "node": "Una solicitud a la vez",
             "type": "main",
             "index": 0
           }

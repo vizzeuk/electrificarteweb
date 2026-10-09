@@ -65,7 +65,9 @@ export async function validarFila(fila: FilaSheet, sanity: SanityWriteClient): P
   const errores: string[] = [];
 
   for (const c of CAMPOS) {
-    if (String(fila[c] ?? "").trim() === "") errores.push(`Falta la columna "${c}"`);
+    const v = fila[c];
+    const vacio = Array.isArray(v) ? v.length === 0 : String(v ?? "").trim() === "";
+    if (vacio) errores.push(`Falta el campo "${c}"`);
   }
   const slug = slugify(`${fila.marca ?? ""} ${fila.modelo ?? ""}`);
   if (errores.length) return { ok: false, errores, slug };
@@ -87,7 +89,7 @@ export async function validarFila(fila: FilaSheet, sanity: SanityWriteClient): P
 
   try {
     const vs = parseVersiones(fila.versiones);
-    if (!vs.length) errores.push("La columna versiones esta vacia: sin precio no hay PDP");
+    if (!vs.length) errores.push("No hay versiones declaradas: sin precio no hay PDP");
   } catch (e) {
     errores.push(e instanceof Error ? e.message : "versiones no se pudo interpretar");
   }

@@ -5,7 +5,7 @@ Implementación de los dos diagramas del board de Miro **FLUJO PDP's**
 
 | Flujo | Qué hace | Estado |
 |---|---|---|
-| **v2 — Creación** | Google Sheet → validación sin IA → 1 agente Claude → borrador `hidden:true` en Sanity | **Construido y probado en vivo** (§3). El workflow viejo no servía: auditoría en §3.1 |
+| **v2 — Creación** | **Formulario del panel** → validación sin IA → 1 agente Claude → borrador `hidden:true` en Sanity | **Construido y probado en vivo** (§3). Input desde el panel desde oct-2026 (§3.0); antes era el Sheet |
 | **C — Re-check semanal** | 28 lotes/semana × 7 autos → lee la URL oficial → diff aritmético → flags de auditoría | Por construir (reemplaza al Flujo B actual) |
 
 Este documento es el **contrato**: qué vive en n8n, qué vive en la web, qué vive en Claude
@@ -463,7 +463,51 @@ El caso del Sealion 7 enseñó dos cosas: que BYD pone los precios en `/cl/order
 matcher del Sheet lo premia), y un bug — una fuente que **no lista ninguna** versión volvía
 "faltantes" a las nuestras. Corregido: una página sin versiones no dice nada del inventario.
 
-## 3. Flujo v2 — Creación desde el Sheet
+## 3. Flujo v2 — Creación de PDPs
+
+### 3.0 Cambio oct-2026: el input es el panel, no el Sheet
+
+Para centralizar todo en el panel, **las PDPs nuevas ya no se piden con una fila `listo` en la
+hoja AUTOS.** Se piden con un formulario en el dashboard (rol admin). Contrato completo para el
+dashboard: **`docs/DASHBOARD_PDP_CREACION.md`**.
+
+```
+Panel ──▶ POST /api/admin/pdp/solicitudes   valida sin IA (validarFila) → fila "listo" en
+                                            Supabase `pdp_solicitudes` → despierta a n8n
+n8n   ──▶ POST /api/admin/pdp/reservar      reserva atómica (for update skip locked)
+      ──▶ POST /api/admin/pdp/iniciar       { solicitudId } → la web lee la fila y abre la sesión
+      ──▶ POST /api/admin/pdp/cerrar        { sessionId, host, solicitudId } → borrador + resultado
+      ──▶ POST /api/admin/pdp/marcar        solo el caso "se agotó la espera"
+Panel ◀── GET  /api/admin/pdp/solicitudes   estado, detalle, mensaje, link a Studio
+```
+
+Lo que **no** cambió: el agente, la validación, el umbral N/M, las fotos, R2–R8, los avisos por
+WhatsApp. `iniciar`/`cerrar` siguen aceptando la fila completa en el body (así lo usa
+`scripts/qa/pdp-crear.test.ts`); con `solicitudId` la leen de Supabase y escriben el resultado ahí.
+
+Decisiones:
+
+- **n8n sigue sin ninguna key salvo `x-admin-secret`.** Reservar, leer y escribir la solicitud lo
+  hace la web: n8n no toca ni Supabase ni el Sheet en este flujo.
+- **La validación corre dos veces, a propósito.** Al crear, para que el error salga en el
+  formulario al instante y no 15 min después por WhatsApp; en `iniciar` y `cerrar`, porque entre
+  medio alguien pudo crear el auto a mano (R8).
+- **Una sola solicitud activa por slug** (índice único parcial). `validarFila` solo mira Sanity,
+  así que sin el índice dos envíos del mismo modelo gastaban dos sesiones. El chequeo **no** va
+  dentro de `validarFila`: la re-validación de `cerrar` encontraría su propia solicitud.
+- **Webhook + cron.** La web despierta al workflow (`N8N_PDP_CREACION_URL`, con el header
+  `x-electrificarte-secret` de `lib/n8n.ts`, como todo webhook) al crear o reintentar;
+  el cron de 15 min queda de red de seguridad. La reserva atómica hace que nunca procesen la
+  misma solicitud.
+- **`versiones` llega como arreglo** `[{nombre, precio}]`. `parseVersiones` acepta las dos formas;
+  con el arreglo, un nombre con coma ya no se parte.
+- **Tapa el agujero de §3.6:** cada solicitud es una fila propia con `session_id`, `costo_usd`,
+  `intentos` y el `mensaje` completo — el historial append-only que el Sheet no tenía.
+
+El Sheet **sigue existiendo** para lo que no es creación: fuentes (`url_oficial` de los autos que
+ya existen, §4), hojas `CORRIDAS` / `FALTAN FUENTES` del Flujo C, y `REVISAR`. Las secciones de
+abajo que hablan de la fila `listo` del Sheet describen el diseño original (sep-2026).
+
 
 ### 3.1 Auditoría del workflow existente (22-09-2026)
 
@@ -624,7 +668,7 @@ el nodo de Google Sheets las busca por nombre exacto.
 
 | Columna | Dueño | Notas |
 |---|---|---|
-| `estado` | n8n | Vacío = la fila no se procesa. `listo` **solo** para crear una PDP nueva. Las 182 precargadas ya existen: van vacías. |
+| `estado` | — | **Ya no se usa para crear** (desde oct-2026 las PDPs nuevas se piden en el panel, §3.0). Dejar vacío. |
 | `pdp_id` | automático | `_id` de Sanity. Lleno = el auto existe (solo se actualiza la fuente). Vacío = PDP nueva. |
 | `marca` `modelo` `anio` `tipo` `electrificacion` | humano | Deben existir como refs en Sanity |
 | **`url_oficial`** | **humano** | **La columna que importa.** Página de precios, configurador o ficha de venta. Nunca newsroom ni nota de prensa. |
@@ -881,6 +925,9 @@ avisó nada.
 
 ### 3.5b La reserva del lote (por qué no basta con marcar fila por fila)
 
+> Desde oct-2026 la reserva la hace la función `reservar_pdp_solicitudes` en Supabase (§3.0),
+> con `for update skip locked`. El razonamiento de abajo sigue valiendo igual.
+
 El cron corre cada 15 min y una fila tarda ~3 min. Si la reserva fuera por fila:
 
 ```
@@ -939,7 +986,9 @@ No hay un solo lugar. Cinco, con vidas distintas:
 | **Vercel → Logs** | Los `console.warn` de `/api/admin/notify` con los avisos que no se entregaron | En Hobby, corto. Es el eslabón más débil |
 | **Sanity** | El documento en sí: `aiGenerated`, `sourceUrls`, `catalogFindings` con las discrepancias y su cita | Para siempre |
 
-**El agujero:** no hay historial append-only del flujo de creación. Si la misma fila se procesa dos
+> ✅ **Tapado en oct-2026** por `pdp_solicitudes` (§3.0): una fila por solicitud, con sesión, costo y mensaje.
+
+**El agujero (sep-2026):** no hay historial append-only del flujo de creación. Si la misma fila se procesa dos
 veces, el primer resultado se pierde del Sheet, y n8n lo puede haber podado. El Flujo C sí lo tiene
 (hoja `CORRIDAS` + `catalog_check_runs` en Supabase).
 
@@ -978,8 +1027,9 @@ auto quedó en **US$0,26–0,31** (tres corridas), contra los US$0,04 que presup
 |---|---|---|
 | 1 | Env vars en Vercel: `ANTHROPIC_API_KEY`, `PDP_AGENT_ID`, `PDP_ENVIRONMENT_ID`, `ADMIN_API_SECRET`, `FIRECRAWL_API_KEY`, `ADMIN_PHONE_NUMBERS` | Matías |
 | 2 | ~~Reemplazar la `FIRECRAWL_API_KEY`~~ ✅ hecha y verificada el 22-09-2026 | — |
-| 3 | En n8n, nodo `Config` de `ecPdpCreacionV2`: confirmar `sheetId` y `siteBase` | Matías |
-| 4 | Probar con **una** fila real marcada `listo` en la hoja AUTOS, con el workflow todavía inactivo (botón *Execute workflow*) | Matías |
+| 3 | Correr `scripts/sql/2026-10-08_pdp_solicitudes.sql`, re-importar `n8n/pdp-creacion.json`, confirmar `siteBase` en `Config` y poner `N8N_PDP_CREACION_URL` en Vercel | Matías |
+| 4 | Probar con **una** solicitud real desde el panel (o con `curl` a `/api/admin/pdp/solicitudes`), con el workflow todavía inactivo (botón *Execute workflow*) | Matías |
+| 4b | Formulario + lista en el dashboard (`docs/DASHBOARD_PDP_CREACION.md`) | Vicente |
 | 5 | Decidir qué hacer con `6ViRF8qaij5BI2Cq` (el viejo): queda inactivo y sin tocar, pero tener dos workflows "PDP" confunde | Francisco/Matías |
 | 6 | Decidir `PDP_GALERIA_MAX` (default 6; `0` = solo portada, como pedía R7) | Francisco |
 | 7 | **Plantilla `pdp_aviso_catalogo` en Kapso/Meta** (copy listo en §3.5) + `ADMIN_NOTIFY_TEMPLATE` en Vercel — sin esto los avisos del cron se pierden | Matías |

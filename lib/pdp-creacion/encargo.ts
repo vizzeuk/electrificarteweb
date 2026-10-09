@@ -13,8 +13,12 @@ export interface FilaSheet {
   tipo: string;
   electrificacion: string;
   url_oficial: string;
-  /** "GLX|24990000, GLS AWD|27490000" — nombre|precio en pesos, sin puntos. */
-  versiones: string;
+  /**
+   * El Sheet manda texto: "GLX|24990000, GLS AWD|27490000" (nombre|precio en
+   * pesos, sin puntos). El panel manda el arreglo ya armado — así un nombre con
+   * coma no rompe nada.
+   */
+  versiones: string | VersionDeclarada[];
 }
 
 export interface VersionDeclarada {
@@ -22,8 +26,20 @@ export interface VersionDeclarada {
   precio: number;
 }
 
-/** Parte la columna `versiones` del Sheet. Tolera espacios, puntos y $ de mas. */
-export function parseVersiones(raw: string): VersionDeclarada[] {
+/**
+ * Normaliza `versiones` venga como texto (Sheet, CLI) o como arreglo (panel).
+ * Tolera espacios, puntos y $ de mas. Lanza con un mensaje accionable.
+ */
+export function parseVersiones(raw: string | VersionDeclarada[] | null | undefined): VersionDeclarada[] {
+  if (Array.isArray(raw)) {
+    return raw.map((v, i) => {
+      const nombre = String(v?.nombre ?? "").trim();
+      const precio = Number(String(v?.precio ?? "").replace(/[^\d]/g, ""));
+      if (!nombre) throw new Error(`Version ${i + 1} sin nombre`);
+      if (!Number.isFinite(precio) || precio <= 0) throw new Error(`Precio invalido en la version "${nombre}"`);
+      return { nombre, precio };
+    });
+  }
   return String(raw ?? "")
     .split(",")
     .map((t) => t.trim())
