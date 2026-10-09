@@ -8,7 +8,7 @@ import { MarcasGrid } from "./MarcasGrid";
 import type { Brand } from "./MarcasGrid";
 import { Icon } from "@/components/ui/Icon";
 import { OfferCta } from "@/components/waitlist/OfferCta";
-import { ASESORIA_PRICE } from "@/lib/products";
+import { ASESORIA_PRICE, WAITLIST_PITCH } from "@/lib/products";
 
 export const revalidate = 3600;
 
@@ -82,6 +82,7 @@ export default async function MarcasPage() {
                 {totalModels > 1 ? `¿No sabes cuál de los ${totalModels} modelos te conviene?` : "¿No sabes qué auto te conviene?"}
               </h2>
               <p>Te asesoramos por WhatsApp según tu uso, tus kilómetros y tu presupuesto, y comparamos contigo los modelos que calzan.</p>
+              <p>{WAITLIST_PITCH}</p>
             </div>
             <div className="cta-row__actions">
               <Link href="/asesoria" className="btn btn--primary btn--lg">

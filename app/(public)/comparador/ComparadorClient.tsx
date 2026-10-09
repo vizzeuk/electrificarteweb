@@ -8,7 +8,7 @@ import { formatCLP, formatNumber, sentenceCase } from "@/lib/utils";
 import { Icon } from "@/components/ui/Icon";
 import { ElectricTypeBadge } from "@/components/car/ElectricTypeBadge";
 import { OfferCta } from "@/components/waitlist/OfferCta";
-import { ASESORIA_PRICE, HOT_DEALS_ENABLED, OFERTA_STANDBY } from "@/lib/products";
+import { ASESORIA_PRICE, HOT_DEALS_ENABLED, OFERTA_STANDBY, WAITLIST_PITCH } from "@/lib/products";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 export interface Car {
@@ -344,6 +344,7 @@ export default function ComparadorClient({ allCars, initialId }: ComparadorClien
               <p>
                 Te asesoramos por WhatsApp según tu uso, tus kilómetros y tu presupuesto, y comparamos contigo los modelos que calzan.
               </p>
+              {OFERTA_STANDBY && <p>{WAITLIST_PITCH}</p>}
             </div>
             <div className="cta-row__actions">
               <Link href="/asesoria" className="btn btn--primary btn--lg">
