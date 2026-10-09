@@ -11,7 +11,7 @@ import {
   type DocumentBadgeComponent,
 } from "sanity";
 
-type CarDoc = { hidden?: boolean; name?: string; basePrice?: number } | null;
+type CarDoc = { hidden?: boolean; name?: string; basePrice?: number; mainImage?: { asset?: unknown } } | null;
 
 const actual = (props: { draft: unknown; published: unknown }) =>
   ((props.draft ?? props.published) as CarDoc) ?? null;
@@ -29,7 +29,10 @@ export const MostrarEnSitioAction: DocumentActionComponent = (props) => {
   }, [props.draft, publicando]);
 
   if (!doc?.hidden) return null;
-  const sinPrecio = !(typeof doc.basePrice === "number" && doc.basePrice > 0);
+  const faltan = [
+    !(typeof doc.basePrice === "number" && doc.basePrice > 0) && "precio base",
+    !doc.mainImage?.asset && "foto principal",
+  ].filter(Boolean);
 
   return {
     label: publicando ? "Publicando…" : "Mostrar en el sitio",
@@ -41,8 +44,8 @@ export const MostrarEnSitioAction: DocumentActionComponent = (props) => {
       ? {
           type: "confirm",
           tone: "positive",
-          message: sinPrecio
-            ? `"${doc.name ?? "Esta ficha"}" no tiene precio base. ¿Publicarla igual en electrificarte.com?`
+          message: faltan.length
+            ? `A "${doc.name ?? "esta ficha"}" le falta ${faltan.join(" y ")}. ¿Publicarla igual en electrificarte.com?`
             : `"${doc.name ?? "Esta ficha"}" va a aparecer en electrificarte.com (listados, buscador, comparador y su página). ¿Publicar?`,
           confirmButtonText: "Sí, mostrar en el sitio",
           cancelButtonText: "Cancelar",
