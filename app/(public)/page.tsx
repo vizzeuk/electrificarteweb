@@ -132,7 +132,11 @@ export default async function HomePage() {
       isNew:                c.isNew,
     }));
 
-  const opportunityCars = mergeAndDedup(page?.opportunitiesCars, featuredCars, 8)
+  // "Destacados": si Francisco eligió autos en el CMS, se muestran EXACTAMENTE esos (es lo que
+  // promete el campo en Studio). Antes se rellenaba hasta 8 con autos automáticos y un auto
+  // quitado de la lista podía volver por el relleno: parecía que el CMS "no dejaba" sacarlo.
+  // Sin selección manual, los marcados ⭐ Destacado (y luego los más accesibles).
+  const opportunityCars = (page?.opportunitiesCars?.length ? page.opportunitiesCars : (featuredCars ?? []).slice(0, 8))
     .map((c: any) => ({
       _id:                  c._id,
       name:                 c.name,

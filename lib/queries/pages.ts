@@ -57,7 +57,8 @@ export const homePageQuery = groq`
     },
 
     opportunitiesTitle,
-    "opportunitiesCars": opportunitiesCars[]->{
+    // Los ocultos no se muestran aunque estén elegidos (su página da 404).
+    "opportunitiesCars": opportunitiesCars[@->hidden != true]->{
       _id,
       name,
       "slug": slug.current,

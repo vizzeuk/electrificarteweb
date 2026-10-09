@@ -8,6 +8,11 @@ const dataset   = process.env.NEXT_PUBLIC_SANITY_DATASET!;
 
 export default defineConfig({
   name:    "electrificarte-studio",
+  // Studio vive en electrificarte.com/studio (app/studio/[[...tool]]). Sin basePath, el router
+  // de Studio cree que está en la raíz: navega a /structure/... (que da 404 al recargar) y los
+  // links profundos /studio/structure/car;ID ("Abrir en Studio" del panel y del WhatsApp) abren
+  // Studio vacío. Le pasó a Francisco (oct-2026): parecía que el CMS "no dejaba" editar.
+  basePath: "/studio",
   title:   "Electrificarte CMS",
   projectId,
   dataset,
