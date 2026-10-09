@@ -95,7 +95,7 @@ export const car = defineType({
     defineField({
       name: "hidden", title: "🚫 Ocultar del sitio", type: "boolean",
       group: "general", initialValue: false,
-      description: "Si está activo, el auto desaparece de todo el sitio (listados, buscador, comparador) y su página queda inaccesible. Úsalo cuando el modelo se deja de vender en Chile.",
+      description: "Si está activo, el auto no aparece en el sitio (listados, buscador, comparador) y su página queda inaccesible. Las fichas que crea la IA nacen ocultas: para mostrarlas usa el botón \"Mostrar en el sitio\" (abajo a la derecha), o desactiva esto y aprieta Publish. También sirve para ocultar un modelo que se deja de vender en Chile.",
     }),
     defineField({
       name: "tagline", title: "Tagline corto", type: "string",
