@@ -345,6 +345,15 @@ Bloqueantes de lanzamiento (detalle en `docs/HANDOFF-CONDUCTOR.md` §8):
 - Por decidir: waitlist en páginas genéricas (home "Cómo funciona"/FAQ, `/marcas`, `/nosotros`) y
   si el asesor de WhatsApp sigue enseñando a cotizar.
 
+🟢 **PDPs desde el panel (9-oct-2026)** — `docs/DASHBOARD_PDP_CREACION.md`:
+- ✅ SQL `pdp_solicitudes` aplicado; web con los endpoints en producción; panel con `/admin/pdps`.
+- ✅ n8n: `ecPdpCreacionV2` reemplazado por la versión del panel (sin Sheet) y **activo**. La
+  credencial n8n "Electrificarte Admin" tenía un `ADMIN_API_SECRET` viejo (la web respondía 401):
+  se actualizó al de producción. Si se rota el secreto en Vercel, hay que actualizarla también.
+- ✅ `N8N_PDP_CREACION_URL` en Vercel (web).
+- ⏳ Primera solicitud real: con un modelo que no esté en el catálogo y su precio de lista real
+  (la IA no inventa precios). Cuesta ~US$0,30 y necesita crédito en Anthropic.
+
 Otros:
 - 🔧 **Flujo de VENTAS en n8n (25-sep-2026)** — `scripts/n8n-patch-ventas.mjs` (corrige la rama de
   pagos) + `scripts/qa/ventas-sim.mts` (simula alta + aviso de pago de Reveniu, sin cobrar).
