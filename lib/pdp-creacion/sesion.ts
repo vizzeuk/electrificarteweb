@@ -55,7 +55,7 @@ export async function abrirSesion(
   return api<SesionCreada>("POST", "/v1/sessions", {
     agent: { type: "agent_with_overrides", id: opciones.agentId, tools: toolsDeSesion(host) },
     environment_id: opciones.environmentId,
-    title: `PDP ${fila.marca} ${fila.modelo} ${fila.anio}`,
+    title: `PDP ${fila.marca} ${fila.modelo}${Number(fila.anio) ? ` ${fila.anio}` : ""}`,
     metadata: { flujo: "pdp-v2", modelo: `${fila.marca} ${fila.modelo}`.slice(0, 512) },
     // Tope duro por sesion. Una corrida medida costo US$0,26; el tope existe
     // para que una sesion que se enrede no se lleve el presupuesto del mes.

@@ -229,8 +229,56 @@ test("armarDocumentoCar: nace oculto, marcado como IA y con la fuente guardada",
   assert.equal(doc.modelYear, 2026);
 });
 
-test("armarDocumentoCar: sin versiones declaradas no se crea nada", () => {
-  assert.throws(() => armarDocumentoCar({ ...FILA, versiones: "" }, { estado: "listo", fuente_leida: "x" }, REFS), /version/);
+// ─── Año, URL y versiones opcionales (oct-2026) ───────────────────────────────
+
+const SIN_NADA: FilaSheet = { marca: "GWM", modelo: "Ora 5", tipo: "SUV", electrificacion: "EV", url_oficial: null, anio: null, versiones: [] };
+
+test("armarDocumentoCar: sin versiones, el precio es el leido de la fuente CON cita, y queda para confirmar", () => {
+  const doc = armarDocumentoCar({ ...FILA, versiones: [] }, {
+    estado: "listo", fuente_leida: FILA.url_oficial!,
+    precio_lista_leido: 26490000, evidencia_precio: "Precio lista $26.490.000",
+  }, REFS);
+  assert.equal(doc.basePrice, 26490000);
+  assert.deepEqual(doc.versions, []);
+  const h = (doc.catalogFindings as Record<string, unknown>[])[0];
+  assert.equal(h.kind, "precio_base");
+  assert.match(String(h.detail), /Confirmalo/);
+});
+
+test("armarDocumentoCar: sin versiones y sin cita no hay precio (R3), pero el borrador igual se arma", () => {
+  const doc = armarDocumentoCar({ ...FILA, versiones: [] }, { estado: "listo", fuente_leida: "x", precio_lista_leido: 26490000 }, REFS);
+  assert.equal(doc.basePrice, undefined);
+  assert.equal(doc.hidden, true);
+});
+
+test("armarDocumentoCar: sin año no se escribe modelYear (no se inventa)", () => {
+  const doc = armarDocumentoCar({ ...FILA, anio: null }, { estado: "listo", fuente_leida: "x" }, REFS);
+  assert.equal(doc.modelYear, undefined);
+});
+
+test("armarDocumentoCar: con el sitio de la marca como fuente, guarda la ficha que leyo el agente (no la home)", () => {
+  const fila = { ...SIN_NADA, url_oficial: "https://www.gwm.cl/", sitio_marca: true };
+  const doc = armarDocumentoCar(fila, { estado: "listo", fuente_leida: "https://www.gwm.cl/vehiculo/ora/ora-5/, https://www.gwm.cl/ficha-ora5.pdf" }, REFS);
+  assert.deepEqual(doc.sourceUrls, ["https://www.gwm.cl/vehiculo/ora/ora-5/"]);
+  const otra = armarDocumentoCar(fila, { estado: "listo", fuente_leida: "https://otro-sitio.cl/ora-5" }, REFS);
+  assert.deepEqual(otra.sourceUrls, ["https://www.gwm.cl/"], "una ficha de otro dominio no se guarda");
+});
+
+test("armarEncargo: sin URL de ficha manda a buscar dentro del dominio de la marca, sin otro dominio", () => {
+  const e = armarEncargo({ ...SIN_NADA, url_oficial: "https://www.gwm.cl/", sitio_marca: true });
+  assert.match(e, /sitio oficial de la marca/);
+  assert.match(e, /SOLO dentro del dominio gwm\.cl/);
+  assert.match(e, /no declarado/, "el año se dice no declarado, no se inventa");
+  assert.match(e, /precio de lista MAS BAJO/);
+  assert.doesNotMatch(e, /null|undefined/);
+});
+
+test("filaDesdeEntrada: año, URL y versiones vacios quedan como null / null / []", () => {
+  const f = filaDesdeEntrada({ marca: "GWM", modelo: "Ora 5", tipo: "SUV", electrificacion: "ev", anio: "", url_oficial: "  ", versiones: [] });
+  assert.equal(f.anio, null);
+  assert.equal(f.url_oficial, null);
+  assert.deepEqual(f.versiones, []);
+  assert.equal(f.electrificacion, "EV");
 });
 
 test("slugify: marca + modelo, sin tildes", () => {

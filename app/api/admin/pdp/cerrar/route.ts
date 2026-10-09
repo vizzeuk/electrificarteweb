@@ -22,7 +22,7 @@ import { medirLlenado } from "@/lib/pdp-creacion/contrato";
 import { armarDocumentoCar, slugify } from "@/lib/pdp-creacion/sanity-doc";
 import { cerrarSesion, estadoSesion, leerEntrega, responderTool } from "@/lib/pdp-creacion/sesion";
 import { firecrawlConfigured, scrapeMarkdown } from "@/lib/catalog-recheck/firecrawl";
-import { hostDe } from "@/lib/pdp-creacion/encargo";
+import { hostDe, parseVersiones } from "@/lib/pdp-creacion/encargo";
 import { camposDeImagen, subirFotos } from "@/lib/pdp-creacion/imagenes";
 import { validarFila } from "@/lib/pdp-creacion/validar";
 import type { FilaSheet } from "@/lib/pdp-creacion/encargo";
@@ -77,9 +77,10 @@ export async function POST(req: NextRequest): Promise<Response> {
   // dominio de destino.
   let hostSesion: string;
   try {
-    hostSesion = body.host || hostDe(fila.url_oficial);
+    hostSesion = body.host || hostDe(fila.url_oficial ?? "");
   } catch {
-    return NextResponse.json({ error: "url_oficial invalida" }, { status: 400 });
+    // Sin URL en la fila (fuente = sitio de la marca) el host lo trae siempre /iniciar → n8n.
+    return NextResponse.json({ error: "Falta host (o url_oficial invalida)" }, { status: 400 });
   }
 
   const estado = await estadoSesion(sessionId);
@@ -104,7 +105,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       respuesta = "No hay navegador disponible (FIRECRAWL_API_KEY sin configurar). Sigue con lo que hayas podido leer, o entrega estado sin_datos.";
     } else if (hostSeguro(pedido.url) !== hostSesion) {
       // R2 otra vez: el navegador no es una puerta trasera a otra fuente.
-      respuesta = `Rechazado: ${pedido.url} no es del dominio ${hostSesion} de la fuente del encargo. Solo puedes releer la URL que te dieron.`;
+      respuesta = `Rechazado: ${pedido.url} no es del dominio ${hostSesion} de la fuente del encargo. Solo puedes leer paginas de ese dominio.`;
     } else {
       const r = await scrapeMarkdown(pedido.url);
       if (r.ok && r.markdown) {
@@ -153,7 +154,16 @@ export async function POST(req: NextRequest): Promise<Response> {
   const llenado = medirLlenado(contrato.base, fila.electrificacion, contrato.portada_url);
   // `sourceUrls` guarda la URL EFECTIVA: es la que el Flujo C va a releer cada
   // semana, y la de la fila puede ser un redirect a otro dominio.
-  const doc = armarDocumentoCar({ ...fila, url_oficial: v.urlFinal ?? fila.url_oficial }, contrato, v.refs!);
+  const doc = armarDocumentoCar(
+    { ...fila, url_oficial: v.urlFinal ?? fila.url_oficial, sitio_marca: v.sitioMarca },
+    contrato,
+    v.refs!,
+  );
+  // Sin versiones declaradas, el precio salio de la fuente (con cita) o no hay precio.
+  const sinVersiones = !parseVersiones(fila.versiones).length;
+  const precioDeFuente = sinVersiones && typeof doc.basePrice === "number";
+  if (sinVersiones && !precioDeFuente) llenado.vitalesFaltantes.unshift("precio");
+  if (sinVersiones && !precioDeFuente) llenado.completo = false;
 
   const fotos = await subirFotos(sanity, contrato.portada_url, contrato.galeria, nombre, hostSesion);
   const { mainImage, gallery } = camposDeImagen(fotos, nombre);
@@ -184,6 +194,7 @@ export async function POST(req: NextRequest): Promise<Response> {
         ``,
         `${llenado.n}/${llenado.m} campos aplicables${fotos.portada ? "" : ` · ⚠️ sin portada: ${fotos.problemaPortada}`} · ${fotos.galeria.length + (fotos.portada ? 1 : 0)} foto(s)`,
         lote ? `Re-check: ${lote}` : `Lote de re-check: se asigna al publicarlo.`,
+        precioDeFuente ? `\n💲 Precio tomado de la fuente oficial ($${(doc.basePrice as number).toLocaleString("es-CL")}): confírmalo en Studio antes de publicar.` : null,
         contrato.discrepancias?.length ? `\n⚠️ La fuente contradice la fila:\n• ${contrato.discrepancias.join("\n• ")}` : null,
         v.redirigida ? `\n↪️ La URL indicada redirige a ${v.urlFinal} — se guardo esa como fuente.` : null,
         ``,
@@ -206,7 +217,7 @@ export async function POST(req: NextRequest): Promise<Response> {
   const estadoFinal = llenado.completo ? "listo_para_revisar" : "borrador_incompleto";
   const detalleFila = `${llenado.n}/${llenado.m} campos · ${
     llenado.completo
-      ? "completo"
+      ? precioDeFuente ? "completo, precio tomado de la fuente: confírmalo" : "completo"
       : `falta: ${[...llenado.vitalesFaltantes, ...llenado.importantesFaltantes].join(", ") || faltan}`
   }`.slice(0, 480);
   await anotarFinal(estadoFinal, { detalle: detalleFila, mensaje, costo, carId, studioUrl, lote });

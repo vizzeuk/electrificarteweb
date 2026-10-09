@@ -20,9 +20,14 @@ export interface Validacion {
   urlFinal?: string;
   /** La fila apunta a un dominio que redirige a otro. Se avisa, no bloquea. */
   redirigida?: boolean;
+  /** Sin URL en la fila: la fuente es el sitio oficial de la marca (`brand.website`). */
+  sitioMarca?: boolean;
 }
 
-const CAMPOS: (keyof FilaSheet)[] = ["marca", "modelo", "anio", "tipo", "electrificacion", "url_oficial", "versiones"];
+/** Lo unico obligatorio desde oct-2026: anio, URL y versiones son opcionales (ver encargo.ts). */
+const CAMPOS: (keyof FilaSheet)[] = ["marca", "modelo", "tipo", "electrificacion"];
+
+const vacio = (v: unknown) => (Array.isArray(v) ? v.length === 0 : String(v ?? "").trim() === "");
 
 interface Alcance {
   problema: string | null;
@@ -65,31 +70,36 @@ export async function validarFila(fila: FilaSheet, sanity: SanityWriteClient): P
   const errores: string[] = [];
 
   for (const c of CAMPOS) {
-    const v = fila[c];
-    const vacio = Array.isArray(v) ? v.length === 0 : String(v ?? "").trim() === "";
-    if (vacio) errores.push(`Falta el campo "${c}"`);
+    if (vacio(fila[c])) errores.push(`Falta el campo "${c}"`);
   }
   const slug = slugify(`${fila.marca ?? ""} ${fila.modelo ?? ""}`);
   if (errores.length) return { ok: false, errores, slug };
 
-  const anio = Number(fila.anio);
-  if (!Number.isInteger(anio) || anio < 2015 || anio > new Date().getFullYear() + 2) {
-    errores.push(`Ano invalido: ${fila.anio}`);
-  }
-
-  let host: string | undefined;
-  try {
-    host = hostDe(fila.url_oficial);
-    if (!isChileConfirmedUrl(fila.url_oficial)) {
-      errores.push(`La URL no es del mercado chileno: ${fila.url_oficial}`);
+  // Opcional: solo se valida si vino.
+  if (!vacio(fila.anio) && Number(fila.anio) !== 0) {
+    const anio = Number(fila.anio);
+    if (!Number.isInteger(anio) || anio < 2015 || anio > new Date().getFullYear() + 2) {
+      errores.push(`Ano invalido: ${fila.anio}`);
     }
-  } catch (e) {
-    errores.push(e instanceof Error ? e.message : `URL invalida: ${fila.url_oficial}`);
   }
 
+  // Opcional: sin URL, la fuente sera el sitio de la marca (se resuelve con las refs, abajo).
+  const conUrl = !vacio(fila.url_oficial);
+  let host: string | undefined;
+  if (conUrl) {
+    try {
+      host = hostDe(fila.url_oficial!);
+      if (!isChileConfirmedUrl(fila.url_oficial!)) {
+        errores.push(`La URL no es del mercado chileno: ${fila.url_oficial}`);
+      }
+    } catch (e) {
+      errores.push(e instanceof Error ? e.message : `URL invalida: ${fila.url_oficial}`);
+    }
+  }
+
+  // Opcional: si vienen, cada una con nombre y precio > 0.
   try {
-    const vs = parseVersiones(fila.versiones);
-    if (!vs.length) errores.push("No hay versiones declaradas: sin precio no hay PDP");
+    parseVersiones(fila.versiones);
   } catch (e) {
     errores.push(e instanceof Error ? e.message : "versiones no se pudo interpretar");
   }
@@ -98,13 +108,14 @@ export async function validarFila(fila: FilaSheet, sanity: SanityWriteClient): P
   const marcaSlug = slugify(fila.marca);
   const tipo = String(fila.tipo).trim();
   const tag = String(fila.electrificacion).trim().toUpperCase();
-  interface Refs { brandId: string | null; vehicleTypeId: string | null; electricTypeId: string | null; existente: string | null }
+  interface Refs { brandId: string | null; brandSite: string | null; vehicleTypeId: string | null; electricTypeId: string | null; existente: string | null }
   // El cast es porque el tipado del cliente de Sanity infiere los params desde el
   // literal de la query, y no le calza una proyeccion de varias sub-queries.
   const fetchRefs = sanity.fetch.bind(sanity) as (q: string, p: Record<string, string>) => Promise<Refs>;
   const encontrado: Refs = await fetchRefs(
     `{
       "brandId":       *[_type == "brand" && (slug.current == $marcaSlug || lower(name) == lower($marca)) && !(_id in path("drafts.**"))][0]._id,
+      "brandSite":     *[_type == "brand" && (slug.current == $marcaSlug || lower(name) == lower($marca)) && !(_id in path("drafts.**"))][0].website,
       "vehicleTypeId": *[_type == "vehicleType" && (lower(label) == lower($tipo) || lower(name) == lower($tipo) || slug.current == $tipoSlug) && !(_id in path("drafts.**"))][0]._id,
       "electricTypeId":*[_type == "electricType" && upper(tag) == $tag && !(_id in path("drafts.**"))][0]._id,
       "existente":     *[_type == "car" && slug.current == $slug && !(_id in path("drafts.**"))][0]._id
@@ -117,22 +128,44 @@ export async function validarFila(fila: FilaSheet, sanity: SanityWriteClient): P
   if (!encontrado.electricTypeId) errores.push(`La electrificacion "${tag}" no existe en Sanity`);
   if (encontrado.existente) errores.push(`Ya existe una PDP con el slug "${slug}" (${encontrado.existente}) — R8, no se duplica`);
 
+  // Sin URL: el punto de partida es el sitio oficial de la marca. Tiene que existir en Sanity y
+  // ser del mercado chileno (R2: el agente queda encerrado en ese dominio).
+  let fuente = conUrl ? fila.url_oficial! : "";
+  const sitioMarca = !conUrl;
+  if (sitioMarca && encontrado.brandId) {
+    const sitio = String(encontrado.brandSite ?? "").trim();
+    if (!sitio) {
+      errores.push(`Falta la URL oficial: la marca "${fila.marca}" no tiene sitio web cargado en Sanity. Pon la URL de la ficha del modelo o agrega el sitio de la marca en Studio.`);
+    } else {
+      try {
+        host = hostDe(sitio);
+        fuente = sitio;
+        if (!isChileConfirmedUrl(sitio)) {
+          errores.push(`El sitio de la marca en Sanity no es del mercado chileno (${sitio}): pon la URL de la ficha del modelo en Chile.`);
+        }
+      } catch (e) {
+        errores.push(`El sitio de la marca en Sanity no sirve (${sitio}): ${e instanceof Error ? e.message : "URL invalida"}. Pon la URL de la ficha del modelo.`);
+      }
+    }
+  }
+
   // La URL se chequea al final: es la unica parte lenta, y no vale la pena si
   // ya hay errores de datos.
-  let urlFinal = fila.url_oficial;
+  let urlFinal = fuente;
   let redirigida = false;
   if (!errores.length && host) {
-    const alcance = await alcanzar(fila.url_oficial);
+    const alcance = await alcanzar(fuente);
     if (alcance.problema) {
-      errores.push(`${alcance.problema}: ${fila.url_oficial}`);
+      errores.push(`${alcance.problema}: ${fuente}`);
     } else {
       urlFinal = alcance.urlFinal;
       const hostFinal = hostDe(urlFinal);
       // Un redirect a la raiz del sitio es una pagina muerta disfrazada de 200:
       // la marca borro la ficha y manda todo a la home. Leer la home no produce
       // ninguna spec del modelo, asi que es mejor rebotar la fila que gastar una
-      // sesion entera para terminar en "sin datos".
-      if (new URL(urlFinal).pathname.replace(/\/$/, "") === "" && new URL(fila.url_oficial).pathname.replace(/\/$/, "") !== "") {
+      // sesion entera para terminar en "sin datos". (Con el sitio de la marca como
+      // punto de partida, terminar en la home es lo esperado.)
+      if (!sitioMarca && new URL(urlFinal).pathname.replace(/\/$/, "") === "" && new URL(fuente).pathname.replace(/\/$/, "") !== "") {
         errores.push(`La URL redirige a la home (${urlFinal}): la ficha del modelo ya no existe ahi`);
       } else if (hostFinal !== host) {
         redirigida = true;
@@ -144,7 +177,7 @@ export async function validarFila(fila: FilaSheet, sanity: SanityWriteClient): P
     }
   }
 
-  if (errores.length) return { ok: false, errores, slug, host, urlFinal, redirigida };
+  if (errores.length) return { ok: false, errores, slug, host, urlFinal, redirigida, sitioMarca };
   return {
     ok: true,
     errores: [],
@@ -152,6 +185,7 @@ export async function validarFila(fila: FilaSheet, sanity: SanityWriteClient): P
     host,
     urlFinal,
     redirigida,
+    sitioMarca,
     refs: {
       brandId: encontrado.brandId!,
       vehicleTypeId: encontrado.vehicleTypeId!,

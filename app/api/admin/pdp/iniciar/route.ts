@@ -66,7 +66,8 @@ export async function POST(req: NextRequest): Promise<Response> {
   // Se abre la sesion con la URL EFECTIVA, no con la que escribio el humano: si
   // la fila apunta a un dominio que redirige a otro (kia.com/cl → kia.cl), el
   // cerco de `web_fetch` al host de la fila hace fallar la sesion entera.
-  const efectiva = { ...fila, url_oficial: v.urlFinal ?? fila.url_oficial };
+  // Sin URL en la fila, la fuente es el sitio de la marca y el agente busca la ficha adentro.
+  const efectiva = { ...fila, url_oficial: v.urlFinal ?? fila.url_oficial, sitio_marca: v.sitioMarca };
   let sesion: Awaited<ReturnType<typeof abrirSesion>>;
   try {
     sesion = await abrirSesion(efectiva, v.host!, { agentId, environmentId });

@@ -25,10 +25,13 @@ export interface Solicitud {
   creado_por: string | null;
   marca: string;
   modelo: string;
-  anio: number;
+  /** null = no declarado (opcional desde oct-2026). */
+  anio: number | null;
   tipo: string;
   electrificacion: string;
-  url_oficial: string;
+  /** null = buscar en el sitio oficial de la marca. */
+  url_oficial: string | null;
+  /** [] = sin versiones declaradas: el precio sale de la fuente, con cita. */
   versiones: VersionDeclarada[];
   slug: string;
   estado: EstadoSolicitud;
@@ -57,6 +60,8 @@ export interface EntradaPanel {
 }
 
 const txt = (v: unknown) => String(v ?? "").trim();
+/** Año opcional: vacio, 0 o basura → null (la validacion rechaza los fuera de rango). */
+const anioOpcional = (v: unknown) => (txt(v) === "" || Number(v) === 0 ? null : Number(v));
 
 /**
  * Formulario → fila del flujo. No valida contra Sanity (eso es `validarFila`):
@@ -74,11 +79,11 @@ export function filaDesdeEntrada(e: EntradaPanel): FilaSheet {
   return {
     marca: txt(e.marca),
     modelo: txt(e.modelo),
-    anio: Number(e.anio),
+    anio: anioOpcional(e.anio),
     tipo: txt(e.tipo),
     electrificacion: txt(e.electrificacion).toUpperCase(),
-    url_oficial: txt(e.url_oficial),
-    versiones,
+    url_oficial: txt(e.url_oficial) || null,
+    versiones: versiones ?? [],
   };
 }
 
@@ -87,11 +92,11 @@ export function filaDeSolicitud(s: Pick<Solicitud, "marca" | "modelo" | "anio" |
   return {
     marca: s.marca,
     modelo: s.modelo,
-    anio: Number(s.anio),
+    anio: anioOpcional(s.anio),
     tipo: s.tipo,
     electrificacion: s.electrificacion,
-    url_oficial: s.url_oficial,
-    versiones: s.versiones,
+    url_oficial: s.url_oficial || null,
+    versiones: s.versiones ?? [],
   };
 }
 
@@ -124,10 +129,10 @@ export async function crearSolicitud(
     .insert({
       marca: fila.marca,
       modelo: fila.modelo,
-      anio: fila.anio,
+      anio: Number(fila.anio) || null,
       tipo: fila.tipo,
       electrificacion: fila.electrificacion,
-      url_oficial: fila.url_oficial,
+      url_oficial: fila.url_oficial || null,
       versiones: parseVersiones(fila.versiones),
       slug,
       creado_por: creadoPor,

@@ -3,22 +3,36 @@
 // sola fuente.
 //
 // Ver docs/FLUJO-PDP-N8N.md §3 y el board de Miro "FLUJO PDP's" → "Flujo PDP v2".
-// R4: marca, modelo, anio, tipo, electrificacion, URL y versiones son del humano.
-// El agente no los cambia; solo extrae, normaliza y redacta (R5).
+// R4: marca, modelo, tipo y electrificacion son del humano, y tambien el anio, la URL y las
+// versiones cuando los declara. El agente no los cambia; solo extrae, normaliza y redacta (R5).
+//
+// Desde oct-2026 (pedido de Vicente) anio, URL y versiones son OPCIONALES en el panel:
+// - Sin URL, la fuente es el sitio oficial de la marca (`brand.website` en Sanity) y el agente
+//   navega dentro de ESE dominio hasta la ficha del modelo. Sigue siendo una sola fuente (R2).
+// - Sin versiones, el precio de la PDP es el precio de lista que el agente lee de la fuente CON
+//   cita textual (R3), marcado para que una persona lo confirme. Sin cita, la PDP queda sin
+//   precio y en "borrador con faltantes". Nunca se publica sola (R6).
 
 export interface FilaSheet {
   marca: string;
   modelo: string;
-  anio: number;
+  /** Opcional desde oct-2026. null/0 = no declarado. */
+  anio?: number | null;
   tipo: string;
   electrificacion: string;
-  url_oficial: string;
+  /** Opcional desde oct-2026: vacio = buscar en el sitio oficial de la marca. */
+  url_oficial?: string | null;
+  /**
+   * true cuando `url_oficial` es el sitio de la marca (no la ficha del modelo): el agente tiene
+   * que encontrar la ficha navegando ese dominio. Lo pone `validarFila`, no se guarda.
+   */
+  sitio_marca?: boolean;
   /**
    * El Sheet manda texto: "GLX|24990000, GLS AWD|27490000" (nombre|precio en
    * pesos, sin puntos). El panel manda el arreglo ya armado — así un nombre con
    * coma no rompe nada.
    */
-  versiones: string | VersionDeclarada[];
+  versiones?: string | VersionDeclarada[] | null;
 }
 
 export interface VersionDeclarada {
@@ -90,18 +104,35 @@ export function armarEncargo(fila: FilaSheet): string {
   const base = versiones.length
     ? versiones.reduce((a, b) => (b.precio < a.precio ? b : a))
     : null;
+  const anio = Number(fila.anio) || null;
+  const dominio = fila.url_oficial ? hostDe(fila.url_oficial) : "";
 
-  const lineas = [
-    `Extrae la ficha de este auto leyendo UNICAMENTE la URL de abajo.`,
-    ``,
-    `Marca: ${fila.marca}`,
-    `Modelo: ${fila.modelo}`,
-    `Ano del modelo: ${fila.anio}`,
-    `Tipo de vehiculo: ${fila.tipo}`,
-    `Electrificacion declarada: ${fila.electrificacion}`,
-    `Fuente oficial (la unica que puedes leer): ${fila.url_oficial}`,
-    ``,
-  ];
+  const lineas = fila.sitio_marca
+    ? [
+        `Extrae la ficha de este auto. No te damos la pagina del modelo: buscala dentro del sitio oficial de la marca en Chile.`,
+        ``,
+        `Marca: ${fila.marca}`,
+        `Modelo: ${fila.modelo}`,
+        anio ? `Ano del modelo: ${anio}` : `Ano del modelo: no declarado (no lo inventes; si la fuente lo publica, mencionalo en \`notas\`).`,
+        `Tipo de vehiculo: ${fila.tipo}`,
+        `Electrificacion declarada: ${fila.electrificacion}`,
+        `Sitio oficial de la marca (punto de partida): ${fila.url_oficial}`,
+        ``,
+        `Empieza por esa URL y navega con \`web_fetch\` SOLO dentro del dominio ${dominio} (menu de modelos, catalogo, ficha, configurador, precios o PDF de ficha tecnica) hasta la pagina de ESTE modelo. Ningun otro dominio. Si el sitio no tiene este modelo, entrega estado "sin_datos" y dilo en \`motivo\`.`,
+        `En \`fuente_leida\` pon la URL de la ficha del modelo que terminaste leyendo (no la home).`,
+        ``,
+      ]
+    : [
+        `Extrae la ficha de este auto leyendo UNICAMENTE la URL de abajo.`,
+        ``,
+        `Marca: ${fila.marca}`,
+        `Modelo: ${fila.modelo}`,
+        anio ? `Ano del modelo: ${anio}` : `Ano del modelo: no declarado (no lo inventes; si la fuente lo publica, mencionalo en \`notas\`).`,
+        `Tipo de vehiculo: ${fila.tipo}`,
+        `Electrificacion declarada: ${fila.electrificacion}`,
+        `Fuente oficial (la unica que puedes leer): ${fila.url_oficial}`,
+        ``,
+      ];
 
   if (versiones.length) {
     lineas.push(
@@ -115,11 +146,15 @@ export function armarEncargo(fila: FilaSheet): string {
       ``,
     );
   } else {
-    lineas.push(`El humano no declaro versiones. Deja \`versiones\` vacio y pon todo en \`base\`.`, ``);
+    lineas.push(
+      `El humano no declaro versiones ni precios. Deja \`versiones\` vacio y pon en \`base\` las specs de la version mas economica que publique la fuente.`,
+      `Reporta en \`precio_lista_leido\` el precio de lista MAS BAJO que publica la fuente para este modelo (sin bonos ni descuentos), con su cita textual en \`evidencia_precio\`. Sin cita, omite el precio: una persona lo completa.`,
+      ``,
+    );
   }
 
   lineas.push(
-    `Recorda: sin cita textual en la fuente, el campo se omite (R3). Los precios no los fijas tu.`,
+    `Recorda: sin cita textual en la fuente, el campo se omite (R3). Los precios no los fijas tu: solo los reportas con su cita.`,
     `Termina llamando \`entregar_pdp\` una sola vez.`,
   );
 

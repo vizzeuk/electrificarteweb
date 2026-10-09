@@ -4,7 +4,7 @@
 // docs/FLUJO-PDP-N8N.md): las reglas de quien es dueno de que campo son codigo
 // con tests, no expresiones de n8n que nadie puede correr.
 import type { BasePdp, ContratoPdp, VersionPdp } from "./contrato";
-import { parseVersiones, type FilaSheet, type VersionDeclarada } from "./encargo";
+import { hostDe, parseVersiones, type FilaSheet, type VersionDeclarada } from "./encargo";
 
 export function slugify(text: string): string {
   return String(text)
@@ -88,11 +88,40 @@ export function armarVersiones(
 }
 
 /**
+ * La URL que queda en `sourceUrls` (la que el re-check semanal relee). Si la fuente fue el sitio
+ * de la marca, la home no sirve: se guarda la ficha que el agente dice haber leido, siempre que
+ * sea del mismo dominio. Si no, la URL de la fila.
+ */
+export function fuenteDelDocumento(fila: FilaSheet, contrato: Pick<ContratoPdp, "fuente_leida">): string {
+  const fuente = String(fila.url_oficial ?? "");
+  if (!fila.sitio_marca) return fuente;
+  let host = "";
+  try {
+    host = hostDe(fuente);
+  } catch {
+    return fuente;
+  }
+  const leidas = String(contrato.fuente_leida ?? "").split(/[,\s]+/).filter(Boolean);
+  for (const u of leidas) {
+    try {
+      if (hostDe(u) === host && !/\.pdf($|\?)/i.test(u) && new URL(u).pathname.replace(/\/$/, "") !== "") return u;
+    } catch {
+      // no es una URL https: se ignora
+    }
+  }
+  return fuente;
+}
+
+/**
  * El documento completo, siempre `hidden: true` (R6).
  *
- * `basePrice` sale del MINIMO de las versiones declaradas por el humano, nunca
- * de lo que leyo el modelo: la IA no es duena de precios. Lo leido queda en
- * `catalogFindings` como control, con su cita.
+ * `basePrice` sale del MINIMO de las versiones declaradas por el humano. Lo que
+ * leyo el modelo queda en `catalogFindings` como control, con su cita.
+ *
+ * Sin versiones declaradas (opcional desde oct-2026) el precio es el de lista que
+ * el agente leyo de la fuente oficial, SOLO si trae cita textual (R3), y queda un
+ * hallazgo para que una persona lo confirme antes de publicar. Sin cita no hay
+ * precio: el borrador queda incompleto y lo completa una persona en Studio.
  */
 export function armarDocumentoCar(
   fila: FilaSheet,
@@ -100,20 +129,31 @@ export function armarDocumentoCar(
   refs: RefsSanity,
 ): Record<string, unknown> {
   const declaradas = parseVersiones(fila.versiones);
-  if (!declaradas.length) throw new Error("La fila no declara ninguna version: no hay precio para la PDP");
-
   const base = contrato.base ?? {};
-  const basePrice = Math.min(...declaradas.map((v) => v.precio));
+  const precioLeido =
+    typeof contrato.precio_lista_leido === "number" && contrato.precio_lista_leido > 0 && contrato.evidencia_precio
+      ? contrato.precio_lista_leido
+      : undefined;
+  const basePrice = declaradas.length ? Math.min(...declaradas.map((v) => v.precio)) : precioLeido;
 
   const hallazgos: Record<string, unknown>[] = [];
-  if (typeof contrato.precio_lista_leido === "number" && contrato.evidencia_precio) {
-    const dif = Math.abs(contrato.precio_lista_leido - basePrice);
+  if (!declaradas.length && precioLeido) {
+    hallazgos.push({
+      _key: "precio-de-fuente",
+      kind: "precio_base",
+      detail: `Nadie declaro versiones: el precio base ($${precioLeido.toLocaleString("es-CL")}) es el de lista que publica la fuente oficial. Confirmalo antes de publicar.`,
+      proposedPrice: precioLeido,
+      evidence: contrato.evidencia_precio,
+    });
+  }
+  if (declaradas.length && basePrice && precioLeido) {
+    const dif = Math.abs(precioLeido - basePrice);
     if (dif > basePrice * 0.01) {
       hallazgos.push({
         _key: "precio-leido",
         kind: "precio_base",
-        detail: `La fila declara $${basePrice.toLocaleString("es-CL")} como precio mas bajo; la fuente publica $${contrato.precio_lista_leido.toLocaleString("es-CL")}. No se aplico: el precio es del humano.`,
-        proposedPrice: contrato.precio_lista_leido,
+        detail: `La fila declara $${basePrice.toLocaleString("es-CL")} como precio mas bajo; la fuente publica $${precioLeido.toLocaleString("es-CL")}. No se aplico: el precio es del humano.`,
+        proposedPrice: precioLeido,
         evidence: contrato.evidencia_precio,
       });
     }
@@ -129,10 +169,10 @@ export function armarDocumentoCar(
     brand: { _type: "reference", _ref: refs.brandId },
     vehicleType: { _type: "reference", _ref: refs.vehicleTypeId },
     electricType: { _type: "reference", _ref: refs.electricTypeId },
-    modelYear: fila.anio,
+    modelYear: Number(fila.anio) || undefined,
     hidden: true,            // R6 — publicar es siempre acto humano
     aiGenerated: true,
-    sourceUrls: [fila.url_oficial],
+    sourceUrls: [fuenteDelDocumento(fila, contrato)],
     basePrice,
     versions: armarVersiones(declaradas, contrato.versiones, base),
 
