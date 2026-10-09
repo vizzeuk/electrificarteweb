@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
 import { StarRating, StarIcon } from "./StarRating";
 import { cuentaResenas, formatNota } from "@/lib/reviews/categories";
+import { sanityImg } from "@/lib/sanityImage";
 import type { PublicReview, ReviewSummary } from "@/lib/reviews/queries";
 
 /**
@@ -15,18 +16,25 @@ import type { PublicReview, ReviewSummary } from "@/lib/reviews/queries";
  * reseña más reciente que no esté ya en los testimonios de más abajo. Si todavía no hay reseñas
  * (o Supabase no responde), queda solo la invitación con estrellas vacías. Nada inventado.
  *
+ * Si la reseña citada apunta a un modelo del catálogo, la tarjeta lleva arriba la foto de ese
+ * modelo (la de la ficha, enlazada a ella).
+ *
  * Las estrellas ya no precargan una nota (la reseña se califica en 4 categorías): todo lleva a
  * /resenas, que explica cómo funcionan, y de ahí a /resenas/escribir.
  */
 export function HomeReviewPrompt({
   summary,
   latest,
+  carImageUrl,
 }: {
   summary: ReviewSummary | null;
   /** Reseña reciente para citar (opcional). */
   latest?: PublicReview | null;
+  /** Foto de catálogo del modelo que cita `latest` (opcional). */
+  carImageUrl?: string | null;
 }) {
   const auto = latest ? [latest.carBrand, latest.carModel].filter(Boolean).join(" ") : "";
+  const foto = latest && carImageUrl ? carImageUrl : null;
 
   return (
     <section className="section section--tight" aria-labelledby="home-review-title">
@@ -53,29 +61,37 @@ export function HomeReviewPrompt({
 
         {summary ? (
           <div className="card rv-strip__card">
-            <div className="rv-strip__score">
-              <p className="rv-sum__num">{formatNota(summary.promedio)}</p>
-              <div>
-                <StarRating value={summary.promedio} size={20} />
-                <p className="rv-sum__count">{cuentaResenas(summary.total)} de dueños</p>
-              </div>
-            </div>
-            {latest && (
-              <figure className="rv-strip__quote">
-                <blockquote className="line-clamp-3">&ldquo;{latest.body}&rdquo;</blockquote>
-                <figcaption>
-                  <p>
-                    {latest.autor}
-                    {auto && (
-                      <>
-                        {", "}
-                        {latest.carSlug ? <Link href={`/auto/${latest.carSlug}`} className="link">{auto}</Link> : auto}
-                      </>
-                    )}
-                  </p>
-                </figcaption>
-              </figure>
+            {foto && latest?.carSlug && (
+              <Link href={`/auto/${latest.carSlug}`} className="car__media skeleton-shimmer" tabIndex={-1} aria-hidden>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={sanityImg(foto, { w: 720, q: 75 })} alt="" loading="lazy" decoding="async" />
+              </Link>
             )}
+            <div className="rv-strip__body">
+              <div className="rv-strip__score">
+                <p className="rv-sum__num">{formatNota(summary.promedio)}</p>
+                <div>
+                  <StarRating value={summary.promedio} size={20} />
+                  <p className="rv-sum__count">{cuentaResenas(summary.total)} de dueños</p>
+                </div>
+              </div>
+              {latest && (
+                <figure className="rv-strip__quote">
+                  <blockquote className="line-clamp-3">&ldquo;{latest.body}&rdquo;</blockquote>
+                  <figcaption>
+                    <p>
+                      {latest.autor}
+                      {auto && (
+                        <>
+                          {", "}
+                          {latest.carSlug ? <Link href={`/auto/${latest.carSlug}`} className="link">{auto}</Link> : auto}
+                        </>
+                      )}
+                    </p>
+                  </figcaption>
+                </figure>
+              )}
+            </div>
           </div>
         ) : (
           <Link href="/resenas" aria-label="Dejar mi reseña" className="flex items-center gap-1 justify-self-start rounded-chip p-0.5 text-link md:justify-self-end">

@@ -12,7 +12,7 @@ import { FeaturedCar } from "@/components/car/FeaturedCar";
 import { electricTypeLabel } from "@/components/car/ElectricTypeBadge";
 import { Icon } from "@/components/ui/Icon";
 import { OfferCta } from "@/components/waitlist/OfferCta";
-import { ASESORIA_PRICE, HOT_DEALS_ENABLED } from "@/lib/products";
+import { ASESORIA_PRICE, HOT_DEALS_ENABLED, WAITLIST_PITCH } from "@/lib/products";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -441,6 +441,7 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes, adCar, p
             <div>
               <h2 className="t-h2">{ctaTitle}</h2>
               <p>Te asesoramos por WhatsApp según tu uso, tus kilómetros y tu presupuesto, y comparamos contigo los modelos que calzan.</p>
+              <p>{WAITLIST_PITCH}</p>
             </div>
             <div className="cta-row__actions">
               <Link href="/asesoria" className="btn btn--primary btn--lg">

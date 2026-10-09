@@ -9,7 +9,7 @@ import type { CalcCar, CalcVersion } from "./types";
 import { Icon } from "@/components/ui/Icon";
 import { ElectricTypeBadge } from "@/components/car/ElectricTypeBadge";
 import { OfferCta } from "@/components/waitlist/OfferCta";
-import { ASESORIA_PRICE, OFERTA_STANDBY } from "@/lib/products";
+import { ASESORIA_PRICE, OFERTA_STANDBY, WAITLIST_PITCH } from "@/lib/products";
 
 // ─── Constantes Chile ────────────────────────────────────────────────────────
 const ELECTRICITY_CLP_KWH  = 200;   // CLP/kWh tarifa residencial promedio
@@ -790,6 +790,7 @@ export default function CalculadoraContent({ cars }: Props) {
               <p>
                 Te asesoramos por WhatsApp según tu uso, tus kilómetros y tu presupuesto, y comparamos contigo los modelos que calzan.
               </p>
+              {OFERTA_STANDBY && <p>{WAITLIST_PITCH}</p>}
             </div>
             <div className="cta-row__actions">
               <Link href="/asesoria" className="btn btn--primary btn--lg">

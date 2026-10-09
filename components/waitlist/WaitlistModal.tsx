@@ -7,6 +7,7 @@ import { z } from "zod";
 import { AnimatePresence, m } from "framer-motion";
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
+import { WAITLIST_NEGOCIACION } from "@/lib/products";
 import type { WaitlistPrefill } from "./WaitlistProvider";
 
 /**
@@ -152,7 +153,7 @@ export function WaitlistModal({ isOpen, onClose, prefill }: WaitlistModalProps) 
                     Únete a la waitlist de electrificarte.com
                   </h2>
                   <p className="mt-3 text-[15px] leading-relaxed text-grafito">
-                    Déjanos tus datos y te contactamos cuando abramos el acceso y tengamos novedades
+                    {WAITLIST_NEGOCIACION} Déjanos tus datos y te contamos las últimas novedades
                     para tu modelo.
                   </p>
 
