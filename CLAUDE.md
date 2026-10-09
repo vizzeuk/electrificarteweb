@@ -351,8 +351,12 @@ Bloqueantes de lanzamiento (detalle en `docs/HANDOFF-CONDUCTOR.md` §8):
   credencial n8n "Electrificarte Admin" tenía un `ADMIN_API_SECRET` viejo (la web respondía 401):
   se actualizó al de producción. Si se rota el secreto en Vercel, hay que actualizarla también.
 - ✅ `N8N_PDP_CREACION_URL` en Vercel (web).
-- ⏳ Primera solicitud real: con un modelo que no esté en el catálogo y su precio de lista real
-  (la IA no inventa precios). Cuesta ~US$0,30 y necesita crédito en Anthropic.
+- ✅ Primeras solicitudes reales (Francisco, 9-oct): Ora 5, Haval H7 Max, Jetour G700 → borradores.
+- ✅ Año, URL y versiones OPCIONALES (9-oct, SQL `2026-10-09_pdp_solicitudes_opcionales.sql`
+  aplicado). Sin URL: el agente navega el sitio de la marca (`brand.website`); sin versiones: precio
+  de la fuente con cita, a confirmar. Agente "Extractor PDP Chile" en **v4** (Claude Console).
+- ✅ Studio: botón "Mostrar en el sitio" (quita el oculto y publica), etiqueta "Oculta del sitio" y
+  lista "🆕 Fichas por revisar". Cambiar el toggle sin apretar Publish deja solo un borrador.
 
 Otros:
 - 🔧 **Flujo de VENTAS en n8n (25-sep-2026)** — `scripts/n8n-patch-ventas.mjs` (corrige la rama de
