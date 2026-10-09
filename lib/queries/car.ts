@@ -586,3 +586,8 @@ export const featuredBrandsQuery = groq`
     "models": coalesce(navbarLabel, array::join(*[_type == "car" && brand._ref == ^._id && hidden != true] | order(coalesce(discountPrice, basePrice) desc)[0...3].name, " · "))
   }
 `;
+
+// Foto del modelo citado en la franja de reseñas del home.
+export const carImageBySlugQuery = groq`
+  *[_type == "car" && slug.current == $slug][0]{ name, "imageUrl": mainImage.asset->url }
+`;

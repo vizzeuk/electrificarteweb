@@ -31,6 +31,14 @@ export const OFERTA_PRICE = "$19.990";
 export const OFERTA_STANDBY = true;
 
 /**
+ * Por qué sumarse a la waitlist (feedback oct-2026: "Únete a la waitlist" suelto no se
+ * entiende). Va junto a cada CTA de waitlist que no tenga ya su propia explicación.
+ */
+export const WAITLIST_NEGOCIACION =
+  "Electrificarte prontamente ofrecerá un servicio de negociación con vendedores oficiales para conseguir el mejor precio por tu próximo auto electrificado.";
+export const WAITLIST_PITCH = `${WAITLIST_NEGOCIACION} Entérate de las últimas novedades uniéndote a la waitlist.`;
+
+/**
  * 🔴 INTERRUPTOR — superficies promocionales de "Hot Deal" (septiembre 2026).
  *
  * `false` (hoy) = se ocultan la sección Hot Deal de la home, el popup promocional,

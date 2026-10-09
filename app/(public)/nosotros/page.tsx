@@ -5,7 +5,7 @@ import { Icon } from "@/components/ui/Icon";
 import { OfferCta } from "@/components/waitlist/OfferCta";
 import { client } from "@/lib/sanity/client";
 import { productPricesQuery } from "@/lib/queries/pages";
-import { ASESORIA_PRICE } from "@/lib/products";
+import { ASESORIA_PRICE, WAITLIST_PITCH } from "@/lib/products";
 
 export const revalidate = 60;
 
@@ -175,9 +175,7 @@ export default async function NosotrosPage() {
                 <span className="t-label">Waitlist de ofertas</span>
               </div>
               <h3 className="path__title">Ya sé qué auto quiero</h3>
-              <p className="path__text">
-                Elige tu modelo y déjanos tus datos. Te avisamos cuando abramos el acceso.
-              </p>
+              <p className="path__text">{WAITLIST_PITCH}</p>
               <div className="path__cta">
                 <OfferCta source="nosotros" className="btn btn--secondary btn--lg">
                   Únete a la waitlist
@@ -199,6 +197,7 @@ export default async function NosotrosPage() {
             <p>
               Ya sea que necesites ayuda para decidir o que ya sepas qué quieres, estamos para ayudarte.
             </p>
+            <p>{WAITLIST_PITCH}</p>
           </div>
           <div className="band__actions">
             <OfferCta source="nosotros" className="btn btn--primary btn--lg">

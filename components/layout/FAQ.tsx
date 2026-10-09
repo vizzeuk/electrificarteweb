@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
 import { OfferCta } from "@/components/waitlist/OfferCta";
-import { ASESORIA_PRICE } from "@/lib/products";
+import { ASESORIA_PRICE, WAITLIST_PITCH } from "@/lib/products";
 
 export interface FAQItem {
   question: string;
@@ -79,8 +79,7 @@ export function FAQ({ title = "Preguntas frecuentes", faqs }: FAQProps) {
             {/* Camino 2 — Waitlist: para quien ya eligió su auto */}
             <div className="help__path">
               <p>
-                <strong>¿Ya sabes cuál quieres?</strong> Súmate a la waitlist y te avisamos cuando
-                abramos el acceso.
+                <strong>¿Ya sabes cuál quieres?</strong> {WAITLIST_PITCH}
               </p>
               <OfferCta source="faq" className="btn btn--secondary">
                 Únete a la waitlist

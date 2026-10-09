@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
 import { OfferCta } from "@/components/waitlist/OfferCta";
-import { ASESORIA_PRICE } from "@/lib/products";
+import { ASESORIA_PRICE, WAITLIST_PITCH } from "@/lib/products";
 
 export interface HowItWorksStep {
   number?: string;
@@ -47,7 +47,7 @@ const OFERTA_STEPS: HowItWorksStep[] = [
     number: "03",
     icon: "handshake",
     title: "Te avisamos",
-    description: "Te contactamos cuando abramos el acceso y tengamos novedades para tu modelo.",
+    description: "Te contactamos cuando abramos la negociación con vendedores oficiales y tengamos novedades para tu modelo.",
   },
   {
     number: "04",
@@ -185,9 +185,7 @@ export function HowItWorks({ title = "Cómo funciona Electrificarte", steps, vid
                 <span className="t-label">Waitlist</span>
               </div>
               <h3 className="path__title">Ya sé qué auto quiero</h3>
-              <p className="path__text">
-                Súmate a la waitlist y te avisamos cuando abramos el acceso para tu modelo.
-              </p>
+              <p className="path__text">{WAITLIST_PITCH}</p>
               <Steps steps={waitlistSteps} />
               <div className="path__cta">
                 <OfferCta source="howitworks" className="btn btn--secondary btn--lg">
@@ -204,7 +202,7 @@ export function HowItWorks({ title = "Cómo funciona Electrificarte", steps, vid
               <OfferCta source="howitworks" className="link cursor-pointer">
                 Súmate a la waitlist
               </OfferCta>
-              .
+              {" "}y te avisamos cuando abramos la negociación con vendedores oficiales.
             </p>
             {/* Móvil: video inline (sin modal: evita los bugs de position fixed de iOS) */}
             <button

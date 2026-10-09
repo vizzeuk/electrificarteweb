@@ -8,6 +8,7 @@ import {
   electricTypesForHomeQuery,
   newCarsForHomeQuery,
   featuredCarsForHomeQuery,
+  carImageBySlugQuery,
 } from "@/lib/queries/car";
 import { collectionsForHomeQuery } from "@/lib/queries/collections";
 
@@ -57,6 +58,13 @@ export default async function HomePage() {
   const reviewSummary = summarize(allReviews);
   const featuredReviews = topReviews(allReviews, 3);
   const latestReview = allReviews.find((r) => !featuredReviews.some((f) => f.id === r.id)) ?? null;
+  // Foto del modelo que cita esa reseña (la de catálogo, no las del dueño). Sin auto ligado o si
+  // Sanity no responde, la tarjeta queda sin foto.
+  const latestReviewCar: { name?: string; imageUrl?: string } | null = latestReview?.carSlug
+    ? await client
+        .fetch(carImageBySlugQuery, { slug: latestReview.carSlug }, { next: { tags: ["car"] } })
+        .catch(() => null)
+    : null;
   // El título de Sanity todavía dice "Lo que dicen nuestros clientes", pero quienes opinan son
   // dueños de autos electrificados (cualquiera puede), no clientes: ese texto viejo se ignora.
   // Cualquier otro título que se escriba en Sanity sí manda.
@@ -179,7 +187,7 @@ export default async function HomePage() {
       <LatestLaunches title={page?.latestLaunchesTitle} cars={latestCars} />
       {/* Invitación a reseñar (cualquier auto) con la nota real → /resenas → /resenas/escribir.
           Blanca entre "Últimos lanzamientos" y los tipos, las dos en Niebla: el home alterna fondos. */}
-      <HomeReviewPrompt summary={reviewSummary} latest={latestReview} />
+      <HomeReviewPrompt summary={reviewSummary} latest={latestReview} carImageUrl={latestReviewCar?.imageUrl} />
       <VehicleTypeGrid types={vehicleTypes ?? []} />
       {HOT_DEALS_ENABLED && (
         <HotDeal
