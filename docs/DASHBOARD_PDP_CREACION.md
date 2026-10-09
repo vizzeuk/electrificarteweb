@@ -52,11 +52,11 @@ Una fila = **un modelo = una PDP**. Las versiones van adentro, nunca una PDP por
 |---|---|---|---|
 | `marca` | select con búsqueda | `GET /api/admin/pdp/opciones` → `marcas[].valor` | obligatorio |
 | `modelo` | texto | — | obligatorio. Sin la marca ("Ora 03", no "GWM Ora 03") |
-| `anio` | número | `anioMin`–`anioMax` de opciones | obligatorio, entero |
+| `anio` | número | `anioMin`–`anioMax` de opciones | **opcional** (oct-2026). Si viene, entero en rango; vacío = `null` |
 | `tipo` | select | `tipos[].valor` | obligatorio |
 | `electrificacion` | select | `electrificaciones[].valor` (mostrar `nombre`) | obligatorio |
-| `url_oficial` | URL | — | obligatorio, `https://`. Ver nota abajo |
-| `versiones` | **lista repetible** de `nombre` + `precio` | — | mínimo 1. Precio en pesos, > 0 |
+| `url_oficial` | URL | — | **opcional** (oct-2026). Si viene, `https://`. Vacío = `null`: el agente busca la ficha en el sitio de la marca (`marcas[].sitio`) |
+| `versiones` | **lista repetible** de `nombre` + `precio` | — | **opcional** (oct-2026): puede ser `[]`. Si hay filas, cada una con nombre y precio en pesos > 0 |
 
 **Usa los `valor` tal cual vienen de `/opciones`.** Son exactamente los textos con los que la web
 busca las referencias en Sanity; si los transformas, la validación responde "no existe en Sanity".
@@ -70,8 +70,14 @@ crea marcas.
   un "precio oficial" de $151.900. Si `marcas[].sitio` existe, muéstralo como pista.
 - **Precio**: *"Precio de lista, no el precio con bonos."* Formatea con puntos al escribir
   (`24.990.000`) pero manda el número entero (`24990000`).
-- **El precio lo pone la persona, no la IA.** El precio base de la PDP será el más bajo de las
-  versiones. La IA solo lo compara con la fuente y avisa si no calza.
+- **El precio lo pone la persona, si lo declara.** Con versiones, el precio base de la PDP es el más
+  bajo de ellas y la IA solo lo compara con la fuente. **Sin versiones** (oct-2026), el precio base
+  es el de lista que el agente lee de la fuente oficial, **solo con cita textual**, y queda un
+  hallazgo "confírmalo antes de publicar" en Studio. Sin cita, el borrador queda sin precio
+  (`borrador_incompleto`).
+- **Sin URL** (oct-2026), la fuente es el sitio oficial de la marca en Sanity (`brand.website`): el
+  agente navega solo dentro de ese dominio hasta la ficha del modelo. Requiere
+  `scripts/sql/2026-10-09_pdp_solicitudes_opcionales.sql` (año y URL nullable).
 
 ### Enviar
 
