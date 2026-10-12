@@ -110,7 +110,9 @@ export default async function HomePage() {
   const toBrand = (b: any) =>
     typeof b === "string" || b == null ? b : { name: b.name, slug: toSlug(b.slug), logoUrl: b.logoUrl };
 
-  const latestCars = mergeAndDedup(page?.latestLaunchesCars, newCars, 10)
+  // Todos los 🆕 (tope 20); si hay menos de 10, se completa con los más recientes.
+  const nuevos = (newCars ?? []).filter((c: { isNew?: boolean }) => c.isNew).length;
+  const latestCars = mergeAndDedup(page?.latestLaunchesCars, newCars, Math.min(20, Math.max(10, nuevos)))
     .map((c: any) => ({
       _id:                  c._id,
       name:                 c.name,

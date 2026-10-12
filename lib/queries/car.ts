@@ -63,14 +63,15 @@ export const featuredCarsQuery = groq`
   }
 `;
 
-// ─── Autos recientes — Últimos Lanzamientos (100% automático) ────────────────
-// Orden por fecha de alta en el catálogo (_createdAt desc): los últimos autos
-// agregados salen primero. Sin curación ni flags manuales, cero mantención.
-// OJO: no usar `order(isNew desc, ...)`: en GROQ los ~50 autos con isNew sin
-// setear (null) ordenan por ENCIMA de los marcados true, así que el flag no solo
-// no funcionaba sino que hundía a los realmente marcados.
+// ─── Autos recientes — Últimos Lanzamientos ──────────────────────────────────
+// Primero TODOS los marcados 🆕 Nuevo lanzamiento (lo que promete el campo en Studio) y después
+// los agregados más recientemente al catálogo.
+// Historia: hubo un `order(isNew desc, ...)` que fallaba porque en GROQ los autos con isNew sin
+// setear (null) ordenan por ENCIMA de los true; por eso se pasó a 100% por _createdAt. Eso
+// ignoraba la marca 🆕 y, al publicar fichas nuevas, los marcados quedaban fuera del carrusel
+// (Francisco, oct-2026). `coalesce(isNew, false)` resuelve el problema de los null.
 export const newCarsForHomeQuery = groq`
-  *[_type == "car" && hidden != true] | order(_createdAt desc) [0...10] {
+  *[_type == "car" && hidden != true] | order(coalesce(isNew, false) desc, _createdAt desc) [0...20] {
     _id,
     name,
     "slug": slug.current,

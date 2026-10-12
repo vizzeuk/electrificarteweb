@@ -9,6 +9,14 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Studio vivió un tiempo sin basePath y navegaba a /structure/... (oct-2026). Las pestañas y
+  // links que quedaron con esa dirección vuelven a Studio en vez de dar 404.
+  async redirects() {
+    return [
+      { source: "/structure", destination: "/studio/structure", permanent: false },
+      { source: "/structure/:path*", destination: "/studio/structure/:path*", permanent: false },
+    ];
+  },
   async headers() {
     return [{ source: "/(.*)", headers: securityHeaders }];
   },
