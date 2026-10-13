@@ -27,6 +27,8 @@ export interface CarToCheck {
   brand: string;
   basePrice?: number | null;
   discountPrice?: number | null;
+  /** `sourceUrls[0]`: la fuente propia de la ficha (puede ser un vendedor, ej. el BYD Seal). */
+  sourceUrl?: string | null;
 }
 
 export interface PriceCheckResult {
@@ -123,12 +125,17 @@ export async function checkCarPricing(car: CarToCheck, ctx: PriceCheckContext): 
   const fecha = new Date().toLocaleDateString("es-CL");
 
   if (!status.found) {
-    const note = `No se encontró en sitios oficiales el ${fecha}.${status.note ? ` ${status.note}` : ""}`;
+    // Una ficha con fuente propia no se oculta acá: esta búsqueda solo mira sitios oficiales de la
+    // marca y hay modelos que se venden sin página oficial (el BYD Seal, que sale de un vendedor).
+    // La vigencia de esas fichas la decide la revisión que lee su fuente (lib/catalog-recheck).
+    // Queda la marca "discontinued" para que una persona lo vea en el digest.
+    const hide = !car.sourceUrl;
+    const note = `No se encontró en sitios oficiales el ${fecha}.${status.note ? ` ${status.note}` : ""}${hide ? "" : ` No se ocultó: la ficha tiene fuente propia (${car.sourceUrl}).`}`;
     ctx.log?.(`  🔴 Posiblemente descontinuado — ${note}`);
     if (!ctx.dryRun) {
       await ctx.sanity
         .patch(car.id)
-        .set({ hidden: true, priceCheckFlag: "discontinued", priceCheckNote: note, lastPriceCheckAt: nowIso })
+        .set({ ...(hide ? { hidden: true } : {}), priceCheckFlag: "discontinued", priceCheckNote: note, lastPriceCheckAt: nowIso })
         .unset(["priceCheckSuggestedPrice"])
         .commit();
     }

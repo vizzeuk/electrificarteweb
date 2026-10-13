@@ -2930,6 +2930,167 @@
         }
       ],
       "warranty": "6 años o 150.000 km (sistema de hibridación: 8 años o 150.000 km)"
+    },
+    {
+      "_createdAt": "2026-04-05T21:13:27Z",
+      "_id": "car-byd-seal",
+      "_rev": "wYnW78JBpu1Iw3da9RFbph",
+      "_system": {
+        "base": {
+          "id": "car-byd-seal",
+          "rev": "9qHsvqyKF4agZO92XNRTq0"
+        }
+      },
+      "_type": "car",
+      "_updatedAt": "2026-10-12T21:45:44Z",
+      "acceleration": 7.5,
+      "airbags": 6,
+      "basePrice": 50990000,
+      "batteryCapacity": 82.56,
+      "batteryType": "NMC",
+      "brand": {
+        "_ref": "brand-byd",
+        "_type": "reference"
+      },
+      "cargo": 402,
+      "chargeTimeAC": "~9h (0-100%)",
+      "chargeTimeDC": "16 min (30-80%)",
+      "chargeType": null,
+      "checkSlot": 17,
+      "comfortFeatures": [
+        "Climatizador automático bi-zona",
+        "Asientos deportivos calefaccionados",
+        "Tapicería premium"
+      ],
+      "connectorType": "CCS2",
+      "description": null,
+      "discountPrice": 49990000,
+      "electricRangeKm": null,
+      "electricType": {
+        "_ref": "efdaf152-e14b-414f-8441-415534cd1f41",
+        "_type": "reference"
+      },
+      "euroNcap": 5,
+      "frunkCapacity": null,
+      "fuelConsumption": null,
+      "gallery": [
+        {
+          "_key": "img-3",
+          "_type": "image",
+          "alt": "BYD Seal - foto 3",
+          "asset": {
+            "_ref": "image-cdf82536f635948f4e8bc0f5c11962255f68e063-1720x652-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img-1",
+          "_type": "image",
+          "alt": "BYD Seal - foto 1",
+          "asset": {
+            "_ref": "image-f4384de2796948f1e93688eb76181021d5e23271-1720x652-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img-2",
+          "_type": "image",
+          "alt": "BYD Seal - foto 2",
+          "asset": {
+            "_ref": "image-1b3f2434db1a524957b7f59aa32d46f0f01d83ac-1720x652-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img-5",
+          "_type": "image",
+          "alt": "BYD Seal - foto 5",
+          "asset": {
+            "_ref": "image-39b1e5cc103caa742bcd1ebeb541efaa37add5cc-1720x652-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img-6",
+          "_type": "image",
+          "alt": "BYD Seal - foto 6",
+          "asset": {
+            "_ref": "image-6a7268df63ba125ead2ac15af2f7257985150f57-1720x652-jpg",
+            "_type": "reference"
+          }
+        }
+      ],
+      "groundClearance": 150,
+      "hidden": false,
+      "hiddenByCheck": false,
+      "highlight": "Sedán deportivo eléctrico con CTB, V2L y hasta 700 km de autonomía en versión Ultra",
+      "isFeatured": false,
+      "isHotDeal": false,
+      "isNew": false,
+      "isTopSeller": false,
+      "mainImage": {
+        "_type": "image",
+        "asset": {
+          "_ref": "image-cdf82536f635948f4e8bc0f5c11962255f68e063-1720x652-jpg",
+          "_type": "reference"
+        }
+      },
+      "maxACChargingPower": 11,
+      "maxDCChargingPower": 150,
+      "metaDescription": null,
+      "metaTitle": null,
+      "modelYear": 2027,
+      "motorDescription": "Motor Eléctrico",
+      "name": "Seal",
+      "power": 204,
+      "priceCheckNote": "Precio corregido a mano el 2026-10-12 desde https://www.auto.cl/nuevos/byd/seal/gs (BYD Seal GS 2027, lista $50.990.000, publicado $49.990.000; única versión listada). La fuente no trae specs: las de la ficha son las anteriores, por confirmar para la GS.",
+      "priceCheckPreviousBasePrice": 47990000,
+      "priceNote": "Precio de lista / precio publicado con descuento.",
+      "range": 570,
+      "rendimientoElectrico": 6.3,
+      "safetyFeatures": [
+        "Frenado autónomo de emergencia (AEB)",
+        "Control de crucero adaptativo",
+        "Asistente de mantenimiento de carril",
+        "Alerta de punto ciego",
+        "Cámara 360°"
+      ],
+      "seatRows": 2,
+      "seats": 5,
+      "slug": {
+        "_type": "slug",
+        "current": "byd-seal"
+      },
+      "sourceUrls": [
+        "https://www.auto.cl/nuevos/byd/seal/gs"
+      ],
+      "tagline": "Sedán deportivo eléctrico con CTB, V2L y hasta 700 km de autonomía en versión Ultra",
+      "techFeatures": [
+        "Pantalla giratoria 15.6\" Full HD",
+        "Apple CarPlay / Android Auto",
+        "Vehicle-to-Load (V2L)",
+        "BYD DiPilot ADAS"
+      ],
+      "topSpeed": 180,
+      "torque": 310,
+      "traction": "RWD",
+      "transmission": "Automático de 1 velocidad",
+      "vehicleType": {
+        "_ref": "a40ea459-3aac-4d6f-b2f3-02beb123444b",
+        "_type": "reference"
+      },
+      "versions": [
+        {
+          "_key": "seal-gs",
+          "_type": "version",
+          "discountPrice": 49990000,
+          "name": "Seal GS",
+          "price": 50990000
+        }
+      ],
+      "videoUrl": null,
+      "warranty": "6 años o 150.000 km",
+      "_respaldo": "BYD Seal antes de pasar a la fuente piamonte.cl (2026-10-13)"
     }
   ]
 }
