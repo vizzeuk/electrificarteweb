@@ -1,4 +1,5 @@
 import { groq } from "next-sanity";
+import { LAUNCH_CAR_FIELDS } from "./car";
 
 // ─── Home Page ────────────────────────────────────────────────────────────────
 export const homePageQuery = groq`
@@ -20,26 +21,8 @@ export const homePageQuery = groq`
     heroVideoUrl,
 
     latestLaunchesTitle,
-    "latestLaunchesCars": latestLaunchesCars[]->{
-      _id,
-      name,
-      "slug": slug.current,
-      tagline,
-      "imageUrl": mainImage.asset->url,
-      batteryCapacity,
-      range,
-      "maxVersionRange": math::max(versions[defined(range) && range > 0].range),
-      electricRangeKm,
-      fuelConsumption,
-      rendimientoElectrico,
-      power,
-      basePrice,
-      discountPrice,
-      isNew,
-      isHotDeal,
-      "brand": brand->{ name, "slug": slug.current, "logoUrl": logo.asset->url },
-      "electricType": electricType->{ tag }
-    },
+    // Los ocultos no se muestran aunque estén elegidos (su página da 404).
+    "latestLaunchesCars": latestLaunchesCars[@->hidden != true]->{ ${LAUNCH_CAR_FIELDS} },
 
     "hotDealCar": hotDealCar->{
       _id,

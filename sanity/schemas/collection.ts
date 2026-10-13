@@ -145,7 +145,7 @@ export const collection = defineType({
     }),
     defineField({
       name: "filterIsHotDeal", title: "Solo Hot Deals", type: "boolean",
-      group: "cars", initialValue: false,
+      group: "cars", initialValue: false, hidden: true, // Hot Deal retirado del sitio (HOT_DEALS_ENABLED=false); el dato queda guardado.
       description: "Activa para mostrar solo los autos marcados como 'Hot Deal'.",
     }),
 

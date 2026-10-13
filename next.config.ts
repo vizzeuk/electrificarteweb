@@ -15,6 +15,9 @@ const nextConfig: NextConfig = {
     return [
       { source: "/structure", destination: "/studio/structure", permanent: false },
       { source: "/structure/:path*", destination: "/studio/structure/:path*", permanent: false },
+      // Fichas duplicadas borradas de Sanity (oct-2026): la URL vieja lleva a la que quedó.
+      { source: "/auto/gwm-ora-5", destination: "/auto/ora-5", permanent: true },
+      { source: "/auto/gwm-poer-500-phev", destination: "/auto/poer-p500", permanent: true },
     ];
   },
   async headers() {

@@ -28,6 +28,7 @@ export const siteSettings = defineType({
       title: "Etiqueta de urgencia junto al badge HOT DEAL",
       type: "string",
       group: "general",
+      hidden: true, // Hot Deal retirado del sitio (HOT_DEALS_ENABLED=false); el dato queda guardado.
       initialValue: "Bonos exclusivos por tiempo limitado",
       description:
         'Texto que acompaña el badge "HOT DEAL" en todo el sitio (home, marcas, tipos, popup). ' +

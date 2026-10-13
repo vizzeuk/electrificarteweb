@@ -171,7 +171,7 @@ export default function BrandPageContent({ slug, brand, hotDealUrgencyLabel }: B
       const fc = brand.heroFeaturedCar;
       return { name: fc.name, slug: fc.slug, imageUrl: fc.imageUrl, discountPrice: fc.discountPrice, basePrice: fc.basePrice, isHotDeal: false, isSponsored: true };
     }
-    if (brand.hotDeals.length > 0) {
+    if (HOT_DEALS_ENABLED && brand.hotDeals.length > 0) {
       const hd = brand.hotDeals[0];
       return { name: hd.carName, slug: hd.carSlug, imageUrl: hd.imageUrl, discountPrice: hd.discountPrice, basePrice: hd.basePrice, isHotDeal: true, isSponsored: false };
     }

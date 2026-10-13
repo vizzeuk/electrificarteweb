@@ -71,7 +71,7 @@ export const blogPostBySlugQuery = groq`
     // ─ CTA
     articleCta,
     // ─ Relaciones
-    "relatedCars": relatedCars[]->{
+    "relatedCars": relatedCars[@->hidden != true]->{
       _id,
       name,
       "slug": slug.current,

@@ -77,7 +77,7 @@ export const brand = defineType({
       type: "reference",
       to: [{ type: "car" }],
       group: "content",
-      description: "Auto que aparece en el panel derecho del hero. Si no se configura, se usa el hot deal o el primer auto con foto.",
+      description: "Auto que aparece en el panel derecho del hero. Si no se configura o el auto está oculto, se usa un auto de la marca con foto.",
     }),
     defineField({
       name: "stats", title: "Estadísticas destacadas", type: "array", group: "content",

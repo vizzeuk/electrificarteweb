@@ -28,46 +28,35 @@ export interface OpportunityCarData {
 
 interface OpportunitiesProps {
   title?: string;
-  cars?: OpportunityCarData[];
+  /** Exactamente los elegidos en Sanity; con la lista vacía el home no monta la sección. */
+  cars: OpportunityCarData[];
 }
-
-const FALLBACK: OpportunityCarData[] = [
-  { name: "MG Marvel R",      slug: "mg-marvel-r",      brand: "MG",    category: "SUV",          basePrice: 40500000, discountPrice: 29390000, range: 402, batteryCapacity: 70,  power: 288 },
-  { name: "JAC E30X",         slug: "jac-e30x",         brand: "JAC",   category: "City Car",     basePrice: 22990000, discountPrice: 19590000, range: 322, batteryCapacity: 42,  power: 150 },
-  { name: "BYD Yuan Plus",    slug: "byd-yuan-plus",    brand: "BYD",   category: "SUV Compacto", basePrice: 32500000, discountPrice: 22890000, range: 410, batteryCapacity: 60,  power: 204 },
-  { name: "Tesla Model 3",    slug: "tesla-model-3",    brand: "Tesla", category: "Sedán",        basePrice: 48590000, discountPrice: 39990000, range: 513, batteryCapacity: 75,  power: 283 },
-  { name: "Hyundai IONIQ 5",  slug: "hyundai-ioniq-5",  brand: "Hyundai", category: "SUV",        basePrice: 55990000, discountPrice: 44990000, range: 481, batteryCapacity: 77,  power: 225 },
-  { name: "BYD Seal",         slug: "byd-seal",         brand: "BYD",   category: "Sedán",        basePrice: 42990000, discountPrice: 35990000, range: 570, batteryCapacity: 82,  power: 313 },
-];
 
 const AUTO_MS = 5000;
 /** Cards que avanza cada paso (auto y flechas). */
 const STEP_CARDS = 2;
 
-// Mobile cap: iOS WebKit may OOM with 8 decoded car images simultaneously.
-// SSR keeps the full set for SEO; client reduces after hydration on mobile.
-const MOBILE_LIMIT = 4;
-
 // Ancho de card de esta franja (la maqueta la hace un poco más angosta que la de lanzamientos).
 const RAIL_STYLE = { "--rail-w": "280px" } as React.CSSProperties;
 
 export function Opportunities({ title = "Destacados Electrificarte", cars }: OpportunitiesProps) {
-  const allCars = cars && cars.length > 0 ? cars : FALLBACK;
-  const [limit, setLimit] = useState<number>(allCars.length);
+  const displayCars = cars;
 
+  // Móvil: todos los autos UNA vez. Antes se mostraban solo 4 (tope contra los cierres por
+  // memoria de iOS Safari) y duplicados por el loop. Sin la copia del loop el DOM queda en la
+  // mitad y las imágenes son lazy. Mismo criterio que LatestLaunches.
+  const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
-    if (typeof window === "undefined") return;
     const mql = window.matchMedia("(max-width: 767px)");
-    const apply = () => setLimit(mql.matches ? MOBILE_LIMIT : allCars.length);
+    const apply = () => setIsMobile(mql.matches);
     apply();
     mql.addEventListener("change", apply);
     return () => mql.removeEventListener("change", apply);
-  }, [allCars.length]);
+  }, []);
 
-  const displayCars = useMemo(() => allCars.slice(0, limit), [allCars, limit]);
-  // Double items for seamless infinite loop
-  const loopCars    = useMemo(() => [...displayCars, ...displayCars], [displayCars]);
-  const setCount    = displayCars.length;
+  // Escritorio: dos copias seguidas para el loop infinito de las flechas y el autoplay.
+  const loopCars = useMemo(() => (isMobile ? displayCars : [...displayCars, ...displayCars]), [displayCars, isMobile]);
+  const setCount = displayCars.length;
 
   const sectionRef = useRef<HTMLElement>(null);
   const trackRef   = useRef<HTMLDivElement>(null);
@@ -90,6 +79,7 @@ export function Opportunities({ title = "Destacados Electrificarte", cars }: Opp
   }, []);
 
   const scheduleReset = useCallback((el: HTMLElement) => {
+    if (isMobile) return; // sin copia del loop no hay nada que reiniciar
     const onSettled = () => {
       clearTimeout(fallback);
       const setWidth = stepWidth() * setCount;
@@ -99,7 +89,7 @@ export function Opportunities({ title = "Destacados Electrificarte", cars }: Opp
     };
     el.addEventListener("scrollend", onSettled, { once: true });
     const fallback = setTimeout(onSettled, 900);
-  }, [stepWidth, setCount]);
+  }, [stepWidth, setCount, isMobile]);
 
   const stopAuto = useCallback(() => {
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
@@ -110,10 +100,15 @@ export function Opportunities({ title = "Destacados Electrificarte", cars }: Opp
     timerRef.current = setInterval(() => {
       const el = trackRef.current;
       if (!el) return;
+      // Móvil (una sola copia): al llegar al final, vuelve al primero.
+      if (isMobile && el.scrollLeft + el.clientWidth >= el.scrollWidth - 8) {
+        el.scrollTo({ left: 0, behavior: "smooth" });
+        return;
+      }
       el.scrollBy({ left: stepWidth() * STEP_CARDS, behavior: "smooth" });
       scheduleReset(el);
     }, AUTO_MS);
-  }, [stopAuto, scheduleReset, stepWidth]);
+  }, [stopAuto, scheduleReset, stepWidth, isMobile]);
 
   useEffect(() => {
     const el = trackRef.current;

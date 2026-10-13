@@ -381,12 +381,13 @@ export default function AutoPageClient({ car, similarCars, reviewsSlot }: AutoPa
   };
   const verLabel = hasVersions ? labels[activeVersion] : null;
 
-  // isHotDeal sigue mandando sobre qué precio se muestra (misma regla de siempre):
-  // precio con descuento solo si el auto es hot deal y la versión trae un ahorro real.
+  // Precio con bonos siempre que la versión traiga un ahorro real, igual que las tarjetas
+  // (CarCard). Antes dependía de isHotDeal: con el Hot Deal retirado la ficha mostraba solo el
+  // precio de lista mientras la tarjeta del mismo auto mostraba el precio con bonos.
   const priceOf = (v: VersionData) => {
     const savings = v.price - v.discountPrice;
     const pct = Math.round((savings / v.price) * 100);
-    const discounted = car.isHotDeal && pct > 0;
+    const discounted = pct > 0;
     return { list: v.price, final: discounted ? v.discountPrice : v.price, discounted, savings };
   };
   const price = priceOf(ver);

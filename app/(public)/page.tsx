@@ -7,10 +7,10 @@ import {
   allHotDealsQuery,
   electricTypesForHomeQuery,
   newCarsForHomeQuery,
-  featuredCarsForHomeQuery,
   carImageBySlugQuery,
 } from "@/lib/queries/car";
 import { collectionsForHomeQuery } from "@/lib/queries/collections";
+import { LATEST_LAUNCHES_HOME_MAX, mergeLatestLaunches } from "@/lib/latest-launches";
 
 // Above-the-fold + SEO-critical: render server-side.
 import { Hero }             from "@/components/layout/Hero";
@@ -35,7 +35,7 @@ import { ParaVendedores }   from "@/components/layout/ParaVendedores";
 export const revalidate = 60;
 
 export default async function HomePage() {
-  const [page, blogPosts, brands, collections, hotDeals, allReviews, vehicleTypes, newCars, featuredCars, siteSettings] =
+  const [page, blogPosts, brands, collections, hotDeals, allReviews, vehicleTypes, newCars, siteSettings] =
     await Promise.all([
       client.fetch(homePageQuery, {}, { next: { tags: ["homePage"] } }).catch(() => null),
       client.fetch(latestBlogPostsQuery, { count: 3 }, { next: { tags: ["blogPost"] } }).catch(() => []),
@@ -46,8 +46,7 @@ export default async function HomePage() {
       // Supabase no responde, y ambas secciones quedan en la invitación a escribir.
       getAllReviews(),
       client.fetch(electricTypesForHomeQuery, {}, { next: { tags: ["electricType"] } }).catch(() => []),
-      client.fetch(newCarsForHomeQuery, {}, { next: { tags: ["car"] } }).catch(() => []),
-      client.fetch(featuredCarsForHomeQuery, {}, { next: { tags: ["car"] } }).catch(() => []),
+      client.fetch(newCarsForHomeQuery, { limit: LATEST_LAUNCHES_HOME_MAX }, { next: { tags: ["car"] } }).catch(() => []),
       client.fetch(hotDealUrgencyLabelQuery, {}, { next: { tags: ["siteSettings"] } }).catch(() => null),
     ]);
 
@@ -96,13 +95,6 @@ export default async function HomePage() {
     technologies,
   };
 
-  // Manual Sanity curation takes priority; dynamic fallback fills remaining slots
-  const mergeAndDedup = (manual: any[], dynamic: any[], limit: number) => {
-    const manualIds = new Set((manual ?? []).map((c: any) => c._id));
-    const extras = (dynamic ?? []).filter((c: any) => !manualIds.has(c._id));
-    return [...(manual ?? []), ...extras].slice(0, limit);
-  };
-
   // Sanity slug can come as string ("abc") or object ({current:"abc"}) — normalise
   const toSlug = (s: any): string =>
     typeof s === "string" ? s : (s?.current ?? "");
@@ -110,9 +102,8 @@ export default async function HomePage() {
   const toBrand = (b: any) =>
     typeof b === "string" || b == null ? b : { name: b.name, slug: toSlug(b.slug), logoUrl: b.logoUrl };
 
-  // Todos los 🆕 (tope 20); si hay menos de 10, se completa con los más recientes.
-  const nuevos = (newCars ?? []).filter((c: { isNew?: boolean }) => c.isNew).length;
-  const latestCars = mergeAndDedup(page?.latestLaunchesCars, newCars, Math.min(20, Math.max(10, nuevos)))
+  // Elegidos a mano, después todos los 🆕 (tope 20) y, si hay menos de 10, los más recientes.
+  const latestCars = mergeLatestLaunches(page?.latestLaunchesCars, newCars, LATEST_LAUNCHES_HOME_MAX)
     .map((c: any) => ({
       _id:                  c._id,
       name:                 c.name,
@@ -134,11 +125,10 @@ export default async function HomePage() {
       isNew:                c.isNew,
     }));
 
-  // "Destacados": si Francisco eligió autos en el CMS, se muestran EXACTAMENTE esos (es lo que
-  // promete el campo en Studio). Antes se rellenaba hasta 8 con autos automáticos y un auto
-  // quitado de la lista podía volver por el relleno: parecía que el CMS "no dejaba" sacarlo.
-  // Sin selección manual, los marcados ⭐ Destacado (y luego los más accesibles).
-  const opportunityCars = (page?.opportunitiesCars?.length ? page.opportunitiesCars : (featuredCars ?? []).slice(0, 8))
+  // "Destacados": EXACTAMENTE los autos elegidos en la Página de inicio de Sanity, nada más
+  // (Francisco, oct-2026). Sin relleno automático ni marca ⭐: un auto quitado de la lista no puede
+  // volver por otro camino. Sin autos elegidos, la sección no se muestra.
+  const opportunityCars = (page?.opportunitiesCars ?? [])
     .map((c: any) => ({
       _id:                  c._id,
       name:                 c.name,
@@ -201,10 +191,12 @@ export default async function HomePage() {
           urgencyLabel={hotDealUrgencyLabel}
         />
       )}
-      <Opportunities
-        title={page?.opportunitiesTitle ?? "Destacados Electrificarte"}
-        cars={opportunityCars}
-      />
+      {opportunityCars.length > 0 && (
+        <Opportunities
+          title={page?.opportunitiesTitle ?? "Destacados Electrificarte"}
+          cars={opportunityCars}
+        />
+      )}
 
       <HomeDeferred
         collections={collections ?? []}
