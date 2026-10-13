@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { CSSProperties } from "react";
 import Link from "next/link";
 import { groq } from "next-sanity";
+import { MAX_VERSION_RANGE } from "@/lib/queries/car";
 import { Icon } from "@/components/ui/Icon";
 import { OfferCta } from "@/components/waitlist/OfferCta";
 import { client } from "@/lib/sanity/client";
@@ -36,7 +37,7 @@ const asesoriaCatalogQuery = groq`{
     basePrice,
     discountPrice,
     range,
-    "maxVersionRange": math::max(versions[defined(range) && range > 0].range),
+    ${MAX_VERSION_RANGE},
     "tag": electricType->tag
   },
   "models": count(*[_type == "car" && hidden != true])

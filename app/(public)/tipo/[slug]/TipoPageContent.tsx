@@ -40,6 +40,10 @@ export interface TipoCarData {
   isHotDeal: boolean;
   tagline: string;
   imageUrl?: string;
+  extraVehicleTypes?: FacetCar["extraVehicleTypes"];
+  extraElectricTypes?: FacetCar["extraElectricTypes"];
+  /** Entra por una versión de este tipo: la card abre la ficha con esa versión elegida. */
+  href?: string;
 }
 
 // Adaptador estable raw → FacetCar (contexto: /tipo, oculta el facet "tipo").
@@ -52,6 +56,7 @@ function tipoToFacet(c: TipoCarData): FacetCar {
     vehicleTypeLabel: "",
     electricTypeTag: c.electricTypeTag,
     electricTypeLabel: c.electricTypeLabel,
+    extraElectricTypes: c.extraElectricTypes,
     price: c.discountPrice ?? c.basePrice,
     basePrice: c.basePrice,
     discountPrice: c.discountPrice ?? c.basePrice,
@@ -167,7 +172,7 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes, adCar, p
     .filter((p) => p.eff > 0)
     .reduce<{ eff: number; base: number } | null>((min, p) => (!min || p.eff < min.eff ? p : min), null);
   const brandCount = new Set(cars.map((c) => c.brandSlug || c.brand).filter(Boolean)).size;
-  const techs = Array.from(new Set(cars.map((c) => electricTypeLabel(c.electricTypeTag)).filter(Boolean) as string[]))
+  const techs = Array.from(new Set(cars.flatMap((c) => [c.electricTypeTag, ...(c.extraElectricTypes ?? []).map((t) => t.tag)]).map((t) => electricTypeLabel(t)).filter(Boolean) as string[]))
     .sort((a, b) => (TECH_ORDER.indexOf(a) + 1 || 99) - (TECH_ORDER.indexOf(b) + 1 || 99));
   const kpis = [
     n > 0 && { num: String(n), label: n === 1 ? "modelo en el catálogo" : "modelos en el catálogo" },
@@ -389,6 +394,7 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes, adCar, p
                       name={cleanSeparators(car.name)}
                       brand={car.brand}
                       slug={car.slug}
+                      href={car.href}
                       image={car.imageUrl}
                       batteryCapacity={car.battery}
                       range={car.range}

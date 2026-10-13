@@ -1,4 +1,5 @@
 import { groq } from "next-sanity";
+import { MAX_VERSION_RANGE } from "./car";
 
 // ─── Cards para el carrusel del home ─────────────────────────────────────────
 export const collectionsForHomeQuery = groq`
@@ -53,7 +54,7 @@ export const collectionBySlugQuery = groq`
       fuelConsumption,
       rendimientoElectrico,
       power,
-      "maxVersionRange": math::max(versions[defined(range) && range > 0].range),
+      ${MAX_VERSION_RANGE},
       isNew,
       isHotDeal,
       "brand":        brand->{ name, "slug": slug.current, "logoUrl": logo.asset->url },
@@ -69,8 +70,9 @@ export const carsByFiltersQuery = groq`
     _type == "car"
     && hidden != true
     && (count($brandRefs) == 0    || brand._ref        in $brandRefs)
-    && ($vehicleTypeRef  == null  || vehicleType._ref  == $vehicleTypeRef)
-    && ($electricTypeRef == null  || electricType._ref == $electricTypeRef)
+    // Filtros no excluyentes: también cuenta el tipo de cualquiera de sus versiones.
+    && ($vehicleTypeRef  == null  || vehicleType._ref  == $vehicleTypeRef  || $vehicleTypeRef  in versions[].vehicleType._ref)
+    && ($electricTypeRef == null  || electricType._ref == $electricTypeRef || $electricTypeRef in versions[].electricType._ref)
     && ($maxPrice        == 0     || basePrice         <= $maxPrice)
     && ($minPrice        == 0     || basePrice         >= $minPrice)
     && ($minSeats        == 0     || seats             >= $minSeats)
@@ -89,7 +91,7 @@ export const carsByFiltersQuery = groq`
     fuelConsumption,
     rendimientoElectrico,
     power,
-    "maxVersionRange": math::max(versions[defined(range) && range > 0].range),
+    ${MAX_VERSION_RANGE},
     isNew,
     isHotDeal,
     "brand":        brand->{ name, "slug": slug.current, "logoUrl": logo.asset->url },

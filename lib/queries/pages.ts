@@ -1,5 +1,5 @@
 import { groq } from "next-sanity";
-import { LAUNCH_CAR_FIELDS } from "./car";
+import { LAUNCH_CAR_FIELDS, MAX_VERSION_RANGE } from "./car";
 
 // ─── Home Page ────────────────────────────────────────────────────────────────
 export const homePageQuery = groq`
@@ -49,7 +49,7 @@ export const homePageQuery = groq`
       basePrice,
       discountPrice,
       range,
-      "maxVersionRange": math::max(versions[defined(range) && range > 0].range),
+      ${MAX_VERSION_RANGE},
       batteryCapacity,
       electricRangeKm,
       fuelConsumption,

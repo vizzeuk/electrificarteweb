@@ -1,5 +1,29 @@
 import { groq } from "next-sanity";
 
+// ─── Versiones de otra electrificación o carrocería ──────────────────────────
+// Una versión puede declarar su propia electrificación (`versions[].electricType`) o carrocería
+// (`versions[].vehicleType`), ej. DS 3 Hybrid + DS 3 E-Tense en una sola ficha. Los filtros son
+// no excluyentes: el auto aparece en el tipo principal y en los de sus versiones.
+
+/** Autonomía máxima entre las versiones de la MISMA electrificación que el auto (la de una
+ *  versión eléctrica no se le atribuye a la ficha híbrida). */
+export const MAX_VERSION_RANGE = groq`"maxVersionRange": math::max(versions[defined(range) && range > 0 && (!defined(electricType) || electricType._ref == ^.electricType._ref)].range)`;
+
+/** Tipos que suman las versiones, aparte del principal del auto. */
+export const VERSION_TYPES = groq`
+  "versionVehicleTypes": versions[defined(vehicleType) && vehicleType._ref != ^.vehicleType._ref].vehicleType->{ "slug": slug.current, label },
+  "versionElectricTypes": versions[defined(electricType) && electricType._ref != ^.electricType._ref].electricType->{ "slug": slug.current, label, tag }
+`;
+
+/** La versión que hace que el auto aparezca en una PLP de tipo cuando su tipo principal no
+ *  calza (ej. la E-Tense del DS 3 en /electrico/ev): la tarjeta muestra su precio y specs. */
+const MATCH_VERSION_FIELDS = groq`{
+  _key, name, price, discountPrice, batteryCapacity, range, electricRangeKm, fuelConsumption,
+  rendimientoElectrico, power, traction, seats,
+  "electricType": coalesce(electricType->{ "slug": slug.current, label, tag }, ^.electricType->{ "slug": slug.current, label, tag }),
+  "vehicleType": coalesce(vehicleType->{ "slug": slug.current, label }, ^.vehicleType->{ "slug": slug.current, label })
+}`;
+
 // ─── Campos comunes para listados (tarjetas) ─────────────────────────────────
 const CAR_CARD_FIELDS = groq`
   _id,
@@ -17,7 +41,7 @@ const CAR_CARD_FIELDS = groq`
   electricRangeKm,
   fuelConsumption,
   rendimientoElectrico,
-  "maxVersionRange": math::max(versions[defined(range) && range > 0].range),
+  ${MAX_VERSION_RANGE},
   power,
   torque,
   traction,
@@ -46,7 +70,8 @@ const CAR_CARD_FIELDS = groq`
   hotDealExpiry,
   "brand": brand->{ _id, name, "slug": slug.current, logo, accentColor },
   "vehicleType": vehicleType->{ _id, "slug": slug.current, label, icon },
-  "electricType": electricType->{ _id, "slug": slug.current, label, tag, color }
+  "electricType": electricType->{ _id, "slug": slug.current, label, tag, color },
+  ${VERSION_TYPES}
 `;
 
 // ─── Todos los autos (para comparador y PLP genérico) ─────────────────────────
@@ -70,7 +95,7 @@ export const LAUNCH_CAR_FIELDS = groq`
   fuelConsumption,
   rendimientoElectrico,
   power,
-  "maxVersionRange": math::max(versions[defined(range) && range > 0].range),
+  ${MAX_VERSION_RANGE},
   "electricType": electricType->{ tag },
   "vehicleType": vehicleType->{ label, "slug": slug.current },
   basePrice,
@@ -213,6 +238,9 @@ export const carBySlugQuery = groq`
       name,
       price,
       discountPrice,
+      // Solo si la versión es de otra electrificación/carrocería que el auto (vacío = la del auto).
+      "electricType": electricType->{ tag, label, "slug": slug.current },
+      "vehicleType": vehicleType->{ label, "slug": slug.current },
       batteryCapacity,
       batteryType,
       range,
@@ -283,15 +311,17 @@ export const carsByBrandQuery = groq`
 
 // ─── Autos por tipo de vehículo – PLP Tipo ───────────────────────────────────
 export const carsByVehicleTypeQuery = groq`
-  *[_type == "car" && vehicleType->slug.current == $typeSlug && hidden != true] | order(coalesce(discountPrice, basePrice) asc) {
-    ${CAR_CARD_FIELDS}
+  *[_type == "car" && hidden != true && (vehicleType->slug.current == $typeSlug || $typeSlug in versions[].vehicleType->slug.current)] | order(coalesce(discountPrice, basePrice) asc) {
+    ${CAR_CARD_FIELDS},
+    "matchVersion": select(vehicleType->slug.current != $typeSlug => versions[vehicleType->slug.current == $typeSlug][0]${MATCH_VERSION_FIELDS})
   }
 `;
 
 // ─── Autos por tipo eléctrico – PLP Eléctrico ────────────────────────────────
 export const carsByElectricTypeQuery = groq`
-  *[_type == "car" && electricType->slug.current == $electricSlug && hidden != true] | order(coalesce(discountPrice, basePrice) asc) {
-    ${CAR_CARD_FIELDS}
+  *[_type == "car" && hidden != true && (electricType->slug.current == $electricSlug || $electricSlug in versions[].electricType->slug.current)] | order(coalesce(discountPrice, basePrice) asc) {
+    ${CAR_CARD_FIELDS},
+    "matchVersion": select(electricType->slug.current != $electricSlug => versions[electricType->slug.current == $electricSlug][0]${MATCH_VERSION_FIELDS})
   }
 `;
 
@@ -415,7 +445,9 @@ export const electricTypesForHomeQuery = groq`
     tagline,
     idealFor,
     "cardImageUrl": cardImage.asset->url,
-    "carCount": count(*[_type == "car" && electricType._ref == ^._id && hidden != true])
+    // Incluye los autos con una versión de este tipo (filtros no excluyentes): la suma de estos
+    // conteos NO es la cantidad de modelos (ver catalogModelCountQuery).
+    "carCount": count(*[_type == "car" && hidden != true && (electricType._ref == ^._id || ^._id in versions[].electricType._ref)])
   }
 `;
 
@@ -450,6 +482,10 @@ export const vehicleTypeBySlugQuery = groq`
     metaDescription
   }
 `;
+
+// ─── Cantidad de modelos del catálogo ────────────────────────────────────────
+// Una ficha publicada = un modelo, tenga las versiones que tenga.
+export const catalogModelCountQuery = groq`count(*[_type == "car" && hidden != true])`;
 
 // ─── Todos los tipos eléctricos ──────────────────────────────────────────────
 export const allElectricTypesQuery = groq`
@@ -553,6 +589,9 @@ export const allCarsForComparadorQuery = groq`
       name,
       price,
       discountPrice,
+      // Solo si la versión es de otra electrificación/carrocería que el auto.
+      "electricType": electricType->{ tag },
+      "vehicleType": vehicleType->{ label },
       batteryCapacity,
       range,
       power,

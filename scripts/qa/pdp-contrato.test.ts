@@ -9,7 +9,7 @@
  * N/M no castigue a un HEV por no tener campos que no le corresponden.
  */
 import assert from "node:assert/strict";
-import { armarEncargo, hostDe, parseVersiones, toolsConHost, type FilaSheet } from "@/lib/pdp-creacion/encargo";
+import { armarEncargo, hostDe, parseVersiones, sinTiposDelModelo, toolsConHost, versionBase, type FilaSheet } from "@/lib/pdp-creacion/encargo";
 import { camposAplicables, importantes, medirLlenado, MIN_CAMPOS, vitales, type BasePdp, type ContratoPdp } from "@/lib/pdp-creacion/contrato";
 import { armarDocumentoCar, armarVersiones, slugify } from "@/lib/pdp-creacion/sanity-doc";
 import { filaDeSolicitud, filaDesdeEntrada, MINUTOS_TRABADA, sePuedeReintentar } from "@/lib/pdp-creacion/solicitudes";
@@ -361,6 +361,78 @@ test("sePuedeReintentar: fallidas si, terminadas bien no, activas solo si estan 
   assert.equal(sePuedeReintentar({ estado: "borrador_incompleto", updated_at: hace(999) }, ahora), false);
   assert.equal(sePuedeReintentar({ estado: "procesando", updated_at: hace(5) }, ahora), false);
   assert.equal(sePuedeReintentar({ estado: "en cola", updated_at: hace(MINUTOS_TRABADA + 1) }, ahora), true);
+});
+
+// ─── Versiones de otra electrificacion o carroceria (oct-2026) ────────────────
+
+const FILA_DS3: FilaSheet = {
+  marca: "DS", modelo: "3", anio: 2026, tipo: "Hatchback", electrificacion: "HEV",
+  url_oficial: "https://www.dsautomobiles.cl/ds-3.html",
+  versiones: [
+    { nombre: "E-Tense Opera", precio: 41490000, electrificacion: "ev", tipo: "SUV" },
+    { nombre: "Etoile Hybrid", precio: 35990000 },
+    { nombre: "Etoile Hybrid Plus", precio: 37990000, tipo: "hatchback", electrificacion: "HEV" },
+  ],
+};
+
+test("parseVersiones: guarda tipo/electrificacion de la version (tag en mayuscula) y omite los vacios", () => {
+  assert.deepEqual(parseVersiones([{ nombre: "A", precio: 1000000, tipo: " SUV ", electrificacion: "ev" }, { nombre: "B", precio: 2000000, tipo: "", electrificacion: "" }]), [
+    { nombre: "A", precio: 1000000, tipo: "SUV", electrificacion: "EV" },
+    { nombre: "B", precio: 2000000 },
+  ]);
+});
+
+test("sinTiposDelModelo: un tipo igual al del modelo no cuenta como distinto", () => {
+  const v = sinTiposDelModelo(parseVersiones(FILA_DS3.versiones), FILA_DS3);
+  assert.deepEqual(v[2], { nombre: "Etoile Hybrid Plus", precio: 37990000 });
+  assert.equal(v[0].electrificacion, "EV");
+  assert.equal(v[0].tipo, "SUV");
+});
+
+test("versionBase: la mas barata de la electrificacion del modelo, aunque otra sea mas barata", () => {
+  const v = sinTiposDelModelo(parseVersiones([
+    { nombre: "EV barata", precio: 20000000, electrificacion: "EV" },
+    { nombre: "HEV", precio: 30000000 },
+  ]), { tipo: "SUV", electrificacion: "HEV" });
+  assert.equal(versionBase(v)?.nombre, "HEV");
+  // Si ninguna es del tipo del modelo, la mas barata de todas.
+  assert.equal(versionBase([{ nombre: "X", precio: 5, electrificacion: "EV" }, { nombre: "Y", precio: 3, electrificacion: "EV" }])?.nombre, "Y");
+});
+
+test("armarEncargo: marca las versiones de otra tecnologia y pide sus specs completas", () => {
+  const e = armarEncargo(FILA_DS3);
+  assert.match(e, /E-Tense Opera — \$41\.490\.000 CLP \(electrificacion EV, carroceria SUV, distinta a la del modelo\)/);
+  assert.match(e, /Usa "Etoile Hybrid" como version base/);
+  assert.match(e, /TODAS sus specs propias/);
+  assert.doesNotMatch(e, /Etoile Hybrid Plus — [^\n]*distinta/);
+});
+
+test("armarDocumentoCar: refs propias en la version, basePrice del tipo del modelo, sin heredar la base", () => {
+  const refs = { ...REFS, versiones: [{ electricTypeId: "e-ev", vehicleTypeId: "t-suv" }, {}, {}] };
+  const contrato: ContratoPdp = {
+    estado: "listo", fuente_leida: FILA_DS3.url_oficial!,
+    base: { fuelConsumption: 20.4, power: 145, batteryCapacity: 1.1 },
+    versiones: [{ nombre: "E-Tense Opera", batteryCapacity: 54, range: 404, power: 156 }],
+  };
+  const doc = armarDocumentoCar(FILA_DS3, contrato, refs) as { basePrice: number; versions: Record<string, unknown>[]; catalogFindings?: { detail: string }[] };
+  assert.equal(doc.basePrice, 35990000);
+  const ev = doc.versions[0];
+  assert.deepEqual(ev.electricType, { _type: "reference", _ref: "e-ev" });
+  assert.deepEqual(ev.vehicleType, { _type: "reference", _ref: "t-suv" });
+  assert.equal(ev.fuelConsumption, undefined, "la version EV no hereda el consumo del hibrido");
+  assert.equal(ev.range, 404);
+  assert.equal(doc.versions[1].fuelConsumption, 20.4, "la base hereda las specs del modelo");
+  assert.equal(doc.versions[1].electricType, undefined);
+  // A la EV le falta 0-100 y traccion (vitales): queda un hallazgo para completarla.
+  assert.ok(doc.catalogFindings?.some((f) => /E-Tense Opera.*acceleration/.test(f.detail)));
+});
+
+test("filaDesdeEntrada: pasa tipo/electrificacion de cada version del panel", () => {
+  const f = filaDesdeEntrada({ marca: "DS", modelo: "3", tipo: "Hatchback", electrificacion: "hev", versiones: [{ nombre: "E-Tense", precio: "41.490.000", tipo: "SUV", electrificacion: "ev" }, { nombre: "Hybrid", precio: 35990000, tipo: "", electrificacion: "" }] });
+  assert.deepEqual(f.versiones, [
+    { nombre: "E-Tense", precio: 41490000, tipo: "SUV", electrificacion: "EV" },
+    { nombre: "Hybrid", precio: 35990000 },
+  ]);
 });
 
 console.log(`\n${failed === 0 ? "✓" : "✗"} ${passed} pasaron, ${failed} fallaron\n`);

@@ -6,7 +6,7 @@
 // /api/admin/pdp/* con `x-admin-secret`: ninguno de los dos necesita una key de
 // Supabase para este flujo.
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { parseVersiones, type FilaSheet, type VersionDeclarada } from "./encargo";
+import { parseVersiones, sinTiposDelModelo, type FilaSheet, type VersionDeclarada } from "./encargo";
 import { n8nHeaders } from "@/lib/n8n";
 
 export const TABLA = "pdp_solicitudes";
@@ -71,9 +71,12 @@ const anioOpcional = (v: unknown) => (txt(v) === "" || Number(v) === 0 ? null : 
  */
 export function filaDesdeEntrada(e: EntradaPanel): FilaSheet {
   const versiones = Array.isArray(e.versiones)
-    ? (e.versiones as { nombre?: unknown; precio?: unknown }[]).map((v) => ({
+    ? (e.versiones as { nombre?: unknown; precio?: unknown; tipo?: unknown; electrificacion?: unknown }[]).map((v) => ({
         nombre: txt(v?.nombre),
         precio: Number(String(v?.precio ?? "").replace(/[^\d]/g, "")),
+        // Opcionales: solo si la version es de otra carroceria/electrificacion que el modelo.
+        ...(txt(v?.tipo) ? { tipo: txt(v?.tipo) } : {}),
+        ...(txt(v?.electrificacion) ? { electrificacion: txt(v?.electrificacion).toUpperCase() } : {}),
       }))
     : txt(e.versiones);
   return {
@@ -133,7 +136,7 @@ export async function crearSolicitud(
       tipo: fila.tipo,
       electrificacion: fila.electrificacion,
       url_oficial: fila.url_oficial || null,
-      versiones: parseVersiones(fila.versiones),
+      versiones: sinTiposDelModelo(parseVersiones(fila.versiones), fila),
       slug,
       creado_por: creadoPor,
       estado: "listo",

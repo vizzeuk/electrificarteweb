@@ -43,6 +43,8 @@ interface BrandCarData {
   fuelConsumption?: number | null;
   rendimientoElectrico?: number | null;
   specs: { battery: string; charge0to80: string; topSpeed: string };
+  extraVehicleTypes?: FacetCar["extraVehicleTypes"];
+  extraElectricTypes?: FacetCar["extraElectricTypes"];
 }
 
 // Adaptador estable raw → FacetCar (contexto: /marcas, oculta el facet "marca").
@@ -55,6 +57,8 @@ function brandToFacet(c: BrandCarData): FacetCar {
     vehicleTypeLabel: c.vehicleTypeLabel || c.category,
     electricTypeTag: c.electricTypeTag ?? "",
     electricTypeLabel: c.electricTypeLabel ?? "",
+    extraVehicleTypes: c.extraVehicleTypes,
+    extraElectricTypes: c.extraElectricTypes,
     price: c.discountPrice ?? c.basePrice,
     basePrice: c.basePrice,
     discountPrice: c.discountPrice ?? c.basePrice,
@@ -197,9 +201,10 @@ export default function BrandPageContent({ slug, brand, hotDealUrgencyLabel }: B
     .map((c) => ({ eff: c.discountPrice ?? c.basePrice, base: c.basePrice }))
     .filter((p) => p.eff > 0)
     .reduce<{ eff: number; base: number } | null>((min, p) => (!min || p.eff < min.eff ? p : min), null);
-  const techs = Array.from(new Set(cars.map((c) => electricTypeLabel(c.electricTypeTag)).filter(Boolean) as string[]))
+  // Con los tipos de las versiones (un DS 3 Hybrid + E-Tense suma las dos tecnologías).
+  const techs = Array.from(new Set(cars.flatMap((c) => [c.electricTypeTag, ...(c.extraElectricTypes ?? []).map((t) => t.tag)]).map((t) => electricTypeLabel(t)).filter(Boolean) as string[]))
     .sort((a, b) => (TECH_ORDER.indexOf(a) + 1 || 99) - (TECH_ORDER.indexOf(b) + 1 || 99));
-  const bodyTypes = Array.from(new Set(cars.map((c) => c.vehicleTypeLabel ?? "").filter(Boolean).map(inlineLabel)));
+  const bodyTypes = Array.from(new Set(cars.flatMap((c) => [c.vehicleTypeLabel ?? "", ...(c.extraVehicleTypes ?? []).map((t) => t.label)]).filter(Boolean).map(inlineLabel)));
   const kpis = [
     n > 0 && { num: String(n), label: n === 1 ? "modelo en el catálogo" : "modelos en el catálogo" },
     cheapest && { num: formatCLP(cheapest.eff), label: cheapest.eff < cheapest.base ? "precio más bajo con descuento" : "precio de lista más bajo" },

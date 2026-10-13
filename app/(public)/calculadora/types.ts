@@ -3,6 +3,8 @@ export interface CalcVersion {
   name:                 string;
   price:                number;
   discountPrice?:       number | null;
+  /** Electrificación propia de la versión, solo si difiere de la del auto. */
+  electricTypeTag?:     string | null;
   batteryCapacity?:     number | null;
   range?:               number | null;
   electricRangeKm?:     number | null;

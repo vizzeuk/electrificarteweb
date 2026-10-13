@@ -3,8 +3,8 @@
 // Vive en la web y no en un Code node de n8n a proposito (Directriz 4 de
 // docs/FLUJO-PDP-N8N.md): las reglas de quien es dueno de que campo son codigo
 // con tests, no expresiones de n8n que nadie puede correr.
-import type { BasePdp, ContratoPdp, VersionPdp } from "./contrato";
-import { hostDe, parseVersiones, type FilaSheet, type VersionDeclarada } from "./encargo";
+import { vitales, type BasePdp, type ContratoPdp, type VersionPdp } from "./contrato";
+import { hostDe, parseVersiones, sinTiposDelModelo, versionBase, versionesDelModelo, type FilaSheet, type VersionDeclarada } from "./encargo";
 
 export function slugify(text: string): string {
   return String(text)
@@ -34,6 +34,8 @@ export interface RefsSanity {
   brandId: string;
   vehicleTypeId: string;
   electricTypeId: string;
+  /** Refs propias de cada version declarada (mismo orden), solo si difieren del modelo. */
+  versiones?: { vehicleTypeId?: string; electricTypeId?: string }[];
 }
 
 /**
@@ -45,22 +47,26 @@ export function armarVersiones(
   declaradas: VersionDeclarada[],
   deltas: VersionPdp[] = [],
   base: BasePdp = {},
+  refsVersiones: RefsSanity["versiones"] = [],
 ) {
   const porNombre = new Map(deltas.map((d) => [d.nombre.trim().toLowerCase(), d]));
-  const masBarata = declaradas.length
-    ? declaradas.reduce((a, b) => (b.precio < a.precio ? b : a))
-    : null;
+  // La base es la mas barata de la electrificacion del modelo (ver versionBase).
+  const masBarata = versionBase(declaradas);
 
   return declaradas.map((v, i) => {
     const delta: Partial<VersionPdp> = porNombre.get(v.nombre.trim().toLowerCase()) ?? {};
     // La version base hereda las specs de `base`; las otras solo su delta. Asi el
-    // comparador no muestra una version vacia al lado de otra completa.
+    // comparador no muestra una version vacia al lado de otra completa. Una version de otra
+    // electrificacion trae sus specs completas en el delta (lo pide el encargo).
     const specs: Partial<VersionPdp> & Partial<BasePdp> =
       masBarata && v.nombre === masBarata.nombre ? { ...base, ...delta } : delta;
+    const refs = refsVersiones?.[i] ?? {};
     return sinIndefinidos({
       _key: `v${i}`,
       name: v.nombre,
       price: v.precio,
+      electricType: refs.electricTypeId ? { _type: "reference", _ref: refs.electricTypeId } : undefined,
+      vehicleType: refs.vehicleTypeId ? { _type: "reference", _ref: refs.vehicleTypeId } : undefined,
       batteryCapacity: limpio(specs.batteryCapacity),
       batteryType: limpio(specs.batteryType),
       range: limpio(specs.range),
@@ -128,13 +134,16 @@ export function armarDocumentoCar(
   contrato: ContratoPdp,
   refs: RefsSanity,
 ): Record<string, unknown> {
-  const declaradas = parseVersiones(fila.versiones);
+  const declaradas = sinTiposDelModelo(parseVersiones(fila.versiones), fila);
   const base = contrato.base ?? {};
   const precioLeido =
     typeof contrato.precio_lista_leido === "number" && contrato.precio_lista_leido > 0 && contrato.evidencia_precio
       ? contrato.precio_lista_leido
       : undefined;
-  const basePrice = declaradas.length ? Math.min(...declaradas.map((v) => v.precio)) : precioLeido;
+  // El "desde" del modelo sale de las versiones de SU electrificacion: el de una version de otra
+  // tecnologia se ve en esa version (y en la PLP de ese tipo), no como precio del modelo.
+  const delModelo = versionesDelModelo(declaradas);
+  const basePrice = declaradas.length ? Math.min(...delModelo.map((v) => v.precio)) : precioLeido;
 
   const hallazgos: Record<string, unknown>[] = [];
   if (!declaradas.length && precioLeido) {
@@ -161,6 +170,25 @@ export function armarDocumentoCar(
   for (const [i, d] of (contrato.discrepancias ?? []).entries()) {
     hallazgos.push({ _key: `disc${i}`, kind: "discrepancia_fuente", detail: d });
   }
+  // Una version de otra electrificacion no hereda nada de la base: sin sus vitales propias, la
+  // ficha mostraria esa version sin autonomia, potencia o bateria. Se avisa para completarla.
+  const deltasPorNombre = new Map((contrato.versiones ?? []).map((d) => [d.nombre.trim().toLowerCase(), d as unknown as Record<string, unknown>]));
+  for (const [i, v] of declaradas.entries()) {
+    if (!v.electrificacion) continue;
+    const delta = deltasPorNombre.get(v.nombre.trim().toLowerCase()) ?? {};
+    const faltan = vitales(v.electrificacion).filter((k) => {
+      const x = delta[k];
+      return x === undefined || x === null || x === "" || x === 0;
+    });
+    if (faltan.length) {
+      hallazgos.push({
+        _key: `version-otra-tecnologia-${i}`,
+        kind: "discrepancia_fuente",
+        versionName: v.nombre,
+        detail: `La version "${v.nombre}" (${v.electrificacion}) no trae de la fuente: ${faltan.join(", ")}. Completalos en Studio antes de publicar.`,
+      });
+    }
+  }
 
   const doc: Record<string, unknown> = {
     _type: "car",
@@ -174,7 +202,7 @@ export function armarDocumentoCar(
     aiGenerated: true,
     sourceUrls: [fuenteDelDocumento(fila, contrato)],
     basePrice,
-    versions: armarVersiones(declaradas, contrato.versiones, base),
+    versions: armarVersiones(declaradas, contrato.versiones, base, refs.versiones),
 
     tagline: limpio(base.tagline),
     description: limpio(base.description),

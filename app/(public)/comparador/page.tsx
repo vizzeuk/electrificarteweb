@@ -20,6 +20,8 @@ interface PageProps {
 interface RawVersion {
   name?: string | null;
   price?: number | null;
+  electricType?: { tag?: string } | null;
+  vehicleType?: { label?: string } | null;
   discountPrice?: number | null;
   batteryCapacity?: number | null;
   range?: number | null;
@@ -99,9 +101,14 @@ export default async function ComparadorPage({ searchParams }: PageProps) {
 
     for (let vi = 0; vi < versions.length; vi++) {
       const v = versions[vi];
-      // Fallback chain: version field → car-level field → default
+      // Una versión de otra electrificación (ej. la E-Tense de un DS 3 híbrido) no hereda las specs
+      // del auto. Fallback chain: version field → car-level field (misma tecnología) → default.
+      const ownType = !!v.electricType?.tag && v.electricType.tag !== c.electricType?.tag;
+      const cb: Omit<RawVersion, "price"> & { basePrice?: number | null } = ownType ? {} : c;
       allCars.push({
         ...base,
+        category:        v.vehicleType?.label ?? base.category,
+        electricTypeTag: v.electricType?.tag ?? base.electricTypeTag,
         id:          `${c.slug}__v${vi}`,
         name:        c.name,
         versionName: v.name ?? undefined,
@@ -109,17 +116,17 @@ export default async function ComparadorPage({ searchParams }: PageProps) {
         showVersionBadge,
         basePrice:     v.price         ?? c.basePrice        ?? 0,
         discountPrice: v.discountPrice ?? c.discountPrice     ?? v.price ?? c.basePrice ?? 0,
-        battery:       v.batteryCapacity ?? c.batteryCapacity ?? 0,
-        range:         v.range          ?? c.range            ?? 0,
-        power:         v.power          ?? c.power            ?? 0,
-        traction:      v.traction       ?? c.traction         ?? "—",
-        acceleration:  v.acceleration   ?? c.acceleration     ?? 0,
-        topSpeed:      v.topSpeed       ?? c.topSpeed         ?? 0,
-        chargeTimeDC:  v.chargeTimeDC   ?? c.chargeTimeDC     ?? "—",
-        chargeTimeAC:  v.chargeTimeAC   ?? c.chargeTimeAC     ?? "—",
-        chargeType:    v.chargeType     ?? c.chargeType        ?? "—",
-        seats:         v.seats          ?? c.seats            ?? 0,
-        cargo:         v.cargo          ?? c.cargo            ?? 0,
+        battery:       v.batteryCapacity ?? cb.batteryCapacity ?? 0,
+        range:         v.range          ?? cb.range            ?? 0,
+        power:         v.power          ?? cb.power            ?? 0,
+        traction:      v.traction       ?? cb.traction         ?? "—",
+        acceleration:  v.acceleration   ?? cb.acceleration     ?? 0,
+        topSpeed:      v.topSpeed       ?? cb.topSpeed         ?? 0,
+        chargeTimeDC:  v.chargeTimeDC   ?? cb.chargeTimeDC     ?? "—",
+        chargeTimeAC:  v.chargeTimeAC   ?? cb.chargeTimeAC     ?? "—",
+        chargeType:    v.chargeType     ?? cb.chargeType        ?? "—",
+        seats:         v.seats          ?? c.seats             ?? 0,
+        cargo:         v.cargo          ?? c.cargo             ?? 0,
       });
     }
   }

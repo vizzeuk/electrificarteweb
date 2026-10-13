@@ -38,6 +38,29 @@ export interface FilaSheet {
 export interface VersionDeclarada {
   nombre: string;
   precio: number;
+  /**
+   * Carroceria y electrificacion de la version, SOLO si difieren de las del modelo (ej. DS 3
+   * Hybrid + DS 3 E-Tense). Ausentes = las del modelo. Las declara el humano (R4), como el
+   * tipo y la electrificacion del modelo. Solo las manda el panel (arreglo), no el texto del Sheet.
+   */
+  tipo?: string;
+  electrificacion?: string;
+}
+
+/**
+ * Las versiones de la MISMA electrificacion que el modelo. La base (la que llena las specs del
+ * modelo y la que mide el llenado) sale de aca: si la mas barata es de otra tecnologia, sus specs
+ * no son las del modelo. Si ninguna es del mismo tipo, todas.
+ */
+export function versionesDelModelo(versiones: VersionDeclarada[]): VersionDeclarada[] {
+  const propias = versiones.filter((v) => !v.electrificacion);
+  return propias.length ? propias : versiones;
+}
+
+/** La version base: la mas barata entre las de la electrificacion del modelo. */
+export function versionBase(versiones: VersionDeclarada[]): VersionDeclarada | null {
+  const candidatas = versionesDelModelo(versiones);
+  return candidatas.length ? candidatas.reduce((a, b) => (b.precio < a.precio ? b : a)) : null;
 }
 
 /**
@@ -51,7 +74,10 @@ export function parseVersiones(raw: string | VersionDeclarada[] | null | undefin
       const precio = Number(String(v?.precio ?? "").replace(/[^\d]/g, ""));
       if (!nombre) throw new Error(`Version ${i + 1} sin nombre`);
       if (!Number.isFinite(precio) || precio <= 0) throw new Error(`Precio invalido en la version "${nombre}"`);
-      return { nombre, precio };
+      // Vacios = los del modelo: el campo no se guarda.
+      const tipo = String(v?.tipo ?? "").trim();
+      const electrificacion = String(v?.electrificacion ?? "").trim().toUpperCase();
+      return { nombre, precio, ...(tipo ? { tipo } : {}), ...(electrificacion ? { electrificacion } : {}) };
     });
   }
   return String(raw ?? "")
@@ -67,6 +93,20 @@ export function parseVersiones(raw: string | VersionDeclarada[] | null | undefin
       if (!Number.isFinite(precio) || precio <= 0) throw new Error(`Precio invalido en "${token}"`);
       return { nombre, precio };
     });
+}
+
+/**
+ * Quita de cada version la carroceria/electrificacion que repite la del modelo (el panel puede
+ * mandar "SUV" en una version de un SUV): asi "distinta" significa distinta de verdad.
+ */
+export function sinTiposDelModelo(versiones: VersionDeclarada[], fila: Pick<FilaSheet, "tipo" | "electrificacion">): VersionDeclarada[] {
+  const tipoModelo = String(fila.tipo ?? "").trim().toLowerCase();
+  const electModelo = String(fila.electrificacion ?? "").trim().toUpperCase();
+  return versiones.map(({ tipo, electrificacion, ...v }) => ({
+    ...v,
+    ...(tipo && tipo.trim().toLowerCase() !== tipoModelo ? { tipo } : {}),
+    ...(electrificacion && electrificacion !== electModelo ? { electrificacion } : {}),
+  }));
 }
 
 /** Host de una URL, sin www. Lanza si la URL no es https. */
@@ -100,10 +140,8 @@ export function toolsConHost(host: string, entregarPdp?: unknown): unknown[] {
 
 /** El mensaje inicial de la sesion. Todo lo que el agente sabe del auto. */
 export function armarEncargo(fila: FilaSheet): string {
-  const versiones = parseVersiones(fila.versiones);
-  const base = versiones.length
-    ? versiones.reduce((a, b) => (b.precio < a.precio ? b : a))
-    : null;
+  const versiones = sinTiposDelModelo(parseVersiones(fila.versiones), fila);
+  const base = versionBase(versiones);
   const anio = Number(fila.anio) || null;
   const dominio = fila.url_oficial ? hostDe(fila.url_oficial) : "";
 
@@ -135,14 +173,28 @@ export function armarEncargo(fila: FilaSheet): string {
       ];
 
   if (versiones.length) {
+    const distintas = versiones.filter((v) => v.electrificacion || v.tipo);
+    const otraTecnologia = versiones.filter((v) => v.electrificacion);
     lineas.push(
-      `Versiones declaradas por el humano (nombre y precio son suyos, no los cambies):`,
-      ...versiones.map((v) => `  - ${v.nombre} — $${v.precio.toLocaleString("es-CL")} CLP`),
+      `Versiones declaradas por el humano (nombre, precio, carroceria y electrificacion son suyos, no los cambies):`,
+      ...versiones.map((v) => {
+        const tipos = [
+          v.electrificacion ? `electrificacion ${v.electrificacion}` : "",
+          v.tipo ? `carroceria ${v.tipo}` : "",
+        ].filter(Boolean).join(", ");
+        return `  - ${v.nombre} — $${v.precio.toLocaleString("es-CL")} CLP${tipos ? ` (${tipos}, distinta a la del modelo)` : ""}`;
+      }),
       ``,
       `Usa "${base!.nombre}" como version base: sus specs van en \`base\`.`,
       versiones.length > 1
         ? `En \`versiones[]\` pon las otras ${versiones.length - 1}, SOLO con los campos que difieren de la base.`
         : `Como hay una sola version, \`versiones\` va vacio.`,
+      ...(otraTecnologia.length
+        ? [
+            `Las versiones de otra electrificacion (${otraTecnologia.map((v) => `"${v.nombre}"`).join(", ")}) son otra tecnologia: en \`versiones[]\` van con TODAS sus specs propias (bateria, autonomia, consumo, carga, potencia, torque, traccion...), no solo las diferencias. Nada de la base se les aplica.`,
+          ]
+        : []),
+      ...(distintas.length ? [`Si la fuente no publica esas versiones, dilo en \`discrepancias\`.`] : []),
       ``,
     );
   } else {

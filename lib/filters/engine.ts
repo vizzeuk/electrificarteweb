@@ -16,8 +16,7 @@ import { FACETS, FACETS_BY_ID, type Facet } from "./facets";
 function matchesFacet(car: FacetCar, facet: Facet, values: string[]): boolean {
   if (!values || values.length === 0) return true;
   if (facet.kind === "multi") {
-    const entry = facet.getEntry(car);
-    return entry != null && values.includes(entry.value);
+    return facet.getEntries(car).some((e) => values.includes(e.value));
   }
   // threshold: single-select, el auto debe alcanzar el umbral elegido
   const tier = facet.tiers.find((t) => t.value === values[0]);
@@ -77,14 +76,15 @@ export function buildFacetOptions(
       // Conjunto estable de valores desde el universo completo.
       const labelByValue = new Map<string, string>();
       for (const c of allCars) {
-        const e = facet.getEntry(c);
-        if (e && !labelByValue.has(e.value)) labelByValue.set(e.value, e.label);
+        for (const e of facet.getEntries(c)) {
+          if (!labelByValue.has(e.value)) labelByValue.set(e.value, e.label);
+        }
       }
       // Conteo contra los demás filtros.
       const countByValue = new Map<string, number>();
+      // getEntries no repite valores, así que cada auto suma 1 por valor.
       for (const c of others) {
-        const e = facet.getEntry(c);
-        if (e) countByValue.set(e.value, (countByValue.get(e.value) ?? 0) + 1);
+        for (const e of facet.getEntries(c)) countByValue.set(e.value, (countByValue.get(e.value) ?? 0) + 1);
       }
       let options: FacetOption[] = [...labelByValue].map(([value, label]) => ({
         value,
@@ -129,8 +129,7 @@ export function visibleFacetIds(allCars: FacetCar[], context: FacetId | null): F
     if (facet.kind === "multi") {
       const values = new Set<string>();
       for (const c of allCars) {
-        const e = facet.getEntry(c);
-        if (e) values.add(e.value);
+        for (const e of facet.getEntries(c)) values.add(e.value);
         if (values.size >= 2) return true;
       }
       return false;

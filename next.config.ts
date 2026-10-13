@@ -18,6 +18,8 @@ const nextConfig: NextConfig = {
       // Fichas duplicadas borradas de Sanity (oct-2026): la URL vieja lleva a la que quedó.
       { source: "/auto/gwm-ora-5", destination: "/auto/ora-5", permanent: true },
       { source: "/auto/gwm-poer-500-phev", destination: "/auto/poer-p500", permanent: true },
+      // DS 3 E-Tense pasó a ser una versión de /auto/ds-3 (scripts/fusionar-ds3.ts).
+      { source: "/auto/ds-3-opera-e-tense", destination: "/auto/ds-3", permanent: true },
     ];
   },
   async headers() {

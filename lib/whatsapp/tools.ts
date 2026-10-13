@@ -32,7 +32,46 @@ interface CarRow {
   traction?: string;
   acceleration?: number;
   tagline?: string;
+  /** Versiones con otra electrificación o carrocería que el auto (ej. la E-Tense de un híbrido). */
+  otherVersions?: OtherVersion[] | null;
 }
+
+interface OtherVersion {
+  name: string;
+  drivetrainType?: string;
+  vehicleType?: string;
+  price?: number;
+  discountPrice?: number;
+  range?: number;
+  electricRangeKm?: number;
+}
+
+/** Las versiones de otro tipo, listas para el modelo (con su precio efectivo). */
+function otherVersionsOut(c: CarRow) {
+  return (c.otherVersions ?? []).map((v) => {
+    const price = v.price ? effectivePrice({ basePrice: v.price, discountPrice: v.discountPrice }) : undefined;
+    return {
+      name: v.name,
+      drivetrainType: v.drivetrainType,
+      vehicleType: v.vehicleType,
+      price,
+      priceFormatted: price ? fmtCLP(price) : undefined,
+      range: v.range,
+      electricRangeKm: v.electricRangeKm,
+    };
+  });
+}
+
+/** Precios válidos para el guard de salida: el del auto y los de sus versiones de otro tipo. */
+function pricesOf(c: CarRow): number[] {
+  return [effectivePrice(c), ...otherVersionsOut(c).map((v) => v.price ?? 0)].filter((p) => p > 0);
+}
+
+const OTHER_VERSIONS = groq`"otherVersions": versions[(defined(electricType) && electricType._ref != ^.electricType._ref) || (defined(vehicleType) && vehicleType._ref != ^.vehicleType._ref)]{
+  name, price, discountPrice, range, electricRangeKm,
+  "drivetrainType": coalesce(electricType->tag, ^.electricType->tag),
+  "vehicleType": coalesce(vehicleType->label, ^.vehicleType->label)
+}`;
 
 function effectivePrice(c: { basePrice: number; discountPrice?: number }): number {
   return c.discountPrice && c.discountPrice < c.basePrice ? c.discountPrice : c.basePrice;
@@ -195,7 +234,8 @@ const CAR_PROJECTION = groq`{
   "drivetrainType": electricType->tag,
   "vehicleType": vehicleType->label,
   basePrice, discountPrice, range, electricRangeKm,
-  power, batteryCapacity, traction, acceleration, tagline
+  power, batteryCapacity, traction, acceleration, tagline,
+  ${OTHER_VERSIONS}
 }`;
 
 async function searchVehicles(input: Record<string, unknown>): Promise<ToolRun> {
@@ -211,7 +251,7 @@ async function searchVehicles(input: Record<string, unknown>): Promise<ToolRun> 
         groq`*[_type == "car"
           && hidden != true
           && !(_id in path("drafts.**"))
-          && (!defined($dtype) || electricType->tag == $dtype)
+          && (!defined($dtype) || electricType->tag == $dtype || $dtype in versions[].electricType->tag)
           && (!defined($maxPrice) || coalesce(discountPrice, basePrice) <= $maxPrice)
           && (!defined($minRange) || range >= $minRange)
           && (!defined($brand) || brand->name match ($brand + "*"))
@@ -236,6 +276,7 @@ async function searchVehicles(input: Record<string, unknown>): Promise<ToolRun> 
       electricRangeKm: c.electricRangeKm,
       power: c.power,
       tagline: c.tagline,
+      otherVersions: otherVersionsOut(c),
       pdpUrl: PDP_BASE + c.slug,
     };
   });
@@ -243,7 +284,7 @@ async function searchVehicles(input: Record<string, unknown>): Promise<ToolRun> 
   return {
     output: { results, totalFound: results.length },
     slugs: cars.map((c) => c.slug).filter(Boolean),
-    prices: cars.map(effectivePrice).filter((p) => p > 0),
+    prices: cars.flatMap(pricesOf),
   };
 }
 
@@ -282,7 +323,8 @@ async function getVehicleDetail(input: Record<string, unknown>): Promise<ToolRun
           power, batteryCapacity, traction, acceleration, tagline,
           motorDescription, transmission, topSpeed, seats, warranty,
           connectorType, maxDCChargingPower, chargeTimeDC, chargeTimeAC,
-          euroNcap, safetyFeatures, techFeatures, comfortFeatures, description
+          euroNcap, safetyFeatures, techFeatures, comfortFeatures, description,
+          ${OTHER_VERSIONS}
         }`,
         { slug },
       ),
@@ -322,10 +364,11 @@ async function getVehicleDetail(input: Record<string, unknown>): Promise<ToolRun
       techFeatures: car.techFeatures,
       comfortFeatures: car.comfortFeatures,
       description: car.description,
+      otherVersions: otherVersionsOut(car),
       pdpUrl: PDP_BASE + car.slug,
     },
     slugs: [car.slug],
-    prices: price > 0 ? [price] : [],
+    prices: pricesOf(car),
   };
 }
 

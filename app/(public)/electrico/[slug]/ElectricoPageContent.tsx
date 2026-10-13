@@ -54,6 +54,10 @@ export interface ElectricoCarData {
   isHotDeal: boolean;
   tagline: string;
   imageUrl?: string;
+  extraVehicleTypes?: FacetCar["extraVehicleTypes"];
+  extraElectricTypes?: FacetCar["extraElectricTypes"];
+  /** Entra por una versión de este tipo: la card abre la ficha con esa versión elegida. */
+  href?: string;
 }
 
 // Adaptador estable raw → FacetCar (contexto: /electrico, oculta "tecnologia").
@@ -64,6 +68,7 @@ function electricoToFacet(c: ElectricoCarData): FacetCar {
     brandName: c.brand,
     vehicleTypeSlug: c.tipoSlug,
     vehicleTypeLabel: c.tipoLabel,
+    extraVehicleTypes: c.extraVehicleTypes,
     electricTypeTag: "",
     electricTypeLabel: "",
     price: c.discountPrice ?? c.basePrice,
@@ -419,6 +424,7 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
                       name={cleanSeparators(car.name)}
                       brand={car.brand}
                       slug={car.slug}
+                      href={car.href}
                       image={car.imageUrl}
                       batteryCapacity={car.battery}
                       range={car.range}

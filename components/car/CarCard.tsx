@@ -10,6 +10,9 @@ interface CarCardProps {
   /** Ya no se dibuja (sistema v1: sin logo de marca en la card). Se conserva por compatibilidad. */
   brandLogo?: string;
   slug: string;
+  /** Destino de la card. Por defecto `/auto/{slug}`; una PLP que muestra una versión puntual
+   *  (ej. la E-Tense del DS 3 en Eléctricos) manda `/auto/{slug}?version={key}`. */
+  href?: string;
   image?: string;
   /** Ya no se dibuja: el tipo eléctrico va en el chip de la foto. Se conserva por compatibilidad. */
   category?: string;
@@ -39,6 +42,7 @@ export function CarCard({
   name,
   brand,
   slug,
+  href,
   image,
   batteryCapacity,
   range,
@@ -56,6 +60,7 @@ export function CarCard({
   maxStats = 3,
 }: CarCardProps) {
   const hasDiscount = !!discountPrice && discountPrice < basePrice;
+  const carHref = href ?? `/auto/${slug}`;
 
   const stats = carStats({ battery: batteryCapacity, range, maxVersionRange, electricRangeKm, fuelConsumption, rendimientoElectrico, electricTypeTag, power }).slice(0, maxStats);
 
@@ -67,7 +72,7 @@ export function CarCard({
 
   return (
     <article className={`card car ${animClass}`} style={animStyle}>
-      <Link href={`/auto/${slug}`} className="car__media skeleton-shimmer" tabIndex={-1} aria-hidden>
+      <Link href={carHref} className="car__media skeleton-shimmer" tabIndex={-1} aria-hidden>
         {image ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -91,7 +96,7 @@ export function CarCard({
         <div>
           <p className="car__brand">{brand}</p>
           <h3 className="car__name">
-            <Link href={`/auto/${slug}`}>{name}</Link>
+            <Link href={carHref}>{name}</Link>
           </h3>
         </div>
 
@@ -121,7 +126,7 @@ export function CarCard({
             <p className="t-micro">Precio referencial. Consulta por financiamiento.</p>
           </div>
           <div className="car__actions">
-            <Link href={`/auto/${slug}`} className="btn btn--secondary btn--sm btn--block">
+            <Link href={carHref} className="btn btn--secondary btn--sm btn--block">
               Ver detalle
             </Link>
             <Link

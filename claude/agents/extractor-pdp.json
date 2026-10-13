@@ -248,7 +248,7 @@
           },
           "versiones": {
             "type": "array",
-            "description": "Una entrada por version declarada en el encargo que NO sea la base. Incluye SOLO los campos que difieren de base. Nunca el precio: ese lo pone el humano.",
+            "description": "Una entrada por version declarada en el encargo que NO sea la base. Incluye SOLO los campos que difieren de base, salvo las versiones que el encargo marca con otra electrificacion: esas llevan TODAS sus specs propias. Nunca el precio: ese lo pone el humano.",
             "items": {
               "type": "object",
               "additionalProperties": false,

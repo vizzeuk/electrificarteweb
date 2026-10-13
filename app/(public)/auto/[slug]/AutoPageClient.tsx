@@ -5,15 +5,22 @@ import Link from "next/link";
 import { cn, formatCLP, formatNumber, classifyElectric, sentenceCase, cleanSeparators } from "@/lib/utils";
 import { sanityImg } from "@/lib/sanityImage";
 import { Icon } from "@/components/ui/Icon";
-import { ElectricTypeBadge } from "@/components/car/ElectricTypeBadge";
+import { ElectricTypeBadge, electricTypeLabel } from "@/components/car/ElectricTypeBadge";
 import { OfferCta } from "@/components/waitlist/OfferCta";
 import { ASESORIA_PRICE, HOT_DEALS_ENABLED } from "@/lib/products";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export interface VersionData {
+  /** `_key` de Sanity: las PLP enlazan `?version={key}` para abrir la ficha en esa versión. */
+  key?: string;
   name: string;
   price: number;
   discountPrice: number;
+  /** Electrificación y carrocería de la versión: la propia si difiere de la del auto, si no la
+   *  del auto. `ownType` = la versión es de otra electrificación (no hereda specs del auto). */
+  electricTypeTag?: string | null;
+  category?: string | null;
+  ownType?: boolean;
   battery: number;
   range: number;
   electricRangeKm?: number | null;
@@ -265,6 +272,32 @@ function keySpecs(car: CarData, v: VersionData, cls: ElectricClass): SpecCell[] 
   return out.slice(0, 6);
 }
 
+/**
+ * El auto visto desde una versión. Si la versión es de otra electrificación (ej. la E-Tense de un
+ * DS 3 híbrido), sus specs reemplazan a las del auto y no se hereda nada de carga, consumo ni
+ * química: son de otra tecnología. La carrocería propia, si la tiene, cambia el "Segmento".
+ */
+function carForVersion(car: CarData, v: VersionData | undefined): CarData {
+  if (!v) return car;
+  const withBody = { ...car, category: v.category || car.category };
+  if (!v.ownType) return withBody;
+  return {
+    ...withBody,
+    electricTypeTag: v.electricTypeTag ?? car.electricTypeTag,
+    battery: v.battery, range: v.range, power: v.power, torque: v.torque, traction: v.traction,
+    acceleration: v.acceleration, topSpeed: v.topSpeed,
+    chargeTimeDC: v.chargeTimeDC, chargeTimeAC: v.chargeTimeAC, chargeType: "",
+    electricRangeKm: v.electricRangeKm ?? null,
+    fuelConsumption: v.fuelConsumption ?? null,
+    rendimientoElectrico: v.rendimientoElectrico ?? null,
+    maxDCChargingPower: v.maxDCChargingPower ?? null,
+    maxACChargingPower: v.maxACChargingPower ?? null,
+    transmission: v.transmission ?? null,
+    connectorType: null, batteryType: null,
+    cargo: v.cargo ?? car.cargo,
+  };
+}
+
 /** Línea corta bajo el nombre de cada versión: "295 km, 170 CV, RWD". */
 function versionMeta(v: VersionData, cls: ElectricClass): string {
   const eRange = fmt(v.electricRangeKm, "km");
@@ -367,8 +400,9 @@ export default function AutoPageClient({ car, similarCars, reviewsSlot }: AutoPa
   const thumbsRef     = useRef<HTMLDivElement>(null);
 
   const model = `${car.brand} ${car.name}`;
-  const cls = classifyElectric(car);
   const hasVersions = car.versions.length > 0;
+  // Electrificación de cada versión (puede variar dentro del mismo auto, ver carForVersion).
+  const clsOf = (v: VersionData) => classifyElectric(carForVersion(car, v));
   const labels = useMemo(() => versionLabels(car.versions.map((v) => v.name), car.name), [car.versions, car.name]);
 
   const ver: VersionData = car.versions[activeVersion] ?? {
@@ -380,6 +414,21 @@ export default function AutoPageClient({ car, similarCars, reviewsSlot }: AutoPa
     rendimientoElectrico: car.rendimientoElectrico,
   };
   const verLabel = hasVersions ? labels[activeVersion] : null;
+
+  // `?version={key}`: una PLP que mostró una versión puntual (ej. la E-Tense del DS 3 en
+  // Eléctricos) abre la ficha en esa versión. Se lee al montar, sin useSearchParams, porque la
+  // página es estática (ISR).
+  useEffect(() => {
+    const key = new URLSearchParams(window.location.search).get("version");
+    const i = key ? car.versions.findIndex((v) => v.key === key) : -1;
+    if (i < 0) return;
+    // Se difiere un frame (regla react-hooks/set-state-in-effect), como en ReviewProvider.
+    const id = requestAnimationFrame(() => setActiveVersion(i));
+    return () => cancelAnimationFrame(id);
+  }, [car.versions]);
+  // El auto visto desde la versión elegida: chips, datos clave y ficha siguen a esa versión.
+  const vcar = carForVersion(car, car.versions[activeVersion]);
+  const cls = classifyElectric(vcar);
 
   // Precio con bonos siempre que la versión traiga un ahorro real, igual que las tarjetas
   // (CarCard). Antes dependía de isHotDeal: con el Hot Deal retirado la ficha mostraba solo el
@@ -446,7 +495,7 @@ export default function AutoPageClient({ car, similarCars, reviewsSlot }: AutoPa
   }, [galleryIndex]);
 
   // ─── Derivados de la versión elegida ──────────────────────────────────────
-  const specs = keySpecs(car, ver, cls);
+  const specs = keySpecs(vcar, ver, cls);
   const tagline = tidyText(car.tagline);
   const taglineText = tagline && !/[.!?…]$/.test(tagline) ? `${tagline}.` : tagline;
   const description = tidyText(car.description);
@@ -457,24 +506,32 @@ export default function AutoPageClient({ car, similarCars, reviewsSlot }: AutoPa
   if (car.isTopSeller) mediaChips.push("Más vendido");
 
   const headChips = [
-    car.category ? sentenceCase(car.category) : null,
+    vcar.category ? sentenceCase(vcar.category) : null,
     car.modelYear ? `Modelo ${car.modelYear}` : null,
     car.euroNcap ? `Euro NCAP ${car.euroNcap} ${car.euroNcap === 1 ? "estrella" : "estrellas"}` : null,
   ].filter((c): c is string => !!c);
 
   const highlights = car.highlights && car.highlights.length > 0 ? car.highlights : buildFallbackHighlights(car);
 
+  // Con versiones de distinta electrificación, cada fila propia de una tecnología queda vacía en
+  // las versiones de otra, y se suman las filas "Tecnología" y "Carrocería" para distinguirlas.
+  const versionClasses = new Set(car.versions.map(clsOf));
+  const mixedTech = new Set(car.versions.map((v) => v.electricTypeTag ?? "")).size > 1;
+  const mixedBody = new Set(car.versions.map((v) => v.category ?? "")).size > 1;
+  const onlyFor = (c: ElectricClass, get: (v: VersionData) => string | null) =>
+    (v: VersionData) => (clsOf(v) === c ? get(v) : "No aplica");
   const allVersionRows: { label: string; get: (v: VersionData) => string | null }[] = [
-    cls === "EV"   ? { label: "Autonomía",           get: (v) => fmt(v.range, "km") } :
-    cls === "PHEV" ? { label: "Autonomía eléctrica", get: (v) => fmt(v.electricRangeKm, "km") } :
-                     { label: "Rendimiento",         get: (v) => fmt(v.fuelConsumption, "km/L") },
+    ...(mixedTech ? [{ label: "Tecnología", get: (v: VersionData) => electricTypeLabel(v.electricTypeTag) }] : []),
+    ...(mixedBody ? [{ label: "Carrocería", get: (v: VersionData) => (v.category ? sentenceCase(v.category) : null) }] : []),
+    ...(versionClasses.has("EV")   ? [{ label: "Autonomía",           get: onlyFor("EV",   (v) => fmt(v.range, "km")) }] : []),
+    ...(versionClasses.has("PHEV") ? [{ label: "Autonomía eléctrica", get: onlyFor("PHEV", (v) => fmt(v.electricRangeKm, "km")) }] : []),
+    ...(versionClasses.has("HEV")  ? [{ label: "Rendimiento",         get: onlyFor("HEV",  (v) => fmt(v.fuelConsumption, "km/L")) }] : []),
     { label: "Potencia",     get: (v) => fmt(v.power, "CV") },
     { label: "Torque",       get: (v) => fmt(v.torque, "Nm") },
     { label: "Tracción",     get: (v) => tractionLabel(v.traction) },
     { label: "0 a 100 km/h", get: (v) => fmt(v.acceleration, "s") },
-    cls === "HEV"
-      ? { label: "Velocidad máxima", get: (v) => fmt(v.topSpeed, "km/h") }
-      : { label: "Batería",          get: (v) => fmt(v.battery, "kWh") },
+    ...(versionClasses.has("HEV") ? [{ label: "Velocidad máxima", get: (v: VersionData) => fmt(v.topSpeed, "km/h") }] : []),
+    ...(versionClasses.has("EV") || versionClasses.has("PHEV") ? [{ label: "Batería", get: (v: VersionData) => fmt(v.battery, "kWh") }] : []),
   ];
   const versionRows = allVersionRows.filter((row) => car.versions.some((v) => row.get(v)));
   const showVersionTable = car.versions.length > 1 && versionRows.length > 0;
@@ -487,8 +544,8 @@ export default function AutoPageClient({ car, similarCars, reviewsSlot }: AutoPa
     .map((g) => ({ ...g, features: (g.features ?? []).map((f) => tidyText(f)).filter((f): f is string => !!f) }))
     .filter((g) => g.features.length > 0);
 
-  const { dc, ac } = chargeTimes(car, ver);
-  const batteryType = tidyText(car.batteryType);
+  const { dc, ac } = chargeTimes(vcar, ver);
+  const batteryType = tidyText(vcar.batteryType);
   const fichaGroups = [
     {
       title: "Batería y carga",
@@ -497,31 +554,31 @@ export default function AutoPageClient({ car, similarCars, reviewsSlot }: AutoPa
         ["Química", batteryType && batteryType.toLowerCase() !== "other" ? batteryType : null],
         ["Autonomía WLTP", fmt(ver.range, "km")],
         ["Autonomía eléctrica", cls === "PHEV" ? fmt(ver.electricRangeKm, "km") : null],
-        ["Eficiencia", fmt(ver.rendimientoElectrico ?? car.rendimientoElectrico, "km/kWh")],
+        ["Eficiencia", fmt(ver.rendimientoElectrico ?? vcar.rendimientoElectrico, "km/kWh")],
         [`Carga rápida DC${dc?.span ? `, ${dc.span}` : ""}`, dc?.value ?? null],
-        ["Potencia máxima DC", fmt(ver.maxDCChargingPower ?? car.maxDCChargingPower, "kW")],
+        ["Potencia máxima DC", fmt(ver.maxDCChargingPower ?? vcar.maxDCChargingPower, "kW")],
         [`Carga AC${ac?.span ? `, ${ac.span}` : ""}`, ac?.value ?? null],
-        ["Potencia máxima AC", fmt(ver.maxACChargingPower ?? car.maxACChargingPower, "kW")],
-        ["Conector", tidyText(car.chargeType) ?? tidyText(car.connectorType)],
+        ["Potencia máxima AC", fmt(ver.maxACChargingPower ?? vcar.maxACChargingPower, "kW")],
+        ["Conector", tidyText(vcar.chargeType) ?? tidyText(vcar.connectorType)],
       ],
     },
     {
       title: "Motor y rendimiento",
       rows: [
-        ["Rendimiento", cls === "PHEV" ? null : fmt(ver.fuelConsumption ?? car.fuelConsumption, "km/L")],
+        ["Rendimiento", cls === "PHEV" ? null : fmt(ver.fuelConsumption ?? vcar.fuelConsumption, "km/L")],
         ["Potencia", ver.power > 0 ? `${formatNumber(ver.power)} CV (${formatNumber(Math.round(ver.power * 0.7355))} kW)` : null],
         ["Torque", fmt(ver.torque, "Nm")],
         ["Tracción", tractionLabel(ver.traction)],
         ["0 a 100 km/h", fmt(ver.acceleration, "s")],
         ["Velocidad máxima", fmt(ver.topSpeed, "km/h")],
-        ["Transmisión", tidyText(ver.transmission ?? car.transmission)],
+        ["Transmisión", tidyText(ver.transmission ?? vcar.transmission)],
       ],
     },
     {
       title: "Dimensiones y capacidad",
       rows: [
         ["Plazas", car.seats > 0 ? String(car.seats) : null],
-        ["Maletero", fmt(ver.cargo ?? car.cargo, "L")],
+        ["Maletero", fmt(ver.cargo ?? vcar.cargo, "L")],
         ["Maletero delantero", fmt(car.frunkCapacity, "L")],
         ["Altura libre al suelo", fmt(car.groundClearance, "mm")],
       ],
@@ -578,9 +635,9 @@ export default function AutoPageClient({ car, similarCars, reviewsSlot }: AutoPa
                     <Icon name="electric_car" className="text-[96px] text-line-2" />
                   </span>
                 )}
-                {(car.electricTypeTag || mediaChips.length > 0) && (
+                {(vcar.electricTypeTag || mediaChips.length > 0) && (
                   <div className="gallery__chips">
-                    <ElectricTypeBadge tag={car.electricTypeTag} />
+                    <ElectricTypeBadge tag={vcar.electricTypeTag} />
                     {mediaChips.map((c) => (
                       <span key={c} className="chip chip--soft">{c}</span>
                     ))}
@@ -674,7 +731,7 @@ export default function AutoPageClient({ car, similarCars, reviewsSlot }: AutoPa
                   </p>
                   <div className="vers" role="radiogroup" aria-labelledby="pdp-version-label">
                     {car.versions.map((v, i) => {
-                      const meta = versionMeta(v, cls);
+                      const meta = versionMeta(v, clsOf(v));
                       return (
                         <label key={`${i}-${v.name}`} className="ver">
                           <input

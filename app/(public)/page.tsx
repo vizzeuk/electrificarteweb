@@ -7,6 +7,7 @@ import {
   allHotDealsQuery,
   electricTypesForHomeQuery,
   newCarsForHomeQuery,
+  catalogModelCountQuery,
   carImageBySlugQuery,
 } from "@/lib/queries/car";
 import { collectionsForHomeQuery } from "@/lib/queries/collections";
@@ -35,7 +36,7 @@ import { ParaVendedores }   from "@/components/layout/ParaVendedores";
 export const revalidate = 60;
 
 export default async function HomePage() {
-  const [page, blogPosts, brands, collections, hotDeals, allReviews, vehicleTypes, newCars, siteSettings] =
+  const [page, blogPosts, brands, collections, hotDeals, allReviews, vehicleTypes, newCars, siteSettings, modelCount] =
     await Promise.all([
       client.fetch(homePageQuery, {}, { next: { tags: ["homePage"] } }).catch(() => null),
       client.fetch(latestBlogPostsQuery, { count: 3 }, { next: { tags: ["blogPost"] } }).catch(() => []),
@@ -48,6 +49,7 @@ export default async function HomePage() {
       client.fetch(electricTypesForHomeQuery, {}, { next: { tags: ["electricType"] } }).catch(() => []),
       client.fetch(newCarsForHomeQuery, { limit: LATEST_LAUNCHES_HOME_MAX }, { next: { tags: ["car"] } }).catch(() => []),
       client.fetch(hotDealUrgencyLabelQuery, {}, { next: { tags: ["siteSettings"] } }).catch(() => null),
+      client.fetch<number>(catalogModelCountQuery, {}, { next: { tags: ["car"] } }).catch(() => 0),
     ]);
 
   const hotDealUrgencyLabel: string | null = siteSettings?.hotDealUrgencyLabel ?? null;
@@ -90,7 +92,9 @@ export default async function HomePage() {
     return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
   });
   const heroFacts = {
-    models: electricTypes.reduce((n, t) => n + (Number(t?.carCount) || 0), 0),
+    // Cantidad de fichas publicadas. No la suma de los conteos por tipo: un auto con versiones de
+    // dos electrificaciones aparece en ambos y se contaría doble.
+    models: Number(modelCount) || 0,
     brands: (brands ?? []).length,
     technologies,
   };

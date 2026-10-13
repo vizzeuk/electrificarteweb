@@ -12,8 +12,9 @@ interface MultiFacet {
   label: string;
   icon: string; // Material Symbols
   kind: "multi";
-  /** Valor+etiqueta de este auto para el facet, o null si no aplica. */
-  getEntry: (car: FacetCar) => { value: string; label: string } | null;
+  /** Valores+etiquetas de este auto para el facet (vacío si no aplica). Puede haber más de uno:
+   *  tipo y tecnología suman los de las versiones. */
+  getEntries: (car: FacetCar) => { value: string; label: string }[];
   /** Orden fijo de valores (para buckets); si falta se ordena por conteo. */
   order?: string[];
   /** Comparador custom de opciones (tiene prioridad sobre `order`/conteo). */
@@ -50,6 +51,16 @@ export const TRACTION_LABELS: Record<string, string> = {
   AWD: "Total (AWD)",
 };
 
+/** Sin nulos ni valores repetidos (gana la primera etiqueta). */
+function uniqueEntries(entries: ({ value: string; label: string } | null)[]): { value: string; label: string }[] {
+  const seen = new Set<string>();
+  return entries.filter((e): e is { value: string; label: string } => {
+    if (!e || seen.has(e.value)) return false;
+    seen.add(e.value);
+    return true;
+  });
+}
+
 // ─── Catálogo ────────────────────────────────────────────────────────────────
 export const FACETS: Facet[] = [
   {
@@ -57,8 +68,8 @@ export const FACETS: Facet[] = [
     label: "Marca",
     icon: "sell",
     kind: "multi",
-    getEntry: (c) =>
-      c.brandSlug ? { value: c.brandSlug, label: c.brandName || c.brandSlug } : null,
+    getEntries: (c) =>
+      c.brandSlug ? [{ value: c.brandSlug, label: c.brandName || c.brandSlug }] : [],
     optionSort: (a, b) => a.label.localeCompare(b.label, "es"),
   },
   {
@@ -66,30 +77,34 @@ export const FACETS: Facet[] = [
     label: "Tipo de vehículo",
     icon: "directions_car",
     kind: "multi",
-    getEntry: (c) =>
-      c.vehicleTypeSlug
-        ? { value: c.vehicleTypeSlug, label: c.vehicleTypeLabel || c.vehicleTypeSlug }
-        : null,
+    getEntries: (c) =>
+      uniqueEntries([
+        c.vehicleTypeSlug ? { value: c.vehicleTypeSlug, label: c.vehicleTypeLabel || c.vehicleTypeSlug } : null,
+        ...(c.extraVehicleTypes ?? []).map((t) => (t.slug ? { value: t.slug, label: t.label || t.slug } : null)),
+      ]),
   },
   {
     id: "tecnologia",
     label: "Tecnología",
     icon: "bolt",
     kind: "multi",
-    getEntry: (c) => {
-      const tag = (c.electricTypeTag || "").toUpperCase();
-      if (!tag) return null;
-      return { value: tag, label: c.electricTypeLabel || tag };
-    },
+    getEntries: (c) =>
+      uniqueEntries([
+        { tag: c.electricTypeTag, label: c.electricTypeLabel },
+        ...(c.extraElectricTypes ?? []),
+      ].map((t) => {
+        const tag = (t.tag || "").toUpperCase();
+        return tag ? { value: tag, label: t.label || tag } : null;
+      })),
   },
   {
     id: "precio",
     label: "Precio",
     icon: "payments",
     kind: "multi",
-    getEntry: (c) => {
+    getEntries: (c) => {
       const b = PRICE_BUCKETS.find((x) => c.price >= x.min && c.price < x.max);
-      return b ? { value: b.value, label: b.label } : null;
+      return b ? [{ value: b.value, label: b.label }] : [];
     },
     order: PRICE_BUCKETS.map((b) => b.value),
   },
@@ -111,11 +126,11 @@ export const FACETS: Facet[] = [
     label: "Asientos",
     icon: "airline_seat_recline_normal",
     kind: "multi",
-    getEntry: (c) => {
-      if (!c.seats || c.seats < 1) return null;
-      return c.seats >= 7
+    getEntries: (c) => {
+      if (!c.seats || c.seats < 1) return [];
+      return [c.seats >= 7
         ? { value: "7plus", label: "7+" }
-        : { value: String(c.seats), label: String(c.seats) };
+        : { value: String(c.seats), label: String(c.seats) }];
     },
     optionSort: (a, b) => seatOrder(a.value) - seatOrder(b.value),
   },
@@ -126,10 +141,10 @@ export const FACETS: Facet[] = [
     // se renderizaba como texto literal. Ver scripts/subset-icon-font.ts.
     icon: "tune",
     kind: "multi",
-    getEntry: (c) => {
+    getEntries: (c) => {
       const t = (c.traction || "").toUpperCase();
-      if (!t) return null;
-      return { value: t, label: TRACTION_LABELS[t] ?? c.traction };
+      if (!t) return [];
+      return [{ value: t, label: TRACTION_LABELS[t] ?? c.traction }];
     },
     order: ["FWD", "RWD", "AWD"],
   },

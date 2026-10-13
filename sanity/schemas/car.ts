@@ -22,6 +22,18 @@ const versionFields = [
   defineField({ name: "name",        title: "Nombre de versión",         type: "string", validation: (r) => r.required() }),
   defineField({ name: "price",       title: "Precio (CLP)",              type: "number", validation: (r) => r.required().positive() }),
   defineField({ name: "discountPrice", title: "Precio con descuento (CLP)", type: "number" }),
+  // Versiones de otra electrificación o carrocería que el auto (ej. DS 3 Hybrid + DS 3 E-Tense):
+  // el auto aparece en los filtros de las dos. Vacío = igual que el auto.
+  defineField({
+    name: "electricType", title: "Electrificación (solo si es distinta a la del auto)", type: "reference",
+    to: [{ type: "electricType" }],
+    description: "Déjalo vacío si la versión tiene la misma electrificación que el auto. Si es distinta (ej. versión 100% eléctrica de un modelo híbrido), elígela: el auto aparece también en ese filtro y la versión necesita sus propias specs de batería, autonomía y carga.",
+  }),
+  defineField({
+    name: "vehicleType", title: "Carrocería (solo si es distinta a la del auto)", type: "reference",
+    to: [{ type: "vehicleType" }],
+    description: "Déjalo vacío si la versión tiene la misma carrocería que el auto. Si es distinta, elígela: el auto aparece también en ese tipo de vehículo.",
+  }),
   defineField({ name: "batteryCapacity", title: "Batería (kWh)",         type: "number" }),
   defineField({ name: "batteryType", title: "Tipo de batería",           type: "string", options: { list: batteryTypeList } }),
   defineField({ name: "range",       title: "Autonomía WLTP (km)",       type: "number" }),
@@ -187,9 +199,10 @@ export const car = defineType({
       of: [defineArrayMember({
         type: "object", name: "version", title: "Versión", fields: versionFields,
         preview: {
-          select: { title: "name", price: "price" },
-          prepare({ title, price }: any) {
-            return { title: title || "Sin nombre", subtitle: price ? `$${price.toLocaleString("es-CL")}` : "Sin precio" };
+          select: { title: "name", price: "price", tag: "electricType.tag", body: "vehicleType.label" },
+          prepare({ title, price, tag, body }: any) {
+            const precio = price ? `$${price.toLocaleString("es-CL")}` : "Sin precio";
+            return { title: title || "Sin nombre", subtitle: [precio, tag, body].filter(Boolean).join(", ") };
           },
         },
       })],

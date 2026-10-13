@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { client } from "@/lib/sanity/client";
 import { urlFor } from "@/lib/sanity/image";
 import { normalizeElectricLabel, pickFeaturedAdCar, stripBrandSuffix } from "@/lib/utils";
+import { extraTypes, showMatchVersion } from "@/lib/version-types";
 import {
   electricTypeBySlugQuery,
   carsByElectricTypeQuery,
@@ -68,7 +69,10 @@ export default async function ElectricoPage({ params }: PageProps) {
     idealFor:    sanityMeta.idealFor ?? "",
   };
 
-  const cars: ElectricoCarData[] = (sanityCars ?? []).map((c: any) => ({
+  // Los que entran por una versión de este tipo muestran esa versión (ver lib/version-types.ts).
+  const cars: ElectricoCarData[] = (sanityCars ?? []).map(showMatchVersion).map((c: any) => ({
+    ...extraTypes(c),
+    href:                 c.versionKey ? `/auto/${c.slug}?version=${encodeURIComponent(c.versionKey)}` : undefined,
     slug:                 c.slug,
     name:                 c.name,
     brand:                c.brand?.name ?? "",
