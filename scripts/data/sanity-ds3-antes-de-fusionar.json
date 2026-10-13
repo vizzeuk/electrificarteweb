@@ -1,0 +1,332 @@
+{
+  "fecha": "2026-10-13T02:52:42.562Z",
+  "documentos": [
+    {
+      "_createdAt": "2026-05-20T12:43:08Z",
+      "_id": "N413gTqYC4TRZUrB6qPxzL",
+      "_rev": "GeAoiCW5dHDLUjKiwfDFO2",
+      "_system": {
+        "base": {
+          "id": "N413gTqYC4TRZUrB6qPxzL",
+          "rev": "ZHqqLjeD04q22UAujRdnCr"
+        }
+      },
+      "_type": "car",
+      "_updatedAt": "2026-09-22T19:29:40Z",
+      "basePrice": 35990000,
+      "batteryType": "NMC",
+      "brand": {
+        "_ref": "brand-ds",
+        "_type": "reference"
+      },
+      "cargo": 350,
+      "checkSlot": 17,
+      "comfortFeatures": [
+        "Asientos delanteros calefactables con función de masaje",
+        "Controles eléctricos de asiento del conductor",
+        "Tapicería tipo «watchstrap» en acabado Étoile",
+        "Inserciones con relieve «Clous de Paris»",
+        "Llantas de aleación hasta 18\"",
+        "Insonorización óptima reforzada"
+      ],
+      "description": "El DS 3 Hybrid es un vehículo tecnológico y eficiente fabricado en París, propulsado por un motor de combustión interna combinado con un motor eléctrico de batería de iones de litio de 48V autorrecargable. Ofrece hasta un 20% de ahorro de combustible y conduce en modo 100% eléctrico más del 50% del tiempo en ciudad.",
+      "discountPrice": 34190500,
+      "electricType": {
+        "_ref": "55e00600-5524-440c-9db7-b2c9f6c35d1d",
+        "_type": "reference"
+      },
+      "fuelConsumption": 20.4,
+      "gallery": [
+        {
+          "_key": "main-x1586-webp",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-6a7f93b598b3248450ebed27ffb2ae98cb6d1218-2048x1586-webp",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "g0",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-03422feb98533cd85887d3b5431ea704484cf120-607x768-webp",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "g1",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-43e406f7f6f402b06bdd459d59cd478dd12f333d-607x768-webp",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "g2",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-c22a4c447f3fb861c9bdf5a549aa31c08a06e5eb-2048x427-webp",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "g3",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-fc8398314e604f7424d9b8db8beb0cfb31bbec0e-607x768-webp",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "g4",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-db30714b61a9533492111dcffa40a21612f1c556-1728x800-webp",
+            "_type": "reference"
+          }
+        }
+      ],
+      "highlight": "Más del 50% del tiempo en modo eléctrico en ciudad y hasta 20% de ahorro de combustible",
+      "lastPriceCheckAt": "2026-07-19T03:06:19.296Z",
+      "mainImage": {
+        "_type": "image",
+        "asset": {
+          "_ref": "image-6a7f93b598b3248450ebed27ffb2ae98cb6d1218-2048x1586-webp",
+          "_type": "reference"
+        }
+      },
+      "motorDescription": "Motor térmico + motor eléctrico 48V autorrecargable (HEV)",
+      "name": "3",
+      "power": 145,
+      "priceCheckFlag": "none",
+      "safetyFeatures": [
+        "Detección de ángulo muerto",
+        "Aviso de salida de carril",
+        "Control crucero con limitador de velocidad",
+        "360° VISION – Sensor de estacionamiento delantero y trasero",
+        "Cámara delantera y trasera",
+        "Entrada y arranque sin llave (ADML PROXIMITY)"
+      ],
+      "seatRows": 2,
+      "seats": 5,
+      "slug": {
+        "_type": "slug",
+        "current": "ds-3"
+      },
+      "sourceUrls": [
+        "https://cotizador.dsautomobiles.cl/modelos/ds3/cotiza.html"
+      ],
+      "tagline": "El arte del refinamiento",
+      "techFeatures": [
+        "DS IRIS SYSTEM con ChatGPT e inteligencia artificial SoundHound",
+        "Android Auto y Apple CarPlay inalámbricos",
+        "Faros Full LED con tecnología DS MATRIX LED VISION",
+        "DS Wings con diseño premium"
+      ],
+      "traction": "FWD",
+      "vehicleType": {
+        "_ref": "208f1dc8-c01b-41a0-bffa-7d554c697581",
+        "_type": "reference"
+      },
+      "versions": [
+        {
+          "_key": "ds-3-etoile-hybrid",
+          "_type": "version",
+          "batteryType": "NMC",
+          "motorDescription": "Motor térmico + motor eléctrico 48V HEV",
+          "name": "DS 3 Étoile Hybrid",
+          "power": 145,
+          "price": 35990000,
+          "seatRows": 2,
+          "seats": 5,
+          "traction": "FWD",
+          "trunkCapacity": 350
+        }
+      ]
+    },
+    {
+      "_createdAt": "2026-04-05T21:14:12Z",
+      "_id": "car-ds-3-opera-e-tense",
+      "_rev": "GeAoiCW5dHDLUjKiwfLItB",
+      "_system": {
+        "base": {
+          "id": "car-ds-3-opera-e-tense",
+          "rev": "fMw0mKldjMaT7Q7Hltk0Cr"
+        }
+      },
+      "_type": "car",
+      "_updatedAt": "2026-09-22T20:13:19Z",
+      "acceleration": 8.7,
+      "airbags": 6,
+      "basePrice": 41490000,
+      "batteryCapacity": 54,
+      "batteryType": "NMC",
+      "brand": {
+        "_ref": "brand-ds",
+        "_type": "reference"
+      },
+      "cargo": 350,
+      "chargeTimeAC": "N/D",
+      "chargeTimeDC": "30 min (0-80%)",
+      "chargeType": null,
+      "checkSlot": 18,
+      "comfortFeatures": [
+        "Climatizador automático",
+        "Asientos de cuero",
+        "Diseño DS Premium con acabados de lujo"
+      ],
+      "connectorType": "CCS2",
+      "description": null,
+      "electricRangeKm": null,
+      "electricType": {
+        "_ref": "efdaf152-e14b-414f-8441-415534cd1f41",
+        "_type": "reference"
+      },
+      "euroNcap": 4,
+      "frunkCapacity": null,
+      "fuelConsumption": null,
+      "gallery": [
+        {
+          "_key": "img-1",
+          "_type": "image",
+          "alt": "DS 3 Opera E-tense - foto 1",
+          "asset": {
+            "_ref": "image-95018aefaae7e217d44edeca1bba5eba7ea2fd2b-1665x877-png",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img-3",
+          "_type": "image",
+          "alt": "DS 3 Opera E-tense - foto 3",
+          "asset": {
+            "_ref": "image-eeda601ec7aa6c20534f705a49e2a61c9aecb801-1395x872-png",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img-5",
+          "_type": "image",
+          "alt": "DS 3 Opera E-tense - foto 5",
+          "asset": {
+            "_ref": "image-c980107e77262b2f89f4a53a00d747b434e8838c-683x436-png",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img-6",
+          "_type": "image",
+          "alt": "DS 3 Opera E-tense - foto 6",
+          "asset": {
+            "_ref": "image-95018aefaae7e217d44edeca1bba5eba7ea2fd2b-1665x877-png",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img-8",
+          "_type": "image",
+          "alt": "DS 3 Opera E-tense - foto 8",
+          "asset": {
+            "_ref": "image-596d50c1aae711527f82bb49079b1723edb8a013-2500x1667-jpg",
+            "_type": "reference"
+          }
+        }
+      ],
+      "groundClearance": 160,
+      "highlight": "SUV eléctrico de lujo francés con 404 km WLTP y carga rápida 100 kW",
+      "isFeatured": false,
+      "isHotDeal": false,
+      "isNew": false,
+      "isTopSeller": false,
+      "lastPriceCheckAt": "2026-09-22T20:12:51.027Z",
+      "mainImage": {
+        "_type": "image",
+        "asset": {
+          "_ref": "image-eeda601ec7aa6c20534f705a49e2a61c9aecb801-1395x872-png",
+          "_type": "reference"
+        },
+        "crop": {
+          "_type": "sanity.imageCrop",
+          "bottom": 0.10991908537004705,
+          "left": 0,
+          "right": 0,
+          "top": 0.005112515598606815
+        },
+        "hotspot": {
+          "_type": "sanity.imageHotspot",
+          "height": 0.7929431182564232,
+          "width": 1,
+          "x": 0.5,
+          "y": 0.4936093555017414
+        }
+      },
+      "maxACChargingPower": 11,
+      "maxDCChargingPower": 100,
+      "metaDescription": null,
+      "metaTitle": null,
+      "modelYear": 2025,
+      "motorDescription": "Motor Eléctrico",
+      "name": "3 Opera E-tense",
+      "power": 156,
+      "priceCheckPreviousBasePrice": 41490000,
+      "priceNote": "Incluye Bonos",
+      "range": 404,
+      "rendimientoElectrico": 6.9,
+      "safetyFeatures": [
+        "Frenado autónomo de emergencia (AEB)",
+        "Control de crucero adaptativo",
+        "Asistente de mantenimiento de carril",
+        "Alerta de punto ciego",
+        "6 airbags"
+      ],
+      "seatRows": 2,
+      "seats": 5,
+      "slug": {
+        "_type": "slug",
+        "current": "ds-3-opera-e-tense"
+      },
+      "sourceUrls": [
+        "https://cotizador.dsautomobiles.cl/modelos/ds3/cotiza.html"
+      ],
+      "tagline": "SUV eléctrico de lujo francés con 404 km WLTP y carga rápida 100 kW",
+      "techFeatures": [
+        "Pantalla central táctil 10\"",
+        "Panel de instrumentos digital",
+        "Apple CarPlay / Android Auto",
+        "Navegación integrada"
+      ],
+      "topSpeed": 150,
+      "torque": 260,
+      "traction": "FWD",
+      "transmission": "Automático de 1 velocidad",
+      "vehicleType": {
+        "_ref": "5239b59b-3134-4d40-9a21-de121138b961",
+        "_type": "reference"
+      },
+      "versions": [
+        {
+          "_key": "ver-0",
+          "_type": "version",
+          "batteryCapacity": 54,
+          "chargeTimeAC": "N/D",
+          "chargeTimeDC": "30 min (0-80%)",
+          "connectorType": "CCS2",
+          "discountPrice": null,
+          "fuelConsumption": null,
+          "maxACChargingPower": 11,
+          "maxDCChargingPower": 100,
+          "name": "3 Opera E-tense",
+          "power": 156,
+          "price": 41490000,
+          "range": 404,
+          "rendimientoElectrico": 6.9,
+          "seats": 5,
+          "torque": 260,
+          "traction": "FWD"
+        }
+      ],
+      "videoUrl": null,
+      "warranty": "5 años o 100.000 km"
+    }
+  ]
+}
