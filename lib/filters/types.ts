@@ -14,6 +14,10 @@ export interface FacetCar {
   vehicleTypeLabel: string;
   electricTypeTag: string;
   electricTypeLabel: string;
+  /** Carrocerías y electrificaciones que suman sus versiones aparte de la principal: los
+   *  filtros son no excluyentes (un DS 3 Hybrid + E-Tense aparece en Híbridos y en Eléctricos). */
+  extraVehicleTypes?: { slug: string; label: string }[];
+  extraElectricTypes?: { tag: string; label: string }[];
   /** Precio efectivo para buckets/orden: discountPrice ?? basePrice. */
   price: number;
   basePrice: number;

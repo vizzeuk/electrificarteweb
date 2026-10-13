@@ -6,7 +6,7 @@
 // decide el mensaje, no si se crea.
 import type { SanityWriteClient } from "./sanity";
 import { isChileConfirmedUrl } from "@/lib/chile-url";
-import { parseVersiones, hostDe, type FilaSheet } from "./encargo";
+import { parseVersiones, sinTiposDelModelo, hostDe, type FilaSheet, type VersionDeclarada } from "./encargo";
 import { slugify, type RefsSanity } from "./sanity-doc";
 
 export interface Validacion {
@@ -98,8 +98,9 @@ export async function validarFila(fila: FilaSheet, sanity: SanityWriteClient): P
   }
 
   // Opcional: si vienen, cada una con nombre y precio > 0.
+  let versiones: VersionDeclarada[] = [];
   try {
-    parseVersiones(fila.versiones);
+    versiones = sinTiposDelModelo(parseVersiones(fila.versiones), fila);
   } catch (e) {
     errores.push(e instanceof Error ? e.message : "versiones no se pudo interpretar");
   }
@@ -108,25 +109,47 @@ export async function validarFila(fila: FilaSheet, sanity: SanityWriteClient): P
   const marcaSlug = slugify(fila.marca);
   const tipo = String(fila.tipo).trim();
   const tag = String(fila.electrificacion).trim().toUpperCase();
-  interface Refs { brandId: string | null; brandSite: string | null; vehicleTypeId: string | null; electricTypeId: string | null; existente: string | null }
+  // Carrocerias y electrificaciones propias de las versiones (solo las distintas a las del modelo).
+  const tiposV = [...new Set(versiones.map((v) => v.tipo).filter((t): t is string => !!t))];
+  const tagsV = [...new Set(versiones.map((v) => v.electrificacion).filter((t): t is string => !!t))];
+  interface TipoV { _id: string; l: string | null; n: string | null; s: string | null }
+  interface TagV { _id: string; t: string }
+  interface Refs { brandId: string | null; brandSite: string | null; vehicleTypeId: string | null; electricTypeId: string | null; existente: string | null; tiposV: TipoV[]; tagsV: TagV[] }
   // El cast es porque el tipado del cliente de Sanity infiere los params desde el
   // literal de la query, y no le calza una proyeccion de varias sub-queries.
-  const fetchRefs = sanity.fetch.bind(sanity) as (q: string, p: Record<string, string>) => Promise<Refs>;
+  const fetchRefs = sanity.fetch.bind(sanity) as (q: string, p: Record<string, string | string[]>) => Promise<Refs>;
   const encontrado: Refs = await fetchRefs(
     `{
       "brandId":       *[_type == "brand" && (slug.current == $marcaSlug || lower(name) == lower($marca)) && !(_id in path("drafts.**"))][0]._id,
       "brandSite":     *[_type == "brand" && (slug.current == $marcaSlug || lower(name) == lower($marca)) && !(_id in path("drafts.**"))][0].website,
       "vehicleTypeId": *[_type == "vehicleType" && (lower(label) == lower($tipo) || lower(name) == lower($tipo) || slug.current == $tipoSlug) && !(_id in path("drafts.**"))][0]._id,
       "electricTypeId":*[_type == "electricType" && upper(tag) == $tag && !(_id in path("drafts.**"))][0]._id,
-      "existente":     *[_type == "car" && slug.current == $slug && !(_id in path("drafts.**"))][0]._id
+      "existente":     *[_type == "car" && slug.current == $slug && !(_id in path("drafts.**"))][0]._id,
+      "tiposV":        *[_type == "vehicleType" && (lower(label) in $tiposV || lower(name) in $tiposV || slug.current in $tiposVSlug) && !(_id in path("drafts.**"))]{ _id, "l": lower(label), "n": lower(name), "s": slug.current },
+      "tagsV":         *[_type == "electricType" && upper(tag) in $tagsV && !(_id in path("drafts.**"))]{ _id, "t": upper(tag) }
     }`,
-    { marca: fila.marca, marcaSlug, tipo, tipoSlug: slugify(tipo), tag, slug },
+    {
+      marca: fila.marca, marcaSlug, tipo, tipoSlug: slugify(tipo), tag, slug,
+      tiposV: tiposV.map((t) => t.toLowerCase()), tiposVSlug: tiposV.map(slugify), tagsV,
+    },
   );
 
   if (!encontrado.brandId) errores.push(`La marca "${fila.marca}" no existe en Sanity — crearla a mano primero`);
   if (!encontrado.vehicleTypeId) errores.push(`El tipo de vehiculo "${tipo}" no existe en Sanity`);
   if (!encontrado.electricTypeId) errores.push(`La electrificacion "${tag}" no existe en Sanity`);
   if (encontrado.existente) errores.push(`Ya existe una PDP con el slug "${slug}" (${encontrado.existente}) — R8, no se duplica`);
+
+  // Refs de cada version, en el mismo orden que `versiones`.
+  const tipoId = (t: string) =>
+    (encontrado.tiposV ?? []).find((x) => x.l === t.toLowerCase() || x.n === t.toLowerCase() || x.s === slugify(t))?._id;
+  const tagId = (t: string) => (encontrado.tagsV ?? []).find((x) => x.t === t)?._id;
+  const refsVersiones = versiones.map((v) => {
+    const vehicleTypeId = v.tipo ? tipoId(v.tipo) : undefined;
+    const electricTypeId = v.electrificacion ? tagId(v.electrificacion) : undefined;
+    if (v.tipo && !vehicleTypeId) errores.push(`El tipo de vehiculo "${v.tipo}" de la version "${v.nombre}" no existe en Sanity`);
+    if (v.electrificacion && !electricTypeId) errores.push(`La electrificacion "${v.electrificacion}" de la version "${v.nombre}" no existe en Sanity`);
+    return { ...(vehicleTypeId ? { vehicleTypeId } : {}), ...(electricTypeId ? { electricTypeId } : {}) };
+  });
 
   // Sin URL: el punto de partida es el sitio oficial de la marca. Tiene que existir en Sanity y
   // ser del mercado chileno (R2: el agente queda encerrado en ese dominio).
@@ -190,6 +213,7 @@ export async function validarFila(fila: FilaSheet, sanity: SanityWriteClient): P
       brandId: encontrado.brandId!,
       vehicleTypeId: encontrado.vehicleTypeId!,
       electricTypeId: encontrado.electricTypeId!,
+      versiones: refsVersiones,
     },
   };
 }

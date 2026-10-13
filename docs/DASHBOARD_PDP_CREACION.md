@@ -56,7 +56,32 @@ Una fila = **un modelo = una PDP**. Las versiones van adentro, nunca una PDP por
 | `tipo` | select | `tipos[].valor` | obligatorio |
 | `electrificacion` | select | `electrificaciones[].valor` (mostrar `nombre`) | obligatorio |
 | `url_oficial` | URL | — | **opcional** (oct-2026). Si viene, `https://`. Vacío = `null`: el agente busca la ficha en el sitio de la marca (`marcas[].sitio`) |
-| `versiones` | **lista repetible** de `nombre` + `precio` | — | **opcional** (oct-2026): puede ser `[]`. Si hay filas, cada una con nombre y precio en pesos > 0 |
+| `versiones` | **lista repetible** de `nombre` + `precio` (+ `tipo` y `electrificacion` opcionales por versión) | `tipos[].valor` y `electrificaciones[].valor` para los dos selects de la versión | **opcional** (oct-2026): puede ser `[]`. Si hay filas, cada una con nombre y precio en pesos > 0 |
+
+### Versiones de otra carrocería o electrificación (oct-2026)
+
+Un mismo modelo puede tener versiones de **distinta electrificación o carrocería** que la del modelo
+(ej. DS 3: "Étoile Hybrid" es HEV hatchback y "E-Tense Opera" es EV SUV). Sigue siendo **una sola
+PDP**: cada versión puede declarar su `tipo` y/o su `electrificacion`, y el auto aparece en los
+filtros de todos sus tipos (Híbridos **y** Eléctricos, Hatchback **y** SUV).
+
+- Ambos campos son **opcionales** y se mandan **solo si difieren** de los del modelo. Vacío, ausente
+  o igual al del modelo = "igual que el modelo" (la web normaliza los iguales y no los guarda).
+- Los valores son los mismos `valor` de `/opciones` que usan los selects del modelo.
+- El `tipo` y la `electrificacion` del **modelo** son los principales: el badge de la tarjeta, las
+  specs de la ficha y el precio "desde" salen de las versiones de esa electrificación.
+- La IA extrae las specs **completas** de las versiones de otra electrificación (no hereda nada de
+  la base). Si la fuente no trae sus vitales (autonomía, potencia, batería, 0-100, tracción), queda
+  un hallazgo en Studio para completarlas.
+- Un valor que no existe en Sanity responde 422: *"El tipo de vehiculo "X" de la version "Y" no
+  existe en Sanity"*.
+
+```json
+"versiones": [
+  { "nombre": "Étoile Hybrid", "precio": 35990000 },
+  { "nombre": "E-Tense Opera", "precio": 41490000, "tipo": "SUV", "electrificacion": "EV" }
+]
+```
 
 **Usa los `valor` tal cual vienen de `/opciones`.** Son exactamente los textos con los que la web
 busca las referencias en Sanity; si los transformas, la validación responde "no existe en Sanity".
@@ -208,6 +233,7 @@ un tipo en Studio.
 
 - [ ] Variables `ELECTRIFICARTE_API_BASE` y `ELECTRIFICARTE_ADMIN_SECRET` en el servidor del dashboard (y en su Vercel)
 - [ ] Formulario con selects desde `/opciones` y versiones repetibles
+- [ ] Cada versión con selects opcionales de carrocería y electrificación ("Igual que el modelo" por defecto)
 - [ ] Errores 422/409 mostrados en el form sin perder lo escrito
 - [ ] Lista con estados, `detalle`, `mensaje` expandible y botón a Studio
 - [ ] Reintentar (con corrección) y cancelar

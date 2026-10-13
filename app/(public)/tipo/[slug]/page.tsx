@@ -10,6 +10,7 @@ import {
 } from "@/lib/queries/car";
 import { hotDealUrgencyLabelQuery } from "@/lib/queries/pages";
 import { pickFeaturedAdCar, stripBrandSuffix } from "@/lib/utils";
+import { extraTypes, showMatchVersion } from "@/lib/version-types";
 import TipoPageContent, { type TipoCarData, type TipoMeta, type OtherType } from "./TipoPageContent";
 
 export const revalidate = 60;
@@ -57,7 +58,10 @@ export default async function TipoPage({ params }: PageProps) {
     heroDesc: sanityMeta.heroDescription ?? sanityMeta.heroTagline ?? "",
   };
 
-  const cars: TipoCarData[] = (sanityCars ?? []).map((c: any) => ({
+  // Los que entran por una versión de este tipo muestran esa versión (ver lib/version-types.ts).
+  const cars: TipoCarData[] = (sanityCars ?? []).map(showMatchVersion).map((c: any) => ({
+    ...extraTypes(c),
+    href:                 c.versionKey ? `/auto/${c.slug}?version=${encodeURIComponent(c.versionKey)}` : undefined,
     slug:                 c.slug,
     name:                 c.name,
     brand:                c.brand?.name ?? "",

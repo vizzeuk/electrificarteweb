@@ -43,6 +43,8 @@ const carsForCalculatorQuery = groq`
       _key,
       name,
       price,
+      // Solo si la versión es de otra electrificación que el auto (ej. la E-Tense de un DS 3 híbrido).
+      "electricTypeTag": electricType->tag,
       discountPrice,
       batteryCapacity,
       range,

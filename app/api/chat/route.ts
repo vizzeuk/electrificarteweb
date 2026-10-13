@@ -187,8 +187,8 @@ async function handleRecommendation(body: {
         && hidden != true
         && coalesce(discountPrice, basePrice) >= $minPrice
         && coalesce(discountPrice, basePrice) <= $maxPrice
-        && ($anyVehicle || vehicleType->slug.current in $vehicleSlugs)
-        && ($anyElectric || electricType->tag in $electricTags)
+        && ($anyVehicle || vehicleType->slug.current in $vehicleSlugs || count(versions[vehicleType->slug.current in $vehicleSlugs]) > 0)
+        && ($anyElectric || electricType->tag in $electricTags || count(versions[electricType->tag in $electricTags]) > 0)
       ] | order(coalesce(discountPrice, basePrice) asc) [0..3] {
         name, "slug": slug.current,
         "brand": brand->{ name, "slug": slug.current },

@@ -7,6 +7,7 @@ import { urlFor } from "@/lib/sanity/image";
 import { brandBySlugQuery, carsByBrandQuery } from "@/lib/queries/car";
 import { hotDealUrgencyLabelQuery } from "@/lib/queries/pages";
 import { stripBrandSuffix } from "@/lib/utils";
+import { extraTypes } from "@/lib/version-types";
 import BrandPageContent from "./BrandPageContent";
 
 export const revalidate = 60;
@@ -51,6 +52,7 @@ export default async function BrandPage({ params }: PageProps) {
 
   // Map Sanity cars → BrandCarData shape
   const cars = (sanityCars ?? []).map((c: any) => ({
+    ...extraTypes(c),
     name:         c.name,
     slug:         c.slug,
     basePrice:    c.basePrice,

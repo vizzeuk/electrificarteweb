@@ -41,6 +41,17 @@ interface ResolvedSpecs {
 }
 
 function resolveSpecs(car: CalcCar, ver: CalcVersion | null): ResolvedSpecs {
+  // Una versión de otra electrificación calcula con su tecnología y sus specs, sin heredar las
+  // del auto (la autonomía del híbrido no es la de su versión eléctrica).
+  if (ver?.electricTypeTag && ver.electricTypeTag !== car.electricTypeTag) {
+    return {
+      electricTypeTag: ver.electricTypeTag,
+      batteryCapacity: ver.batteryCapacity ?? 0,
+      range:           ver.range ?? 0,
+      electricRangeKm: ver.electricRangeKm ?? null,
+      fuelConsumption: ver.fuelConsumption ?? null,
+    };
+  }
   return {
     electricTypeTag: car.electricTypeTag,
     batteryCapacity: ver?.batteryCapacity ?? car.batteryCapacity,

@@ -157,27 +157,37 @@ export default async function CarDetailPage({ params }: PageProps) {
       imageUrl:      h.imageUrl,
       imagePosition: h.imagePosition ?? "right",
     })),
-    versions:        (sanity.versions ?? []).map((v: any) => ({
-      name:          v.name,
-      price:         v.price,
-      discountPrice: v.discountPrice ?? v.price,
-      battery:       v.batteryCapacity ?? sanity.batteryCapacity,
-      range:         v.range ?? sanity.range,
-      power:         v.power ?? sanity.power,
-      torque:        v.torque ?? sanity.torque ?? 0,
-      traction:      v.traction ?? sanity.traction,
-      acceleration:  v.acceleration ?? sanity.acceleration ?? 0,
-      topSpeed:      v.topSpeed ?? sanity.topSpeed ?? 0,
-      chargeTimeDC:         v.chargeTimeDC ?? sanity.chargeTimeDC ?? "",
-      chargeTimeAC:         v.chargeTimeAC ?? sanity.chargeTimeAC ?? "",
-      electricRangeKm:      v.electricRangeKm ?? sanity.electricRangeKm ?? null,
-      fuelConsumption:      v.fuelConsumption ?? sanity.fuelConsumption ?? null,
-      rendimientoElectrico: v.rendimientoElectrico ?? sanity.rendimientoElectrico ?? null,
-      maxDCChargingPower:   v.maxDCChargingPower ?? sanity.maxDCChargingPower ?? null,
-      maxACChargingPower:   v.maxACChargingPower ?? sanity.maxACChargingPower ?? null,
-      transmission:         v.transmission ?? sanity.transmission ?? null,
-      cargo:                v.trunkCapacity ?? sanity.cargo ?? null,
-    })),
+    versions:        (sanity.versions ?? []).map((v: any) => {
+      // Una versión de otra electrificación (ej. la E-Tense de un DS 3 híbrido) no hereda las specs
+      // del auto: la autonomía o el rendimiento del híbrido no son los suyos. Sin dato, queda vacío.
+      const ownType = !!v.electricType?.tag && v.electricType.tag !== sanity.electricType?.tag;
+      const base = ownType ? {} : sanity;
+      return {
+        key:           v._key,
+        name:          v.name,
+        price:         v.price,
+        discountPrice: v.discountPrice ?? v.price,
+        electricTypeTag: v.electricType?.tag ?? sanity.electricType?.tag ?? null,
+        category:      v.vehicleType?.label ?? sanity.vehicleType?.label ?? null,
+        ownType,
+        battery:       v.batteryCapacity ?? base.batteryCapacity ?? 0,
+        range:         v.range ?? base.range ?? 0,
+        power:         v.power ?? base.power ?? 0,
+        torque:        v.torque ?? base.torque ?? 0,
+        traction:      v.traction ?? base.traction ?? "",
+        acceleration:  v.acceleration ?? base.acceleration ?? 0,
+        topSpeed:      v.topSpeed ?? base.topSpeed ?? 0,
+        chargeTimeDC:         v.chargeTimeDC ?? base.chargeTimeDC ?? "",
+        chargeTimeAC:         v.chargeTimeAC ?? base.chargeTimeAC ?? "",
+        electricRangeKm:      v.electricRangeKm ?? base.electricRangeKm ?? null,
+        fuelConsumption:      v.fuelConsumption ?? base.fuelConsumption ?? null,
+        rendimientoElectrico: v.rendimientoElectrico ?? base.rendimientoElectrico ?? null,
+        maxDCChargingPower:   v.maxDCChargingPower ?? base.maxDCChargingPower ?? null,
+        maxACChargingPower:   v.maxACChargingPower ?? base.maxACChargingPower ?? null,
+        transmission:         v.transmission ?? base.transmission ?? null,
+        cargo:                v.trunkCapacity ?? base.cargo ?? null,
+      };
+    }),
   };
 
   // ─── Score and rank similar cars ────────────────────────────────────────────

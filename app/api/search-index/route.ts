@@ -17,7 +17,8 @@ export async function GET() {
       "brandLogo": brand->logo.asset->url,
       basePrice,
       discountPrice,
-      "type": electricType->tag,
+      // Con las electrificaciones de sus versiones: "HEV y EV" para un DS 3 Hybrid + E-Tense.
+      "type": array::join(array::unique([electricType->tag] + coalesce(versions[defined(electricType)].electricType->tag, [])), " y "),
       "versions": versions[].name
     } | order(brand asc, name asc)`
   );

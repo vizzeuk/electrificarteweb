@@ -16,7 +16,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { authorized } from "@/lib/catalog-recheck/admin";
 import { getSupabase } from "@/lib/whatsapp/subscription";
 import { sanityCreacion } from "@/lib/pdp-creacion/sanity";
-import { parseVersiones } from "@/lib/pdp-creacion/encargo";
+import { parseVersiones, sinTiposDelModelo } from "@/lib/pdp-creacion/encargo";
 import { validarFila } from "@/lib/pdp-creacion/validar";
 import {
   actualizarSolicitud,
@@ -59,7 +59,7 @@ export async function POST(req: NextRequest): Promise<Response> {
   try {
     await actualizarSolicitud(sb, actual.id, {
       ...fila,
-      versiones: parseVersiones(fila.versiones),
+      versiones: sinTiposDelModelo(parseVersiones(fila.versiones), fila),
       slug: v.slug,
       estado: "listo",
       detalle: "Reintento pedido desde el panel",
