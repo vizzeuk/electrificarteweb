@@ -151,7 +151,11 @@ export async function POST(req: NextRequest): Promise<Response> {
     return NextResponse.json({ estado: "rechazada", costoUsd: costo, errores: v.errores, mensaje, detalleFila });
   }
 
-  const llenado = medirLlenado(contrato.base, fila.electrificacion, contrato.portada_url);
+  // Las fotos van ANTES de medir: la portada que cuenta es la que quedo subida,
+  // no la URL que propuso el agente (esa puede dar 403, y una de la galeria
+  // puede haber pasado a portada).
+  const fotos = await subirFotos(sanity, contrato.portada_url, contrato.galeria, nombre, hostSesion);
+  const llenado = medirLlenado(contrato.base, fila.electrificacion, fotos.portada?.url);
   // `sourceUrls` guarda la URL EFECTIVA: es la que el Flujo C va a releer cada
   // semana, y la de la fila puede ser un redirect a otro dominio.
   const doc = armarDocumentoCar(
@@ -165,7 +169,6 @@ export async function POST(req: NextRequest): Promise<Response> {
   if (sinVersiones && !precioDeFuente) llenado.vitalesFaltantes.unshift("precio");
   if (sinVersiones && !precioDeFuente) llenado.completo = false;
 
-  const fotos = await subirFotos(sanity, contrato.portada_url, contrato.galeria, nombre, hostSesion);
   const { mainImage, gallery } = camposDeImagen(fotos, nombre);
   if (mainImage) doc.mainImage = mainImage;
   if (gallery) doc.gallery = gallery;

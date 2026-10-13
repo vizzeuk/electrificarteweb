@@ -22,6 +22,7 @@ import type { createClient } from "@sanity/client";
 import type { Browser } from "playwright-core";
 import { extractText, getDocumentProxy } from "unpdf";
 import { isChileConfirmedUrl } from "@/lib/chile-url";
+import { SCRAPE_UA } from "@/lib/utils/scrape-ua";
 
 // ReturnType<typeof createClient> (en vez del tipo SanityClient exportado) para preservar
 // exactamente el mismo tipo concreto que devuelve createClient() — con el tipo de clase genérico
@@ -36,8 +37,6 @@ const MAX_EXTRA_LINKS_PER_SOURCE = 2;
 const MAX_IMAGE_CANDIDATES = 12;
 const MIN_DESIRED_PHOTOS = 7; // 1 portada + 6 galería
 const MIN_FILLED_SPECS = 10; // si encuentra menos, la PDP queda casi vacía — mejor no crearla
-const SCRAPE_UA =
-  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36";
 
 export interface ResearchContext {
   anthropic: Anthropic;

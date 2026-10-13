@@ -8,6 +8,7 @@
 //
 // `PDP_GALERIA_MAX=0` vuelve al comportamiento del board (solo portada).
 import { createHash } from "node:crypto";
+import { SCRAPE_UA } from "@/lib/utils/scrape-ua";
 import type { SanityWriteClient } from "./sanity";
 
 /** Menos que esto es un icono, un placeholder o un sprite, no una foto de un auto. */
@@ -15,7 +16,26 @@ const MIN_BYTES = 25_000;
 /** Mas que esto es un TIFF o un render sin comprimir: no entra en una PDP. */
 const MAX_BYTES = 12_000_000;
 const TIMEOUT_MS = 20_000;
-const UA = "Mozilla/5.0 (compatible; ElectrificarteBot/1.0)";
+
+/**
+ * El formato real de la imagen, leido de los primeros bytes. `null` = no es una
+ * foto que sirva (HTML, SVG, PDF, basura).
+ *
+ * Los bytes mandan, no el `content-type`: deepalautos.cl sirve sus `.webp` sin
+ * ese header, y con el chequeo por header las 8 fotos del Deepal G318 se
+ * descartaron como "no es una imagen". Y al reves, una pagina de error con
+ * `image/jpeg` no tiene por que pasar.
+ */
+export function formatoImagen(buf: Uint8Array): "image/jpeg" | "image/png" | "image/gif" | "image/webp" | "image/avif" | null {
+  const ascii = (desde: number, largo: number) => String.fromCharCode(...buf.subarray(desde, desde + largo));
+  if (buf.length < 12) return null;
+  if (buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return "image/jpeg";
+  if (buf[0] === 0x89 && ascii(1, 3) === "PNG") return "image/png";
+  if (ascii(0, 4) === "GIF8") return "image/gif";
+  if (ascii(0, 4) === "RIFF" && ascii(8, 4) === "WEBP") return "image/webp";
+  if (ascii(4, 4) === "ftyp" && ["avif", "avis"].includes(ascii(8, 4))) return "image/avif";
+  return null;
+}
 
 export function maxGaleria(): number {
   const n = Number(process.env.PDP_GALERIA_MAX ?? 6);
@@ -39,29 +59,39 @@ export interface ResultadoFotos {
 interface Bajada {
   buf: Buffer;
   sha: string;
+  tipo: NonNullable<ReturnType<typeof formatoImagen>>;
 }
 
 /** Baja una imagen y la valida. Reintenta una vez: un hipo de red no es un "no hay foto". */
-async function bajar(url: string): Promise<{ ok: true; data: Bajada } | { ok: false; motivo: string }> {
+async function bajar(url: string, referer?: string): Promise<{ ok: true; data: Bajada } | { ok: false; motivo: string }> {
   if (!/^https:\/\//i.test(url)) return { ok: false, motivo: "no es https" };
 
   let ultimo = "sin respuesta";
   for (let intento = 0; intento < 2; intento++) {
     try {
-      const res = await fetch(url, { headers: { "user-agent": UA }, signal: AbortSignal.timeout(TIMEOUT_MS) });
+      const res = await fetch(url, {
+        headers: {
+          "user-agent": SCRAPE_UA,
+          accept: "image/avif,image/webp,image/png,image/jpeg,*/*;q=0.8",
+          // Algunos CDN niegan el hotlink sin Referer del propio sitio.
+          ...(referer ? { referer } : {}),
+        },
+        signal: AbortSignal.timeout(TIMEOUT_MS),
+      });
       if (!res.ok) { ultimo = `responde ${res.status}`; continue; }
 
-      const tipo = (res.headers.get("content-type") ?? "").toLowerCase();
-      // Una pagina de error que devuelve 200 con HTML es el falso positivo mas
-      // comun: pasa el status y despues Sanity guarda un asset roto.
-      if (!tipo.startsWith("image/")) return { ok: false, motivo: `no es una imagen (${tipo || "sin content-type"})` };
-      if (tipo.includes("svg")) return { ok: false, motivo: "es un SVG (casi siempre un logo o un icono)" };
+      const header = (res.headers.get("content-type") ?? "").toLowerCase();
+      if (header.includes("svg")) return { ok: false, motivo: "es un SVG (casi siempre un logo o un icono)" };
 
       const buf = Buffer.from(await res.arrayBuffer());
+      // Una pagina de error que devuelve 200 con HTML es el falso positivo mas
+      // comun: pasa el status y despues Sanity guarda un asset roto.
+      const tipo = formatoImagen(buf);
+      if (!tipo) return { ok: false, motivo: `no es una imagen (${header || "sin content-type"})` };
       if (buf.byteLength < MIN_BYTES) return { ok: false, motivo: `pesa ${Math.round(buf.byteLength / 1024)} kB` };
       if (buf.byteLength > MAX_BYTES) return { ok: false, motivo: `pesa ${Math.round(buf.byteLength / 1024 / 1024)} MB` };
 
-      return { ok: true, data: { buf, sha: createHash("sha256").update(buf).digest("hex") } };
+      return { ok: true, data: { buf, sha: createHash("sha256").update(buf).digest("hex"), tipo } };
     } catch (e) {
       ultimo = e instanceof Error ? e.message : String(e);
     }
@@ -122,8 +152,9 @@ export async function subirFotos(
     })),
   ];
 
+  const referer = `https://${hostFuente}/`;
   const bajadas = await Promise.all(
-    aBajar.map(async (f) => ({ ...f, r: await bajar(f.url) })),
+    aBajar.map(async (f) => ({ ...f, r: await bajar(f.url, referer) })),
   );
 
   // Dedup en el orden original, con la portada primero.
@@ -157,7 +188,7 @@ export async function subirFotos(
   const subidas = await Promise.all(
     aSubir.map(async (f) => {
       try {
-        const asset = await sanity.assets.upload("image", f.data.buf, { filename: nombreDe(f.url) });
+        const asset = await sanity.assets.upload("image", f.data.buf, { filename: nombreDe(f.url), contentType: f.data.tipo });
         return { ok: true as const, foto: { assetId: asset._id, url: asset.url, alt: f.alt }, esPortada: f.esPortada };
       } catch (e) {
         return { ok: false as const, url: f.url, esPortada: f.esPortada, motivo: e instanceof Error ? e.message : String(e) };

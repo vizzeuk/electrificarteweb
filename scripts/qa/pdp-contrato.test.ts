@@ -12,6 +12,7 @@ import assert from "node:assert/strict";
 import { armarEncargo, hostDe, parseVersiones, sinTiposDelModelo, toolsConHost, versionBase, type FilaSheet } from "@/lib/pdp-creacion/encargo";
 import { camposAplicables, importantes, medirLlenado, MIN_CAMPOS, vitales, type BasePdp, type ContratoPdp } from "@/lib/pdp-creacion/contrato";
 import { armarDocumentoCar, armarVersiones, slugify } from "@/lib/pdp-creacion/sanity-doc";
+import { formatoImagen } from "@/lib/pdp-creacion/imagenes";
 import { filaDeSolicitud, filaDesdeEntrada, MINUTOS_TRABADA, sePuedeReintentar } from "@/lib/pdp-creacion/solicitudes";
 
 let passed = 0;
@@ -433,6 +434,21 @@ test("filaDesdeEntrada: pasa tipo/electrificacion de cada version del panel", ()
     { nombre: "E-Tense", precio: 41490000, tipo: "SUV", electrificacion: "EV" },
     { nombre: "Hybrid", precio: 35990000 },
   ]);
+});
+
+test("formatoImagen: decide por los bytes, no por el content-type", () => {
+  const b = (...partes: (number[] | string)[]) =>
+    new Uint8Array([...partes.flatMap((p) => (typeof p === "string" ? [...p].map((c) => c.charCodeAt(0)) : p)), ...new Array(16).fill(0)]);
+  assert.equal(formatoImagen(b([0xff, 0xd8, 0xff, 0xe0])), "image/jpeg");
+  assert.equal(formatoImagen(b([0x89], "PNG", [0x0d, 0x0a])), "image/png");
+  assert.equal(formatoImagen(b("GIF89a")), "image/gif");
+  assert.equal(formatoImagen(b("RIFF", [1, 2, 3, 4], "WEBPVP8 ")), "image/webp");
+  assert.equal(formatoImagen(b([0, 0, 0, 0x1c], "ftypavif")), "image/avif");
+  // Lo que un CDN puede devolver con 200 y header de imagen, y no es una foto:
+  assert.equal(formatoImagen(b("<!DOCTYPE html><html>")), null);
+  assert.equal(formatoImagen(b('<svg xmlns="http://www.w3.org/2000/svg">')), null);
+  assert.equal(formatoImagen(b("%PDF-1.7")), null);
+  assert.equal(formatoImagen(new Uint8Array([0xff, 0xd8])), null);
 });
 
 console.log(`\n${failed === 0 ? "✓" : "✗"} ${passed} pasaron, ${failed} fallaron\n`);
