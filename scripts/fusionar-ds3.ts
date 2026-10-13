@@ -16,7 +16,7 @@
  *   npx tsx --env-file=.env.local scripts/fusionar-ds3.ts           # muestra lo que haría
  *   npx tsx --env-file=.env.local scripts/fusionar-ds3.ts --apply   # lo hace
  */
-import { writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { createClient } from "@sanity/client";
 
@@ -48,10 +48,18 @@ async function main() {
     ids: [BASE_ID, ETENSE_ID, `drafts.${BASE_ID}`, `drafts.${ETENSE_ID}`],
   });
   const base = docs.find((d) => d._id === BASE_ID);
-  const et = docs.find((d) => d._id === ETENSE_ID);
   if (!base) throw new Error(`No existe ${BASE_ID} (ds-3)`);
-  if (!et) {
-    console.log(`${ETENSE_ID} ya no existe: la fusión ya se hizo.`);
+  // Si la ficha E-Tense ya se borró (corrida anterior), se retoma desde el respaldo.
+  const respaldo = join(process.cwd(), "scripts/data/sanity-ds3-antes-de-fusionar.json");
+  const desdeRespaldo = !docs.some((d) => d._id === ETENSE_ID);
+  const et: Doc | undefined = desdeRespaldo
+    ? existsSync(respaldo)
+      ? (JSON.parse(readFileSync(respaldo, "utf8")).documentos as Doc[]).find((d) => d._id === ETENSE_ID)
+      : undefined
+    : docs.find((d) => d._id === ETENSE_ID);
+  if (!et) throw new Error(`No existe ${ETENSE_ID} ni su respaldo`);
+  if ((base.versions ?? []).some((v: Doc) => v._key === "e-tense")) {
+    console.log("ds-3 ya tiene la versión E-Tense: la fusión ya se hizo.");
     return;
   }
   const borradores = docs.filter((d) => d._id.startsWith("drafts."));
@@ -109,18 +117,18 @@ async function main() {
     return;
   }
 
-  const respaldo = join(process.cwd(), "scripts/data/sanity-ds3-antes-de-fusionar.json");
-  writeFileSync(respaldo, JSON.stringify({ fecha: new Date().toISOString(), documentos: [base, et] }, null, 2));
-  console.log(`Respaldo: ${respaldo}`);
+  if (!desdeRespaldo) {
+    writeFileSync(respaldo, JSON.stringify({ fecha: new Date().toISOString(), documentos: [base, et] }, null, 2));
+    console.log(`Respaldo: ${respaldo}`);
+  }
 
-  const tx = client.transaction()
-    .patch(BASE_ID, (p) =>
-      p.setIfMissing({ versions: [], gallery: [] })
-        .append("versions", [version])
-        .append("gallery", fotos)
-        .set({ sourceUrls: fuentes }),
-    )
-    .delete(ETENSE_ID);
+  // Un patch admite UN solo insert: versiones y galería van en patches separados (con los dos en el
+  // mismo, el segundo pisaba al primero y la versión no se agregaba).
+  let tx = client.transaction()
+    .patch(BASE_ID, (p) => p.setIfMissing({ versions: [], gallery: [] }).set({ sourceUrls: fuentes }))
+    .patch(BASE_ID, (p) => p.append("versions", [version]));
+  if (fotos.length) tx = tx.patch(BASE_ID, (p) => p.append("gallery", fotos));
+  if (!desdeRespaldo) tx = tx.delete(ETENSE_ID);
   const res = await tx.commit({ visibility: "sync" });
   console.log(`Listo (transacción ${res.transactionId}).`);
 }
