@@ -40,7 +40,7 @@ const sanity = createClient({
 async function main() {
   const cars = await sanity.fetch<CarToCheck[]>(
     `*[_type == "car" && hidden != true && !(_id in path("drafts.**"))] | order(coalesce(lastPriceCheckAt, "1970-01-01") asc) [0...$limit] {
-      "id": _id, name, "brand": brand->name, basePrice, discountPrice
+      "id": _id, name, "brand": brand->name, basePrice, discountPrice, "sourceUrl": sourceUrls[0]
     }`,
     { limit: LIMIT }
   );
