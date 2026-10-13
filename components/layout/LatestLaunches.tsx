@@ -1,9 +1,11 @@
 "use client";
 
 import { useRef, useState, useEffect, useCallback, useMemo } from "react";
+import Link from "next/link";
 import { CarCard } from "@/components/car/CarCard";
 import { useInViewport } from "@/lib/useInViewport";
 import { Icon } from "@/components/ui/Icon";
+import { LATEST_LAUNCHES_PATH } from "@/lib/latest-launches";
 
 export interface LaunchCarData {
   _id?: string;
@@ -38,30 +40,25 @@ const FALLBACK_CARS: LaunchCarData[] = [
 
 const AUTO_MS = 5000;
 
-// On mobile (iOS WebKit specifically) we cap the cards rendered initially.
-// iOS Safari has been seen to OOM-crash with 6 carousel cards × decoded
-// images in memory. Brave skips speculative decoding so it survives 6 fine.
-// Server-rendered count stays at the full set for SEO; client reduces post-
-// hydration when matchMedia matches mobile.
-const MOBILE_LIMIT = 3;
-
 export function LatestLaunches({ title = "Últimos lanzamientos", cars }: LatestLaunchesProps) {
-  const allCars = cars && cars.length > 0 ? cars : FALLBACK_CARS;
-  const [limit, setLimit] = useState<number>(allCars.length);
+  const hasCars     = !!cars && cars.length > 0;
+  const displayCars = hasCars ? cars : FALLBACK_CARS;
 
+  // Móvil: todos los autos UNA vez. Antes se mostraban solo 3 (tope contra los cierres por
+  // memoria de iOS Safari) y duplicados por el loop, así que parecían repetidos y el resto de los
+  // 🆕 nunca aparecía. Sin la copia del loop el DOM queda en la mitad y las imágenes son lazy.
+  const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
-    if (typeof window === "undefined") return;
     const mql = window.matchMedia("(max-width: 767px)");
-    const apply = () => setLimit(mql.matches ? MOBILE_LIMIT : allCars.length);
+    const apply = () => setIsMobile(mql.matches);
     apply();
     mql.addEventListener("change", apply);
     return () => mql.removeEventListener("change", apply);
-  }, [allCars.length]);
+  }, []);
 
-  const displayCars = useMemo(() => allCars.slice(0, limit), [allCars, limit]);
-  // Dos copias seguidas para el loop infinito.
-  const loopCars    = useMemo(() => [...displayCars, ...displayCars], [displayCars]);
-  const setCount    = displayCars.length;
+  // Escritorio: dos copias seguidas para el loop infinito de las flechas y el autoplay.
+  const loopCars = useMemo(() => (isMobile ? displayCars : [...displayCars, ...displayCars]), [displayCars, isMobile]);
+  const setCount = displayCars.length;
 
   const sectionRef = useRef<HTMLElement>(null);
   const trackRef   = useRef<HTMLDivElement>(null);
@@ -87,6 +84,7 @@ export function LatestLaunches({ title = "Últimos lanzamientos", cars }: Latest
   // Silently reset when past the first copy — uses scrollend + fallback so it
   // never fires mid-animation and interrupts the smooth scroll.
   const scheduleReset = useCallback((el: HTMLElement) => {
+    if (isMobile) return; // sin copia del loop no hay nada que reiniciar
     const onSettled = () => {
       clearTimeout(fallback);
       const setWidth = stepWidth() * setCount;
@@ -96,7 +94,7 @@ export function LatestLaunches({ title = "Últimos lanzamientos", cars }: Latest
     };
     el.addEventListener("scrollend", onSettled, { once: true });
     const fallback = setTimeout(onSettled, 900);
-  }, [stepWidth, setCount]);
+  }, [stepWidth, setCount, isMobile]);
 
   const stopAuto = useCallback(() => {
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
@@ -107,10 +105,15 @@ export function LatestLaunches({ title = "Últimos lanzamientos", cars }: Latest
     timerRef.current = setInterval(() => {
       const el = trackRef.current;
       if (!el) return;
+      // Móvil (una sola copia): al llegar al final, vuelve al primero.
+      if (isMobile && el.scrollLeft + el.clientWidth >= el.scrollWidth - 8) {
+        el.scrollTo({ left: 0, behavior: "smooth" });
+        return;
+      }
       el.scrollBy({ left: stepWidth(), behavior: "smooth" });
       scheduleReset(el);
     }, AUTO_MS);
-  }, [stopAuto, scheduleReset, stepWidth]);
+  }, [stopAuto, scheduleReset, stepWidth, isMobile]);
 
   useEffect(() => {
     const el = trackRef.current;
@@ -148,8 +151,15 @@ export function LatestLaunches({ title = "Últimos lanzamientos", cars }: Latest
           <h2 id="latest-title" className="t-h2">{title}</h2>
           <p className="t-lead">Lo más nuevo que entró al catálogo, con precio de lista y specs clave.</p>
         </div>
-        {/* Flechas: ocultas en móvil (ahí se desliza con el dedo). */}
+        {/* "Ver todos" y flechas: ocultos en móvil (ahí se desliza con el dedo y el enlace va
+            debajo del riel). */}
         <div className="section-head__side">
+          {hasCars && (
+            <Link href={LATEST_LAUNCHES_PATH} className="link-arrow mr-2">
+              Ver todos
+              <Icon name="arrow_forward" size="none" />
+            </Link>
+          )}
           <button
             type="button"
             data-rail-prev="rail-latest"
@@ -215,6 +225,15 @@ export function LatestLaunches({ title = "Últimos lanzamientos", cars }: Latest
           );
         })}
       </div>
+
+      {hasCars && (
+        <div className="wrap mt-6 md:hidden">
+          <Link href={LATEST_LAUNCHES_PATH} className="link-arrow">
+            Ver todos los lanzamientos
+            <Icon name="arrow_forward" size="none" />
+          </Link>
+        </div>
+      )}
     </section>
   );
 }

@@ -115,8 +115,6 @@ interface CarResult {
   electricType?: { label: string; tag: string };
   basePrice: number;
   discountPrice?: number;
-  isHotDeal?: boolean;
-  hotDealBonusAmount?: number;
   range?: number;
   power?: number;
   batteryCapacity?: number;
@@ -158,16 +156,13 @@ function fmt(n: number) {
 
 function carCard(c: CarResult): string {
   const price = c.discountPrice && c.discountPrice < c.basePrice ? c.discountPrice : c.basePrice;
-  const savings = c.isHotDeal && c.discountPrice && c.discountPrice < c.basePrice
-    ? `\n🔥 HOT DEAL — Ahorra ${fmt(c.basePrice - c.discountPrice)}`
-    : "";
   const specs = [
     c.range        ? `${c.range} km autonomía`     : null,
     c.power        ? `${c.power} CV`               : null,
     c.traction     ?? null,
     c.acceleration ? `0–100 en ${c.acceleration}s` : null,
   ].filter(Boolean).join(" · ");
-  return `**${c.brand.name} ${c.name}** — ${fmt(price)}${savings}\n${specs}\n[Ver detalle](/auto/${c.slug})`;
+  return `**${c.brand.name} ${c.name}** — ${fmt(price)}\n${specs}\n[Ver detalle](/auto/${c.slug})`;
 }
 
 // ─── Recommendation handler ───────────────────────────────────────────────────
@@ -189,16 +184,17 @@ async function handleRecommendation(body: {
     () => sanity.fetch<CarResult[]>(
       groq`*[_type == "car"
         && !(_id in path("drafts.**"))
+        && hidden != true
         && coalesce(discountPrice, basePrice) >= $minPrice
         && coalesce(discountPrice, basePrice) <= $maxPrice
         && ($anyVehicle || vehicleType->slug.current in $vehicleSlugs)
         && ($anyElectric || electricType->tag in $electricTags)
-      ] | order(isHotDeal desc, coalesce(discountPrice, basePrice) asc) [0..3] {
+      ] | order(coalesce(discountPrice, basePrice) asc) [0..3] {
         name, "slug": slug.current,
         "brand": brand->{ name, "slug": slug.current },
         "vehicleType": vehicleType->{ label, "slug": slug.current },
         "electricType": electricType->{ label, tag },
-        basePrice, discountPrice, isHotDeal, hotDealBonusAmount,
+        basePrice, discountPrice,
         range, power, batteryCapacity, traction, acceleration
       }`,
       {
@@ -241,7 +237,7 @@ function carsToText(cars: CarResult[]): string {
       c.traction     ?? null,
       c.acceleration ? `0-100: ${c.acceleration}s` : null,
     ].filter(Boolean).join(", ");
-    return `- ${c.brand.name} ${c.name} | ${fmt(price)}${c.isHotDeal ? " 🔥HOT" : ""} | ${specs} | /auto/${c.slug}`;
+    return `- ${c.brand.name} ${c.name} | ${fmt(price)} | ${specs} | /auto/${c.slug}`;
   }).join("\n");
 }
 
@@ -250,39 +246,27 @@ async function handleChat(messages: ChatMessage[]): Promise<string> {
 
   const allBrands = await getBrands();
 
-  const [hotDeals, cheapCars, longRangeCars] = await Promise.all([
-    cached("hotDeals", () => sanityFetch(
-      () => sanity.fetch<CarResult[]>(
-        groq`*[_type == "car" && !(_id in path("drafts.**")) && isHotDeal == true]
-          | order(coalesce(discountPrice, basePrice) asc) [0..5] {
-            name, "slug": slug.current,
-            "brand": brand->{ name, "slug": slug.current },
-            "electricType": electricType->{ label, tag },
-            basePrice, discountPrice, hotDealBonusAmount, range, power, traction, acceleration
-          }`
-      ),
-      [],
-    )),
+  const [cheapCars, longRangeCars] = await Promise.all([
     cached("cheapCars", () => sanityFetch(
       () => sanity.fetch<CarResult[]>(
-        groq`*[_type == "car" && !(_id in path("drafts.**"))]
+        groq`*[_type == "car" && !(_id in path("drafts.**")) && hidden != true]
           | order(coalesce(discountPrice, basePrice) asc) [0..5] {
             name, "slug": slug.current,
             "brand": brand->{ name, "slug": slug.current },
             "electricType": electricType->{ label, tag },
-            basePrice, discountPrice, isHotDeal, range, power, traction
+            basePrice, discountPrice, range, power, traction
           }`
       ),
       [],
     )),
     cached("longRangeCars", () => sanityFetch(
       () => sanity.fetch<CarResult[]>(
-        groq`*[_type == "car" && !(_id in path("drafts.**")) && defined(range) && range > 0]
+        groq`*[_type == "car" && !(_id in path("drafts.**")) && hidden != true && defined(range) && range > 0]
           | order(range desc) [0..5] {
             name, "slug": slug.current,
             "brand": brand->{ name, "slug": slug.current },
             "electricType": electricType->{ label, tag },
-            basePrice, discountPrice, isHotDeal, range, power, traction
+            basePrice, discountPrice, range, power, traction
           }`
       ),
       [],
@@ -294,12 +278,12 @@ async function handleChat(messages: ChatMessage[]): Promise<string> {
   if (matchedBrand) {
     brandCars = await cached(`brandCars:${matchedBrand.slug}`, () => sanityFetch(
       () => sanity.fetch<CarResult[]>(
-        groq`*[_type == "car" && !(_id in path("drafts.**")) && brand->slug.current == $slug]
+        groq`*[_type == "car" && !(_id in path("drafts.**")) && hidden != true && brand->slug.current == $slug]
           | order(coalesce(discountPrice, basePrice) asc) [0..6] {
             name, "slug": slug.current,
             "brand": brand->{ name, "slug": slug.current },
             "electricType": electricType->{ label, tag },
-            basePrice, discountPrice, isHotDeal, range, power, traction, acceleration
+            basePrice, discountPrice, range, power, traction, acceleration
           }`,
         { slug: matchedBrand.slug }
       ),
@@ -309,7 +293,7 @@ async function handleChat(messages: ChatMessage[]): Promise<string> {
   }
 
   // Slugs y precios válidos para la validación de output
-  const allCars = [...hotDeals, ...cheapCars, ...longRangeCars, ...brandCars];
+  const allCars = [...cheapCars, ...longRangeCars, ...brandCars];
   const validSlugs = new Set(allCars.map((c) => c.slug));
   const validPrices = allCars
     .map((c) => c.discountPrice ?? c.basePrice)
@@ -318,9 +302,6 @@ async function handleChat(messages: ChatMessage[]): Promise<string> {
   const systemPrompt = `Eres Francisco, el asistente virtual de Electrificarte, el sitio para elegir autos eléctricos e híbridos en Chile: catálogo con fichas y precios de lista, comparador, calculadora de ahorro y asesoría por WhatsApp. Eres amable, experto y conciso.
 
 MARCAS DISPONIBLES: ${allBrands.map((b) => b.name).join(", ")}
-
-HOT DEALS ACTIVOS:
-${hotDeals.length > 0 ? carsToText(hotDeals) : "Sin Hot Deals activos"}
 
 AUTOS MÁS ACCESIBLES (precio ascendente):
 ${carsToText(cheapCars)}

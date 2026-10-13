@@ -107,7 +107,7 @@ export const homePage = defineType({
     }),
     defineField({
       name: "hotDealCar", title: "🔥 Auto del HOT DEAL del home", type: "reference", to: [{ type: "car" }],
-      group: "catalog",
+      group: "catalog", hidden: true, // Hot Deal retirado del sitio (HOT_DEALS_ENABLED=false); el dato queda guardado.
       description: "El auto que aparece en la sección Hot Deal del home. Idealmente activa el flag 'HOT DEAL' en el auto también.",
     }),
     defineField({
@@ -117,7 +117,7 @@ export const homePage = defineType({
     defineField({
       name: "opportunitiesCars", title: "Autos en 'Destacados'", type: "array",
       group: "catalog",
-      description: "Autos que aparecen en el carrusel 'Destacados' (sección inferior del home). Si no hay selección manual, se muestran los autos marcados como ⭐ Destacado en Home.",
+      description: "Autos que aparecen en el carrusel 'Destacados' del home, en este orden. Se muestran exactamente estos y nada más; si la lista queda vacía, la sección no aparece. Los autos ocultos no se muestran aunque estén en la lista.",
       of: [defineArrayMember({ type: "reference", to: [{ type: "car" }] })],
     }),
     defineField({

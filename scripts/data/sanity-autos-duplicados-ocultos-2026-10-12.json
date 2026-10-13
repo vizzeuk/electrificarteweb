@@ -1,0 +1,2935 @@
+{
+  "nota": "Respaldo de autos borrados o corregidos en Sanity el 2026-10-12 (duplicados, Suzuki Vitara Hybrid, y Poer P500 / BYD Seal antes de corregir precios). Para restaurar: client.createOrReplace con cada documento.",
+  "documentos": [
+    {
+      "_createdAt": "2026-05-20T12:36:24Z",
+      "_id": "ZHqqLjeD04q22UAujRJoq9",
+      "_rev": "Lbd62M6NNsBtBmz2JopKaa",
+      "_system": {
+        "base": {
+          "id": "ZHqqLjeD04q22UAujRJoq9",
+          "rev": "2EnjDnHKjc3GR1IZ8n9Hal"
+        }
+      },
+      "_type": "car",
+      "_updatedAt": "2026-09-25T02:15:28Z",
+      "acceleration": 7.9,
+      "airbags": 6,
+      "basePrice": 25990000,
+      "batteryCapacity": 27.28,
+      "batteryType": "LFP",
+      "brand": {
+        "_ref": "brand-deepal",
+        "_type": "reference"
+      },
+      "cargo": 423,
+      "chargeTimeAC": "< 4 h (7 kW, 0-100%)",
+      "chargeTimeDC": "11 min (30-80%)",
+      "chargeType": "AC Tipo 2 + DC CCS2",
+      "comfortFeatures": [
+        "Climatizador",
+        "Asientos en ecocuero",
+        "Asiento conductor eléctrico 6 posiciones",
+        "Asiento acompañante eléctrico 4 posiciones",
+        "Asiento copiloto gravedad cero",
+        "Enfriador y calefactor de asiento",
+        "Espejo retrovisor antiencandilamiento automático",
+        "Alzavidrios electrónicos one touch",
+        "Techo solar",
+        "Portalón automático",
+        "Espejos laterales abatibles",
+        "Plumillas con sensor de lluvia",
+        "Tomacorriente maletero 12V",
+        "Apoyabrazos central con portavasos",
+        "Modos de manejo: Eco, Normal, Sport, Personalizable"
+      ],
+      "connectorType": "CCS2",
+      "description": "El Deepal S05 REEV es un SUV eléctrico de rango extendido con motor síncrono de imanes permanentes de 160 kW (215 HP) de tracción trasera y batería LFP de 27,28 kWh. Con un generador a combustión 1.5L como extensor de rango, alcanza 1.129 km de autonomía combinada (160 km en modo 100% eléctrico). Incluye pantalla panorámica 15,4\", Deepal OS con IA, Head Up Display y sistema de seguridad activa 360°.",
+      "electricRangeKm": 160,
+      "electricType": {
+        "_ref": "f646ff3a-160a-4932-b5f9-bea10bf8b880",
+        "_type": "reference"
+      },
+      "fuelConsumption": 100,
+      "gallery": [
+        {
+          "_key": "g1",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-b20375f08689bf8d47af9cfd859567ef52b76c20-1690x630-webp",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "main-1x352-webp",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-7298032a94d876a38c2e1fd86bd93113951c2889-321x352-webp",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "g0",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-25d82032e5e8514917e1ffcf37c8273dbd07de61-1690x630-webp",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "g2",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-d5c3ea28db1123df0eee077bf190bbf7642ac255-1690x630-webp",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "g3",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-c83f84115fb1b9cbc0cf42f6311fc9a7056b6f69-1690x630-webp",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "g4",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-28f318cfb897f621f7a49e486f88810dfe152508-1690x630-webp",
+            "_type": "reference"
+          }
+        }
+      ],
+      "hidden": true,
+      "highlight": "1.129 km de autonomía combinada; 160 km en modo 100% eléctrico (NEDC); carga rápida hasta 151 kW en 11 min",
+      "mainImage": {
+        "_type": "image",
+        "asset": {
+          "_ref": "image-b20375f08689bf8d47af9cfd859567ef52b76c20-1690x630-webp",
+          "_type": "reference"
+        }
+      },
+      "maxACChargingPower": 7,
+      "maxDCChargingPower": 151,
+      "modelYear": 2026,
+      "motorDescription": "Motor síncrono de imanes permanentes (tracción trasera) + generador 1.5L REEV",
+      "name": "S05",
+      "power": 215,
+      "priceNote": "Precio con bono desde $25.990.000.",
+      "rendimientoElectrico": 4.5,
+      "safetyFeatures": [
+        "6 airbags (frontales, laterales y de cortina)",
+        "Frenos ABS con EBD",
+        "Control de estabilidad (ESP)",
+        "Control de tracción (TCS)",
+        "Cámara 360° con visión 540° y simulación 3D",
+        "Control crucero adaptativo",
+        "Asistencia de arranque en pendiente (HHC)",
+        "Control de descenso en pendiente (HDC)",
+        "Freno de mano automático (APB)",
+        "Retención automática del vehículo (AVH)",
+        "Seguro de niño electrónico",
+        "Sistema ISOFIX (x2)",
+        "Inmobilizador antirrobo",
+        "Frenado autónomo de emergencia con detección de peatones y ciclistas (AEB)",
+        "Alerta de colisión frontal (FCW)",
+        "Alerta de salida de carril (LDW)",
+        "Asistente de mantenimiento de carril (LKA)",
+        "Detector de punto ciego (BSD)",
+        "Asistente de cambio de carril",
+        "Centrado de carril (LCC)",
+        "Asistente de tráfico (TJA)",
+        "Reconocimiento de señalética (TSR)",
+        "Alerta de tráfico cruzado trasero",
+        "Sistema de alerta acústica de vehículo (AVAS)",
+        "6 sensores de estacionamiento"
+      ],
+      "seatRows": 2,
+      "seats": 5,
+      "slug": {
+        "_type": "slug",
+        "current": "deepal-s05"
+      },
+      "sourceUrls": [
+        "https://www.deepalautos.cl/vehiculo/s05"
+      ],
+      "tagline": "Toca el futuro",
+      "techFeatures": [
+        "Pantalla infoentretenimiento panorámica 15,4\"",
+        "Sistema operativo inteligente Deepal OS con IA",
+        "Head Up Display",
+        "Apple CarPlay y Android Auto",
+        "Control por voz en español",
+        "Cargador inalámbrico rápido 50W",
+        "8 altavoces de alta fidelidad",
+        "Entradas USB (2 delantero + 1 trasero Tipo C)",
+        "Sistema de carga inteligente con gestión térmica"
+      ],
+      "topSpeed": 175,
+      "torque": 320,
+      "traction": "RWD",
+      "transmission": "Automática E-CVT",
+      "vehicleType": {
+        "_ref": "5239b59b-3134-4d40-9a21-de121138b961",
+        "_type": "reference"
+      },
+      "warranty": "5 años o 150.000 km (vehículo); 8 años o 150.000 km (circuito EV)"
+    },
+    {
+      "_createdAt": "2026-05-20T12:47:18Z",
+      "_id": "ZHqqLjeD04q22UAujRM7ad",
+      "_rev": "GeAoiCW5dHDLUjKiwfDFO2",
+      "_system": {
+        "base": {
+          "id": "ZHqqLjeD04q22UAujRM7ad",
+          "rev": "ZHqqLjeD04q22UAujRYYhV"
+        }
+      },
+      "_type": "car",
+      "_updatedAt": "2026-09-22T19:29:40Z",
+      "acceleration": 8,
+      "airbags": 6,
+      "basePrice": 23990000,
+      "batteryCapacity": 29.8,
+      "batteryType": "LFP",
+      "brand": {
+        "_ref": "brand-geely",
+        "_type": "reference"
+      },
+      "cargo": 528,
+      "chargeTimeDC": "16 min (30-80%)",
+      "chargeType": "AC + DC CCS2",
+      "comfortFeatures": [
+        "Asiento conductor eléctrico 6 posiciones con memoria",
+        "Asientos delanteros ventilados y calefaccionados",
+        "Climatizador automático",
+        "Aire acondicionado plazas traseras",
+        "Techo corredizo panorámico eléctrico",
+        "Sunroof panorámico",
+        "Iluminación ambiental dinámica 256 colores",
+        "Maletero eléctrico",
+        "Asientos traseros abatibles 60:40",
+        "Espejos laterales abatibles eléctricamente",
+        "Sensor de lluvia",
+        "Maletero 528 L / 2.065 L máx",
+        "Llantas de aleación 19\" Goodyear F1"
+      ],
+      "connectorType": "CCS2",
+      "description": "El Geely EX5 E-DMi es un SUV híbrido enchufable con sistema EM-i (Extended-range Motor integration). Con batería LFP de 29.8 kWh ofrece 170 km de autonomía eléctrica (NEDC) y más de 1.300 km de autonomía total combinada. Motor eléctrico de 215 HP con carga DC del 30 al 80% en 16 minutos.",
+      "discountPrice": 22490000,
+      "electricRangeKm": 170,
+      "electricType": {
+        "_ref": "f3e5f1d7-0f89-4efc-b941-39d5f1e3a523",
+        "_type": "reference"
+      },
+      "euroNcap": 5,
+      "fuelConsumption": 125,
+      "gallery": [
+        {
+          "_key": "g0",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-14a2593141df3f357bc5e4d64c6630f0ee198396-1920x756-png",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "g1",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-66be1197e1b481a2e9e551bc637123c7efc0d81c-1920x756-png",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "g2",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-6eb3a33a92d87b375caa314fee534ee1ed7d451d-1920x756-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "g3",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-9ce1ed013bc43029ee8b3bff9c2025bdac6fc317-1920x756-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "g4",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-587eecef202ba6e084c1e7e60a84a338edda9e32-1920x756-jpg",
+            "_type": "reference"
+          }
+        }
+      ],
+      "groundClearance": 172,
+      "hidden": true,
+      "highlight": "Carga DC 30-80% en 16 minutos y más de 1.300 km de autonomía total",
+      "mainImage": {
+        "_type": "image",
+        "asset": {
+          "_ref": "image-14a2593141df3f357bc5e4d64c6630f0ee198396-1920x756-png",
+          "_type": "reference"
+        }
+      },
+      "maxACChargingPower": 6.6,
+      "maxDCChargingPower": 60,
+      "modelYear": 2026,
+      "motorDescription": "Motor eléctrico PMSM 215 HP + motor combustión 1.5L 98 HP (PHEV EM-i)",
+      "name": "EX5 E-DMi",
+      "power": 215,
+      "priceNote": "Pro desde $23.990.000 / Con bono $22.490.000",
+      "rendimientoElectrico": 5.5,
+      "safetyFeatures": [
+        "6 airbags (frontales, laterales y cortina)",
+        "14 sistemas ADAS",
+        "Control crucero adaptativo (ACC)",
+        "Frenado autónomo de emergencia (AEB)",
+        "Asistente de mantención de carril (LKA + ELKA)",
+        "Detección de punto ciego (BSD)",
+        "Asistente de cambio de carril (LCA)",
+        "Cámara panorámica 540°",
+        "Sistema de mitigación de colisión frontal (CMSF) y trasera (CMSR)",
+        "Alerta de tráfico cruzado trasero (RCTA + RCTB)",
+        "Alerta apertura de puertas (DOW)",
+        "Control crucero inteligente (ICC)",
+        "Reconocimiento de señales de tránsito (TSI)",
+        "Control inteligente de luces altas (IHBC)",
+        "Control de asistencia de arranque en pendiente (HSA)",
+        "Control de descenso (HDC)",
+        "Freno de mano eléctrico (Autohold)",
+        "TPMS",
+        "ISOFIX asientos traseros",
+        "Alarma antirrobo"
+      ],
+      "seatRows": 2,
+      "seats": 5,
+      "slug": {
+        "_type": "slug",
+        "current": "geely-ex5-e-dmi"
+      },
+      "sourceUrls": [
+        "https://www.geely.cl/modelos/geely-ex5-em-i/"
+      ],
+      "tagline": "Vive sin interrupciones",
+      "techFeatures": [
+        "Pantalla táctil HD 15.4\" con sistema FLYME AUTO",
+        "Panel de instrumentos LCD 10.2\"",
+        "Head-Up Display W-HUD 13.8\"",
+        "Apple CarPlay y Android Auto inalámbrico",
+        "Sistema de audio premium FLYME SOUND 16 altavoces",
+        "Asistente de voz \"Hola Geely\"",
+        "Actualización remota OTA",
+        "Geely App con conectividad 4G",
+        "Cargador inalámbrico",
+        "V2L (carga a dispositivos externos)",
+        "V2V (carga a otros vehículos eléctricos)"
+      ],
+      "topSpeed": 170,
+      "torque": 262,
+      "traction": "FWD",
+      "transmission": "Automática con motor eléctrico incorporado",
+      "vehicleType": {
+        "_ref": "5239b59b-3134-4d40-9a21-de121138b961",
+        "_type": "reference"
+      },
+      "warranty": "6 años o 150.000 km (batería: 8 años o 150.000 km)"
+    },
+    {
+      "_createdAt": "2026-05-20T12:53:03Z",
+      "_id": "ZHqqLjeD04q22UAujRN2E5",
+      "_rev": "GeAoiCW5dHDLUjKiwfDFO2",
+      "_system": {
+        "base": {
+          "id": "ZHqqLjeD04q22UAujRN2E5",
+          "rev": "nPDzCrbukQGKfB0OasghYg"
+        }
+      },
+      "_type": "car",
+      "_updatedAt": "2026-09-22T19:29:40Z",
+      "airbags": 8,
+      "basePrice": 41490000,
+      "brand": {
+        "_ref": "brand-subaru",
+        "_type": "reference"
+      },
+      "cargo": 484,
+      "comfortFeatures": [
+        "Tapiz de cuero/Alcantara",
+        "Asientos delanteros con ajuste eléctrico y memoria 2 posiciones",
+        "Asientos traseros abatibles 60/40 de un solo toque",
+        "Climatizador BI-zona",
+        "Sunroof",
+        "Portalón eléctrico con sensor de pie",
+        "Llantas de aleación 19\"",
+        "Rieles de techo",
+        "Cubre equipaje retráctil",
+        "Espejos laterales abatibles eléctricamente y calefaccionados",
+        "Espejos laterales color cromado"
+      ],
+      "description": "El All New Forester Strong Hybrid integra el sistema e-Boxer Strong Hybrid de Subaru, combinando un motor BOXER de 2.5 litros de inyección directa con un potente motor eléctrico de 90 kW (122 CV) para una potencia combinada de 194 CV. Con más de 1.000 km de autonomía por estanque, tracción AWD permanente Symmetrical y 220 mm de despeje, es el SUV aventurero más eficiente de Subaru.",
+      "electricType": {
+        "_ref": "55e00600-5524-440c-9db7-b2c9f6c35d1d",
+        "_type": "reference"
+      },
+      "fuelConsumption": 14.9,
+      "gallery": [
+        {
+          "_key": "main-8x650-webp",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-a545fd61481d25f13f666f969a16a081608ecc21-1928x650-webp",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "g0",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-b1b58f625be3a53eda316ff972ddad28c00ec54e-1700x830-webp",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "g1",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-b53da3c15571f30945b5fec1fd0bd001f012ebdc-1700x830-webp",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "g2",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-26c0b14f4ecdea09cc2022df04be8eece0143d52-1700x830-webp",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "g3",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-944d4a912e712b0e2959383137362ab72afe0a67-1700x830-webp",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "g4",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-9b2bd01d8a74e3d070cc928b1e4c17d689a0cdcf-870x690-webp",
+            "_type": "reference"
+          }
+        }
+      ],
+      "groundClearance": 220,
+      "hidden": true,
+      "highlight": "Más de 1.000 km de autonomía · Motor eléctrico 90 kW · AWD Symmetrical · EyeSight última generación",
+      "isNew": false,
+      "mainImage": {
+        "_type": "image",
+        "asset": {
+          "_ref": "image-26c0b14f4ecdea09cc2022df04be8eece0143d52-1700x830-webp",
+          "_type": "reference"
+        }
+      },
+      "modelYear": 2026,
+      "motorDescription": "Subaru e-Boxer Strong Hybrid 2.5L DOHC + Motor eléctrico 90 kW (122 CV) / 270 Nm",
+      "name": "Forester Strong Hybrid ASD",
+      "power": 194,
+      "priceNote": "Precio desde según sitio oficial Subaru Chile",
+      "safetyFeatures": [
+        "8 airbags SRS (frontales, laterales, de cortina, de rodilla y cojín asiento pasajero)",
+        "Sistema EyeSight última generación con cámara monocular gran angular",
+        "Sistema de Maniobra de Emergencia EDSS",
+        "Sistema de monitorización del conductor (DMS)",
+        "Monitor del punto ciego (BSD)",
+        "Asistencia de cambio de carril (LCA)",
+        "Alerta de tráfico trasero cruzado (RCTA)",
+        "Frenado previo a la colisión",
+        "Control crucero adaptativo",
+        "Frenado automático en reversa (RAB)",
+        "Cámara 360°",
+        "Frenos ABS con EBD",
+        "Control electrónico de estabilidad (VDC)",
+        "Vectorización activa de torque (ATV)",
+        "Freno de estacionamiento electrónico con AVH",
+        "Sensor de presión de neumáticos (TPMS)",
+        "Anclaje ISOFIX"
+      ],
+      "seatRows": 2,
+      "seats": 5,
+      "slug": {
+        "_type": "slug",
+        "current": "subaru-forester-strong-hibrida"
+      },
+      "sourceUrls": [
+        "https://www.subaru.cl/precios-y-especificaciones-new-forester-hybrid/"
+      ],
+      "tagline": "Nuevo espíritu. Grandes aventuras.",
+      "techFeatures": [
+        "Pantalla táctil 11,6\" con Apple CarPlay y Android Auto",
+        "Sistema de audio premium Harman Kardon (10 parlantes + amplificador + subwoofer)",
+        "Cluster digital 12,3\"",
+        "Navegador satelital",
+        "Selector de cambios en volante (Paddle Shift)",
+        "SI-DRIVE (Subaru Intelligent Drive) 2 modos",
+        "X-MODE avanzado doble función",
+        "Smart Key con encendido sin llave",
+        "Cargador inalámbrico",
+        "Start Stop System con control de desactivación",
+        "Monitor de Vista en 360 grados (Vision Assist)"
+      ],
+      "torque": 209,
+      "traction": "AWD",
+      "transmission": "CVT AWD de Distribución de Torque Activo (6 marchas modo manual)",
+      "vehicleType": {
+        "_ref": "5239b59b-3134-4d40-9a21-de121138b961",
+        "_type": "reference"
+      },
+      "versions": [
+        {
+          "_key": "2-5-hev-awd-cvt-adventure-es",
+          "_type": "version",
+          "motorDescription": "e-Boxer Strong Hybrid 2.5L + Motor eléctrico 90 kW",
+          "name": "2.5 HEV AWD CVT Sport ES",
+          "power": 194,
+          "price": 41490000,
+          "seatRows": 2,
+          "seats": 5,
+          "torque": 209,
+          "traction": "AWD",
+          "transmission": "CVT AWD de Distribución de Torque Activo",
+          "trunkCapacity": 484
+        },
+        {
+          "_key": "2-5-hev-awd-cvt-touring-es",
+          "_type": "version",
+          "motorDescription": "e-Boxer Strong Hybrid 2.5L + Motor eléctrico 90 kW",
+          "name": "2.5 HEV AWD CVT Touring ES",
+          "power": 194,
+          "price": 43490000,
+          "seatRows": 2,
+          "seats": 5,
+          "torque": 209,
+          "traction": "AWD",
+          "transmission": "CVT AWD de Distribución de Torque Activo",
+          "trunkCapacity": 484
+        }
+      ],
+      "warranty": "5 años o 100.000 km · Batería de alto voltaje: 8 años o 160.000 km"
+    },
+    {
+      "_createdAt": "2026-04-05T21:13:45Z",
+      "_id": "car-chery-tiggo-7-pro-phev",
+      "_rev": "l5sMM4F5nfeR7QLww9Dyjb",
+      "_system": {
+        "base": {
+          "id": "car-chery-tiggo-7-pro-phev",
+          "rev": "2kR9nJxTrWAUbGttt4Hkvj"
+        }
+      },
+      "_type": "car",
+      "_updatedAt": "2026-09-22T21:30:48Z",
+      "acceleration": 7.5,
+      "airbags": 6,
+      "basePrice": 29990000,
+      "batteryCapacity": 19.27,
+      "batteryType": "LFP",
+      "brand": {
+        "_ref": "brand-chery",
+        "_type": "reference"
+      },
+      "cargo": 450,
+      "chargeTimeAC": "4-5h (0-100%)",
+      "chargeTimeDC": "N/D",
+      "chargeType": null,
+      "checkSlot": 2,
+      "comfortFeatures": [
+        "Climatizador automático",
+        "Asientos calefaccionados delanteros",
+        "Tapicería premium"
+      ],
+      "connectorType": "CCS2",
+      "description": null,
+      "electricRangeKm": 75,
+      "electricType": {
+        "_ref": "f3e5f1d7-0f89-4efc-b941-39d5f1e3a523",
+        "_type": "reference"
+      },
+      "euroNcap": null,
+      "frunkCapacity": null,
+      "fuelConsumption": 55.6,
+      "gallery": [
+        {
+          "_key": "main-40x811-png",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-d49f6cb8ba6801b50342b722ec3dba9db4135070-1440x811-png",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img-2",
+          "_type": "image",
+          "alt": "Chery Tiggo 7 Pro PHEV - foto 2",
+          "asset": {
+            "_ref": "image-8337502897b37b6eff45938fefacd0f39e58ad1d-1459x811-png",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img-1",
+          "_type": "image",
+          "alt": "Chery Tiggo 7 Pro PHEV - foto 1",
+          "asset": {
+            "_ref": "image-18adda38c56caab08d7ea1d29a446327ffecae99-2500x1400-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img-3",
+          "_type": "image",
+          "alt": "Chery Tiggo 7 Pro PHEV - foto 3",
+          "asset": {
+            "_ref": "image-907e46388898dcd8dadad50b6614340a701fd42a-1459x811-png",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img-4",
+          "_type": "image",
+          "alt": "Chery Tiggo 7 Pro PHEV - foto 4",
+          "asset": {
+            "_ref": "image-66905c296c7fa6322f1a941ebbf3cae0ffb5be1d-1250x1250-png",
+            "_type": "reference"
+          }
+        }
+      ],
+      "groundClearance": 185,
+      "hidden": true,
+      "hiddenByCheck": false,
+      "highlight": "SUV compacto PHEV con 75 km de autonomía eléctrica NEDC y 10+ sistemas ADAS",
+      "isFeatured": false,
+      "isHotDeal": false,
+      "isNew": false,
+      "isTopSeller": false,
+      "lastPriceCheckAt": "2026-09-22T20:12:51.027Z",
+      "mainImage": {
+        "_type": "image",
+        "asset": {
+          "_ref": "image-d49f6cb8ba6801b50342b722ec3dba9db4135070-1440x811-png",
+          "_type": "reference"
+        }
+      },
+      "maxACChargingPower": 7,
+      "maxDCChargingPower": 40,
+      "metaDescription": null,
+      "metaTitle": null,
+      "modelYear": 2025,
+      "motorDescription": "Motor 1.5T + Motor Eléctrico",
+      "name": "Tiggo 7 Pro PHEV",
+      "power": 308,
+      "priceCheckPreviousBasePrice": 29990000,
+      "priceNote": "Incluye Bonos",
+      "range": null,
+      "rendimientoElectrico": 5.4,
+      "safetyFeatures": [
+        "Frenado autónomo de emergencia (AEB)",
+        "Control de crucero adaptativo",
+        "Asistente de mantenimiento de carril",
+        "Alerta de punto ciego",
+        "Cámara 360°"
+      ],
+      "seatRows": 2,
+      "seats": 5,
+      "slug": {
+        "_type": "slug",
+        "current": "chery-tiggo-7-pro-phev"
+      },
+      "sourceUrls": [
+        "https://chery.cl/tiggo-7-pro-max-phev/"
+      ],
+      "tagline": "SUV compacto PHEV con 75 km de autonomía eléctrica NEDC y 10+ sistemas ADAS",
+      "techFeatures": [
+        "Pantalla central táctil",
+        "Apple CarPlay / Android Auto",
+        "Sistemas ADAS avanzados (10+ sistemas)"
+      ],
+      "topSpeed": 175,
+      "torque": 510,
+      "traction": "FWD",
+      "transmission": "Automático DHT",
+      "vehicleType": {
+        "_ref": "5239b59b-3134-4d40-9a21-de121138b961",
+        "_type": "reference"
+      },
+      "versions": [
+        {
+          "_key": "ver-0",
+          "_type": "version",
+          "acceleration": 7.5,
+          "batteryCapacity": 19.27,
+          "chargeTimeAC": "4-5h (0-100%)",
+          "chargeTimeDC": "N/D",
+          "connectorType": "Type2",
+          "discountPrice": null,
+          "electricRangeKm": 90,
+          "fuelConsumption": 55.6,
+          "maxACChargingPower": 7,
+          "maxDCChargingPower": 40,
+          "name": "Tiggo 7 Pro PHEV",
+          "power": 315,
+          "price": 29990000,
+          "rendimientoElectrico": 5.4,
+          "torque": 525,
+          "traction": "FWD"
+        }
+      ],
+      "videoUrl": null,
+      "warranty": "3 años o 100.000 km"
+    },
+    {
+      "_createdAt": "2026-04-05T21:14:22Z",
+      "_id": "car-ford-f-150-platinum-hev",
+      "_rev": "l5sMM4F5nfeR7QLww9Dyjb",
+      "_system": {
+        "base": {
+          "id": "car-ford-f-150-platinum-hev",
+          "rev": "fMw0mKldjMaT7Q7HltkrUP"
+        }
+      },
+      "_type": "car",
+      "_updatedAt": "2026-09-22T21:30:48Z",
+      "acceleration": 5.1,
+      "airbags": 6,
+      "basePrice": 76148100,
+      "batteryCapacity": null,
+      "batteryType": "NMC",
+      "brand": {
+        "_ref": "brand-ford",
+        "_type": "reference"
+      },
+      "cargo": null,
+      "chargeTimeAC": "N/D",
+      "chargeTimeDC": "N/D",
+      "chargeType": null,
+      "checkSlot": 1,
+      "comfortFeatures": [
+        "Carrocería de aleación de aluminio de alta resistencia",
+        "Capacidad de carga 790 kg",
+        "Tracción inteligente 4x4"
+      ],
+      "connectorType": null,
+      "description": null,
+      "electricRangeKm": null,
+      "electricType": {
+        "_ref": "55e00600-5524-440c-9db7-b2c9f6c35d1d",
+        "_type": "reference"
+      },
+      "euroNcap": null,
+      "frunkCapacity": null,
+      "fuelConsumption": 10.1,
+      "gallery": [
+        {
+          "_key": "img-9",
+          "_type": "image",
+          "alt": "Ford F-150 Platinum HEV - foto 9",
+          "asset": {
+            "_ref": "image-40c6493d3a6c72fa95f2e6a7a5c3111c7ea25a1f-1600x752-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img-8",
+          "_type": "image",
+          "alt": "Ford F-150 Platinum HEV - foto 8",
+          "asset": {
+            "_ref": "image-ad3c31062bd65cf655b1c9a66fc680f61390525c-1731x577-png",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img-1",
+          "_type": "image",
+          "alt": "Ford F-150 Platinum HEV - foto 1",
+          "asset": {
+            "_ref": "image-58cf97eb7a4aede0b389db1d90a2e10cc48fdf61-457x248-png",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img-3",
+          "_type": "image",
+          "alt": "Ford F-150 Platinum HEV - foto 3",
+          "asset": {
+            "_ref": "image-d28f0baa0342ab13e46b58d28071a3a26e4ceffe-800x450-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img-5",
+          "_type": "image",
+          "alt": "Ford F-150 Platinum HEV - foto 5",
+          "asset": {
+            "_ref": "image-d93d3634ab65e9518d0c8e1e73666cbc4cbef989-455x247-png",
+            "_type": "reference"
+          }
+        }
+      ],
+      "groundClearance": 229,
+      "hidden": true,
+      "hiddenByCheck": false,
+      "highlight": "La primera pick-up full híbrida con 430 hp y sistema Pro Power Onboard de 7.2 kW",
+      "isFeatured": false,
+      "isHotDeal": false,
+      "isNew": false,
+      "isTopSeller": false,
+      "lastPriceCheckAt": "2026-09-22T20:12:51.027Z",
+      "mainImage": {
+        "_type": "image",
+        "asset": {
+          "_ref": "image-d28f0baa0342ab13e46b58d28071a3a26e4ceffe-800x450-jpg",
+          "_type": "reference"
+        }
+      },
+      "maxACChargingPower": null,
+      "maxDCChargingPower": null,
+      "metaDescription": null,
+      "metaTitle": null,
+      "modelYear": 2025,
+      "motorDescription": "Motor 3.5L PowerBoost V6 EcoBoost + Motor Eléctrico",
+      "name": "F-150 Platinum HEV",
+      "power": 430,
+      "priceCheckPreviousBasePrice": 76148100,
+      "priceNote": "Incluye Bonos",
+      "range": null,
+      "safetyFeatures": [
+        "6 airbags (frontales, laterales y Safety Canopy)",
+        "Cámara 360° con pantalla dividida",
+        "Sensores traseros",
+        "Sistema avanzado de asistencia a la conducción"
+      ],
+      "seatRows": 2,
+      "seats": 5,
+      "slug": {
+        "_type": "slug",
+        "current": "ford-f-150-platinum-hev"
+      },
+      "sourceUrls": [
+        "https://www.ford.cl/hibridos/f-150-hibrida/"
+      ],
+      "tagline": "La primera pick-up full híbrida con 430 hp y sistema Pro Power Onboard de 7.2 kW",
+      "techFeatures": [
+        "Tablero digital 12\" 100% digital",
+        "Pro Power Onboard 7.2 kW",
+        "Caja automática inteligente 10 velocidades",
+        "Conectividad SYNC"
+      ],
+      "topSpeed": 180,
+      "torque": 772,
+      "traction": "4x4",
+      "transmission": "Automático de 10 velocidades",
+      "vehicleType": {
+        "_ref": "ec31b9ff-670e-4656-9f65-943f2a01a772",
+        "_type": "reference"
+      },
+      "versions": [
+        {
+          "_key": "ver-0",
+          "_type": "version",
+          "batteryCapacity": null,
+          "chargeTimeAC": "N/D",
+          "chargeTimeDC": "N/D",
+          "discountPrice": null,
+          "fuelConsumption": 10.1,
+          "maxACChargingPower": null,
+          "maxDCChargingPower": null,
+          "name": "F-150 Platinum HEV",
+          "power": 430,
+          "price": 76148100,
+          "rendimientoElectrico": null,
+          "torque": 667,
+          "traction": "AWD",
+          "transmission": "10AT"
+        }
+      ],
+      "videoUrl": null,
+      "warranty": "5 años o 100.000 km"
+    },
+    {
+      "_createdAt": "2026-04-05T21:16:13Z",
+      "_id": "car-renault-e-kwid",
+      "_rev": "L73c2B0odFpWpv6l4jcLFa",
+      "_system": {
+        "base": {
+          "id": "car-renault-e-kwid",
+          "rev": "5HfN120UQvvCz6r9e6xWVU"
+        }
+      },
+      "_type": "car",
+      "_updatedAt": "2026-09-22T19:00:01Z",
+      "acceleration": 14.39,
+      "airbags": 2,
+      "basePrice": 11990000,
+      "batteryCapacity": 26.8,
+      "batteryType": "LFP",
+      "brand": {
+        "_ref": "brand-renault",
+        "_type": "reference"
+      },
+      "cargo": 290,
+      "chargeTimeAC": "3.5h (15-80%)",
+      "chargeTimeDC": "40 min (15-80%)",
+      "chargeType": null,
+      "checkSlot": 0,
+      "comfortFeatures": [
+        "Climatizador manual",
+        "Asientos tela",
+        "Tablero bitono"
+      ],
+      "connectorType": "CCS2",
+      "description": null,
+      "electricRangeKm": null,
+      "electricType": {
+        "_ref": "efdaf152-e14b-414f-8441-415534cd1f41",
+        "_type": "reference"
+      },
+      "euroNcap": null,
+      "frunkCapacity": null,
+      "fuelConsumption": null,
+      "gallery": [
+        {
+          "_key": "img-1",
+          "_type": "image",
+          "alt": "Renault E-Kwid - foto 1",
+          "asset": {
+            "_ref": "image-5a0d8505d84a36caf31c80d7fea796a733035b91-1700x830-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img-2",
+          "_type": "image",
+          "alt": "Renault E-Kwid - foto 2",
+          "asset": {
+            "_ref": "image-d4cd9051722e0f3d1953942b6639d8c6ce1c5423-1700x830-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img-3",
+          "_type": "image",
+          "alt": "Renault E-Kwid - foto 3",
+          "asset": {
+            "_ref": "image-8a0a121058e76f2f21ea2a5642ee42ab0c289f3e-1700x830-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img-5",
+          "_type": "image",
+          "alt": "Renault E-Kwid - foto 5",
+          "asset": {
+            "_ref": "image-b66f399446d7013e476238ba82416272bd398fb5-1700x830-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img-6",
+          "_type": "image",
+          "alt": "Renault E-Kwid - foto 6",
+          "asset": {
+            "_ref": "image-664dd2cfee4a31d0ece1a2f9940ed291a224f3a1-869x690-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img-7",
+          "_type": "image",
+          "alt": "Renault E-Kwid - foto 7",
+          "asset": {
+            "_ref": "image-b5f1bc1052431395dfc7f2698e70c60859857596-900x506-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img-8",
+          "_type": "image",
+          "alt": "Renault E-Kwid - foto 8",
+          "asset": {
+            "_ref": "image-707c5a1c2bd056f07b1c885be9a088750d79d91d-467x758-png",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img-9",
+          "_type": "image",
+          "alt": "Renault E-Kwid - foto 9",
+          "asset": {
+            "_ref": "image-adc9cd6c6a985095d2d7f78ff8399bedd37f1320-1260x500-jpg",
+            "_type": "reference"
+          }
+        }
+      ],
+      "groundClearance": 183,
+      "hidden": true,
+      "hiddenByCheck": false,
+      "highlight": "El eléctrico más económico de Chile con 300 km de autonomía",
+      "isFeatured": false,
+      "isHotDeal": false,
+      "isNew": false,
+      "isTopSeller": false,
+      "mainImage": {
+        "_type": "image",
+        "asset": {
+          "_ref": "image-b5f1bc1052431395dfc7f2698e70c60859857596-900x506-jpg",
+          "_type": "reference"
+        }
+      },
+      "maxACChargingPower": 3.3,
+      "maxDCChargingPower": 30,
+      "metaDescription": null,
+      "metaTitle": null,
+      "modelYear": 2024,
+      "motorDescription": "Motor Eléctrico Frontal",
+      "name": "E-Kwid",
+      "power": 65,
+      "priceNote": "Incluye Bonos",
+      "range": 300,
+      "rendimientoElectrico": 8.1,
+      "safetyFeatures": [
+        "Frenado de emergencia ABS",
+        "Control de estabilidad ESC",
+        "2 airbags frontales"
+      ],
+      "seatRows": 2,
+      "seats": 5,
+      "slug": {
+        "_type": "slug",
+        "current": "renault-e-kwid"
+      },
+      "tagline": "El eléctrico más económico de Chile con 300 km de autonomía",
+      "techFeatures": [
+        "Pantalla táctil 7\"",
+        "Android Auto / Apple CarPlay",
+        "Cámara de retroceso"
+      ],
+      "topSpeed": 130,
+      "torque": 113,
+      "traction": "FWD",
+      "transmission": "Automático de 1 velocidad",
+      "vehicleType": {
+        "_ref": "8cf25bb7-f515-4dcd-b7fe-8c26927ad150",
+        "_type": "reference"
+      },
+      "versions": [
+        {
+          "_key": "ver-0",
+          "_type": "version",
+          "batteryCapacity": 26.8,
+          "chargeTimeAC": "3.5h (15-80%)",
+          "chargeTimeDC": "40 min (15-80%)",
+          "connectorType": "CCS2",
+          "discountPrice": null,
+          "fuelConsumption": null,
+          "maxACChargingPower": 3.3,
+          "maxDCChargingPower": 30,
+          "name": "E-Kwid 26.8 kWh",
+          "power": 65,
+          "price": 11990000,
+          "range": 298,
+          "rendimientoElectrico": 8.1,
+          "seats": 5,
+          "torque": 113,
+          "traction": "FWD"
+        }
+      ],
+      "videoUrl": null,
+      "warranty": "3 años o 100.000 km"
+    },
+    {
+      "_createdAt": "2026-07-17T01:52:52Z",
+      "_id": "11uL037Gj31olf1V7KNyuk",
+      "_rev": "11uL037Gj31olf1V7KNysE",
+      "_type": "car",
+      "_updatedAt": "2026-07-17T01:52:52Z",
+      "aiGenerated": true,
+      "basePrice": 26490000,
+      "brand": {
+        "_ref": "brand-gwm",
+        "_type": "reference"
+      },
+      "comfortFeatures": [
+        "Asientos deportivos",
+        "Techo panorámico",
+        "Cargador inalámbrico",
+        "Sistema de estacionamiento asistido",
+        "Sistema de audio con 6 parlantes"
+      ],
+      "description": "Hatchback deportivo eléctrico GWM ORA 03, disponible en dos versiones: SR y GT. Logró 5 estrellas Euro NCAP y Green NCAP.",
+      "electricType": {
+        "_ref": "efdaf152-e14b-414f-8441-415534cd1f41",
+        "_type": "reference"
+      },
+      "euroNcap": 5,
+      "hidden": true,
+      "motorDescription": "Motor eléctrico",
+      "name": "Ora 03",
+      "power": 169,
+      "range": 374,
+      "rendimientoElectrico": 4.9,
+      "safetyFeatures": [
+        "7 airbags",
+        "Control crucero adaptativo",
+        "Frenado de emergencia",
+        "Centrado de carril",
+        "Asistente de partida en pendiente",
+        "Reconocimiento de señales de tránsito",
+        "Asistencia en cruces",
+        "Control electrónico de estabilidad",
+        "Control de tracción",
+        "Sistema electrónico antivuelco",
+        "Sistema de colisión secundario",
+        "Cámara 360"
+      ],
+      "slug": {
+        "_type": "slug",
+        "current": "gwm-ora-03"
+      },
+      "sourceUrls": [
+        "https://www.gwm.cl/vehiculo/ora/ora-03/"
+      ],
+      "tagline": "ELECTRIFÍCATE CON ORA 03 – Llegó la movilidad sostenible a GWM",
+      "techFeatures": [
+        "Pantalla de infoentretenimiento 10.25\"",
+        "Selector de marchas",
+        "Cámara 360",
+        "Cargador inalámbrico"
+      ],
+      "torque": 250,
+      "vehicleType": {
+        "_ref": "208f1dc8-c01b-41a0-bffa-7d554c697581",
+        "_type": "reference"
+      },
+      "versions": [
+        {
+          "_key": "ora-03-sr",
+          "_type": "version",
+          "name": "ORA 03 SR",
+          "price": 26490000,
+          "rendimientoElectrico": 4.9
+        },
+        {
+          "_key": "ora-03-gt",
+          "_type": "version",
+          "name": "ORA 03 GT"
+        }
+      ]
+    },
+    {
+      "_createdAt": "2026-07-17T04:37:21Z",
+      "_id": "drafts.zmthKiPWkZZt0t9mK42vmy",
+      "_rev": "ae5ad7d1-98bb-4611-9b5e-6d34c6bcbd45",
+      "_system": {
+        "base": {
+          "id": "zmthKiPWkZZt0t9mK42vmy",
+          "rev": "5JQSNP2l3g03aGdcXPOUNT"
+        }
+      },
+      "_type": "car",
+      "_updatedAt": "2026-07-21T02:27:52Z",
+      "acceleration": 8.6,
+      "aiGenerated": true,
+      "basePrice": 26490000,
+      "batteryCapacity": 59.1,
+      "batteryType": "NMC",
+      "brand": {
+        "_ref": "brand-gwm",
+        "_type": "reference"
+      },
+      "cargo": 228,
+      "chargeTimeAC": "5 hr (20-100%) semi rápida / 20 hr (20-100%) carga lenta",
+      "chargeTimeDC": "1 hr (20-100%)",
+      "comfortFeatures": [
+        "Asientos deportivos",
+        "Techo panorámico",
+        "Cargador inalámbrico",
+        "Aire acondicionado automático",
+        "Asientos de cuero",
+        "Asiento del conductor con regulación eléctrica en 6 posiciones con asistencia de memoria"
+      ],
+      "connectorType": "Type2",
+      "description": "Hatchback deportivo eléctrico con diseño retro y eficiencia innovadora.",
+      "electricType": {
+        "_ref": "efdaf152-e14b-414f-8441-415534cd1f41",
+        "_type": "reference"
+      },
+      "euroNcap": 5,
+      "gallery": [
+        {
+          "_key": "img0",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-00dafc54587b1464ac237663fc42b4a7ab976775-1366x530-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img1",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-1ff02f5c64448beb03472e71e63390d7b4e2bcc7-1920x720-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img2",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-323c86d9d8e8cbd7ee73664c9e108112a052505f-1723x854-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img3",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-6660a52265fe4e59e7d95f5ea4b254cea9f1208c-1555x670-png",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img4",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-78de0954d6f0b6335c5477b67948a2c213304840-1555x670-png",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img5",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-a9c06d66890672635d74a1fda6b0fc8026739958-1555x670-png",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img6",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-d6f948d0c418c7ed449d8f9a63a7c634e33bc08a-1555x670-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img7",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-8052aa77c145ee6e717d3a6f7f88a35731fd845e-1555x670-png",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img8",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-43bba0b5931d7794483e299404e8c6823bf4c17d-1555x670-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img9",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-308a29a4f8cf505270e473415f198947b9fa7198-1555x670-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img10",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-f32bee498e8007eea58713927da72be87270dcf2-1555x670-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img11",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-73985d67333c93a3dd2ef4121db51964ec95c45c-1555x670-jpg",
+            "_type": "reference"
+          }
+        }
+      ],
+      "hidden": true,
+      "mainImage": {
+        "_type": "image",
+        "asset": {
+          "_ref": "image-323c86d9d8e8cbd7ee73664c9e108112a052505f-1723x854-jpg",
+          "_type": "reference"
+        }
+      },
+      "name": "Ora 03 GT",
+      "power": 169,
+      "range": 400,
+      "rendimientoElectrico": 5,
+      "safetyFeatures": [
+        "7 airbags",
+        "Control electrónico de estabilidad (ESP)",
+        "Control de tracción (TCS)",
+        "Sistema electrónico de antivuelco (RMI)",
+        "Asistente de partida en pendiente (HHC)",
+        "Sistema de monitoreo de presión de neumáticos (TPMS)",
+        "Asistencia en cruces (AEB-JA)",
+        "Reconocimiento de señales de tránsito (TSR)",
+        "Asistencia de cambio de carril (LCA)",
+        "Advertencia de apertura de puertas (DOW)",
+        "Cámara 360°",
+        "ISOFIX"
+      ],
+      "seats": 5,
+      "slug": {
+        "_type": "slug",
+        "current": "gwm-ora-03-gt"
+      },
+      "sourceUrls": [
+        "https://www.gwm.cl/vehiculo/ora/ora-03/",
+        "https://www.gwm.cl/media/yplngrji/ficha-te-cnica-ora-web-v10.pdf",
+        "https://www.gwm.cl/blog/caracteristicas-del-ora-03/"
+      ],
+      "tagline": "Electrifícate con Ora 03",
+      "techFeatures": [
+        "Panel de instrumentos digital de 10.25\"",
+        "Pantalla touch de 10.25\" con Bluetooth, Apple CarPlay inalámbrico",
+        "Selector de marchas electrónico",
+        "Sistema de estacionamiento asistido",
+        "Cámara 360°",
+        "6 parlantes con ajuste de volumen sensible a la velocidad"
+      ],
+      "torque": 250,
+      "traction": "FWD",
+      "transmission": "Automática",
+      "vehicleType": {
+        "_ref": "208f1dc8-c01b-41a0-bffa-7d554c697581",
+        "_type": "reference"
+      },
+      "versions": [
+        {
+          "_key": "ora-03-sr",
+          "_type": "version",
+          "batteryCapacity": 47.8,
+          "name": "ORA 03 SR",
+          "power": 169,
+          "price": 26490000,
+          "range": 310,
+          "torque": 250,
+          "traction": "FWD"
+        },
+        {
+          "_key": "ora-03-gt",
+          "_type": "version",
+          "batteryCapacity": 59.1,
+          "name": "ORA 03 GT",
+          "power": 169,
+          "price": 26490000,
+          "range": 400,
+          "torque": 250,
+          "traction": "FWD"
+        }
+      ],
+      "warranty": "6 años o 160.000 km"
+    },
+    {
+      "_createdAt": "2026-07-17T04:37:21Z",
+      "_id": "zmthKiPWkZZt0t9mK42vmy",
+      "_rev": "l5sMM4F5nfeR7QLww9FMpf",
+      "_system": {
+        "base": {
+          "id": "zmthKiPWkZZt0t9mK42vmy",
+          "rev": "zmthKiPWkZZt0t9mK42vlD"
+        }
+      },
+      "_type": "car",
+      "_updatedAt": "2026-09-22T21:38:05Z",
+      "acceleration": 8.6,
+      "aiGenerated": true,
+      "basePrice": 26490000,
+      "batteryCapacity": 59.1,
+      "batteryType": "NMC",
+      "brand": {
+        "_ref": "brand-gwm",
+        "_type": "reference"
+      },
+      "cargo": 228,
+      "chargeTimeAC": "5 hr (20-100%) semi rápida / 20 hr (20-100%) carga lenta",
+      "chargeTimeDC": "1 hr (20-100%)",
+      "checkSlot": 6,
+      "comfortFeatures": [
+        "Asientos deportivos",
+        "Techo panorámico",
+        "Cargador inalámbrico",
+        "Aire acondicionado automático",
+        "Asientos de cuero",
+        "Asiento del conductor con regulación eléctrica en 6 posiciones con asistencia de memoria"
+      ],
+      "connectorType": "Type2",
+      "description": "Hatchback deportivo eléctrico con diseño retro y eficiencia innovadora.",
+      "electricType": {
+        "_ref": "efdaf152-e14b-414f-8441-415534cd1f41",
+        "_type": "reference"
+      },
+      "euroNcap": 5,
+      "gallery": [
+        {
+          "_key": "img2",
+          "asset": {
+            "_ref": "image-323c86d9d8e8cbd7ee73664c9e108112a052505f-1723x854-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img0",
+          "asset": {
+            "_ref": "image-00dafc54587b1464ac237663fc42b4a7ab976775-1366x530-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img1",
+          "asset": {
+            "_ref": "image-1ff02f5c64448beb03472e71e63390d7b4e2bcc7-1920x720-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img3",
+          "asset": {
+            "_ref": "image-6660a52265fe4e59e7d95f5ea4b254cea9f1208c-1555x670-png",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img5",
+          "asset": {
+            "_ref": "image-a9c06d66890672635d74a1fda6b0fc8026739958-1555x670-png",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img6",
+          "asset": {
+            "_ref": "image-d6f948d0c418c7ed449d8f9a63a7c634e33bc08a-1555x670-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img8",
+          "asset": {
+            "_ref": "image-43bba0b5931d7794483e299404e8c6823bf4c17d-1555x670-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img9",
+          "asset": {
+            "_ref": "image-308a29a4f8cf505270e473415f198947b9fa7198-1555x670-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img10",
+          "asset": {
+            "_ref": "image-f32bee498e8007eea58713927da72be87270dcf2-1555x670-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img11",
+          "asset": {
+            "_ref": "image-73985d67333c93a3dd2ef4121db51964ec95c45c-1555x670-jpg",
+            "_type": "reference"
+          }
+        }
+      ],
+      "hidden": true,
+      "hiddenByCheck": false,
+      "mainImage": {
+        "_type": "image",
+        "asset": {
+          "_ref": "image-323c86d9d8e8cbd7ee73664c9e108112a052505f-1723x854-jpg",
+          "_type": "reference"
+        }
+      },
+      "name": "Ora 03 GT",
+      "power": 169,
+      "range": 380,
+      "rendimientoElectrico": 5,
+      "safetyFeatures": [
+        "7 airbags",
+        "Control electrónico de estabilidad (ESP)",
+        "Control de tracción (TCS)",
+        "Sistema electrónico de antivuelco (RMI)",
+        "Asistente de partida en pendiente (HHC)",
+        "Sistema de monitoreo de presión de neumáticos (TPMS)",
+        "Asistencia en cruces (AEB-JA)",
+        "Reconocimiento de señales de tránsito (TSR)",
+        "Asistencia de cambio de carril (LCA)",
+        "Advertencia de apertura de puertas (DOW)",
+        "Cámara 360°",
+        "ISOFIX"
+      ],
+      "seats": 5,
+      "slug": {
+        "_type": "slug",
+        "current": "gwm-ora-03-gt"
+      },
+      "sourceUrls": [
+        "https://www.gwm.cl/vehiculo/ora/ora-03/",
+        "https://www.gwm.cl/media/yplngrji/ficha-te-cnica-ora-web-v10.pdf",
+        "https://www.gwm.cl/blog/caracteristicas-del-ora-03/"
+      ],
+      "tagline": "Electrifícate con Ora 03",
+      "techFeatures": [
+        "Panel de instrumentos digital de 10.25\"",
+        "Pantalla touch de 10.25\" con Bluetooth, Apple CarPlay inalámbrico",
+        "Selector de marchas electrónico",
+        "Sistema de estacionamiento asistido",
+        "Cámara 360°",
+        "6 parlantes con ajuste de volumen sensible a la velocidad"
+      ],
+      "torque": 250,
+      "traction": "FWD",
+      "transmission": "Automática",
+      "vehicleType": {
+        "_ref": "208f1dc8-c01b-41a0-bffa-7d554c697581",
+        "_type": "reference"
+      },
+      "versions": [
+        {
+          "_key": "ora-03-sr",
+          "_type": "version",
+          "batteryCapacity": 47.8,
+          "name": "ORA 03 SR",
+          "power": 169,
+          "price": 26490000,
+          "range": 310,
+          "torque": 250,
+          "traction": "FWD"
+        },
+        {
+          "_key": "ora-03-gt",
+          "_type": "version",
+          "batteryCapacity": 59.1,
+          "name": "ORA 03 GT",
+          "power": 169,
+          "price": 26490000,
+          "range": 400,
+          "torque": 250,
+          "traction": "FWD"
+        }
+      ],
+      "warranty": "6 años o 160.000 km"
+    },
+    {
+      "_createdAt": "2026-09-22T19:12:17Z",
+      "_id": "GeAoiCW5dHDLUjKiwfBMzm",
+      "_rev": "wYnW78JBpu1Iw3da9Qzlwg",
+      "_system": {
+        "base": {
+          "id": "GeAoiCW5dHDLUjKiwfBMzm",
+          "rev": "GeAoiCW5dHDLUjKiwfBMxt"
+        }
+      },
+      "_type": "car",
+      "_updatedAt": "2026-10-12T20:24:42Z",
+      "acceleration": 7.5,
+      "aiGenerated": true,
+      "airbags": 6,
+      "basePrice": 26490000,
+      "batteryCapacity": 58.3,
+      "brand": {
+        "_ref": "brand-gwm",
+        "_type": "reference"
+      },
+      "cargo": 362,
+      "comfortFeatures": [
+        "Asientos delanteros calefaccionados y ventilados",
+        "Techo panorámico con cortina eléctrica",
+        "Aire acondicionado con climatizador",
+        "Volante forrado en ecocuero y calefaccionado",
+        "Asiento del conductor con ajuste eléctrico de 6 posiciones y función memoria",
+        "Sistema de audio con 6 parlantes",
+        "Cargador inalámbrico para celulares"
+      ],
+      "connectorType": "CCS2",
+      "description": "El ORA 5 es el SUV 100% eléctrico de GWM que en Chile llega en una sola versión, EV 2WD Deluxe, con tracción delantera y transmisión automática eléctrica. Su batería de 58,3 kWh entrega hasta 435 km de autonomía según el ciclo WLTP (520 km bajo ciclo NEDC), con un consumo energético homologado combinado de 7,5 km/kWh.\n\nEl motor eléctrico entrega 201 HP y 260 Nm de torque, con una aceleración de 0 a 100 km/h en 7,5 segundos. Admite carga rápida en corriente continua y carga en corriente alterna de hasta 7 kW, además de tecnología V2L (Vehicle-to-Load) que permite usar la batería del auto como fuente de energía portátil para otros dispositivos, con corte automático al llegar al 30% de carga.\n\nPor dentro destaca la pantalla táctil de 14,6 pulgadas con Apple CarPlay y Android Auto inalámbricos, panel digital de instrumentos de 10,25 pulgadas, techo panorámico con cortina eléctrica, asientos delanteros calefaccionados y ventilados, y sistema de audio de 6 parlantes.\n\nEn seguridad suma 6 airbags, cámara 360° con chasis transparente de 180° y un paquete de asistencias a la conducción (ADAS) que incluye frenado automático de emergencia, control crucero adaptativo y asistencia de mantención de carril. GWM declara garantía de 6 años o 150.000 km para el vehículo y 8 años o 150.000 km para la batería de potencia.",
+      "electricType": {
+        "_ref": "efdaf152-e14b-414f-8441-415534cd1f41",
+        "_type": "reference"
+      },
+      "gallery": [
+        {
+          "_key": "portada",
+          "_type": "image",
+          "alt": "GWM Ora 5",
+          "asset": {
+            "_ref": "image-8e7969a89263ad4a26d168ffbce510704f5a0ca4-1927x650-jpg",
+            "_type": "reference"
+          },
+          "caption": "Portada oficial"
+        },
+        {
+          "_key": "g0",
+          "_type": "image",
+          "alt": "Vista lateral delantera, color verde oscuro, en patio de casa",
+          "asset": {
+            "_ref": "image-46c0f7421c211f6d25dc4a4d8a22ebb8e7c439a8-1700x830-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "g1",
+          "_type": "image",
+          "alt": "Detalle de llanta de aleación bitono",
+          "asset": {
+            "_ref": "image-6d435eb1545f5e5cc31dde9c6290cadff2a2e816-1700x830-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "g2",
+          "_type": "image",
+          "alt": "Vista trasera con portalón eléctrico abierto y maletero",
+          "asset": {
+            "_ref": "image-52c465b7dcf7517d1629a76659d217ace74c412e-1700x830-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "g3",
+          "_type": "image",
+          "alt": "Vista 3/4 delantera nocturna junto a un espejo de agua",
+          "asset": {
+            "_ref": "image-e2b31673cb92c24bc77e8911b7167943a12425e9-870x440-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "g4",
+          "_type": "image",
+          "alt": "Tablero frontal con pantalla táctil y panel digital",
+          "asset": {
+            "_ref": "image-5ffb175bbd1a44cd0e14ff5149724f0e4640a145-1700x800-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "g5",
+          "_type": "image",
+          "alt": "Interior visto desde atrás, asientos delanteros y traseros",
+          "asset": {
+            "_ref": "image-16c6785758a98e719303771d1d9bb0867255f8c2-1700x800-jpg",
+            "_type": "reference"
+          }
+        }
+      ],
+      "groundClearance": 175,
+      "hidden": false,
+      "keywords": [
+        "GWM Ora 5",
+        "Ora 5 precio Chile",
+        "SUV eléctrico Chile",
+        "auto eléctrico GWM",
+        "Ora 5 autonomía",
+        "carro eléctrico SUV",
+        "GWM Ora 5 ficha técnica"
+      ],
+      "mainImage": {
+        "_type": "image",
+        "alt": "GWM Ora 5",
+        "asset": {
+          "_ref": "image-8e7969a89263ad4a26d168ffbce510704f5a0ca4-1927x650-jpg",
+          "_type": "reference"
+        }
+      },
+      "maxACChargingPower": 7,
+      "maxDCChargingPower": 120,
+      "metaDescription": "GWM Ora 5, SUV 100% eléctrico con 435 km WLTP, 201 HP y tecnología V2L. Conoce su ficha técnica y cotiza en vendedores oficiales.",
+      "metaTitle": "GWM Ora 5: SUV eléctrico con 435 km de autonomía",
+      "modelYear": 2026,
+      "motorDescription": "Motor eléctrico",
+      "name": "Ora 5",
+      "power": 201,
+      "priceCheckNote": "La página web y la ficha técnica en PDF (mismo dominio gwm.cl) traen datos complementarios que se combinaron. Autonomía usada: WLTP (435 km), que es la que destaca la página como cifra principal; la ficha técnica PDF también declara 520 km bajo ciclo NEDC, no incluido en 'range' para no mezclar ciclos. Hay una contradicción entre fuentes sobre la carga rápida DC: la página web dice \"carga rápida de hasta 80kW en corriente continua\" en el texto de tecnología, mientras la ficha técnica PDF en su tabla de especificaciones indica \"Capacidad máxima de carga. Corriente continua (carga rápida): 120kW\". Se usó el valor de la tabla técnica (120 kW) por ser la fuente de especificaciones formal, pero un humano debería confirmar cuál es el correcto. La única versión que ofrece la página es \"EV 2WD DELUXE\" (llamada Deluxe en la ficha técnica), que corresponde a la versión \"ORA 5\" declarada por el encargo. No se encontraron datos de asientos/filas exactos, batteryType (química), velocidad máxima, ni rating Euro NCAP en la fuente, por lo que se omitieron. El precio de lista leído ($26.490.000) coincide exactamente con el precio declarado por el encargo para la versión ORA 5.",
+      "range": 435,
+      "rendimientoElectrico": 7.5,
+      "safetyFeatures": [
+        "6 airbags (2 frontales, 2 laterales y 2 de cortina)",
+        "Frenado de emergencia automático (AEB)",
+        "Frenado de emergencia a baja velocidad (MEB)",
+        "Control crucero adaptativo (ACC)",
+        "Aviso de puntos ciegos (BSW)",
+        "Asistencia de mantención de pista (LKA)",
+        "Control electrónico de estabilidad (ESP)",
+        "Monitoreo de presión de neumáticos (TPMS)",
+        "Sensores de estacionamiento traseros"
+      ],
+      "slug": {
+        "_type": "slug",
+        "current": "gwm-ora-5"
+      },
+      "sourceUrls": [
+        "https://www.gwm.cl/vehiculo/ora/nuevo-ora-5/"
+      ],
+      "tagline": "SUV eléctrico con 435 km de autonomía WLTP y tecnología V2L",
+      "techFeatures": [
+        "Pantalla táctil de 14,6\" con Bluetooth, Apple CarPlay y Android Auto inalámbrico",
+        "Panel digital de instrumentos de 10,25\"",
+        "Comando por voz",
+        "Tecnología V2L (Vehicle-to-Load)",
+        "Cámara 360° de alta definición con chasis transparente de 180°",
+        "Selector de modos de conducción (Estándar, Económica, Well Being y Deportiva)"
+      ],
+      "torque": 260,
+      "traction": "FWD",
+      "transmission": "Automática eléctrica",
+      "vehicleType": {
+        "_ref": "5239b59b-3134-4d40-9a21-de121138b961",
+        "_type": "reference"
+      },
+      "versions": [
+        {
+          "_key": "v0",
+          "acceleration": 7.5,
+          "batteryCapacity": 58.3,
+          "connectorType": "CCS2",
+          "maxACChargingPower": 7,
+          "maxDCChargingPower": 120,
+          "motorDescription": "Motor eléctrico",
+          "name": "ORA 5",
+          "power": 201,
+          "price": 26490000,
+          "range": 435,
+          "rendimientoElectrico": 7.5,
+          "torque": 260,
+          "traction": "FWD",
+          "transmission": "Automática eléctrica"
+        }
+      ],
+      "warranty": "6 años o 150.000 km (vehículo); 8 años o 150.000 km (batería de potencia)"
+    },
+    {
+      "_createdAt": "2026-04-05T21:13:27Z",
+      "_id": "car-byd-seal",
+      "_rev": "L73c2B0odFpWpv6l4jcLFa",
+      "_system": {
+        "base": {
+          "id": "car-byd-seal",
+          "rev": "9qHsvqyKF4agZO92XNRTq0"
+        }
+      },
+      "_type": "car",
+      "_updatedAt": "2026-09-22T19:00:01Z",
+      "acceleration": 7.5,
+      "airbags": 6,
+      "basePrice": 47990000,
+      "batteryCapacity": 82.56,
+      "batteryType": "NMC",
+      "brand": {
+        "_ref": "brand-byd",
+        "_type": "reference"
+      },
+      "cargo": 402,
+      "chargeTimeAC": "~9h (0-100%)",
+      "chargeTimeDC": "16 min (30-80%)",
+      "chargeType": null,
+      "checkSlot": 17,
+      "comfortFeatures": [
+        "Climatizador automático bi-zona",
+        "Asientos deportivos calefaccionados",
+        "Tapicería premium"
+      ],
+      "connectorType": "CCS2",
+      "description": null,
+      "electricRangeKm": null,
+      "electricType": {
+        "_ref": "efdaf152-e14b-414f-8441-415534cd1f41",
+        "_type": "reference"
+      },
+      "euroNcap": 5,
+      "frunkCapacity": null,
+      "fuelConsumption": null,
+      "gallery": [
+        {
+          "_key": "img-3",
+          "_type": "image",
+          "alt": "BYD Seal - foto 3",
+          "asset": {
+            "_ref": "image-cdf82536f635948f4e8bc0f5c11962255f68e063-1720x652-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img-1",
+          "_type": "image",
+          "alt": "BYD Seal - foto 1",
+          "asset": {
+            "_ref": "image-f4384de2796948f1e93688eb76181021d5e23271-1720x652-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img-2",
+          "_type": "image",
+          "alt": "BYD Seal - foto 2",
+          "asset": {
+            "_ref": "image-1b3f2434db1a524957b7f59aa32d46f0f01d83ac-1720x652-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img-5",
+          "_type": "image",
+          "alt": "BYD Seal - foto 5",
+          "asset": {
+            "_ref": "image-39b1e5cc103caa742bcd1ebeb541efaa37add5cc-1720x652-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img-6",
+          "_type": "image",
+          "alt": "BYD Seal - foto 6",
+          "asset": {
+            "_ref": "image-6a7268df63ba125ead2ac15af2f7257985150f57-1720x652-jpg",
+            "_type": "reference"
+          }
+        }
+      ],
+      "groundClearance": 150,
+      "hidden": true,
+      "hiddenByCheck": false,
+      "highlight": "Sedán deportivo eléctrico con CTB, V2L y hasta 700 km de autonomía en versión Ultra",
+      "isFeatured": false,
+      "isHotDeal": false,
+      "isNew": false,
+      "isTopSeller": false,
+      "mainImage": {
+        "_type": "image",
+        "asset": {
+          "_ref": "image-cdf82536f635948f4e8bc0f5c11962255f68e063-1720x652-jpg",
+          "_type": "reference"
+        }
+      },
+      "maxACChargingPower": 11,
+      "maxDCChargingPower": 150,
+      "metaDescription": null,
+      "metaTitle": null,
+      "modelYear": 2025,
+      "motorDescription": "Motor Eléctrico",
+      "name": "Seal",
+      "power": 204,
+      "priceNote": "Incluye Bonos",
+      "range": 570,
+      "rendimientoElectrico": 6.3,
+      "safetyFeatures": [
+        "Frenado autónomo de emergencia (AEB)",
+        "Control de crucero adaptativo",
+        "Asistente de mantenimiento de carril",
+        "Alerta de punto ciego",
+        "Cámara 360°"
+      ],
+      "seatRows": 2,
+      "seats": 5,
+      "slug": {
+        "_type": "slug",
+        "current": "byd-seal"
+      },
+      "tagline": "Sedán deportivo eléctrico con CTB, V2L y hasta 700 km de autonomía en versión Ultra",
+      "techFeatures": [
+        "Pantalla giratoria 15.6\" Full HD",
+        "Apple CarPlay / Android Auto",
+        "Vehicle-to-Load (V2L)",
+        "BYD DiPilot ADAS"
+      ],
+      "topSpeed": 180,
+      "torque": 310,
+      "traction": "RWD",
+      "transmission": "Automático de 1 velocidad",
+      "vehicleType": {
+        "_ref": "a40ea459-3aac-4d6f-b2f3-02beb123444b",
+        "_type": "reference"
+      },
+      "versions": [
+        {
+          "_key": "ver-0",
+          "_type": "version",
+          "acceleration": 7.5,
+          "batteryCapacity": 82.56,
+          "chargeTimeAC": "~9h (0-100%)",
+          "chargeTimeDC": "16 min (30-80%)",
+          "discountPrice": null,
+          "fuelConsumption": null,
+          "maxACChargingPower": 11,
+          "maxDCChargingPower": 150,
+          "name": "Seal Standard",
+          "power": 204,
+          "price": 47990000,
+          "range": 460,
+          "rendimientoElectrico": 6.3,
+          "topSpeed": 180,
+          "torque": 310,
+          "traction": "RWD"
+        },
+        {
+          "_key": "ver-1",
+          "_type": "version",
+          "acceleration": 3.8,
+          "batteryCapacity": 82.56,
+          "chargeTimeAC": "~9h (0-100%)",
+          "chargeTimeDC": "16 min (30-80%)",
+          "discountPrice": null,
+          "fuelConsumption": null,
+          "maxACChargingPower": 11,
+          "maxDCChargingPower": 150,
+          "name": "Seal Excellence AWD",
+          "power": 530,
+          "price": 47990000,
+          "range": 520,
+          "rendimientoElectrico": 6.3,
+          "topSpeed": 180,
+          "torque": 670,
+          "traction": "AWD"
+        },
+        {
+          "_key": "ver-2",
+          "_type": "version",
+          "acceleration": 3.8,
+          "batteryCapacity": 100,
+          "chargeTimeAC": "~11h (0-100%)",
+          "chargeTimeDC": "16 min (30-80%)",
+          "discountPrice": null,
+          "fuelConsumption": null,
+          "maxACChargingPower": 11,
+          "maxDCChargingPower": 150,
+          "name": "Seal Excellence Ultra AWD",
+          "power": 530,
+          "price": 47990000,
+          "range": 520,
+          "rendimientoElectrico": 6.3,
+          "topSpeed": 180,
+          "torque": 670,
+          "traction": "AWD"
+        }
+      ],
+      "videoUrl": null,
+      "warranty": "6 años o 150.000 km"
+    },
+    {
+      "_createdAt": "2026-04-05T21:14:33Z",
+      "_id": "car-gwm-poer-500-phev",
+      "_rev": "wYnW78JBpu1Iw3da9OhmcE",
+      "_system": {
+        "base": {
+          "id": "car-gwm-poer-500-phev",
+          "rev": "NRAyKjFYuAAaIixn9atX5Y"
+        }
+      },
+      "_type": "car",
+      "_updatedAt": "2026-10-12T13:00:44Z",
+      "acceleration": 6.9,
+      "airbags": 6,
+      "basePrice": 49968100,
+      "batteryCapacity": 37.1,
+      "batteryType": "LFP",
+      "brand": {
+        "_ref": "brand-gwm",
+        "_type": "reference"
+      },
+      "cargo": null,
+      "chargeTimeAC": "6.5h (15-80%) a 7kW",
+      "chargeTimeDC": "24 min (30-80%)",
+      "chargeType": null,
+      "checkSlot": 8,
+      "comfortFeatures": [
+        "Tracción AWD permanente sin desconexiones",
+        "Autonomía ampliada NEDC hasta 1.060 km",
+        "Climatizador automático"
+      ],
+      "connectorType": "CCS2",
+      "description": null,
+      "electricRangeKm": 130,
+      "electricType": {
+        "_ref": "f3e5f1d7-0f89-4efc-b941-39d5f1e3a523",
+        "_type": "reference"
+      },
+      "euroNcap": null,
+      "frunkCapacity": null,
+      "fuelConsumption": 58.8,
+      "gallery": [
+        {
+          "_key": "img-3",
+          "_type": "image",
+          "alt": "GWM Poer 500 PHEV - foto 3",
+          "asset": {
+            "_ref": "image-0a9870023061c0b29906adafd0f60ddf48c81187-1253x672-png",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img-4",
+          "_type": "image",
+          "alt": "GWM Poer 500 PHEV - foto 4",
+          "asset": {
+            "_ref": "image-2eaf8afa70328c47b4634ab463587303660e7846-1000x493-png",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img-1",
+          "_type": "image",
+          "alt": "GWM Poer 500 PHEV - foto 1",
+          "asset": {
+            "_ref": "image-110ff600b593ea5026473775d6c249d09a2e2f78-948x760-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img-2",
+          "_type": "image",
+          "alt": "GWM Poer 500 PHEV - foto 2",
+          "asset": {
+            "_ref": "image-7f032405f3074b938e710020ffd436b680d40443-992x995-png",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img-5",
+          "_type": "image",
+          "alt": "GWM Poer 500 PHEV - foto 5",
+          "asset": {
+            "_ref": "image-7a2083b4677558c7f5c8d3dfab9eea360a414c97-786x738-png",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img-6",
+          "_type": "image",
+          "alt": "GWM Poer 500 PHEV - foto 6",
+          "asset": {
+            "_ref": "image-e3e4ef27e8fd221262228ae1a2327d799a50c41f-1817x1026-png",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img-7",
+          "_type": "image",
+          "alt": "GWM Poer 500 PHEV - foto 7",
+          "asset": {
+            "_ref": "image-3df2cb3dc5f220f9c7758e3d5c229b94a552387a-1260x500-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img-8",
+          "_type": "image",
+          "alt": "GWM Poer 500 PHEV - foto 8",
+          "asset": {
+            "_ref": "image-d59752886d61ac60a88ba8b80d3bcc81deb8a179-1644x1005-png",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img-9",
+          "_type": "image",
+          "alt": "GWM Poer 500 PHEV - foto 9",
+          "asset": {
+            "_ref": "image-745c5992c1fc2c52a1d4fb1435859b2523b0784b-1372x533-png",
+            "_type": "reference"
+          }
+        }
+      ],
+      "groundClearance": 220,
+      "highlight": "Pick-up PHEV 4x4 con tecnología Hi4-T, triple bloqueo de diferencial y 130 km eléctrico",
+      "isFeatured": false,
+      "isHotDeal": false,
+      "isNew": false,
+      "isTopSeller": false,
+      "lastPriceCheckAt": "2026-10-12T13:00:44.103Z",
+      "mainImage": {
+        "_type": "image",
+        "asset": {
+          "_ref": "image-0a9870023061c0b29906adafd0f60ddf48c81187-1253x672-png",
+          "_type": "reference"
+        }
+      },
+      "maxACChargingPower": 7,
+      "maxDCChargingPower": 50,
+      "metaDescription": null,
+      "metaTitle": null,
+      "modelYear": 2025,
+      "motorDescription": "Motor 2.0T 4 cilindros + Motor Eléctrico Hi4-T",
+      "name": "Poer 500 PHEV",
+      "power": 402,
+      "priceCheckFlag": "price_high",
+      "priceCheckNote": "Oficial: $46.990.000 · Nuestro: $49.968.100 · Sugerido (5% bajo oficial): $44.640.500 · Fuente: https://www.gwm.cl/vehiculo/poer/nueva-poer-p500/",
+      "priceCheckSuggestedPrice": 44640500,
+      "priceNote": "Incluye Bonos",
+      "range": null,
+      "rendimientoElectrico": 3.3,
+      "safetyFeatures": [
+        "Control de crucero adaptativo (ACC)",
+        "Frenado automático de emergencia (AEB)",
+        "Asistencia de mantenimiento de carril",
+        "Reconocimiento de señales de tránsito (TSR)",
+        "6 airbags"
+      ],
+      "seatRows": 2,
+      "seats": 5,
+      "slug": {
+        "_type": "slug",
+        "current": "gwm-poer-500-phev"
+      },
+      "tagline": "Pick-up PHEV 4x4 con tecnología Hi4-T, triple bloqueo de diferencial y 130 km eléctrico",
+      "techFeatures": [
+        "Sistema Hi4-T con modos de conducción adaptativos",
+        "Recuperación de energía en desaceleración",
+        "Triple bloqueo de diferencial"
+      ],
+      "topSpeed": 180,
+      "torque": 750,
+      "traction": "AWD",
+      "transmission": "Automático de 8 velocidades",
+      "vehicleType": {
+        "_ref": "ec31b9ff-670e-4656-9f65-943f2a01a772",
+        "_type": "reference"
+      },
+      "versions": [
+        {
+          "_key": "ver-0",
+          "_type": "version",
+          "acceleration": 6.9,
+          "batteryCapacity": 37.1,
+          "chargeTimeAC": "6.5h (15-80%) a 7kW",
+          "chargeTimeDC": "24 min (30-80%)",
+          "connectorType": "Type2",
+          "discountPrice": null,
+          "electricRangeKm": 90,
+          "fuelConsumption": 58.8,
+          "maxACChargingPower": 7,
+          "maxDCChargingPower": 50,
+          "name": "Poer 500 PHEV AWD",
+          "power": 402,
+          "price": 49968100,
+          "rendimientoElectrico": 3.3,
+          "torque": 750,
+          "traction": "AWD"
+        }
+      ],
+      "videoUrl": null,
+      "warranty": "5 años o 150.000 km"
+    },
+    {
+      "_createdAt": "2026-09-22T19:12:17Z",
+      "_id": "drafts.GeAoiCW5dHDLUjKiwfBMzm",
+      "_rev": "6b41158b-b290-49a1-8ebd-e06e597495aa",
+      "_system": {
+        "base": {
+          "id": "GeAoiCW5dHDLUjKiwfBMzm",
+          "rev": "wYnW78JBpu1Iw3da9Qzlwg"
+        }
+      },
+      "_type": "car",
+      "_updatedAt": "2026-10-12T20:25:32Z",
+      "acceleration": 7.5,
+      "aiGenerated": true,
+      "airbags": 6,
+      "basePrice": 26490000,
+      "batteryCapacity": 58.3,
+      "brand": {
+        "_ref": "brand-gwm",
+        "_type": "reference"
+      },
+      "cargo": 362,
+      "comfortFeatures": [
+        "Asientos delanteros calefaccionados y ventilados",
+        "Techo panorámico con cortina eléctrica",
+        "Aire acondicionado con climatizador",
+        "Volante forrado en ecocuero y calefaccionado",
+        "Asiento del conductor con ajuste eléctrico de 6 posiciones y función memoria",
+        "Sistema de audio con 6 parlantes",
+        "Cargador inalámbrico para celulares"
+      ],
+      "connectorType": "CCS2",
+      "description": "El ORA 5 es el SUV 100% eléctrico de GWM que en Chile llega en una sola versión, EV 2WD Deluxe, con tracción delantera y transmisión automática eléctrica. Su batería de 58,3 kWh entrega hasta 435 km de autonomía según el ciclo WLTP (520 km bajo ciclo NEDC), con un consumo energético homologado combinado de 7,5 km/kWh.\n\nEl motor eléctrico entrega 201 HP y 260 Nm de torque, con una aceleración de 0 a 100 km/h en 7,5 segundos. Admite carga rápida en corriente continua y carga en corriente alterna de hasta 7 kW, además de tecnología V2L (Vehicle-to-Load) que permite usar la batería del auto como fuente de energía portátil para otros dispositivos, con corte automático al llegar al 30% de carga.\n\nPor dentro destaca la pantalla táctil de 14,6 pulgadas con Apple CarPlay y Android Auto inalámbricos, panel digital de instrumentos de 10,25 pulgadas, techo panorámico con cortina eléctrica, asientos delanteros calefaccionados y ventilados, y sistema de audio de 6 parlantes.\n\nEn seguridad suma 6 airbags, cámara 360° con chasis transparente de 180° y un paquete de asistencias a la conducción (ADAS) que incluye frenado automático de emergencia, control crucero adaptativo y asistencia de mantención de carril. GWM declara garantía de 6 años o 150.000 km para el vehículo y 8 años o 150.000 km para la batería de potencia.",
+      "electricType": {
+        "_ref": "efdaf152-e14b-414f-8441-415534cd1f41",
+        "_type": "reference"
+      },
+      "gallery": [
+        {
+          "_key": "portada",
+          "_type": "image",
+          "alt": "GWM Ora 5",
+          "asset": {
+            "_ref": "image-8e7969a89263ad4a26d168ffbce510704f5a0ca4-1927x650-jpg",
+            "_type": "reference"
+          },
+          "caption": "Portada oficial"
+        },
+        {
+          "_key": "g0",
+          "_type": "image",
+          "alt": "Vista lateral delantera, color verde oscuro, en patio de casa",
+          "asset": {
+            "_ref": "image-46c0f7421c211f6d25dc4a4d8a22ebb8e7c439a8-1700x830-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "g1",
+          "_type": "image",
+          "alt": "Detalle de llanta de aleación bitono",
+          "asset": {
+            "_ref": "image-6d435eb1545f5e5cc31dde9c6290cadff2a2e816-1700x830-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "g2",
+          "_type": "image",
+          "alt": "Vista trasera con portalón eléctrico abierto y maletero",
+          "asset": {
+            "_ref": "image-52c465b7dcf7517d1629a76659d217ace74c412e-1700x830-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "g3",
+          "_type": "image",
+          "alt": "Vista 3/4 delantera nocturna junto a un espejo de agua",
+          "asset": {
+            "_ref": "image-e2b31673cb92c24bc77e8911b7167943a12425e9-870x440-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "g4",
+          "_type": "image",
+          "alt": "Tablero frontal con pantalla táctil y panel digital",
+          "asset": {
+            "_ref": "image-5ffb175bbd1a44cd0e14ff5149724f0e4640a145-1700x800-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "g5",
+          "_type": "image",
+          "alt": "Interior visto desde atrás, asientos delanteros y traseros",
+          "asset": {
+            "_ref": "image-16c6785758a98e719303771d1d9bb0867255f8c2-1700x800-jpg",
+            "_type": "reference"
+          }
+        }
+      ],
+      "groundClearance": 175,
+      "hidden": true,
+      "keywords": [
+        "GWM Ora 5",
+        "Ora 5 precio Chile",
+        "SUV eléctrico Chile",
+        "auto eléctrico GWM",
+        "Ora 5 autonomía",
+        "carro eléctrico SUV",
+        "GWM Ora 5 ficha técnica"
+      ],
+      "mainImage": {
+        "_type": "image",
+        "alt": "GWM Ora 5",
+        "asset": {
+          "_ref": "image-8e7969a89263ad4a26d168ffbce510704f5a0ca4-1927x650-jpg",
+          "_type": "reference"
+        }
+      },
+      "maxACChargingPower": 7,
+      "maxDCChargingPower": 120,
+      "metaDescription": "GWM Ora 5, SUV 100% eléctrico con 435 km WLTP, 201 HP y tecnología V2L. Conoce su ficha técnica y cotiza en vendedores oficiales.",
+      "metaTitle": "GWM Ora 5: SUV eléctrico con 435 km de autonomía",
+      "modelYear": 2026,
+      "motorDescription": "Motor eléctrico",
+      "name": "Ora 5",
+      "power": 201,
+      "priceCheckNote": "La página web y la ficha técnica en PDF (mismo dominio gwm.cl) traen datos complementarios que se combinaron. Autonomía usada: WLTP (435 km), que es la que destaca la página como cifra principal; la ficha técnica PDF también declara 520 km bajo ciclo NEDC, no incluido en 'range' para no mezclar ciclos. Hay una contradicción entre fuentes sobre la carga rápida DC: la página web dice \"carga rápida de hasta 80kW en corriente continua\" en el texto de tecnología, mientras la ficha técnica PDF en su tabla de especificaciones indica \"Capacidad máxima de carga. Corriente continua (carga rápida): 120kW\". Se usó el valor de la tabla técnica (120 kW) por ser la fuente de especificaciones formal, pero un humano debería confirmar cuál es el correcto. La única versión que ofrece la página es \"EV 2WD DELUXE\" (llamada Deluxe en la ficha técnica), que corresponde a la versión \"ORA 5\" declarada por el encargo. No se encontraron datos de asientos/filas exactos, batteryType (química), velocidad máxima, ni rating Euro NCAP en la fuente, por lo que se omitieron. El precio de lista leído ($26.490.000) coincide exactamente con el precio declarado por el encargo para la versión ORA 5.",
+      "range": 435,
+      "rendimientoElectrico": 7.5,
+      "safetyFeatures": [
+        "6 airbags (2 frontales, 2 laterales y 2 de cortina)",
+        "Frenado de emergencia automático (AEB)",
+        "Frenado de emergencia a baja velocidad (MEB)",
+        "Control crucero adaptativo (ACC)",
+        "Aviso de puntos ciegos (BSW)",
+        "Asistencia de mantención de pista (LKA)",
+        "Control electrónico de estabilidad (ESP)",
+        "Monitoreo de presión de neumáticos (TPMS)",
+        "Sensores de estacionamiento traseros"
+      ],
+      "slug": {
+        "_type": "slug",
+        "current": "gwm-ora-5"
+      },
+      "sourceUrls": [
+        "https://www.gwm.cl/vehiculo/ora/nuevo-ora-5/"
+      ],
+      "tagline": "SUV eléctrico con 435 km de autonomía WLTP y tecnología V2L",
+      "techFeatures": [
+        "Pantalla táctil de 14,6\" con Bluetooth, Apple CarPlay y Android Auto inalámbrico",
+        "Panel digital de instrumentos de 10,25\"",
+        "Comando por voz",
+        "Tecnología V2L (Vehicle-to-Load)",
+        "Cámara 360° de alta definición con chasis transparente de 180°",
+        "Selector de modos de conducción (Estándar, Económica, Well Being y Deportiva)"
+      ],
+      "torque": 260,
+      "traction": "FWD",
+      "transmission": "Automática eléctrica",
+      "vehicleType": {
+        "_ref": "5239b59b-3134-4d40-9a21-de121138b961",
+        "_type": "reference"
+      },
+      "versions": [
+        {
+          "_key": "v0",
+          "acceleration": 7.5,
+          "batteryCapacity": 58.3,
+          "connectorType": "CCS2",
+          "maxACChargingPower": 7,
+          "maxDCChargingPower": 120,
+          "motorDescription": "Motor eléctrico",
+          "name": "ORA 5",
+          "power": 201,
+          "price": 26490000,
+          "range": 435,
+          "rendimientoElectrico": 7.5,
+          "torque": 260,
+          "traction": "FWD",
+          "transmission": "Automática eléctrica"
+        }
+      ],
+      "warranty": "6 años o 150.000 km (vehículo); 8 años o 150.000 km (batería de potencia)"
+    },
+    {
+      "_createdAt": "2026-04-05T21:13:27Z",
+      "_id": "car-byd-seal",
+      "_rev": "wYnW78JBpu1Iw3da9RDHj1",
+      "_system": {
+        "base": {
+          "id": "car-byd-seal",
+          "rev": "9qHsvqyKF4agZO92XNRTq0"
+        }
+      },
+      "_type": "car",
+      "_updatedAt": "2026-10-12T21:33:35Z",
+      "acceleration": 7.5,
+      "airbags": 6,
+      "basePrice": 47990000,
+      "batteryCapacity": 82.56,
+      "batteryType": "NMC",
+      "brand": {
+        "_ref": "brand-byd",
+        "_type": "reference"
+      },
+      "cargo": 402,
+      "chargeTimeAC": "~9h (0-100%)",
+      "chargeTimeDC": "16 min (30-80%)",
+      "chargeType": null,
+      "checkSlot": 17,
+      "comfortFeatures": [
+        "Climatizador automático bi-zona",
+        "Asientos deportivos calefaccionados",
+        "Tapicería premium"
+      ],
+      "connectorType": "CCS2",
+      "description": null,
+      "electricRangeKm": null,
+      "electricType": {
+        "_ref": "efdaf152-e14b-414f-8441-415534cd1f41",
+        "_type": "reference"
+      },
+      "euroNcap": 5,
+      "frunkCapacity": null,
+      "fuelConsumption": null,
+      "gallery": [
+        {
+          "_key": "img-3",
+          "_type": "image",
+          "alt": "BYD Seal - foto 3",
+          "asset": {
+            "_ref": "image-cdf82536f635948f4e8bc0f5c11962255f68e063-1720x652-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img-1",
+          "_type": "image",
+          "alt": "BYD Seal - foto 1",
+          "asset": {
+            "_ref": "image-f4384de2796948f1e93688eb76181021d5e23271-1720x652-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img-2",
+          "_type": "image",
+          "alt": "BYD Seal - foto 2",
+          "asset": {
+            "_ref": "image-1b3f2434db1a524957b7f59aa32d46f0f01d83ac-1720x652-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img-5",
+          "_type": "image",
+          "alt": "BYD Seal - foto 5",
+          "asset": {
+            "_ref": "image-39b1e5cc103caa742bcd1ebeb541efaa37add5cc-1720x652-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img-6",
+          "_type": "image",
+          "alt": "BYD Seal - foto 6",
+          "asset": {
+            "_ref": "image-6a7268df63ba125ead2ac15af2f7257985150f57-1720x652-jpg",
+            "_type": "reference"
+          }
+        }
+      ],
+      "groundClearance": 150,
+      "hidden": false,
+      "hiddenByCheck": false,
+      "highlight": "Sedán deportivo eléctrico con CTB, V2L y hasta 700 km de autonomía en versión Ultra",
+      "isFeatured": false,
+      "isHotDeal": false,
+      "isNew": false,
+      "isTopSeller": false,
+      "mainImage": {
+        "_type": "image",
+        "asset": {
+          "_ref": "image-cdf82536f635948f4e8bc0f5c11962255f68e063-1720x652-jpg",
+          "_type": "reference"
+        }
+      },
+      "maxACChargingPower": 11,
+      "maxDCChargingPower": 150,
+      "metaDescription": null,
+      "metaTitle": null,
+      "modelYear": 2025,
+      "motorDescription": "Motor Eléctrico",
+      "name": "Seal",
+      "power": 204,
+      "priceNote": "Incluye Bonos",
+      "range": 570,
+      "rendimientoElectrico": 6.3,
+      "safetyFeatures": [
+        "Frenado autónomo de emergencia (AEB)",
+        "Control de crucero adaptativo",
+        "Asistente de mantenimiento de carril",
+        "Alerta de punto ciego",
+        "Cámara 360°"
+      ],
+      "seatRows": 2,
+      "seats": 5,
+      "slug": {
+        "_type": "slug",
+        "current": "byd-seal"
+      },
+      "tagline": "Sedán deportivo eléctrico con CTB, V2L y hasta 700 km de autonomía en versión Ultra",
+      "techFeatures": [
+        "Pantalla giratoria 15.6\" Full HD",
+        "Apple CarPlay / Android Auto",
+        "Vehicle-to-Load (V2L)",
+        "BYD DiPilot ADAS"
+      ],
+      "topSpeed": 180,
+      "torque": 310,
+      "traction": "RWD",
+      "transmission": "Automático de 1 velocidad",
+      "vehicleType": {
+        "_ref": "a40ea459-3aac-4d6f-b2f3-02beb123444b",
+        "_type": "reference"
+      },
+      "versions": [
+        {
+          "_key": "ver-0",
+          "_type": "version",
+          "acceleration": 7.5,
+          "batteryCapacity": 82.56,
+          "chargeTimeAC": "~9h (0-100%)",
+          "chargeTimeDC": "16 min (30-80%)",
+          "discountPrice": null,
+          "fuelConsumption": null,
+          "maxACChargingPower": 11,
+          "maxDCChargingPower": 150,
+          "name": "Seal Standard",
+          "power": 204,
+          "price": 47990000,
+          "range": 460,
+          "rendimientoElectrico": 6.3,
+          "topSpeed": 180,
+          "torque": 310,
+          "traction": "RWD"
+        },
+        {
+          "_key": "ver-1",
+          "_type": "version",
+          "acceleration": 3.8,
+          "batteryCapacity": 82.56,
+          "chargeTimeAC": "~9h (0-100%)",
+          "chargeTimeDC": "16 min (30-80%)",
+          "discountPrice": null,
+          "fuelConsumption": null,
+          "maxACChargingPower": 11,
+          "maxDCChargingPower": 150,
+          "name": "Seal Excellence AWD",
+          "power": 530,
+          "price": 47990000,
+          "range": 520,
+          "rendimientoElectrico": 6.3,
+          "topSpeed": 180,
+          "torque": 670,
+          "traction": "AWD"
+        },
+        {
+          "_key": "ver-2",
+          "_type": "version",
+          "acceleration": 3.8,
+          "batteryCapacity": 100,
+          "chargeTimeAC": "~11h (0-100%)",
+          "chargeTimeDC": "16 min (30-80%)",
+          "discountPrice": null,
+          "fuelConsumption": null,
+          "maxACChargingPower": 11,
+          "maxDCChargingPower": 150,
+          "name": "Seal Excellence Ultra AWD",
+          "power": 530,
+          "price": 47990000,
+          "range": 520,
+          "rendimientoElectrico": 6.3,
+          "topSpeed": 180,
+          "torque": 670,
+          "traction": "AWD"
+        }
+      ],
+      "videoUrl": null,
+      "warranty": "6 años o 150.000 km"
+    },
+    {
+      "_createdAt": "2026-04-05T21:16:35Z",
+      "_id": "car-suzuki-vitara-hybrid",
+      "_rev": "l5sMM4F5nfeR7QLww9NmTv",
+      "_system": {
+        "base": {
+          "id": "car-suzuki-vitara-hybrid",
+          "rev": "NRAyKjFYuAAaIixn9b39I3"
+        }
+      },
+      "_type": "car",
+      "_updatedAt": "2026-09-22T22:30:05Z",
+      "acceleration": null,
+      "airbags": 6,
+      "basePrice": 19990000,
+      "batteryCapacity": null,
+      "batteryType": null,
+      "brand": {
+        "_ref": "brand-suzuki",
+        "_type": "reference"
+      },
+      "cargo": 373,
+      "chargeTimeAC": "N/D",
+      "chargeTimeDC": "N/D",
+      "chargeType": null,
+      "checkSlot": 17,
+      "comfortFeatures": [
+        "Climatizador automático",
+        "Asientos ergonómicos",
+        "AllGrip 4WD disponible"
+      ],
+      "connectorType": null,
+      "description": null,
+      "electricRangeKm": null,
+      "electricType": {
+        "_ref": "34973cc0-ef3d-472d-867b-bc045eca0049",
+        "_type": "reference"
+      },
+      "euroNcap": null,
+      "frunkCapacity": null,
+      "fuelConsumption": 15.5,
+      "gallery": [
+        {
+          "_key": "img-2",
+          "_type": "image",
+          "alt": "Suzuki Vitara Hybrid - foto 2",
+          "asset": {
+            "_ref": "image-cb30fc614a4f9848d762b785a335eec07ba0bc2e-1700x830-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img-1",
+          "_type": "image",
+          "alt": "Suzuki Vitara Hybrid - foto 1",
+          "asset": {
+            "_ref": "image-c75dcd8655fa9fae1ac7507901dfc71b29714180-1872x670-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img-3",
+          "_type": "image",
+          "alt": "Suzuki Vitara Hybrid - foto 3",
+          "asset": {
+            "_ref": "image-99974716f3679112360fe652b654bee2afdf9a08-1555x670-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "img-4",
+          "_type": "image",
+          "alt": "Suzuki Vitara Hybrid - foto 4",
+          "asset": {
+            "_ref": "image-edc6500b9a51ffd5c5aa269a0a6c08ab20a5f154-1366x530-jpg",
+            "_type": "reference"
+          }
+        }
+      ],
+      "groundClearance": 185,
+      "hidden": true,
+      "hiddenByCheck": false,
+      "highlight": "SUV icónico con disponibilidad AWD y 373L de maletero",
+      "isFeatured": false,
+      "isHotDeal": false,
+      "isNew": false,
+      "isTopSeller": false,
+      "mainImage": {
+        "_type": "image",
+        "asset": {
+          "_ref": "image-cb30fc614a4f9848d762b785a335eec07ba0bc2e-1700x830-jpg",
+          "_type": "reference"
+        }
+      },
+      "maxACChargingPower": null,
+      "maxDCChargingPower": null,
+      "metaDescription": null,
+      "metaTitle": null,
+      "modelYear": 2024,
+      "motorDescription": "Motor 1.5L + Sistema MHEV 12V ISG",
+      "name": "Vitara Hybrid",
+      "power": 101,
+      "priceCheckPreviousBasePrice": 18590000,
+      "priceNote": "Incluye Bonos",
+      "range": null,
+      "safetyFeatures": [
+        "6 airbags SRS",
+        "Hill Hold Control",
+        "Asistencia al frenado de urgencia",
+        "Cámara de retroceso",
+        "Control electrónico de estabilidad"
+      ],
+      "seatRows": 2,
+      "seats": 5,
+      "slug": {
+        "_type": "slug",
+        "current": "suzuki-vitara-hybrid"
+      },
+      "sourceUrls": [
+        "https://www.suzuki.cl/vehiculo/across-hybrid/"
+      ],
+      "tagline": "SUV icónico con disponibilidad AWD y 373L de maletero",
+      "techFeatures": [
+        "Pantalla táctil con conectividad",
+        "Android Auto / Apple CarPlay (GLX)"
+      ],
+      "topSpeed": 175,
+      "torque": 137,
+      "traction": "FWD",
+      "transmission": "Manual / Automático CVT",
+      "vehicleType": {
+        "_ref": "5239b59b-3134-4d40-9a21-de121138b961",
+        "_type": "reference"
+      },
+      "versions": [
+        {
+          "_key": "905706e4",
+          "_type": "version",
+          "fuelConsumption": 17.2,
+          "motorDescription": "1.5L Dualjet MHEV SHVS 12V",
+          "name": "GL MT 4x2",
+          "power": 101,
+          "price": 19990000,
+          "seats": 5,
+          "torque": 137,
+          "traction": "FWD",
+          "transmission": "MT 5 velocidades",
+          "trunkCapacity": 310
+        },
+        {
+          "_key": "19c7800c",
+          "_type": "version",
+          "fuelConsumption": 18.5,
+          "motorDescription": "1.5L Dualjet MHEV SHVS 12V",
+          "name": "GL AT 4x2",
+          "power": 101,
+          "price": 21290000,
+          "seats": 5,
+          "torque": 137,
+          "traction": "FWD",
+          "transmission": "AT 6 velocidades",
+          "trunkCapacity": 310
+        },
+        {
+          "_key": "3921741d",
+          "_type": "version",
+          "fuelConsumption": 17.2,
+          "motorDescription": "1.5L Dualjet MHEV SHVS 12V",
+          "name": "GLX MT 4x2",
+          "power": 101,
+          "price": 21690000,
+          "seats": 5,
+          "torque": 137,
+          "traction": "FWD",
+          "transmission": "MT 5 velocidades",
+          "trunkCapacity": 310
+        },
+        {
+          "_key": "f263692e",
+          "_type": "version",
+          "fuelConsumption": 18.5,
+          "motorDescription": "1.5L Dualjet MHEV SHVS 12V",
+          "name": "GLX AT 4x2",
+          "power": 101,
+          "price": 23290000,
+          "seats": 5,
+          "torque": 137,
+          "traction": "FWD",
+          "transmission": "AT 6 velocidades",
+          "trunkCapacity": 310
+        },
+        {
+          "_key": "061c22f4",
+          "_type": "version",
+          "fuelConsumption": 18.5,
+          "motorDescription": "1.5L Dualjet MHEV SHVS 12V",
+          "name": "Limited AT 4x4",
+          "power": 101,
+          "price": 25590000,
+          "seats": 5,
+          "torque": 137,
+          "traction": "AWD",
+          "transmission": "AT 6 velocidades",
+          "trunkCapacity": 310
+        }
+      ],
+      "videoUrl": null,
+      "warranty": "3 años o 100.000 km"
+    },
+    {
+      "_createdAt": "2026-05-20T12:51:15Z",
+      "_id": "dkNVm2bBlGoq09qdvck17X",
+      "_rev": "l5sMM4F5nfeR7QLww9NmTv",
+      "_system": {
+        "base": {
+          "id": "dkNVm2bBlGoq09qdvck17X",
+          "rev": "h2EbErQAtFZ4M8XM5PiJiP"
+        }
+      },
+      "_type": "car",
+      "_updatedAt": "2026-09-22T22:30:05Z",
+      "airbags": 6,
+      "basePrice": 41990000,
+      "batteryCapacity": 37.1,
+      "brand": {
+        "_ref": "brand-gwm",
+        "_type": "reference"
+      },
+      "chargeTimeAC": "6,5 h (15-80%, Wallbox 7 kW)",
+      "chargeTimeDC": "24 min (30-80%, 50 kW)",
+      "chargeType": "AC Tipo 2 + DC CCS2",
+      "checkSlot": 7,
+      "comfortFeatures": [
+        "Climatizador bizona con salidas traseras",
+        "Tapiz asientos de ecocuero",
+        "Asiento conductor con regulación eléctrica 8 posiciones + memoria + bienvenida",
+        "Soporte lumbar del asiento conductor eléctrico 4 posiciones",
+        "Asientos delanteros calefaccionados, ventilados y con masajeador (8 opciones)",
+        "Asiento segunda fila calefaccionado y ventilado",
+        "Palancas de cambio al volante (Paddle shift)",
+        "Volante forrado en ecocuero y calefaccionado",
+        "Sunroof de amplio tamaño con apertura y cortina",
+        "Apoyabrazos delantero con compartimiento con refrigeración",
+        "Selector de modos de conducción (Estándar, Económica, Deportiva y 4H)",
+        "Selector electrónico de tracción 4L",
+        "Pisaderas laterales electrónicas",
+        "Llantas bitono de aleación aro 18\"",
+        "Protector de pick up tipo Bedliner",
+        "Portalón con cierre electrónico y doble opción de apertura",
+        "Barras de techo"
+      ],
+      "connectorType": "CCS2",
+      "description": "La POER P500 es la primera pickup híbrida enchufable (PHEV) 4x4 de GWM con tecnología Hi4-T. Motor 2.0 turbo gasolina (241 HP) + motor eléctrico (161 HP) = 402 HP combinados y 750 Nm. Transmisión automática de 9 velocidades con motor eléctrico incorporado, tracción 4WD permanente con 3 bloqueos de diferencial. Rango eléctrico NEDC de 115 km y rango ampliado de 1.060 km.",
+      "electricRangeKm": 115,
+      "electricType": {
+        "_ref": "f3e5f1d7-0f89-4efc-b941-39d5f1e3a523",
+        "_type": "reference"
+      },
+      "gallery": [
+        {
+          "_key": "main-70x440-jpg",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-08000a62f082570e09ae050c4008c404d0fd69f9-870x440-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "g0",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-1a5cab621ad50e68d2ceafb8495087f82a6b4958-1700x830-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "g1",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-495eed5eb2c6e258aff9a3691b6db8534268c09e-1700x830-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "g2",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-c0eae8f8eb705abb01ace49a765e8a292c56b862-1700x830-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "g3",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-992eff02700f6cbf64bc91321a702ea3e354a893-1700x830-jpg",
+            "_type": "reference"
+          }
+        },
+        {
+          "_key": "g4",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-f7039af57304c5bd200485a1daa129993d4c0a47-1700x830-jpg",
+            "_type": "reference"
+          }
+        }
+      ],
+      "groundClearance": 232,
+      "highlight": "402 HP combinados · 750 Nm · Tecnología Hi4-T · 3 bloqueos de diferencial · Rango ampliado 1.060 km",
+      "lastPriceCheckAt": "2026-09-22T20:12:51.027Z",
+      "mainImage": {
+        "_type": "image",
+        "asset": {
+          "_ref": "image-08000a62f082570e09ae050c4008c404d0fd69f9-870x440-jpg",
+          "_type": "reference"
+        }
+      },
+      "maxACChargingPower": 7,
+      "maxDCChargingPower": 50,
+      "modelYear": 2026,
+      "motorDescription": "Motor 2.0 gasolina turbo (241 HP) + Motor eléctrico (161 HP) — tecnología Hi4-T",
+      "name": "POER P500 HI4-T PHEV",
+      "power": 402,
+      "priceCheckPreviousBasePrice": 47990000,
+      "priceNote": "Precio lista $46.990.000 + IVA. Bono marca $5.000.000 + bono financiamiento $2.000.000 (ambos + IVA). Precio publicado incluye IVA y bonos.",
+      "rendimientoElectrico": 3.3,
+      "safetyFeatures": [
+        "6 airbags (2 frontales, 2 laterales, 2 de cortina)",
+        "Frenos ABS + EBD",
+        "Control electrónico de estabilidad (ESP)",
+        "Control de tracción (TCS)",
+        "Sistema anti-vuelco (RMI)",
+        "Asistencia de frenado (BAS)",
+        "Asistente de partida en pendiente (HHC)",
+        "Control de descenso (HDC)",
+        "Sistema de control de balanceo del remolque",
+        "Monitor de presión de neumáticos (TPMS)",
+        "Sensores de estacionamiento delanteros y traseros",
+        "Cámaras 360° de alta definición + 180° de chasis transparente",
+        "ISOFIX en asientos traseros",
+        "Columna de dirección colapsable",
+        "Control crucero adaptativo (ACC)",
+        "Frenado automático de emergencia (AEB, AEB-P, AEB-B)",
+        "Monitoreo de puntos ciegos (BSM)",
+        "Reconocimiento de señales de tránsito (TSR)",
+        "Asistencia de mantenimiento de pista (LKA)",
+        "Sistema de estacionamiento asistido"
+      ],
+      "seatRows": 2,
+      "seats": 5,
+      "slug": {
+        "_type": "slug",
+        "current": "poer-p500"
+      },
+      "sourceUrls": [
+        "https://www.gwm.cl/vehiculo/poer/nueva-poer-p500/"
+      ],
+      "tagline": "La pickup híbrida enchufable 4x4 que conjuga economía, tecnología y poder",
+      "techFeatures": [
+        "Pantalla táctil 14,6\" con Apple CarPlay y Android Auto inalámbricos",
+        "Panel digital de instrumentos 12,3\"",
+        "Proyector virtual sobre parabrisas (HUD)",
+        "Sistema de audio 10 parlantes Infinity con amplificador independiente",
+        "Cargador inalámbrico para celulares (delantera y segunda fila)",
+        "4 puertos USB (tipo A y tipo C en consola + 2 tipo A en segunda fila)",
+        "Bluetooth",
+        "GPS",
+        "Llave inteligente (2 llaves)",
+        "Apertura de puertas delanteras sin llave (Keyless)"
+      ],
+      "torque": 750,
+      "traction": "AWD",
+      "transmission": "Automática de 9 velocidades con motor eléctrico incorporado",
+      "vehicleType": {
+        "_ref": "ec31b9ff-670e-4656-9f65-943f2a01a772",
+        "_type": "reference"
+      },
+      "versions": [
+        {
+          "_key": "64d7d8ae",
+          "_type": "version",
+          "acceleration": 6.9,
+          "batteryCapacity": 37.1,
+          "electricRangeKm": 108,
+          "maxACChargingPower": 6.6,
+          "motorDescription": "2.0T 241 CV + Motor Eléctrico 161 CV",
+          "name": "Poer P500 HI4-T PHEV Luxury",
+          "power": 402,
+          "price": 41990000,
+          "seats": 5,
+          "torque": 750,
+          "traction": "AWD",
+          "transmission": "Automática 9 velocidades"
+        }
+      ],
+      "warranty": "6 años o 150.000 km (sistema de hibridación: 8 años o 150.000 km)"
+    }
+  ]
+}

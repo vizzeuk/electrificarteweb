@@ -15,6 +15,7 @@ interface SlugRow {
 const STATIC_ROUTES: { path: string; changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"]; priority: number }[] = [
   { path: "",                     changeFrequency: "daily",   priority: 1.0 },
   { path: "/marcas",              changeFrequency: "weekly",  priority: 0.9 },
+  { path: "/coleccion/ultimos-lanzamientos", changeFrequency: "weekly", priority: 0.7 },
   { path: "/asesoria",            changeFrequency: "monthly", priority: 0.8 },
   { path: "/asesoria/contratar",  changeFrequency: "monthly", priority: 0.7 },
   { path: "/resenas",             changeFrequency: "monthly", priority: 0.6 },

@@ -3,6 +3,7 @@ import { notFound }      from "next/navigation";
 import { client }        from "@/lib/sanity/client";
 import { collectionBySlugQuery, carsByFiltersQuery } from "@/lib/queries/collections";
 import { stripBrandSuffix } from "@/lib/utils";
+import { HOT_DEALS_ENABLED } from "@/lib/products";
 import ColeccionPageContent from "./ColeccionPageContent";
 
 export const revalidate = 60;
@@ -50,7 +51,8 @@ export default async function ColeccionPage({ params }: PageProps) {
       minPrice:        col.filterMinPrice  ? col.filterMinPrice  * 1_000_000 : 0,
       minSeats:        col.filterMinSeats  ?? 0,
       isNew:           col.filterIsNew     ?? false,
-      isHotDeal:       col.filterIsHotDeal ?? false,
+      // Campo oculto en Studio con el Hot Deal retirado: no puede filtrar sin que se vea.
+      isHotDeal:       HOT_DEALS_ENABLED && (col.filterIsHotDeal ?? false),
     }).catch(() => []);
   }
 

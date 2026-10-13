@@ -60,7 +60,7 @@ export const car = defineType({
     { name: "safety",   title: "🛡️ Seguridad"                        },
     { name: "features", title: "✅ Equipamiento"                       },
     { name: "media",    title: "🖼️ Multimedia"                       },
-    { name: "deal",     title: "🔥 Ofertas y etiquetas"               },
+    { name: "deal",     title: "🏷️ Etiquetas"                         },
     { name: "seo",      title: "🔍 SEO"                               },
     { name: "ai",       title: "🤖 IA"                                },
   ],
@@ -309,29 +309,30 @@ export const car = defineType({
       })],
     }),
 
-    // ─── Deal flags ─────────────────────────────────────────────────────────
+    // ─── Etiquetas (grupo "deal") ───────────────────────────────────────────
     defineField({
       name: "isNew", title: "🆕 Nuevo lanzamiento", type: "boolean", group: "deal",
       initialValue: false, description: "Muestra badge NUEVO en las tarjetas. Los autos con este flag aparecen primero en la sección 'Últimos Lanzamientos' del home.",
     }),
     defineField({
       name: "isFeatured", title: "⭐ Destacado en Home", type: "boolean", group: "deal",
-      initialValue: false, description: "Aparece en el carrusel 'Destacados' del home (sección inferior con múltiples autos). NO es 'Últimos Lanzamientos'.",
+      initialValue: false, hidden: true, // Sin uso: 'Destacados' muestra solo los autos elegidos en la Página de inicio.
     }),
     defineField({
       name: "isHotDeal", title: "🔥 HOT DEAL", type: "boolean", group: "deal",
-      initialValue: false, description: "Activa la sección Hot Deal. El auto aparece con precio especial y bono.",
+      initialValue: false, hidden: true, // Hot Deal retirado del sitio (HOT_DEALS_ENABLED=false); el dato queda guardado.
+      description: "Activa la sección Hot Deal. El auto aparece con precio especial y bono.",
     }),
     defineField({
       name: "hotDealBonusAmount", title: "Monto del bono Hot Deal (CLP)", type: "number",
       group: "deal",
-      hidden: ({ document }) => !document?.isHotDeal,
+      hidden: true, // Hot Deal retirado del sitio (HOT_DEALS_ENABLED=false); el dato queda guardado.
       description: "Bono adicional exclusivo Electrificarte",
     }),
     defineField({
       name: "hotDealExpiry", title: "Vencimiento de la oferta", type: "datetime",
       group: "deal",
-      hidden: ({ document }) => !document?.isHotDeal,
+      hidden: true, // Hot Deal retirado del sitio (HOT_DEALS_ENABLED=false); el dato queda guardado.
     }),
 
     // ─── IA (auditoría de investigación automática — Fase 1.2, Flujo A/B) ────
@@ -462,9 +463,9 @@ export const car = defineType({
     }),
   ],
   preview: {
-    select: { title: "name", brand: "brand.name", media: "mainImage", isHotDeal: "isHotDeal", isFeatured: "isFeatured", isNew: "isNew" },
-    prepare({ title, brand, media, isHotDeal, isFeatured, isNew }: any) {
-      const badges = [isHotDeal && "🔥 HOT DEAL", isFeatured && "⭐ Destacado", isNew && "🆕 Nuevo"].filter(Boolean).join(" · ");
+    select: { title: "name", brand: "brand.name", media: "mainImage", isNew: "isNew", hidden: "hidden" },
+    prepare({ title, brand, media, isNew, hidden }: any) {
+      const badges = [hidden && "🚫 Oculto", isNew && "🆕 Nuevo"].filter(Boolean).join(" · ");
       return { title: `${brand || ""} ${title || ""}`.trim(), subtitle: badges || undefined, media };
     },
   },

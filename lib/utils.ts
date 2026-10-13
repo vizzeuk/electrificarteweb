@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { HOT_DEALS_ENABLED } from "@/lib/products";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -143,7 +144,7 @@ interface AdCarInput {
  * manualmente (heroFeaturedCar). El objetivo es coherencia con el mensaje "El
  * mejor precio del mercado garantizado" y con el badge "Desde $X": prioriza una
  * oferta real, nunca el auto más caro del catálogo.
- *   1) Hot deals (mayor descuento primero)
+ *   1) Hot deals (mayor descuento primero), solo con HOT_DEALS_ENABLED
  *   2) Cualquier auto con descuento real (mayor descuento primero)
  *   3) El más accesible (menor precio) — jamás el más caro
  */
@@ -152,7 +153,7 @@ export function pickFeaturedAdCar<T extends AdCarInput>(cars: T[] | null | undef
   const priceOf = (c: T) => c.discountPrice ?? c.basePrice ?? 0;
   const discountOf = (c: T) => Math.max(0, (c.basePrice ?? 0) - (c.discountPrice ?? c.basePrice ?? 0));
 
-  const hotDeals = cars.filter((c) => c.isHotDeal);
+  const hotDeals = HOT_DEALS_ENABLED ? cars.filter((c) => c.isHotDeal) : [];
   if (hotDeals.length) {
     return hotDeals.slice().sort((a, b) => discountOf(b) - discountOf(a))[0];
   }

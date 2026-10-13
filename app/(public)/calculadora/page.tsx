@@ -15,6 +15,7 @@ export const metadata: Metadata = {
 const carsForCalculatorQuery = groq`
   *[
     _type == "car"
+    && hidden != true
     && defined(basePrice)
     && (
       (defined(batteryCapacity) && batteryCapacity > 0 && defined(range) && range > 0) ||

@@ -56,62 +56,49 @@ export const allCarsQuery = groq`
   }
 `;
 
-// ─── Autos destacados (isFeatured) ───────────────────────────────────────────
-export const featuredCarsQuery = groq`
-  *[_type == "car" && isFeatured == true && hidden != true] | order(coalesce(discountPrice, basePrice) asc) {
-    ${CAR_CARD_FIELDS}
-  }
+// ─── Autos recientes — Últimos Lanzamientos ──────────────────────────────────
+// Campos de las tarjetas del carrusel del home y de su página "ver todos"
+// (/coleccion/ultimos-lanzamientos, ver lib/latest-launches.ts).
+export const LAUNCH_CAR_FIELDS = groq`
+  _id,
+  name,
+  "slug": slug.current,
+  "imageUrl": mainImage.asset->url,
+  batteryCapacity,
+  range,
+  electricRangeKm,
+  fuelConsumption,
+  rendimientoElectrico,
+  power,
+  "maxVersionRange": math::max(versions[defined(range) && range > 0].range),
+  "electricType": electricType->{ tag },
+  "vehicleType": vehicleType->{ label, "slug": slug.current },
+  basePrice,
+  discountPrice,
+  isNew,
+  isHotDeal,
+  "brand": brand->{ name, "slug": slug.current, "logoUrl": logo.asset->url }
 `;
 
-// ─── Autos recientes — Últimos Lanzamientos ──────────────────────────────────
 // Primero TODOS los marcados 🆕 Nuevo lanzamiento (lo que promete el campo en Studio) y después
-// los agregados más recientemente al catálogo.
+// los agregados más recientemente al catálogo. `$limit`: 20 en el carrusel, sin tope práctico en
+// la página "ver todos".
 // Historia: hubo un `order(isNew desc, ...)` que fallaba porque en GROQ los autos con isNew sin
 // setear (null) ordenan por ENCIMA de los true; por eso se pasó a 100% por _createdAt. Eso
 // ignoraba la marca 🆕 y, al publicar fichas nuevas, los marcados quedaban fuera del carrusel
 // (Francisco, oct-2026). `coalesce(isNew, false)` resuelve el problema de los null.
 export const newCarsForHomeQuery = groq`
-  *[_type == "car" && hidden != true] | order(coalesce(isNew, false) desc, _createdAt desc) [0...20] {
-    _id,
-    name,
-    "slug": slug.current,
-    "imageUrl": mainImage.asset->url,
-    batteryCapacity,
-    range,
-    electricRangeKm,
-    fuelConsumption,
-    rendimientoElectrico,
-    power,
-    "maxVersionRange": math::max(versions[defined(range) && range > 0].range),
-    "electricType": electricType->{ tag },
-    basePrice,
-    discountPrice,
-    isNew,
-    "brand": brand->{ name, "slug": slug.current, "logoUrl": logo.asset->url }
+  *[_type == "car" && hidden != true] | order(coalesce(isNew, false) desc, _createdAt desc) [0...$limit] {
+    ${LAUNCH_CAR_FIELDS}
   }
 `;
 
-// ─── Autos destacados — fallback para Oportunidades ──────────────────────────
-// isFeatured=true primero, luego por precio — evita concatenación GROQ que rompe asset->url
-export const featuredCarsForHomeQuery = groq`
-  *[_type == "car" && hidden != true] | order(isFeatured desc, coalesce(discountPrice, basePrice) asc) [0...8] {
-    _id,
-    name,
-    "slug": slug.current,
-    "imageUrl": mainImage.asset->url,
-    basePrice,
-    discountPrice,
-    range,
-    batteryCapacity,
-    electricRangeKm,
-    fuelConsumption,
-    rendimientoElectrico,
-    power,
-    "maxVersionRange": math::max(versions[defined(range) && range > 0].range),
-    "electricType": electricType->{ tag },
-    isNew,
-    isHotDeal,
-    "brand": brand->{ name }
+// Los elegidos a mano en la Página de inicio ("Autos en 'Últimos Lanzamientos'"), para la página
+// "ver todos". Los ocultos no se muestran aunque estén elegidos (su página da 404).
+export const latestLaunchesManualQuery = groq`
+  *[_type == "homePage"][0] {
+    latestLaunchesTitle,
+    "cars": latestLaunchesCars[@->hidden != true]->{ ${LAUNCH_CAR_FIELDS} }
   }
 `;
 
@@ -387,13 +374,14 @@ export const brandBySlugQuery = groq`
     isFeatured,
     stats[]{label, value},
     videos[]{title, videoUrl, thumbnail, duration, views, channel},
-    "heroFeaturedCar": heroFeaturedCar-> {
+    // Si el auto elegido está oculto, no se muestra (su página da 404) y la página usa el respaldo.
+    "heroFeaturedCar": select(heroFeaturedCar->hidden != true => heroFeaturedCar->{
       name,
       "slug": slug.current,
       mainImage,
       basePrice,
       discountPrice,
-    },
+    }),
     "plpBanners": plpBanners[active != false]{
       "mobileImageUrl": mobileImage.asset->url,
       "imageUrl": image.asset->url,
@@ -442,7 +430,8 @@ export const vehicleTypeBySlugQuery = groq`
     heroTagline,
     heroDescription,
     heroAdText,
-    "heroFeaturedCar": heroFeaturedCar->{
+    // Si el auto elegido está oculto, no se muestra (su página da 404) y la página usa el respaldo.
+    "heroFeaturedCar": select(heroFeaturedCar->hidden != true => heroFeaturedCar->{
       name,
       "slug": slug.current,
       "imageUrl": mainImage.asset->url,
@@ -450,7 +439,7 @@ export const vehicleTypeBySlugQuery = groq`
       discountPrice,
       range,
       "brand": brand->{ name }
-    },
+    }),
     "plpBanners": plpBanners[active != false]{
       "mobileImageUrl": mobileImage.asset->url,
       "imageUrl": image.asset->url,
@@ -493,7 +482,8 @@ export const electricTypeBySlugQuery = groq`
     cons,
     idealFor,
     heroAdText,
-    "heroFeaturedCar": heroFeaturedCar->{
+    // Si el auto elegido está oculto, no se muestra (su página da 404) y la página usa el respaldo.
+    "heroFeaturedCar": select(heroFeaturedCar->hidden != true => heroFeaturedCar->{
       name,
       "slug": slug.current,
       "imageUrl": mainImage.asset->url,
@@ -501,7 +491,7 @@ export const electricTypeBySlugQuery = groq`
       discountPrice,
       range,
       "brand": brand->{ name }
-    },
+    }),
     "plpBanners": plpBanners[active != false]{
       "mobileImageUrl": mobileImage.asset->url,
       "imageUrl": image.asset->url,
@@ -590,5 +580,5 @@ export const featuredBrandsQuery = groq`
 
 // Foto del modelo citado en la franja de reseñas del home.
 export const carImageBySlugQuery = groq`
-  *[_type == "car" && slug.current == $slug][0]{ name, "imageUrl": mainImage.asset->url }
+  *[_type == "car" && slug.current == $slug && hidden != true][0]{ name, "imageUrl": mainImage.asset->url }
 `;

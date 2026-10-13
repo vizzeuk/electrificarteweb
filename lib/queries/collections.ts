@@ -39,7 +39,8 @@ export const collectionBySlugQuery = groq`
     "filterElectricTypeRef": filterElectricType._ref,
 
     // Autos manuales (cuando filterMode == "manual")
-    "manualCars": manualCars[]->{
+    // Los ocultos no se muestran aunque estén elegidos (su página da 404).
+    "manualCars": manualCars[@->hidden != true]->{
       _id,
       name,
       "slug": slug.current,
@@ -66,6 +67,7 @@ export const collectionBySlugQuery = groq`
 export const carsByFiltersQuery = groq`
   *[
     _type == "car"
+    && hidden != true
     && (count($brandRefs) == 0    || brand._ref        in $brandRefs)
     && ($vehicleTypeRef  == null  || vehicleType._ref  == $vehicleTypeRef)
     && ($electricTypeRef == null  || electricType._ref == $electricTypeRef)
