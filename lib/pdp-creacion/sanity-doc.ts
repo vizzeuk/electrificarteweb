@@ -199,6 +199,10 @@ export function armarDocumentoCar(
     electricType: { _type: "reference", _ref: refs.electricTypeId },
     modelYear: Number(fila.anio) || undefined,
     hidden: true,            // R6 — publicar es siempre acto humano
+    // Todo lo que crea el flujo es un modelo recien llegado al catalogo: nace marcado como
+    // "🆕 Nuevo lanzamiento" (badge NUEVO y primero en "Ultimos lanzamientos" al publicarse).
+    // Se desmarca a mano en Studio cuando deja de serlo.
+    isNew: true,
     aiGenerated: true,
     sourceUrls: [fuenteDelDocumento(fila, contrato)],
     basePrice,

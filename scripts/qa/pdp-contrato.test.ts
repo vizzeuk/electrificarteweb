@@ -227,6 +227,7 @@ test("armarDocumentoCar: las discrepancias de la fuente quedan registradas", () 
 test("armarDocumentoCar: nace oculto, marcado como IA y con la fuente guardada", () => {
   const doc = armarDocumentoCar(FILA, { estado: "listo", fuente_leida: "x" }, REFS);
   assert.equal(doc.hidden, true);
+  assert.equal(doc.isNew, true, "toda PDP del flujo nace como Nuevo lanzamiento");
   assert.equal(doc.aiGenerated, true);
   assert.deepEqual(doc.sourceUrls, [FILA.url_oficial]);
   assert.equal(doc.modelYear, 2026);
