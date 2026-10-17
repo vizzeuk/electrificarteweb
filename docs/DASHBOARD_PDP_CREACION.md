@@ -104,6 +104,30 @@ crea marcas.
   agente navega solo dentro de ese dominio hasta la ficha del modelo. Requiere
   `scripts/sql/2026-10-09_pdp_solicitudes_opcionales.sql` (año y URL nullable).
 
+### Ficha técnica (PDF, opcional — oct-2026)
+
+Campo opcional "Ficha técnica oficial para Chile (PDF, máx. 4 MB)". Se sube **antes** de enviar:
+
+```http
+POST {ELECTRIFICARTE_API_BASE}/api/admin/pdp/ficha?nombre=<nombre original>
+x-admin-secret: <secreto>
+Content-Type: application/pdf
+
+<bytes del PDF>
+```
+
+`201 { ok: true, ficha: { file_id, nombre } }` → mandar `ficha_file_id` y `ficha_nombre` en el
+POST de abajo (o en `cambios` de reintentar: `ficha_file_id: null` la quita, sin la clave se
+conserva). `422 { errores }` si no es PDF o pesa más de 4 MB. Si la solicitud no pasa la
+validación, la web borra el archivo: hay que volver a subirlo.
+
+Qué hace el agente con ella: solo completa **specs técnicas** que la web no publica (la web manda
+si se contradicen) y el precio, como **último recurso**, solo sin versiones declaradas y sin
+precio en la web. Si no es de este modelo o no es del mercado chileno, la ignora y lo reporta. El
+re-check semanal sigue leyendo la URL, nunca la ficha. Requiere
+`scripts/sql/2026-10-17_pdp_ficha_tecnica.sql`; sin esa migración la solicitud se crea igual y
+`avisos` dice que la ficha no se guardó. La lista devuelve `ficha_nombre` para mostrarla.
+
 ### Enviar
 
 ```http

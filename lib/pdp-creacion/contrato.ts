@@ -40,6 +40,10 @@ export interface ContratoPdp {
   galeria?: { url: string; descripcion?: string }[];
   discrepancias?: string[];
   notas?: string;
+  /** Campos que salieron de la ficha tecnica adjunta (no de la web). El re-check no los relee. */
+  campos_de_ficha?: string[];
+  /** El precio provisorio salio de la ficha porque la web no publica ninguno (ultimo recurso). */
+  precio_desde_ficha?: boolean;
 }
 
 // ─── Metrica N/M ──────────────────────────────────────────────────────────────

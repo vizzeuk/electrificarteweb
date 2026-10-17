@@ -45,6 +45,9 @@ export interface Solicitud {
   intentos: number;
   tomada_at: string | null;
   terminada_at: string | null;
+  /** Ficha tecnica (PDF) en la Files API, opcional. Columnas del 17-oct-2026: pueden faltar. */
+  ficha_file_id?: string | null;
+  ficha_nombre?: string | null;
 }
 
 /** Lo que manda el formulario del panel. */
@@ -57,6 +60,9 @@ export interface EntradaPanel {
   url_oficial?: unknown;
   versiones?: unknown;
   creado_por?: unknown;
+  /** De POST /api/admin/pdp/ficha. En `cambios` de reintentar, null = quitar la ficha. */
+  ficha_file_id?: unknown;
+  ficha_nombre?: unknown;
 }
 
 const txt = (v: unknown) => String(v ?? "").trim();
@@ -154,16 +160,25 @@ export function razonTrabada(
 const UNIQUE_VIOLATION = "23505";
 
 export type ResultadoCrear =
-  | { ok: true; solicitud: Solicitud }
+  | { ok: true; solicitud: Solicitud; avisos: string[] }
   | { ok: false; duplicada: true; error: string };
+
+/** Falta la columna (migracion del 17-oct sin correr): PostgREST la reporta asi. */
+export const faltaColumnaFicha = (e: { code?: string; message?: string } | null | undefined) =>
+  Boolean(e && (e.code === "PGRST204" || e.code === "42703") && /ficha_/.test(e.message ?? ""));
+
+export const AVISO_SIN_COLUMNA_FICHA =
+  "La ficha tecnica NO se guardo: falta correr scripts/sql/2026-10-17_pdp_ficha_tecnica.sql en Supabase. La solicitud sigue sin ella.";
 
 export async function crearSolicitud(
   sb: SupabaseClient,
   fila: FilaSheet,
   slug: string,
   creadoPor: string | null,
+  ficha: { file_id: string; nombre: string } | null = null,
 ): Promise<ResultadoCrear> {
-  const { data, error } = await sb
+  const conFicha = ficha ? { ficha_file_id: ficha.file_id, ficha_nombre: ficha.nombre } : {};
+  const insertar = (extra: Record<string, unknown>) => sb
     .from(TABLA)
     .insert({
       marca: fila.marca,
@@ -176,14 +191,23 @@ export async function crearSolicitud(
       slug,
       creado_por: creadoPor,
       estado: "listo",
+      ...extra,
     })
     .select("*")
     .single();
+
+  let { data, error } = await insertar(conFicha);
+  const avisos: string[] = [];
+  // Sin la migracion se crea igual, pero sin callar que la ficha se perdio.
+  if (ficha && faltaColumnaFicha(error)) {
+    ({ data, error } = await insertar({}));
+    avisos.push(AVISO_SIN_COLUMNA_FICHA);
+  }
   if (error?.code === UNIQUE_VIOLATION) {
     return { ok: false, duplicada: true, error: `Ya hay una solicitud en curso para "${slug}"` };
   }
   if (error || !data) throw new Error(error?.message ?? "no se pudo crear la solicitud");
-  return { ok: true, solicitud: data as Solicitud };
+  return { ok: true, solicitud: data as Solicitud, avisos };
 }
 
 export async function cargarSolicitud(sb: SupabaseClient, id: string): Promise<Solicitud | null> {

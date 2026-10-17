@@ -6,6 +6,7 @@
 import { armarEncargo, type FilaSheet } from "./encargo";
 import { toolsDeSesion } from "./agente";
 import type { ContratoPdp } from "./contrato";
+import { FICHA_MOUNT } from "./ficha";
 
 const API = "https://api.anthropic.com";
 const BETA = "managed-agents-2026-04-01";
@@ -49,10 +50,23 @@ export interface SesionCreada {
 export async function abrirSesion(
   fila: FilaSheet,
   host: string,
-  opciones: { agentId: string; environmentId: string; topeUsd?: number },
+  opciones: OpcionesSesion,
 ): Promise<SesionCreada> {
+  return api<SesionCreada>("POST", "/v1/sessions", cuerpoSesion(fila, host, opciones));
+}
+
+export interface OpcionesSesion {
+  agentId: string;
+  environmentId: string;
+  topeUsd?: number;
+  /** Ficha tecnica adjunta (Files API): se monta de solo lectura en FICHA_RUTA. */
+  fichaFileId?: string | null;
+}
+
+/** El body de `POST /v1/sessions`. Aparte para poder testearlo sin red. */
+export function cuerpoSesion(fila: FilaSheet, host: string, opciones: OpcionesSesion) {
   const centavos = String(Math.round((opciones.topeUsd ?? 1.5) * 100));
-  return api<SesionCreada>("POST", "/v1/sessions", {
+  return {
     agent: { type: "agent_with_overrides", id: opciones.agentId, tools: toolsDeSesion(host) },
     environment_id: opciones.environmentId,
     title: `PDP ${fila.marca} ${fila.modelo}${Number(fila.anio) ? ` ${fila.anio}` : ""}`,
@@ -60,8 +74,10 @@ export async function abrirSesion(
     // Tope duro por sesion. Una corrida medida costo US$0,26; el tope existe
     // para que una sesion que se enrede no se lleve el presupuesto del mes.
     budget: { type: "limit", max_list_cost: { amount: centavos, currency: "USD" } },
-    initial_events: [{ type: "user.message", content: [{ type: "text", text: armarEncargo(fila) }] }],
-  });
+    initial_events: [{ type: "user.message", content: [{ type: "text", text: armarEncargo({ ...fila, ficha: Boolean(opciones.fichaFileId) }) }] }],
+    // La sesion monta su propia copia: el original queda para los reintentos.
+    ...(opciones.fichaFileId ? { resources: [{ type: "file", file_id: opciones.fichaFileId, mount_path: FICHA_MOUNT }] } : {}),
+  };
 }
 
 export interface EstadoSesion {
