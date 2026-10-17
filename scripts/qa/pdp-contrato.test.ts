@@ -14,7 +14,8 @@ import { camposAplicables, importantes, medirLlenado, MIN_CAMPOS, vitales, type 
 import { armarDocumentoCar, armarVersiones, slugify } from "@/lib/pdp-creacion/sanity-doc";
 import { formatoImagen } from "@/lib/pdp-creacion/imagenes";
 import { filaDeSolicitud, filaDesdeEntrada, MINUTOS_TRABADA, razonTrabada, sePuedeReintentar } from "@/lib/pdp-creacion/solicitudes";
-import { falloDeSesion } from "@/lib/pdp-creacion/sesion";
+import { cuerpoSesion, falloDeSesion } from "@/lib/pdp-creacion/sesion";
+import { esFileId, FICHA_MAX_BYTES, FICHA_RUTA, nombreFicha, validarPdf } from "@/lib/pdp-creacion/ficha";
 
 let passed = 0;
 let failed = 0;
@@ -389,6 +390,46 @@ test("razonTrabada: dice que paso segun lo que quedo de la sesion", () => {
   assert.match(razonTrabada(s, { status: "running", fallo: null, entrego: false }), /seguia corriendo/);
   assert.match(razonTrabada(s, { status: "idle", fallo: null, entrego: true }), /no alcanzo a crear el borrador/);
   assert.match(razonTrabada(s, { status: null, fallo: null, entrego: false, errorConsulta: "503" }), /no se pudo revisar.*503/);
+});
+
+// ─── Ficha tecnica adjunta (oct-2026) ─────────────────────────────────────────
+
+test("validarPdf: decide por los bytes y el tamano", () => {
+  const pdf = (n: number) => { const b = new Uint8Array(n); b.set([0x25, 0x50, 0x44, 0x46, 0x2d]); return b; };
+  assert.equal(validarPdf(pdf(2048)), null);
+  assert.match(validarPdf(new TextEncoder().encode("<!DOCTYPE html>"))!, /PDF/);
+  assert.match(validarPdf(new Uint8Array(0))!, /vacio/);
+  assert.match(validarPdf(pdf(FICHA_MAX_BYTES + 1))!, /maximo es 4 MB/);
+  assert.equal(esFileId("file_011CNha8iCJcU1wXNR6q4V8w"), true);
+  assert.equal(esFileId("../../etc"), false);
+  assert.equal(nombreFicha("C:\\fakepath\\ficha avatr.pdf"), "ficha avatr.pdf");
+});
+
+test("armarEncargo: sin ficha no la menciona; con ficha, solo specs y el precio como ultimo recurso", () => {
+  assert.doesNotMatch(armarEncargo(FILA), /ficha-tecnica\.pdf/);
+  const con = armarEncargo({ ...FILA, ficha: true });
+  assert.ok(con.includes(FICHA_RUTA));
+  assert.match(con, /mercado CHILENO/);
+  assert.match(con, /SOLO para specs tecnicas/);
+  assert.match(con, /La fuente web manda/);
+  assert.match(con, /campos_de_ficha/);
+  // Con versiones declaradas el precio es del humano: la ficha no lo toca.
+  assert.match(con, /El precio no sale de la ficha/);
+  assert.doesNotMatch(con, /precio_desde_ficha/);
+  const sinVersiones = armarEncargo({ ...FILA, versiones: [], ficha: true });
+  assert.match(sinVersiones, /ULTIMO recurso: solo si la fuente web no publica ningun precio/);
+  assert.match(sinVersiones, /precio_desde_ficha: true/);
+});
+
+test("cuerpoSesion: monta la ficha como recurso y avisa en el encargo; sin ficha, sin resources", () => {
+  const op = { agentId: "agent_1", environmentId: "env_1" };
+  const sin = cuerpoSesion(FILA, "gwm.cl", op) as Record<string, unknown>;
+  assert.equal("resources" in sin, false);
+  const con = cuerpoSesion(FILA, "gwm.cl", { ...op, fichaFileId: "file_abc123456" }) as {
+    resources: unknown[]; initial_events: { content: { text: string }[] }[];
+  };
+  assert.deepEqual(con.resources, [{ type: "file", file_id: "file_abc123456", mount_path: "/ficha-tecnica.pdf" }]);
+  assert.ok(con.initial_events[0].content[0].text.includes(FICHA_RUTA));
 });
 
 // ─── Versiones de otra electrificacion o carroceria (oct-2026) ────────────────

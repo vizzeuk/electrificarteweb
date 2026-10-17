@@ -54,11 +54,13 @@ export async function POST(req: NextRequest): Promise<Response> {
   const { sessionId, solicitudId } = body;
   const sb = solicitudId ? getSupabase() : null;
   let fila = body.fila;
+  let conFicha = false;
   if (solicitudId && !fila) {
     if (!sb) return NextResponse.json({ error: "Supabase no configurado" }, { status: 500 });
     const s = await cargarSolicitud(sb, solicitudId);
     if (!s) return NextResponse.json({ error: `No existe la solicitud ${solicitudId}` }, { status: 404 });
     fila = filaDeSolicitud(s);
+    conFicha = Boolean(s.ficha_file_id);
   }
   if (!sessionId || !fila) return NextResponse.json({ error: "Falta sessionId o fila/solicitudId" }, { status: 400 });
 
@@ -201,6 +203,15 @@ export async function POST(req: NextRequest): Promise<Response> {
     // Sin versiones declaradas, el precio salio de la fuente (con cita) o no hay precio.
     const sinVersiones = !parseVersiones(fila.versiones).length;
     const precioDeFuente = sinVersiones && typeof doc.basePrice === "number";
+    // Lo que salio de la ficha tecnica adjunta: el re-check semanal relee la URL, no el PDF.
+    const camposDeFicha = conFicha ? (contrato.campos_de_ficha ?? []).filter(Boolean) : [];
+    const precioDeFicha = conFicha && precioDeFuente && contrato.precio_desde_ficha === true;
+    const lineaFicha = camposDeFicha.length
+      ? `\n📄 De la ficha técnica adjunta: ${camposDeFicha.join(", ")}. El re-check semanal no los vuelve a verificar: revísalos.`
+      : null;
+    const lineaPrecio = precioDeFicha
+      ? `\n💲 Precio tomado de la ficha técnica adjunta ($${(doc.basePrice as number).toLocaleString("es-CL")}), porque la web no publica ninguno: confírmalo en Studio antes de publicar.`
+      : precioDeFuente ? `\n💲 Precio tomado de la fuente oficial ($${(doc.basePrice as number).toLocaleString("es-CL")}): confírmalo en Studio antes de publicar.` : null;
     if (sinVersiones && !precioDeFuente) llenado.vitalesFaltantes.unshift("precio");
     if (sinVersiones && !precioDeFuente) llenado.completo = false;
 
@@ -232,7 +243,8 @@ export async function POST(req: NextRequest): Promise<Response> {
           ``,
           `${llenado.n}/${llenado.m} campos aplicables${fotos.portada ? "" : ` · ⚠️ sin portada: ${fotos.problemaPortada}`} · ${fotos.galeria.length + (fotos.portada ? 1 : 0)} foto(s)`,
           lote ? `Re-check: ${lote}` : `Lote de re-check: se asigna al publicarlo.`,
-          precioDeFuente ? `\n💲 Precio tomado de la fuente oficial ($${(doc.basePrice as number).toLocaleString("es-CL")}): confírmalo en Studio antes de publicar.` : null,
+          lineaPrecio,
+          lineaFicha,
           contrato.discrepancias?.length ? `\n⚠️ La fuente contradice la fila:\n• ${contrato.discrepancias.join("\n• ")}` : null,
           v.redirigida ? `\n↪️ La URL indicada redirige a ${v.urlFinal} — se guardo esa como fuente.` : null,
           ``,
@@ -248,6 +260,8 @@ export async function POST(req: NextRequest): Promise<Response> {
           `Fotos: ${fotos.galeria.length + (fotos.portada ? 1 : 0)} subida(s)${fotos.descartes.length ? `, ${fotos.descartes.length} descartada(s)` : ""}`,
           faltan ? `Opcionales sin dato: ${faltan}${llenado.faltantes.length > 8 ? ` (+${llenado.faltantes.length - 8})` : ""}` : null,
           lote ? `Re-check: ${lote}` : `Lote de re-check: se asigna al publicarlo.`,
+          lineaPrecio,
+          lineaFicha,
           ``,
           studioUrl,
         ].filter(Boolean).join("\n");
@@ -255,9 +269,10 @@ export async function POST(req: NextRequest): Promise<Response> {
     const estadoFinal = llenado.completo ? "listo_para_revisar" : "borrador_incompleto";
     const detalleFila = `${llenado.n}/${llenado.m} campos · ${
       llenado.completo
-        ? precioDeFuente ? "completo, precio tomado de la fuente: confírmalo" : "completo"
+        ? precioDeFicha ? "completo, precio tomado de la ficha técnica: confírmalo"
+          : precioDeFuente ? "completo, precio tomado de la fuente: confírmalo" : "completo"
         : `falta: ${[...llenado.vitalesFaltantes, ...llenado.importantesFaltantes].join(", ") || faltan}`
-    }`.slice(0, 480);
+    }${camposDeFicha.length ? ` · ${camposDeFicha.length} de la ficha técnica` : ""}`.slice(0, 480);
     await anotarFinal(estadoFinal, { detalle: detalleFila, mensaje, costo, carId, studioUrl, lote });
 
     return NextResponse.json({

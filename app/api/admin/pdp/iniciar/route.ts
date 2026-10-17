@@ -42,11 +42,14 @@ export async function POST(req: NextRequest): Promise<Response> {
   const solicitudId = body.solicitudId;
   const sb = solicitudId ? getSupabase() : null;
   let fila = body as FilaSheet;
+  // Se lee de la fila completa (select *), no de lo que manda n8n: la RPC de reserva no trae la ficha.
+  let fichaFileId: string | null = null;
   if (solicitudId) {
     if (!sb) return NextResponse.json({ error: "Supabase no configurado" }, { status: 500 });
     const s = await cargarSolicitud(sb, solicitudId);
     if (!s) return NextResponse.json({ error: `No existe la solicitud ${solicitudId}` }, { status: 404 });
     fila = filaDeSolicitud(s);
+    fichaFileId = s.ficha_file_id ?? null;
     await anotarSolicitud(sb, solicitudId, { estado: "procesando", detalle: "Validando y abriendo la investigación" });
   }
 
@@ -80,7 +83,7 @@ export async function POST(req: NextRequest): Promise<Response> {
   const efectiva = { ...fila, url_oficial: v.urlFinal ?? fila.url_oficial, sitio_marca: v.sitioMarca };
   let sesion: Awaited<ReturnType<typeof abrirSesion>>;
   try {
-    sesion = await abrirSesion(efectiva, v.host!, { agentId, environmentId });
+    sesion = await abrirSesion(efectiva, v.host!, { agentId, environmentId, fichaFileId });
   } catch (e) {
     // Sin esto la solicitud quedaria en "procesando" para siempre y n8n se
     // cortaria a mitad del lote. Se devuelve como error de la fila: se ve en el

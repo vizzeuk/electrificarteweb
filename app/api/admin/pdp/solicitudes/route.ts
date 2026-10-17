@@ -6,7 +6,8 @@
  *        Antes de listar barre las trabadas (lib/pdp-creacion/trabadas.ts): una
  *        solicitud que n8n dejo a medias sale como "error" con la razon.
  *   POST {marca, modelo, anio, tipo, electrificacion, url_oficial,
- *         versiones: [{nombre, precio}], creado_por}
+ *         versiones: [{nombre, precio}], creado_por, ficha_file_id?, ficha_nombre?}
+ *        (la ficha tecnica se sube antes a /api/admin/pdp/ficha)
  *        → valida SIN IA (la misma validación que corre n8n) y, si pasa, deja
  *          la solicitud en "listo" y despierta al workflow.
  *
@@ -30,6 +31,7 @@ import {
   type EntradaPanel,
 } from "@/lib/pdp-creacion/solicitudes";
 import { barrerTrabadas } from "@/lib/pdp-creacion/trabadas";
+import { borrarFicha, esFileId, nombreFicha } from "@/lib/pdp-creacion/ficha";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -64,21 +66,32 @@ export async function POST(req: NextRequest): Promise<Response> {
 
   const entrada = (await req.json().catch(() => ({}))) as EntradaPanel;
   const fila = filaDesdeEntrada(entrada);
+  if (entrada.ficha_file_id != null && !esFileId(entrada.ficha_file_id)) {
+    return NextResponse.json({ ok: false, errores: ["ficha_file_id invalido: sube la ficha de nuevo."] }, { status: 422 });
+  }
+  const ficha = esFileId(entrada.ficha_file_id) ? { file_id: entrada.ficha_file_id, nombre: nombreFicha(entrada.ficha_nombre) } : null;
   const v = await validarFila(fila, sanity);
 
   // 422 = la solicitud se entendió pero su contenido no sirve. `errores` va
-  // tal cual al formulario: cada uno dice qué corregir.
-  if (!v.ok) return NextResponse.json({ ok: false, slug: v.slug, errores: v.errores }, { status: 422 });
+  // tal cual al formulario: cada uno dice qué corregir. La ficha que se subió
+  // para esta solicitud queda huérfana: se borra (el panel la vuelve a subir).
+  if (!v.ok) {
+    await borrarFicha(ficha?.file_id);
+    return NextResponse.json({ ok: false, slug: v.slug, errores: v.errores }, { status: 422 });
+  }
 
-  const creada = await crearSolicitud(sb, fila, v.slug, String(entrada.creado_por ?? "").trim() || null);
-  if (!creada.ok) return NextResponse.json({ ok: false, slug: v.slug, errores: [creada.error] }, { status: 409 });
+  const creada = await crearSolicitud(sb, fila, v.slug, String(entrada.creado_por ?? "").trim() || null, ficha);
+  if (!creada.ok) {
+    await borrarFicha(ficha?.file_id);
+    return NextResponse.json({ ok: false, slug: v.slug, errores: [creada.error] }, { status: 409 });
+  }
 
   const despertado = await despertarFlujo();
   return NextResponse.json(
     {
       ok: true,
       solicitud: creada.solicitud,
-      avisos: v.redirigida ? [`La URL redirige a ${v.urlFinal}: se va a usar esa.`] : [],
+      avisos: [...(v.redirigida ? [`La URL redirige a ${v.urlFinal}: se va a usar esa.`] : []), ...creada.avisos],
       // false = n8n no se pudo despertar; el cron la toma igual en ≤15 min.
       arrancaYa: despertado,
     },

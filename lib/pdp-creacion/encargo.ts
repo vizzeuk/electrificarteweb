@@ -13,6 +13,8 @@
 //   cita textual (R3), marcado para que una persona lo confirme. Sin cita, la PDP queda sin
 //   precio y en "borrador con faltantes". Nunca se publica sola (R6).
 
+import { FICHA_RUTA } from "./ficha";
+
 export interface FilaSheet {
   marca: string;
   modelo: string;
@@ -33,6 +35,11 @@ export interface FilaSheet {
    * coma no rompe nada.
    */
   versiones?: string | VersionDeclarada[] | null;
+  /**
+   * true cuando la solicitud trae ficha tecnica (PDF) y la sesion la monta en FICHA_RUTA. No se
+   * guarda: lo pone quien abre la sesion.
+   */
+  ficha?: boolean;
 }
 
 export interface VersionDeclarada {
@@ -201,6 +208,21 @@ export function armarEncargo(fila: FilaSheet): string {
     lineas.push(
       `El humano no declaro versiones ni precios. Deja \`versiones\` vacio y pon en \`base\` las specs de la version mas economica que publique la fuente.`,
       `Reporta en \`precio_lista_leido\` el precio de lista MAS BAJO que publica la fuente para este modelo (sin bonos ni descuentos), con su cita textual en \`evidencia_precio\`. Sin cita, omite el precio: una persona lo completa.`,
+      ``,
+    );
+  }
+
+  if (fila.ficha) {
+    lineas.push(
+      `Ficha tecnica adjunta: el humano adjunto el PDF oficial de la ficha tecnica en ${FICHA_RUTA}. Leela con la herramienta \`read\`. No es una segunda fuente web: es parte del encargo, y es la unica excepcion a R2.`,
+      `- Primero confirma que sea de ESTE modelo y del mercado CHILENO (precios en CLP o sin precios, versiones que calcen con las del encargo o la web; nada de otro pais ni de otra moneda). Si es de otro modelo u otro mercado, NO uses nada de ella y dilo en \`discrepancias\`.`,
+      `- Sirve SOLO para specs tecnicas que la fuente web no trae (bateria, autonomia, consumo, potencia, torque, aceleracion, dimensiones, maletero, carga, garantia, seguridad). Tagline, descripcion, SEO y fotos salen de la web.`,
+      `- La fuente web manda. Si la web y la ficha dicen cosas distintas, queda el valor de la web y lo reportas en \`discrepancias\`.`,
+      `- R3 sigue valiendo: el dato tiene que estar textual en la ficha. Pon en \`campos_de_ficha\` los nombres de los campos que sacaste de ella (ej. "torque", "seats", "versiones[GT].range").`,
+      `- Si es un catalogo largo, lee solo las paginas de la tabla de especificaciones: la sesion tiene presupuesto acotado.`,
+      ...(versiones.length
+        ? [`- El precio no sale de la ficha: lo declaro el humano.`]
+        : [`- Precio, ULTIMO recurso: solo si la fuente web no publica ningun precio de lista, tomalo de la ficha (con cita textual y la pagina en \`evidencia_precio\`) y marca \`precio_desde_ficha: true\`.`]),
       ``,
     );
   }
