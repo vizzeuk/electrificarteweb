@@ -94,7 +94,14 @@ export interface Entrega {
   pedidoNavegador: PedidoNavegador | null;
   /** Lo que dijo el agente si no llamo a la herramienta — para el aviso. */
   ultimoMensaje: string | null;
+  /** Mensajes de los eventos `session.error`, del mas nuevo al mas viejo. */
   errores: string[];
+  /**
+   * `stop_reason.type` del ultimo `session.status_idle`: `end_turn`,
+   * `requires_action`, `retries_exhausted` (falla terminal) o `budget_reached`
+   * (se comio el tope). El objeto sesion no lo trae: solo el evento.
+   */
+  stopReason: string | null;
 }
 
 /**
@@ -127,9 +134,11 @@ export async function leerEntrega(sessionId: string): Promise<Entrega> {
   );
   const entradaPendiente = (pendiente?.input ?? {}) as { url?: string; motivo?: string };
 
-  const errores = eventos
-    .filter((e) => e.type === "session.error")
-    .map((e) => String((e as { message?: string }).message ?? JSON.stringify(e).slice(0, 300)));
+  const errores = eventos.filter((e) => e.type === "session.error").map(mensajeDeError);
+
+  const idle = eventos.find((e) => e.type === "session.status_idle") as
+    | { stop_reason?: { type?: string } }
+    | undefined;
 
   const msg = eventos.find((e) => e.type === "agent.message");
   const texto = Array.isArray((msg as { content?: { type: string; text?: string }[] })?.content)
@@ -148,7 +157,38 @@ export async function leerEntrega(sessionId: string): Promise<Entrega> {
       : null,
     ultimoMensaje: texto,
     errores,
+    stopReason: idle?.stop_reason?.type ?? null,
   };
+}
+
+/** El texto de un `session.error`, venga donde venga (`error.message` o `message`). */
+function mensajeDeError(e: Record<string, unknown>): string {
+  const err = e.error as { message?: unknown; type?: unknown } | undefined;
+  const msg = err?.message ?? e.message;
+  if (typeof msg === "string" && msg.trim()) {
+    return typeof err?.type === "string" ? `${msg.trim()} (${err.type})` : msg.trim();
+  }
+  return JSON.stringify(e).slice(0, 300);
+}
+
+/**
+ * ¿La sesion termino por una FALLA y no porque el agente decidiera que no habia
+ * datos? Devuelve la razon para el panel, o null si no hubo falla.
+ *
+ * Distinguirlo importa: "sin datos" dice "revisa la URL", y si la sesion se cayo
+ * (reintentos agotados, tope de gasto, error de la plataforma) la URL esta bien
+ * y lo que hay que hacer es reintentar o mirar la sesion en Console. Solo aplica
+ * cuando NO hubo entrega: si el agente entrego, los errores intermedios no
+ * importan.
+ */
+export function falloDeSesion(status: string, entrega: Pick<Entrega, "contrato" | "errores" | "stopReason">): string | null {
+  if (entrega.contrato) return null;
+  const detalle = entrega.errores[0] ? `: ${entrega.errores[0]}` : "";
+  if (entrega.stopReason === "retries_exhausted") return `La sesion se cayo tras agotar los reintentos${detalle}`;
+  if (entrega.stopReason === "budget_reached") return `La sesion llego al tope de gasto sin entregar la ficha${detalle}`;
+  if (entrega.errores.length) return `La sesion termino con error${detalle}`;
+  if (status === "terminated") return "La sesion se termino sin entregar la ficha";
+  return null;
 }
 
 /** Le devuelve al agente el resultado de un custom tool y lo deja seguir. */

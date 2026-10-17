@@ -72,8 +72,23 @@ const ifEq = (id, name, left, right, pos, notes) => ({
   id, name, type: "n8n-nodes-base.if", typeVersion: 2.2, position: pos, notes,
 });
 
+// Un aviso que falla (Kapso caído, ventana de 24 h) no puede cortar el lote: el
+// resultado ya quedó en la solicitud y el panel lo muestra igual.
+const SIGUE = { node: { onError: "continueRegularOutput" } };
+// Un 500 o un timeout de la web sale por la segunda salida en vez de cortar la
+// ejecución: sin esto la solicitud quedaba en "procesando" y nadie se enteraba.
+const CON_SALIDA_DE_ERROR = { node: { onError: "continueErrorOutput" } };
+
 const avisar = (id, name, textExpr, pos, notes) =>
-  http(id, name, "/api/admin/notify", `{ "text": ${textExpr} }`, pos, notes);
+  http(id, name, "/api/admin/notify", `{ "text": ${textExpr} }`, pos, notes, SIGUE);
+
+/** El texto del error que n8n deja en el item de la salida de error. */
+const DESCRIBIR_ERROR = [
+  "const j = $input.first().json;",
+  "const e = j.error;",
+  "const texto = typeof e === 'string' ? e : (e && (e.description || e.message)) || j.message || JSON.stringify(j);",
+  "const http = e && (e.httpCode || e.status) ? ` (HTTP ${e.httpCode || e.status})` : '';",
+].join("\n");
 
 // ─── Nodos ───────────────────────────────────────────────────────────────────
 
@@ -118,6 +133,12 @@ const nodes = [
         "`borrador_incompleto` · `sin_datos` · `rechazada` · `error`.",
         "Ninguno final es `listo`: nada se re-procesa solo. Para reintentar, botón en el panel.",
         "",
+        "### Las fallas avisan",
+        "`Reservar`, `Validar y abrir sesión` y `¿Terminó?` tienen **salida de error**: un 500 o un",
+        "timeout de la web marca la solicitud en `error` con la razón y avisa, en vez de cortar la",
+        "ejecución. Si n8n o la VPS se caen, la web barre las trabadas (>30 min, también las",
+        "`listo` que nadie tomó) sola y avisa por WhatsApp sin pasar por acá. Docs §3.5d.",
+        "",
         "### La espera",
         "Tres corridas medidas: **155–185 s**, **US$0,26–0,31**. El loop consulta cada 30 s hasta",
         "24 veces (**12 min de techo**). n8n no tiene límite de ejecución, pero las solicitudes",
@@ -126,7 +147,7 @@ const nodes = [
         "⚠️ **El corte de 60 s de Vercel sigue existiendo** para `/api/admin/pdp/*`. Cada llamada",
         "del loop tarda 2–15 s; la investigación de 3 min corre en la infra de Anthropic.",
       ].join("\n"),
-      height: 820, width: 560, color: 5,
+      height: 920, width: 560, color: 5,
     },
     id: "nota", name: "Lee antes de activar",
     type: "n8n-nodes-base.stickyNote", typeVersion: 1, position: [-660, 60],
@@ -174,7 +195,8 @@ const nodes = [
   http("reservar", "Reservar solicitudes", "/api/admin/pdp/reservar",
     `{{ JSON.stringify({ limit: $('Config').first().json.lote }) }}`,
     [380, 300],
-    "Pasa a 'en cola' hasta `lote` solicitudes 'listo' de una sola vez, de forma atómica (for update skip locked). Una corrida simultánea (cron + webhook) nunca toma la misma solicitud."),
+    "Pasa a 'en cola' hasta `lote` solicitudes 'listo' de una sola vez, de forma atómica (for update skip locked). Una corrida simultánea (cron + webhook) nunca toma la misma solicitud. Antes barre las trabadas: las que una ejecución anterior dejó a medias pasan a 'error' con la razón.",
+    CON_SALIDA_DE_ERROR),
 
   {
     parameters: {
@@ -213,7 +235,8 @@ const nodes = [
   http("iniciar", "Validar y abrir sesión", "/api/admin/pdp/iniciar",
     `{{ JSON.stringify({ solicitudId: ${sol("solicitudId")} }) }}`,
     [1040, 420],
-    "Pasos 5 a 10. La web lee la solicitud, la marca 'procesando', valida sin IA (URL viva, refs en Sanity, slug libre, precios > 0) y abre la sesión del Managed Agent. Devuelve en segundos."),
+    "Pasos 5 a 10. La web lee la solicitud, la marca 'procesando', valida sin IA (URL viva, refs en Sanity, slug libre, precios > 0) y abre la sesión del Managed Agent. Devuelve en segundos.",
+    CON_SALIDA_DE_ERROR),
 
   ifEq("ok", "¿Validación OK?", "{{ $json.ok }}", "true", [1260, 420],
     "Rama falsa = pasos 6 a 8: la web ya dejó la solicitud en 'error' con el detalle; acá solo se avisa."),
@@ -238,7 +261,8 @@ const nodes = [
       solicitudId: ${sol("solicitudId")}
     }) }}`,
     [1700, 300],
-    "Pasos 11 a 21. Si la sesión sigue corriendo devuelve {estado:'corriendo'} y el loop vuelve a esperar. Si terminó: mide el llenado N/M, sube las fotos, crea el borrador oculto, le asigna lote de re-check y escribe el resultado en la solicitud."),
+    "Pasos 11 a 21. Si la sesión sigue corriendo devuelve {estado:'corriendo'} y el loop vuelve a esperar. Si terminó: mide el llenado N/M, sube las fotos, crea el borrador oculto, le asigna lote de re-check y escribe el resultado en la solicitud. Si la sesión falló devuelve {estado:'error', mensaje} y la solicitud ya quedó en 'error': se avisa igual que un resultado.",
+    CON_SALIDA_DE_ERROR),
 
   code("contar", "¿Seguir esperando?",
     [
@@ -273,12 +297,53 @@ const nodes = [
       detalle: 'La sesión ' + ${ini("sessionId")} + ' no terminó en ' + Math.round($('Config').first().json.segundosEntreConsultas * $('Config').first().json.maxConsultas / 60) + ' min'
     }) }}`,
     [2380, 360],
-    "La sesión sigue viva en Console: se puede mirar ahí qué pasó antes de reintentar desde el panel."),
+    "La sesión sigue viva en Console: se puede mirar ahí qué pasó antes de reintentar desde el panel.",
+    SIGUE),
 
   avisar("avisa-timeout", "Avisar espera agotada",
     `{{ '⏱️ ' + ${ini("nombre")} + ': la investigación no terminó a tiempo.\\n\\nSesión: ' + ${ini("sessionId")} }}`,
     [2600, 360],
     "Sin esto, una sesión colgada se pierde en silencio."),
+
+  code("describir-falla", "Describir la falla",
+    [
+      DESCRIBIR_ERROR,
+      "const paso = $prevNode.name;",
+      "const fila = $('Una solicitud a la vez').first().json.fila ?? {};",
+      "const nombre = [fila.marca, fila.modelo].filter(Boolean).join(' ') || 'Solicitud del panel';",
+      "const falla = `Falló el paso \"${paso}\"${http}: ${String(texto).slice(0, 300)}`;",
+      "return [{ json: { paso, falla, nombre } }];",
+    ].join("\n"),
+    [1700, 820],
+    "Llega acá cuando /iniciar o /cerrar responden 500, timeout o algo que no es JSON. Arma la razón para la solicitud y el aviso."),
+
+  http("marcar-falla", "Solicitud · falló un paso", "/api/admin/pdp/marcar",
+    `{{ JSON.stringify({
+      solicitudId: ${sol("solicitudId")},
+      estado: 'error',
+      detalle: $json.falla
+    }) }}`,
+    [1920, 820],
+    "La solicitud queda en 'error' con la razón: el panel la muestra y se puede reintentar.",
+    SIGUE),
+
+  avisar("avisa-falla", "Avisar falla",
+    `{{ '❌ ' + $('Describir la falla').first().json.nombre + ': la creación de la PDP falló.\\n\\n' + $('Describir la falla').first().json.falla + '\\n\\nQuedó como error en el panel: reintenta desde ahí.' }}`,
+    [2140, 820],
+    "Sin esto, un 500 de la web cortaba la ejecución en silencio."),
+
+  code("describir-falla-cola", "Describir la falla de la cola",
+    [
+      DESCRIBIR_ERROR,
+      "return [{ json: { falla: `No se pudo reservar la cola de PDPs${http}: ${String(texto).slice(0, 300)}` } }];",
+    ].join("\n"),
+    [490, 520],
+    "Si /reservar falla no hay solicitud que marcar (siguen en 'listo'), pero hay que saberlo: nada se va a crear hasta que se arregle."),
+
+  avisar("avisa-falla-cola", "Avisar falla de la cola",
+    `{{ '⚠️ ' + $json.falla + '\\n\\nLas solicitudes siguen en espera en el panel.' }}`,
+    [710, 520],
+    "La próxima corrida del cron lo vuelve a intentar."),
 
   {
     parameters: {}, id: "volver", name: "Siguiente solicitud",
@@ -293,18 +358,23 @@ const connections = {
   "Panel: solicitud nueva": { main: [to("Config")] },
   "Cada 15 minutos": { main: [to("Config")] },
   "Config": { main: [to("Reservar solicitudes")] },
-  "Reservar solicitudes": { main: [to("¿Hay solicitudes?")] },
+  // Los nodos con onError=continueErrorOutput tienen dos salidas: 0 = ok, 1 = error.
+  "Reservar solicitudes": { main: [to("¿Hay solicitudes?"), to("Describir la falla de la cola")] },
+  "Describir la falla de la cola": { main: [to("Avisar falla de la cola")] },
   "¿Hay solicitudes?": { main: [to("Una por solicitud"), []] },
   "Una por solicitud": { main: [to("Una solicitud a la vez")] },
   "Una solicitud a la vez": {
     // salida 0 = terminó el loop · salida 1 = siguiente item
     main: [[], to("Validar y abrir sesión")],
   },
-  "Validar y abrir sesión": { main: [to("¿Validación OK?")] },
+  "Validar y abrir sesión": { main: [to("¿Validación OK?"), to("Describir la falla")] },
   "¿Validación OK?": { main: [to("Esperar"), to("Avisar error de validación")] },
   "Avisar error de validación": { main: [to("Siguiente solicitud")] },
   "Esperar": { main: [to("¿Terminó? Cerrar y crear")] },
-  "¿Terminó? Cerrar y crear": { main: [to("¿Seguir esperando?")] },
+  "¿Terminó? Cerrar y crear": { main: [to("¿Seguir esperando?"), to("Describir la falla")] },
+  "Describir la falla": { main: [to("Solicitud · falló un paso")] },
+  "Solicitud · falló un paso": { main: [to("Avisar falla")] },
+  "Avisar falla": { main: [to("Siguiente solicitud")] },
   "¿Seguir esperando?": { main: [to("¿Sigue corriendo?")] },
   "¿Sigue corriendo?": { main: [to("Esperar"), to("¿Se agotó la espera?")] },
   "¿Se agotó la espera?": { main: [to("Solicitud · se agotó la espera"), to("Avisar resultado")] },

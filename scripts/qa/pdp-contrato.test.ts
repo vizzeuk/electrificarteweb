@@ -13,7 +13,8 @@ import { armarEncargo, hostDe, parseVersiones, sinTiposDelModelo, toolsConHost, 
 import { camposAplicables, importantes, medirLlenado, MIN_CAMPOS, vitales, type BasePdp, type ContratoPdp } from "@/lib/pdp-creacion/contrato";
 import { armarDocumentoCar, armarVersiones, slugify } from "@/lib/pdp-creacion/sanity-doc";
 import { formatoImagen } from "@/lib/pdp-creacion/imagenes";
-import { filaDeSolicitud, filaDesdeEntrada, MINUTOS_TRABADA, sePuedeReintentar } from "@/lib/pdp-creacion/solicitudes";
+import { filaDeSolicitud, filaDesdeEntrada, MINUTOS_TRABADA, razonTrabada, sePuedeReintentar } from "@/lib/pdp-creacion/solicitudes";
+import { falloDeSesion } from "@/lib/pdp-creacion/sesion";
 
 let passed = 0;
 let failed = 0;
@@ -362,6 +363,32 @@ test("sePuedeReintentar: fallidas si, terminadas bien no, activas solo si estan 
   assert.equal(sePuedeReintentar({ estado: "borrador_incompleto", updated_at: hace(999) }, ahora), false);
   assert.equal(sePuedeReintentar({ estado: "procesando", updated_at: hace(5) }, ahora), false);
   assert.equal(sePuedeReintentar({ estado: "en cola", updated_at: hace(MINUTOS_TRABADA + 1) }, ahora), true);
+});
+
+// ─── Fallas: error con razon, no "sin datos" (oct-2026) ───────────────────────
+
+test("falloDeSesion: una sesion caida es error, no sin datos", () => {
+  const sin = { contrato: null, errores: [] as string[], stopReason: "end_turn" };
+  // El agente termino sin entregar y sin errores: eso sigue siendo "sin datos".
+  assert.equal(falloDeSesion("idle", sin), null);
+  assert.match(falloDeSesion("idle", { ...sin, stopReason: "retries_exhausted", errores: ["overloaded"] })!, /reintentos.*overloaded/);
+  assert.match(falloDeSesion("idle", { ...sin, stopReason: "budget_reached" })!, /tope de gasto/);
+  assert.match(falloDeSesion("idle", { ...sin, errores: ["web_fetch: url_not_allowed"] })!, /url_not_allowed/);
+  assert.match(falloDeSesion("terminated", sin)!, /sin entregar/);
+  // Si el agente entrego, los errores intermedios no importan.
+  const contrato = { estado: "completo" } as unknown as ContratoPdp;
+  assert.equal(falloDeSesion("terminated", { contrato, errores: ["algo"], stopReason: "retries_exhausted" }), null);
+});
+
+test("razonTrabada: dice que paso segun lo que quedo de la sesion", () => {
+  assert.match(razonTrabada({ estado: "listo", session_id: null }, null), /no la tomo.*VPS/);
+  assert.match(razonTrabada({ estado: "en cola", session_id: null }, null), /n8n la tomo/);
+  assert.match(razonTrabada({ estado: "procesando", session_id: null }, null), /no hay sesion/);
+  const s = { estado: "procesando" as const, session_id: "sesn_1" };
+  assert.match(razonTrabada(s, { status: "idle", fallo: "La sesion termino con error: x", entrego: false }), /error: x.*n8n no alcanzo/);
+  assert.match(razonTrabada(s, { status: "running", fallo: null, entrego: false }), /seguia corriendo/);
+  assert.match(razonTrabada(s, { status: "idle", fallo: null, entrego: true }), /no alcanzo a crear el borrador/);
+  assert.match(razonTrabada(s, { status: null, fallo: null, entrego: false, errorConsulta: "503" }), /no se pudo revisar.*503/);
 });
 
 // ─── Versiones de otra electrificacion o carroceria (oct-2026) ────────────────

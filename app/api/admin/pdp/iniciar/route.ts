@@ -50,7 +50,17 @@ export async function POST(req: NextRequest): Promise<Response> {
     await anotarSolicitud(sb, solicitudId, { estado: "procesando", detalle: "Validando y abriendo la investigación" });
   }
 
-  const v = await validarFila(fila, sanity);
+  let v: Awaited<ReturnType<typeof validarFila>>;
+  try {
+    v = await validarFila(fila, sanity);
+  } catch (e) {
+    // Sanity o la URL no respondieron. Mismo trato que abrir la sesion: la
+    // solicitud queda en "error" con la razon y n8n avisa, en vez de un 500
+    // que corta el lote y la deja en "procesando".
+    const error = `No se pudo validar la solicitud: ${e instanceof Error ? e.message : String(e)}`.slice(0, 400);
+    await anotarSolicitud(sb, solicitudId, { estado: "error", detalle: error, terminada_at: new Date().toISOString() });
+    return NextResponse.json({ ok: false, errores: [error], nombre: `${fila.marca} ${fila.modelo}` });
+  }
 
   if (!v.ok) {
     // No es un 4xx: la fila se proceso bien, lo que fallo es su contenido. n8n

@@ -167,14 +167,14 @@ Si todas están terminadas, deja de consultar.
 
 | `estado` | Etiqueta sugerida | Acción |
 |---|---|---|
-| `listo` | En espera | **Cancelar** |
-| `en cola` | Tomada | — (si lleva más de 30 min: **Reintentar**) |
-| `procesando` | Investigando (~3 min) | — (si lleva más de 30 min: **Reintentar**) |
+| `listo` | En espera | **Cancelar** (si nadie la toma en 30 min — VPS de n8n caída —, el GET la pasa a `error`) |
+| `en cola` | Tomada | — (pasados 30 min sin movimiento, el GET la pasa a `error` con la razón) |
+| `procesando` | Investigando (~3 min) | — (ídem) |
 | `listo_para_revisar` | Lista para revisar | **Abrir en Studio** — revisar y publicar |
 | `borrador_incompleto` | Borrador con faltantes | **Abrir en Studio** — completar lo que dice `detalle` |
 | `sin_datos` | No encontró datos | **Corregir y reintentar** (casi siempre es la URL) |
 | `rechazada` | Rechazada | Ver `detalle` (ej. alguien la creó a mano mientras tanto) |
-| `error` | Error | **Corregir y reintentar** |
+| `error` | Error | **Corregir y reintentar**. `detalle` trae la razón (sesión caída, tope de gasto, paso de n8n que falló, trabada >30 min) y `mensaje` el aviso completo |
 
 > **Ninguna PDP se publica sola.** `listo_para_revisar` significa que el borrador está completo,
 > pero sigue **oculto**: publicarlo es siempre una persona, en Studio.
