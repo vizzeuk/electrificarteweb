@@ -47,7 +47,8 @@ export async function GET(req: NextRequest): Promise<Response> {
     if (!solicitud) return NextResponse.json({ error: "No existe" }, { status: 404 });
     return NextResponse.json({ solicitud });
   }
-  await barrerTrabadas(sb);
+  // Acotado: el panel corta este GET a los 10 s.
+  await barrerTrabadas(sb, { max: 3, presupuestoMs: 5_000 });
   const solicitudes = await listarSolicitudes(sb, {
     estado: p.get("estado") ?? undefined,
     limit: Number(p.get("limit")) || undefined,

@@ -19,13 +19,18 @@ import { MINUTOS_TRABADA, razonTrabada, TABLA, type RevisionSesion, type Solicit
 
 type Trabada = Pick<Solicitud, "id" | "marca" | "modelo" | "anio" | "estado" | "session_id">;
 
+/** Las lecturas de la sesion no tienen timeout propio: el barrido corre adentro de un GET del panel. */
+function conTope<T>(p: Promise<T>, ms = 4_000): Promise<T> {
+  return Promise.race([p, new Promise<never>((_, rej) => setTimeout(() => rej(new Error(`Anthropic no respondio en ${ms / 1000} s`)), ms))]);
+}
+
 async function revisar(sessionId: string): Promise<{ revision: RevisionSesion; toolUseId: string | null }> {
   try {
-    const estado = await estadoSesion(sessionId);
+    const estado = await conTope(estadoSesion(sessionId));
     if (estado.status === "running" || estado.status === "rescheduling") {
       return { revision: { status: estado.status, fallo: null, entrego: false }, toolUseId: null };
     }
-    const entrega = await leerEntrega(sessionId);
+    const entrega = await conTope(leerEntrega(sessionId));
     return {
       revision: { status: estado.status, fallo: falloDeSesion(estado.status, entrega), entrego: Boolean(entrega.contrato) },
       toolUseId: entrega.toolUseId,
@@ -39,9 +44,15 @@ async function revisar(sessionId: string): Promise<{ revision: RevisionSesion; t
 /**
  * Marca como "error" las solicitudes trabadas. Devuelve cuantas marco. Nunca lanza.
  * `listo: false` desde /reservar: si n8n esta llamando, esta vivo y las va a tomar ahora.
+ * `max`/`presupuestoMs`: el GET del panel tiene 10 s de timeout; lo que no alcance queda
+ * para el proximo GET (15 s despues).
  */
-export async function barrerTrabadas(sb: SupabaseClient, opts: { listo?: boolean; ahora?: number } = {}): Promise<number> {
+export async function barrerTrabadas(
+  sb: SupabaseClient,
+  opts: { listo?: boolean; max?: number; presupuestoMs?: number; ahora?: number } = {},
+): Promise<number> {
   const ahora = opts.ahora ?? Date.now();
+  const hasta = Date.now() + (opts.presupuestoMs ?? 40_000);
   const corte = new Date(ahora - MINUTOS_TRABADA * 60_000).toISOString();
   try {
     const { data, error } = await sb
@@ -49,11 +60,12 @@ export async function barrerTrabadas(sb: SupabaseClient, opts: { listo?: boolean
       .select("id, marca, modelo, anio, estado, session_id")
       .in("estado", opts.listo === false ? ["en cola", "procesando"] : ["listo", "en cola", "procesando"])
       .lt("updated_at", corte)
-      .limit(10);
+      .limit(opts.max ?? 10);
     if (error || !data?.length) return 0;
 
     let marcadas = 0;
     for (const s of data as Trabada[]) {
+      if (Date.now() > hasta) break;
       const { revision, toolUseId } = s.session_id ? await revisar(s.session_id) : { revision: null, toolUseId: null };
       const detalle = razonTrabada(s, revision).slice(0, 480);
       const nombre = [s.marca, s.modelo, s.anio].filter(Boolean).join(" ");
