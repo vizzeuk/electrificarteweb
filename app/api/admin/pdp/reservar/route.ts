@@ -30,7 +30,8 @@ export async function POST(req: NextRequest): Promise<Response> {
   const { limit } = (await req.json().catch(() => ({}))) as { limit?: number };
   const n = Math.max(1, Math.min(Number(limit) || 5, 20));
   // Cada corrida del cron revisa tambien las que una ejecucion anterior dejo a medias.
-  await barrerTrabadas(sb);
+  // Las "listo" no: n8n esta vivo y las toma ahora mismo.
+  await barrerTrabadas(sb, { listo: false });
   const reservadas = await reservarSolicitudes(sb, n);
 
   return NextResponse.json({

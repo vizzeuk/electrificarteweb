@@ -167,7 +167,7 @@ Si todas están terminadas, deja de consultar.
 
 | `estado` | Etiqueta sugerida | Acción |
 |---|---|---|
-| `listo` | En espera | **Cancelar** |
+| `listo` | En espera | **Cancelar** (si nadie la toma en 30 min — VPS de n8n caída —, el GET la pasa a `error`) |
 | `en cola` | Tomada | — (pasados 30 min sin movimiento, el GET la pasa a `error` con la razón) |
 | `procesando` | Investigando (~3 min) | — (ídem) |
 | `listo_para_revisar` | Lista para revisar | **Abrir en Studio** — revisar y publicar |

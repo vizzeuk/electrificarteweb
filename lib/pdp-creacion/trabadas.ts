@@ -1,14 +1,17 @@
 // Red de seguridad de la cola de PDPs que NO depende de n8n.
 //
-// Si la ejecucion de n8n se corta a mitad de camino (un 500, un timeout, la VPS
-// reiniciada), la solicitud queda en "en cola"/"procesando" para siempre: nadie
-// llama a /cerrar ni a /marcar, y nadie avisa. Este barrido la pasa a "error"
-// con la razon (mirando la sesion del agente si la hay) y avisa por WhatsApp.
+// Si n8n no corre (la VPS caida) la solicitud se queda en "listo" para siempre;
+// si la ejecucion se corta a mitad de camino (un 500, un timeout, un reinicio),
+// queda en "en cola"/"procesando". En ambos casos nadie llama a /cerrar ni a
+// /marcar, y nadie avisa. Este barrido la pasa a "error" con la razon (mirando
+// la sesion del agente si la hay) y avisa por WhatsApp desde la web, que no
+// depende de la VPS. Reintentar desde el panel la devuelve a "listo".
 //
 // Corre en el GET de /api/admin/pdp/solicitudes (el panel lo consulta cada 15 s
-// mientras haya alguna en curso) y en /reservar (el cron de n8n). La espera
-// normal de n8n tiene techo de 12 min, asi que pasados MINUTOS_TRABADA sin
-// movimiento ya nadie la esta esperando.
+// mientras haya alguna en curso), en /reservar (el cron de n8n) y una vez al dia
+// en /api/cron/pdp-trabadas (Vercel Hobby no deja crons mas seguidos). El cron
+// de n8n toma las "listo" en <= 15 min y su espera tiene techo de 12 min, asi que
+// pasados MINUTOS_TRABADA sin movimiento ya nadie la va a tomar ni esperar.
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { avisarAdmins } from "@/lib/whatsapp/avisar-admins";
 import { cerrarSesion, estadoSesion, falloDeSesion, leerEntrega } from "./sesion";
@@ -33,16 +36,20 @@ async function revisar(sessionId: string): Promise<{ revision: RevisionSesion; t
   }
 }
 
-/** Marca como "error" las solicitudes trabadas. Devuelve cuantas marco. Nunca lanza. */
-export async function barrerTrabadas(sb: SupabaseClient, ahora = Date.now()): Promise<number> {
+/**
+ * Marca como "error" las solicitudes trabadas. Devuelve cuantas marco. Nunca lanza.
+ * `listo: false` desde /reservar: si n8n esta llamando, esta vivo y las va a tomar ahora.
+ */
+export async function barrerTrabadas(sb: SupabaseClient, opts: { listo?: boolean; ahora?: number } = {}): Promise<number> {
+  const ahora = opts.ahora ?? Date.now();
   const corte = new Date(ahora - MINUTOS_TRABADA * 60_000).toISOString();
   try {
     const { data, error } = await sb
       .from(TABLA)
       .select("id, marca, modelo, anio, estado, session_id")
-      .in("estado", ["en cola", "procesando"])
+      .in("estado", opts.listo === false ? ["en cola", "procesando"] : ["listo", "en cola", "procesando"])
       .lt("updated_at", corte)
-      .limit(5);
+      .limit(10);
     if (error || !data?.length) return 0;
 
     let marcadas = 0;
@@ -50,7 +57,7 @@ export async function barrerTrabadas(sb: SupabaseClient, ahora = Date.now()): Pr
       const { revision, toolUseId } = s.session_id ? await revisar(s.session_id) : { revision: null, toolUseId: null };
       const detalle = razonTrabada(s, revision).slice(0, 480);
       const nombre = [s.marca, s.modelo, s.anio].filter(Boolean).join(" ");
-      const mensaje = `❌ ${nombre}: la solicitud se quedo sin avanzar.\n\n${detalle}\n\nQuedo como error en el panel: reintenta desde ahi.${s.session_id ? ` Sesion: ${s.session_id}` : ""}`;
+      const mensaje = `❌ ${nombre}: la solicitud se quedo sin avanzar.\n\n${detalle}\n\nQuedo como error en el panel: reintenta desde ahi${s.estado === "listo" ? " cuando n8n vuelva" : ""}.${s.session_id ? ` Sesion: ${s.session_id}` : ""}`;
 
       // Condicional: si otro barrido (u n8n) la movio entretanto, no se pisa ni se avisa dos veces.
       const { data: tocadas } = await sb

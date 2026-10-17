@@ -381,6 +381,7 @@ test("falloDeSesion: una sesion caida es error, no sin datos", () => {
 });
 
 test("razonTrabada: dice que paso segun lo que quedo de la sesion", () => {
+  assert.match(razonTrabada({ estado: "listo", session_id: null }, null), /no la tomo.*VPS/);
   assert.match(razonTrabada({ estado: "en cola", session_id: null }, null), /n8n la tomo/);
   assert.match(razonTrabada({ estado: "procesando", session_id: null }, null), /no hay sesion/);
   const s = { estado: "procesando" as const, session_id: "sesn_1" };

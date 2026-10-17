@@ -988,7 +988,11 @@ ejecución, dejando la solicitud en `procesando` sin aviso. Ahora cada falla tie
 | `validarFila` o abrir la sesión lanzan | `iniciar` | `error` + razón; n8n avisa por la rama "validación falló" |
 | `iniciar`/`cerrar` responden 500 o timeout de todos modos | n8n: salida de error → `Describir la falla` → `marcar` → aviso | `error` + `Falló el paso "…" (HTTP …): …` |
 | `reservar` falla | n8n: salida de error → aviso | Nada (siguen en `listo`); llega el aviso |
-| n8n se corta entero (VPS, reinicio) | `barrerTrabadas` (`lib/pdp-creacion/trabadas.ts`), en el GET de `/solicitudes` y en `/reservar` | Pasados 30 min sin movimiento: `error` + razón mirando la sesión; la sesión viva se corta y se avisa |
+| n8n se corta a mitad de una ejecución (reinicio) | `barrerTrabadas` (`lib/pdp-creacion/trabadas.ts`), en el GET de `/solicitudes`, en `/reservar` y en el cron diario `/api/cron/pdp-trabadas` | `en cola`/`procesando` con 30 min sin movimiento: `error` + razón mirando la sesión; la sesión viva se corta y se avisa |
+| La VPS de n8n está caída (nadie reserva) | `barrerTrabadas`, en el GET de `/solicitudes` y el cron diario (no en `/reservar`: si n8n llama, está vivo) | `listo` con 30 min: `error` "n8n no la tomó: la VPS o el workflow están caídos". El WhatsApp lo manda la web, no n8n. Reintentar cuando vuelva |
+
+Vercel está en Hobby: el cron no puede ser más seguido que diario. Con la VPS caída y el panel
+cerrado, el aviso puede tardar hasta ese cron; con el panel abierto llega a los 30 min.
 
 Los avisos (`/api/admin/notify`) tienen `onError: continueRegularOutput`: un WhatsApp que no sale
 no corta el lote, porque el resultado ya quedó en la solicitud y el panel lo muestra.

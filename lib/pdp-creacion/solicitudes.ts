@@ -123,14 +123,17 @@ export interface RevisionSesion {
 }
 
 /**
- * Por que una solicitud quedo trabada en "en cola"/"procesando", en palabras
- * del panel. Pura: la revision de la sesion la hace `barrerTrabadas`.
+ * Por que una solicitud quedo trabada ("listo" sin que n8n la tome, o "en
+ * cola"/"procesando" sin avanzar), en palabras del panel. Pura: la revision de
+ * la sesion la hace `barrerTrabadas`.
  */
 export function razonTrabada(
   s: Pick<Solicitud, "estado" | "session_id">,
   sesion: RevisionSesion | null,
 ): string {
   const min = `${MINUTOS_TRABADA} min`;
+  // El cron de n8n corre cada 15 min: si en 30 nadie la reservo, n8n (o la VPS) esta caido.
+  if (s.estado === "listo") return `n8n no la tomo en ${min}: la VPS de n8n o el workflow estan caidos.`;
   if (!s.session_id || !sesion) {
     return s.estado === "en cola"
       ? `n8n la tomo pero no alcanzo a validarla en ${min} (el flujo se corto).`
