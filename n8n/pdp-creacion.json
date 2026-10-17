@@ -4,8 +4,8 @@
   "nodes": [
     {
       "parameters": {
-        "content": "## Flujo v2 — Creación de PDP desde el panel\n\nEl formulario del **panel** (dashboard) crea una solicitud en `pdp_solicitudes` a través\nde la web y despierta este workflow por webhook. El cron de 15 min es la red de seguridad\npor si el webhook no llegó.\n\nPor cada solicitud: valida sin IA → abre una sesión del Managed Agent → espera → crea el\nborrador **oculto** en Sanity → la web escribe el resultado en la solicitud (lo ve el\npanel) → aviso por WhatsApp.\n\n### Reglas del board que este flujo hace cumplir\n- **R6 · todo nace `hidden:true`.** Publicar es siempre acto humano.\n- **R8 · idempotencia por slug.** Si la PDP ya existe, no se crea. Además la tabla no\n  admite dos solicitudes activas del mismo auto.\n- **El borrador SIEMPRE se crea.** El umbral de llenado decide el mensaje y el estado,\n  no si se crea. Lo único que impide crear es la validación sin IA o el slug.\n\n### Antes de activar\n1. **Supabase**: correr `scripts/sql/2026-10-08_pdp_solicitudes.sql`.\n2. **Nodo Config**: confirmar `siteBase`.\n3. **Credenciales** (las dos ya existen en esta instancia):\n   - `Electrificarte Admin` (`x-admin-secret`) en los HTTP hacia la web.\n   - `Web Electrificarte (x-electrificarte-secret)` en el webhook de entrada, igual que\n     waitlist y reseñas (docs/N8N-SEGURIDAD.md). Si dice REEMPLAZAR, elegirla a mano.\n4. **En Vercel**: `ADMIN_API_SECRET` (el mismo de la credencial), `ANTHROPIC_API_KEY`,\n   `PDP_AGENT_ID`, `PDP_ENVIRONMENT_ID`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` y\n   `N8N_PDP_CREACION_URL` = la URL de producción del webhook de este workflow.\n\n### n8n no tiene ninguna key salvo `x-admin-secret`\nNi Anthropic, ni Sanity, ni Supabase. La reserva del lote, la validación y la escritura\ndel resultado las hace la web. Es la Directriz 1 y la 4 del doc.\n\n### Estados (columna `estado` de `pdp_solicitudes`)\n`listo` → **`en cola`** (reserva atómica) → `procesando` → `listo_para_revisar` ·\n`borrador_incompleto` · `sin_datos` · `rechazada` · `error`.\nNinguno final es `listo`: nada se re-procesa solo. Para reintentar, botón en el panel.\n\n### La espera\nTres corridas medidas: **155–185 s**, **US$0,26–0,31**. El loop consulta cada 30 s hasta\n24 veces (**12 min de techo**). n8n no tiene límite de ejecución, pero las solicitudes\nvan de a una: una trabada retrasa a las que siguen.\n\n⚠️ **El corte de 60 s de Vercel sigue existiendo** para `/api/admin/pdp/*`. Cada llamada\ndel loop tarda 2–15 s; la investigación de 3 min corre en la infra de Anthropic.",
-        "height": 820,
+        "content": "## Flujo v2 — Creación de PDP desde el panel\n\nEl formulario del **panel** (dashboard) crea una solicitud en `pdp_solicitudes` a través\nde la web y despierta este workflow por webhook. El cron de 15 min es la red de seguridad\npor si el webhook no llegó.\n\nPor cada solicitud: valida sin IA → abre una sesión del Managed Agent → espera → crea el\nborrador **oculto** en Sanity → la web escribe el resultado en la solicitud (lo ve el\npanel) → aviso por WhatsApp.\n\n### Reglas del board que este flujo hace cumplir\n- **R6 · todo nace `hidden:true`.** Publicar es siempre acto humano.\n- **R8 · idempotencia por slug.** Si la PDP ya existe, no se crea. Además la tabla no\n  admite dos solicitudes activas del mismo auto.\n- **El borrador SIEMPRE se crea.** El umbral de llenado decide el mensaje y el estado,\n  no si se crea. Lo único que impide crear es la validación sin IA o el slug.\n\n### Antes de activar\n1. **Supabase**: correr `scripts/sql/2026-10-08_pdp_solicitudes.sql`.\n2. **Nodo Config**: confirmar `siteBase`.\n3. **Credenciales** (las dos ya existen en esta instancia):\n   - `Electrificarte Admin` (`x-admin-secret`) en los HTTP hacia la web.\n   - `Web Electrificarte (x-electrificarte-secret)` en el webhook de entrada, igual que\n     waitlist y reseñas (docs/N8N-SEGURIDAD.md). Si dice REEMPLAZAR, elegirla a mano.\n4. **En Vercel**: `ADMIN_API_SECRET` (el mismo de la credencial), `ANTHROPIC_API_KEY`,\n   `PDP_AGENT_ID`, `PDP_ENVIRONMENT_ID`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` y\n   `N8N_PDP_CREACION_URL` = la URL de producción del webhook de este workflow.\n\n### n8n no tiene ninguna key salvo `x-admin-secret`\nNi Anthropic, ni Sanity, ni Supabase. La reserva del lote, la validación y la escritura\ndel resultado las hace la web. Es la Directriz 1 y la 4 del doc.\n\n### Estados (columna `estado` de `pdp_solicitudes`)\n`listo` → **`en cola`** (reserva atómica) → `procesando` → `listo_para_revisar` ·\n`borrador_incompleto` · `sin_datos` · `rechazada` · `error`.\nNinguno final es `listo`: nada se re-procesa solo. Para reintentar, botón en el panel.\n\n### Las fallas avisan\n`Reservar`, `Validar y abrir sesión` y `¿Terminó?` tienen **salida de error**: un 500 o un\ntimeout de la web marca la solicitud en `error` con la razón y avisa, en vez de cortar la\nejecución. Si n8n se cae entero, la web barre las trabadas (>30 min) sola. Docs §3.5d.\n\n### La espera\nTres corridas medidas: **155–185 s**, **US$0,26–0,31**. El loop consulta cada 30 s hasta\n24 veces (**12 min de techo**). n8n no tiene límite de ejecución, pero las solicitudes\nvan de a una: una trabada retrasa a las que siguen.\n\n⚠️ **El corte de 60 s de Vercel sigue existiendo** para `/api/admin/pdp/*`. Cada llamada\ndel loop tarda 2–15 s; la investigación de 3 min corre en la infra de Anthropic.",
+        "height": 920,
         "width": 560,
         "color": 5
       },
@@ -133,7 +133,8 @@
           "name": "Electrificarte Admin"
         }
       },
-      "notes": "Pasa a 'en cola' hasta `lote` solicitudes 'listo' de una sola vez, de forma atómica (for update skip locked). Una corrida simultánea (cron + webhook) nunca toma la misma solicitud."
+      "notes": "Pasa a 'en cola' hasta `lote` solicitudes 'listo' de una sola vez, de forma atómica (for update skip locked). Una corrida simultánea (cron + webhook) nunca toma la misma solicitud. Antes barre las trabadas: las que una ejecución anterior dejó a medias pasan a 'error' con la razón.",
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -228,7 +229,8 @@
           "name": "Electrificarte Admin"
         }
       },
-      "notes": "Pasos 5 a 10. La web lee la solicitud, la marca 'procesando', valida sin IA (URL viva, refs en Sanity, slug libre, precios > 0) y abre la sesión del Managed Agent. Devuelve en segundos."
+      "notes": "Pasos 5 a 10. La web lee la solicitud, la marca 'procesando', valida sin IA (URL viva, refs en Sanity, slug libre, precios > 0) y abre la sesión del Managed Agent. Devuelve en segundos.",
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -292,7 +294,8 @@
           "name": "Electrificarte Admin"
         }
       },
-      "notes": "Aviso corto, como pide el board. El detalle completo ya quedó en la solicitud."
+      "notes": "Aviso corto, como pide el board. El detalle completo ya quedó en la solicitud.",
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -337,7 +340,8 @@
           "name": "Electrificarte Admin"
         }
       },
-      "notes": "Pasos 11 a 21. Si la sesión sigue corriendo devuelve {estado:'corriendo'} y el loop vuelve a esperar. Si terminó: mide el llenado N/M, sube las fotos, crea el borrador oculto, le asigna lote de re-check y escribe el resultado en la solicitud."
+      "notes": "Pasos 11 a 21. Si la sesión sigue corriendo devuelve {estado:'corriendo'} y el loop vuelve a esperar. Si terminó: mide el llenado N/M, sube las fotos, crea el borrador oculto, le asigna lote de re-check y escribe el resultado en la solicitud. Si la sesión falló devuelve {estado:'error', mensaje} y la solicitud ya quedó en 'error': se avisa igual que un resultado.",
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -450,7 +454,8 @@
           "name": "Electrificarte Admin"
         }
       },
-      "notes": "Pasos 16 a 21. El mensaje lo arma la web (N/M, faltantes, link a Studio) y ya quedó también en la solicitud."
+      "notes": "Pasos 16 a 21. El mensaje lo arma la web (N/M, faltantes, link a Studio) y ya quedó también en la solicitud.",
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -479,7 +484,8 @@
           "name": "Electrificarte Admin"
         }
       },
-      "notes": "La sesión sigue viva en Console: se puede mirar ahí qué pasó antes de reintentar desde el panel."
+      "notes": "La sesión sigue viva en Console: se puede mirar ahí qué pasó antes de reintentar desde el panel.",
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -508,7 +514,126 @@
           "name": "Electrificarte Admin"
         }
       },
-      "notes": "Sin esto, una sesión colgada se pierde en silencio."
+      "notes": "Sin esto, una sesión colgada se pierde en silencio.",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const j = $input.first().json;\nconst e = j.error;\nconst texto = typeof e === 'string' ? e : (e && (e.description || e.message)) || j.message || JSON.stringify(j);\nconst http = e && (e.httpCode || e.status) ? ` (HTTP ${e.httpCode || e.status})` : '';\nconst paso = $prevNode.name;\nconst fila = $('Una solicitud a la vez').first().json.fila ?? {};\nconst nombre = [fila.marca, fila.modelo].filter(Boolean).join(' ') || 'Solicitud del panel';\nconst falla = `Falló el paso \"${paso}\"${http}: ${String(texto).slice(0, 300)}`;\nreturn [{ json: { paso, falla, nombre } }];"
+      },
+      "id": "describir-falla",
+      "name": "Describir la falla",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1700,
+        820
+      ],
+      "notes": "Llega acá cuando /iniciar o /cerrar responden 500, timeout o algo que no es JSON. Arma la razón para la solicitud y el aviso."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config').first().json.siteBase }}/api/admin/pdp/marcar",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n      solicitudId: $('Una solicitud a la vez').first().json.solicitudId,\n      estado: 'error',\n      detalle: $json.falla\n    }) }}",
+        "options": {
+          "timeout": 90000
+        }
+      },
+      "id": "marcar-falla",
+      "name": "Solicitud · falló un paso",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1920,
+        820
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "V9iMtS3nXUravFD5",
+          "name": "Electrificarte Admin"
+        }
+      },
+      "notes": "La solicitud queda en 'error' con la razón: el panel la muestra y se puede reintentar.",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config').first().json.siteBase }}/api/admin/notify",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"text\": {{ '❌ ' + $('Describir la falla').first().json.nombre + ': la creación de la PDP falló.\\n\\n' + $('Describir la falla').first().json.falla + '\\n\\nQuedó como error en el panel: reintenta desde ahí.' }} }",
+        "options": {
+          "timeout": 90000
+        }
+      },
+      "id": "avisa-falla",
+      "name": "Avisar falla",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2140,
+        820
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "V9iMtS3nXUravFD5",
+          "name": "Electrificarte Admin"
+        }
+      },
+      "notes": "Sin esto, un 500 de la web cortaba la ejecución en silencio.",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const j = $input.first().json;\nconst e = j.error;\nconst texto = typeof e === 'string' ? e : (e && (e.description || e.message)) || j.message || JSON.stringify(j);\nconst http = e && (e.httpCode || e.status) ? ` (HTTP ${e.httpCode || e.status})` : '';\nreturn [{ json: { falla: `No se pudo reservar la cola de PDPs${http}: ${String(texto).slice(0, 300)}` } }];"
+      },
+      "id": "describir-falla-cola",
+      "name": "Describir la falla de la cola",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        490,
+        520
+      ],
+      "notes": "Si /reservar falla no hay solicitud que marcar (siguen en 'listo'), pero hay que saberlo: nada se va a crear hasta que se arregle."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config').first().json.siteBase }}/api/admin/notify",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"text\": {{ '⚠️ ' + $json.falla + '\\n\\nLas solicitudes siguen en espera en el panel.' }} }",
+        "options": {
+          "timeout": 90000
+        }
+      },
+      "id": "avisa-falla-cola",
+      "name": "Avisar falla de la cola",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        710,
+        520
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "V9iMtS3nXUravFD5",
+          "name": "Electrificarte Admin"
+        }
+      },
+      "notes": "La próxima corrida del cron lo vuelve a intentar.",
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {},
@@ -565,6 +690,24 @@
             "type": "main",
             "index": 0
           }
+        ],
+        [
+          {
+            "node": "Describir la falla de la cola",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Describir la falla de la cola": {
+      "main": [
+        [
+          {
+            "node": "Avisar falla de la cola",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
@@ -608,6 +751,13 @@
         [
           {
             "node": "¿Validación OK?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Describir la falla",
             "type": "main",
             "index": 0
           }
@@ -659,6 +809,46 @@
         [
           {
             "node": "¿Seguir esperando?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Describir la falla",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Describir la falla": {
+      "main": [
+        [
+          {
+            "node": "Solicitud · falló un paso",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Solicitud · falló un paso": {
+      "main": [
+        [
+          {
+            "node": "Avisar falla",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Avisar falla": {
+      "main": [
+        [
+          {
+            "node": "Siguiente solicitud",
             "type": "main",
             "index": 0
           }

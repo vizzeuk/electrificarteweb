@@ -9,12 +9,15 @@
  * Devuelve cada solicitud ya convertida a la `fila` que esperan `iniciar` y
  * `cerrar`, más su `id`.
  *
+ * Antes barre las trabadas (lib/pdp-creacion/trabadas.ts).
+ *
  * Auth: header `x-admin-secret`.
  */
 import { NextRequest, NextResponse } from "next/server";
 import { authorized } from "@/lib/catalog-recheck/admin";
 import { getSupabase } from "@/lib/whatsapp/subscription";
 import { filaDeSolicitud, reservarSolicitudes } from "@/lib/pdp-creacion/solicitudes";
+import { barrerTrabadas } from "@/lib/pdp-creacion/trabadas";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -26,6 +29,8 @@ export async function POST(req: NextRequest): Promise<Response> {
 
   const { limit } = (await req.json().catch(() => ({}))) as { limit?: number };
   const n = Math.max(1, Math.min(Number(limit) || 5, 20));
+  // Cada corrida del cron revisa tambien las que una ejecucion anterior dejo a medias.
+  await barrerTrabadas(sb);
   const reservadas = await reservarSolicitudes(sb, n);
 
   return NextResponse.json({

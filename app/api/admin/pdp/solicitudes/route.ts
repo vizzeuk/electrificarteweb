@@ -2,7 +2,9 @@
  * /api/admin/pdp/solicitudes — la entrada del flujo v2 desde el panel
  * (docs/DASHBOARD_PDP_CREACION.md). Reemplaza a marcar "listo" en el Sheet.
  *
- *   GET  ?estado=&limit=&id=  → la lista (o una) para la pantalla del panel
+ *   GET  ?estado=&limit=&id=  → la lista (o una) para la pantalla del panel.
+ *        Antes de listar barre las trabadas (lib/pdp-creacion/trabadas.ts): una
+ *        solicitud que n8n dejo a medias sale como "error" con la razon.
  *   POST {marca, modelo, anio, tipo, electrificacion, url_oficial,
  *         versiones: [{nombre, precio}], creado_por}
  *        → valida SIN IA (la misma validación que corre n8n) y, si pasa, deja
@@ -27,6 +29,7 @@ import {
   listarSolicitudes,
   type EntradaPanel,
 } from "@/lib/pdp-creacion/solicitudes";
+import { barrerTrabadas } from "@/lib/pdp-creacion/trabadas";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -44,6 +47,7 @@ export async function GET(req: NextRequest): Promise<Response> {
     if (!solicitud) return NextResponse.json({ error: "No existe" }, { status: 404 });
     return NextResponse.json({ solicitud });
   }
+  await barrerTrabadas(sb);
   const solicitudes = await listarSolicitudes(sb, {
     estado: p.get("estado") ?? undefined,
     limit: Number(p.get("limit")) || undefined,

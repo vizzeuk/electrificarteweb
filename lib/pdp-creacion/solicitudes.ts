@@ -112,6 +112,39 @@ export function sePuedeReintentar(s: Pick<Solicitud, "estado" | "updated_at">, a
   return false;
 }
 
+/** Lo que se sabe de la sesion de una solicitud trabada (null = no tenia sesion). */
+export interface RevisionSesion {
+  status: string | null;
+  /** Razon de falla de la sesion (`falloDeSesion`), si la hubo. */
+  fallo: string | null;
+  entrego: boolean;
+  /** No se pudo consultar a Anthropic. */
+  errorConsulta?: string;
+}
+
+/**
+ * Por que una solicitud quedo trabada en "en cola"/"procesando", en palabras
+ * del panel. Pura: la revision de la sesion la hace `barrerTrabadas`.
+ */
+export function razonTrabada(
+  s: Pick<Solicitud, "estado" | "session_id">,
+  sesion: RevisionSesion | null,
+): string {
+  const min = `${MINUTOS_TRABADA} min`;
+  if (!s.session_id || !sesion) {
+    return s.estado === "en cola"
+      ? `n8n la tomo pero no alcanzo a validarla en ${min} (el flujo se corto).`
+      : `Se corto validando o abriendo la investigacion: no hay sesion despues de ${min}.`;
+  }
+  if (sesion.errorConsulta) return `No avanzo en ${min} y no se pudo revisar la sesion ${s.session_id}: ${sesion.errorConsulta}`;
+  if (sesion.fallo) return `${sesion.fallo} (n8n no alcanzo a cerrarla).`;
+  if (sesion.status === "running" || sesion.status === "rescheduling") {
+    return `La sesion ${s.session_id} seguia corriendo despues de ${min}: se detuvo.`;
+  }
+  if (sesion.entrego) return `El agente entrego la ficha, pero n8n no alcanzo a crear el borrador.`;
+  return `La sesion ${s.session_id} termino sin entregar y n8n no alcanzo a cerrarla.`;
+}
+
 // ─── Supabase ────────────────────────────────────────────────────────────────
 
 /** Código de Postgres para violación de unique: hay otra solicitud activa del mismo auto. */

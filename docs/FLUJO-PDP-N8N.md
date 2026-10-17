@@ -477,7 +477,7 @@ Panel ──▶ POST /api/admin/pdp/solicitudes   valida sin IA (validarFila) �
 n8n   ──▶ POST /api/admin/pdp/reservar      reserva atómica (for update skip locked)
       ──▶ POST /api/admin/pdp/iniciar       { solicitudId } → la web lee la fila y abre la sesión
       ──▶ POST /api/admin/pdp/cerrar        { sessionId, host, solicitudId } → borrador + resultado
-      ──▶ POST /api/admin/pdp/marcar        solo el caso "se agotó la espera"
+      ──▶ POST /api/admin/pdp/marcar        "se agotó la espera" o "falló un paso" (500/timeout)
 Panel ◀── GET  /api/admin/pdp/solicitudes   estado, detalle, mensaje, link a Studio
 ```
 
@@ -973,6 +973,25 @@ vuelta final          9,5 s   ← baja 7 fotos, las sube a Sanity, crea el docum
 siete fotos secuenciales se acercaban peligrosamente al límite. Ahora van en paralelo, con un
 presupuesto de reloj de 30 s: si bajarlas se lo come, sube solo la portada y anota el resto como
 descartes. Mejor una PDP con portada que un 504 a mitad de la escritura.
+
+### 3.5d Las fallas: siempre terminan en `error` con la razón, y avisan
+
+Antes (oct-2026) una corrida que fallaba podía quedar muda: la sesión del agente se caía y la
+solicitud salía como `sin_datos` ("revisa la URL"), o la web respondía 500 y n8n cortaba la
+ejecución, dejando la solicitud en `procesando` sin aviso. Ahora cada falla tiene dueño:
+
+| Qué falla | Quién la atrapa | Qué queda en la solicitud |
+|---|---|---|
+| La sesión se cae (`session.error`, `stop_reason` `retries_exhausted`, tope de gasto `budget_reached`, `terminated` sin entrega) | `cerrar` (`falloDeSesion` en `lib/pdp-creacion/sesion.ts`) | `error` + razón; n8n avisa el `mensaje` como cualquier resultado |
+| Sanity / fotos / re-validación lanzan después de que la sesión terminó | `cerrar` (try/catch) | `error` + el mensaje de la excepción. Responde 200, nunca 500 |
+| Leer la sesión falla (red, 5xx de Anthropic) | `cerrar` | Nada: responde `corriendo` y n8n vuelve a consultar. Si persiste, el techo de 12 min la marca |
+| `validarFila` o abrir la sesión lanzan | `iniciar` | `error` + razón; n8n avisa por la rama "validación falló" |
+| `iniciar`/`cerrar` responden 500 o timeout de todos modos | n8n: salida de error → `Describir la falla` → `marcar` → aviso | `error` + `Falló el paso "…" (HTTP …): …` |
+| `reservar` falla | n8n: salida de error → aviso | Nada (siguen en `listo`); llega el aviso |
+| n8n se corta entero (VPS, reinicio) | `barrerTrabadas` (`lib/pdp-creacion/trabadas.ts`), en el GET de `/solicitudes` y en `/reservar` | Pasados 30 min sin movimiento: `error` + razón mirando la sesión; la sesión viva se corta y se avisa |
+
+Los avisos (`/api/admin/notify`) tienen `onError: continueRegularOutput`: un WhatsApp que no sale
+no corta el lote, porque el resultado ya quedó en la solicitud y el panel lo muestra.
 
 ### 3.6 Dónde quedan los logs
 
