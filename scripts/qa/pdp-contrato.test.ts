@@ -13,9 +13,9 @@ import { armarEncargo, hostDe, parseVersiones, sinTiposDelModelo, toolsConHost, 
 import { camposAplicables, importantes, medirLlenado, MIN_CAMPOS, vitales, type BasePdp, type ContratoPdp } from "@/lib/pdp-creacion/contrato";
 import { armarDocumentoCar, armarVersiones, slugify } from "@/lib/pdp-creacion/sanity-doc";
 import { formatoImagen } from "@/lib/pdp-creacion/imagenes";
-import { filaDeSolicitud, filaDesdeEntrada, MINUTOS_TRABADA, razonTrabada, sePuedeReintentar } from "@/lib/pdp-creacion/solicitudes";
-import { cuerpoSesion, falloDeSesion } from "@/lib/pdp-creacion/sesion";
-import { esFileId, FICHA_MAX_BYTES, FICHA_RUTA, nombreFicha, validarPdf } from "@/lib/pdp-creacion/ficha";
+import { fichasDe, fichaVersionInvalida, filaDeSolicitud, filaDesdeEntrada, MINUTOS_TRABADA, razonTrabada, sePuedeReintentar } from "@/lib/pdp-creacion/solicitudes";
+import { conFichasDeVersion, cuerpoSesion, falloDeSesion } from "@/lib/pdp-creacion/sesion";
+import { esFileId, FICHA_MAX_BYTES, FICHA_RUTA, fichaVersionRuta, nombreFicha, validarPdf } from "@/lib/pdp-creacion/ficha";
 
 let passed = 0;
 let failed = 0;
@@ -518,6 +518,73 @@ test("formatoImagen: decide por los bytes, no por el content-type", () => {
   assert.equal(formatoImagen(b('<svg xmlns="http://www.w3.org/2000/svg">')), null);
   assert.equal(formatoImagen(b("%PDF-1.7")), null);
   assert.equal(formatoImagen(new Uint8Array([0xff, 0xd8])), null);
+});
+
+
+// ─── Ficha tecnica por version (oct-2026) ────────────────────────────────────
+
+const ENTRADA_FICHAS = {
+  marca: "GWM", modelo: "Ora 5", anio: "", tipo: "Hatchback", electrificacion: "ev",
+  url_oficial: "https://www.gwm.cl/vehiculo/ora/nuevo-ora-5/",
+  ficha_file_id: "file_oc_00000000000000000000000000000001", ficha_nombre: "ora5.pdf",
+  versiones: [
+    { nombre: "GT", precio: "29.990.000", ficha_file_id: "file_oc_00000000000000000000000000000002", ficha_nombre: "C:\\fichas\\gt.pdf" },
+    { nombre: "Pro", precio: "25.990.000" },
+  ],
+};
+
+test("ficha por version: panel → fila guardada → solicitud → encargo, cada ruta con su version", () => {
+  const fila = filaDesdeEntrada(ENTRADA_FICHAS);
+  // Lo que se guarda en `versiones` (jsonb) es lo de parseVersiones: la ficha viaja con su version.
+  const guardadas = sinTiposDelModelo(parseVersiones(fila.versiones), fila);
+  assert.deepEqual(guardadas[0], { nombre: "GT", precio: 29990000, ficha_file_id: "file_oc_00000000000000000000000000000002", ficha_nombre: "gt.pdf" });
+  assert.equal("ficha_file_id" in guardadas[1], false);
+  const deVuelta = filaDeSolicitud({ ...fila, versiones: guardadas });
+  const enc = armarEncargo(deVuelta);
+  assert.ok(enc.includes(`"GT": ${fichaVersionRuta(0)}`), enc);
+  assert.ok(!enc.includes(fichaVersionRuta(1)));
+  assert.ok(enc.includes("versiones[<nombre>]"));
+  // Sin ficha del modelo, el bloque de la del modelo no aparece.
+  assert.ok(!enc.includes(FICHA_RUTA));
+});
+
+test("ficha por version: un id malo se rechaza con el nombre de la version; vacio no es error", () => {
+  assert.match(fichaVersionInvalida([{ nombre: "GT", ficha_file_id: "../etc/passwd" }], esFileId) ?? "", /version "GT"/);
+  assert.equal(fichaVersionInvalida([{ nombre: "GT", ficha_file_id: "" }, { nombre: "Pro" }], esFileId), null);
+  assert.equal(fichaVersionInvalida("GT|1", esFileId), null);
+});
+
+test("fichasDe: junta la del modelo y las de las versiones, sin repetir", () => {
+  const fila = filaDesdeEntrada(ENTRADA_FICHAS);
+  assert.deepEqual(fichasDe({ ficha_file_id: ENTRADA_FICHAS.ficha_file_id, versiones: parseVersiones(fila.versiones) }), [
+    "file_oc_00000000000000000000000000000001",
+    "file_oc_00000000000000000000000000000002",
+  ]);
+  assert.deepEqual(fichasDe({ ficha_file_id: null, versiones: [] }), []);
+});
+
+test("ficha por version: Anthropic no la monta ni la menciona; el runner solo las suyas", () => {
+  const fila = filaDesdeEntrada({
+    ...ENTRADA_FICHAS,
+    versiones: [...ENTRADA_FICHAS.versiones, { nombre: "Ultra", precio: "31.990.000", ficha_file_id: "file_011CNha8iCJcU1wXNR6q4V8w" }],
+  });
+  const op = { agentId: "agent_1", environmentId: "env_1" };
+  const body = cuerpoSesion(fila, "gwm.cl", op) as { initial_events: { content: { text: string }[] }[] };
+  assert.equal("resources" in body, false);
+  assert.ok(!body.initial_events[0].content[0].text.includes("/ficha-version-"));
+  // El runner monta las file_oc_ y descarta la de la Files API (no existe en la VPS).
+  const runner = conFichasDeVersion(fila, (id) => id.startsWith("file_oc_"));
+  const vs = parseVersiones(runner.versiones);
+  assert.equal(vs[0].ficha_file_id, "file_oc_00000000000000000000000000000002");
+  assert.equal(vs[2].ficha_file_id, undefined);
+  assert.ok(armarEncargo(runner).includes(`"GT": ${fichaVersionRuta(0)}`));
+  assert.ok(!armarEncargo(runner).includes(fichaVersionRuta(2)));
+});
+
+test("ficha por version: nunca llega a Sanity", () => {
+  const fila = filaDesdeEntrada(ENTRADA_FICHAS);
+  const vs = armarVersiones(parseVersiones(fila.versiones), [], { range: 400 });
+  assert.ok(vs.every((v) => !JSON.stringify(v).includes("ficha")));
 });
 
 console.log(`\n${failed === 0 ? "✓" : "✗"} ${passed} pasaron, ${failed} fallaron\n`);

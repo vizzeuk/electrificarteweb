@@ -2,7 +2,8 @@
 // Misma forma de ciclo de vida que la web ya maneja (abrir → consultar → leer la entrega), pero
 // cada "sesion" es un `opencode run` en esta VPS con el modelo que diga PDP_MODELO.
 //
-//   POST /v1/sesiones        {encargo, host, ficha_pdf_base64?} → {id, status: "running"}
+//   POST /v1/sesiones        {encargo, host, fichas?: [{id, ruta}]} → {id, status: "running"}
+//                            (`ficha_id` suelto = la del modelo, formato anterior)
 //   GET  /v1/sesiones/:id    → {id, status: running|idle|terminated, contrato, ultimoMensaje, errores, segundos}
 //   POST /v1/fichas          (PDF crudo) → {id: "file_oc_…"}   ·   DELETE /v1/fichas/:id
 //   GET  /health
@@ -30,8 +31,9 @@ const OPENCODE = process.env.OPENCODE_BIN ?? "opencode";
 // Donde la web le dice al agente que esta la ficha (lib/pdp-creacion/ficha.ts → FICHA_RUTA).
 const FICHAS = join(DIR, "fichas");
 const esFichaId = (v) => typeof v === "string" && /^file_oc_[a-f0-9]{32}$/.test(v);
-// Donde la web le dice al agente que esta la ficha. Ver
-const RUTA_FICHA_WEB = /\/mnt\/session\/uploads\/\S*?\.pdf/g;
+// Donde la web le dice al agente que estan las fichas (lib/pdp-creacion/ficha.ts): una ruta por PDF.
+const RUTA_FICHA_WEB = /^\/mnt\/session\/uploads\/[a-z0-9-]+\.pdf$/;
+const RUTA_FICHA_MODELO = "/mnt/session/uploads/ficha-tecnica.pdf";
 
 if (!SECRETO) { console.error("Falta PDP_RUNNER_SECRET"); process.exit(1); }
 const { PDP_RUNNER_SECRET: _fuera, ...entornoAgente } = process.env;
@@ -86,7 +88,7 @@ function arrancar(id) {
   const proc = spawn(OPENCODE, ["run", "--agent", "pdp", "-m", meta.modelo, "--format", "json", readFileSync(join(d, "encargo.txt"), "utf8")], {
     cwd: DIR,
     // Solo lo que las herramientas necesitan: el secreto del runner no entra al proceso del agente.
-    env: { ...entornoAgente, PDP_HOST: meta.host, PDP_OUT: join(d, "contrato.json"), PDP_FICHA: join(d, "ficha.txt") },
+    env: { ...entornoAgente, PDP_HOST: meta.host, PDP_OUT: join(d, "contrato.json"), PDP_FICHAS: (meta.fichas ?? []).join("\n") },
     stdio: ["ignore", "pipe", "pipe"],
   });
   v.proc = proc;
@@ -169,16 +171,24 @@ createServer(async (req, res) => {
       const id = randomUUID();
       const d = join(RUNS, id);
       mkdirSync(d, { recursive: true });
-      const fichaGuardada = esFichaId(b.ficha_id) && existsSync(join(FICHAS, `${b.ficha_id}.pdf`)) ? join(FICHAS, `${b.ficha_id}.pdf`) : null;
-      if (b.ficha_id && !fichaGuardada) return json(res, 422, { error: `No existe la ficha ${b.ficha_id}` });
-      if (b.ficha_pdf_base64 || fichaGuardada) {
-        writeFileSync(join(d, "ficha.pdf"), fichaGuardada ? readFileSync(fichaGuardada) : Buffer.from(String(b.ficha_pdf_base64), "base64"));
-        await pdfATexto(join(d, "ficha.pdf"), join(d, "ficha.txt"));
-        // El modelo lee texto: se le apunta al .txt extraido en vez del PDF que montaba Anthropic.
-        encargo = encargo.replace(RUTA_FICHA_WEB, join(d, "ficha.txt"));
+      const fichas = Array.isArray(b.fichas) ? b.fichas : b.ficha_id ? [{ id: b.ficha_id, ruta: RUTA_FICHA_MODELO }] : [];
+      for (const f of fichas) {
+        if (!esFichaId(f?.id) || !existsSync(join(FICHAS, `${f.id}.pdf`))) return json(res, 422, { error: `No existe la ficha ${f?.id}` });
+        if (!RUTA_FICHA_WEB.test(String(f.ruta))) return json(res, 422, { error: `Ruta de ficha invalida: ${f.ruta}` });
+      }
+      // Cada ficha se pasa a texto en su propio archivo y su ruta del encargo apunta a ese .txt:
+      // el modelo sabe de que version es cada una. `read` solo puede abrir estos.
+      const leibles = [];
+      for (const [n, f] of fichas.entries()) {
+        const pdf = join(d, `ficha-${n + 1}.pdf`);
+        const txt = join(d, `ficha-${n + 1}.txt`);
+        writeFileSync(pdf, readFileSync(join(FICHAS, `${f.id}.pdf`)));
+        await pdfATexto(pdf, txt);
+        encargo = encargo.split(f.ruta).join(txt);
+        leibles.push(txt);
       }
       writeFileSync(join(d, "encargo.txt"), encargo);
-      writeFileSync(join(d, "meta.json"), JSON.stringify({ host, modelo: String(b.modelo || MODELO), titulo: String(b.titulo ?? "").slice(0, 200), creada: new Date().toISOString() }));
+      writeFileSync(join(d, "meta.json"), JSON.stringify({ host, modelo: String(b.modelo || MODELO), titulo: String(b.titulo ?? "").slice(0, 200), fichas: leibles, creada: new Date().toISOString() }));
       vivas.set(id, { proc: null });
       cola.push(id);
       siguiente();

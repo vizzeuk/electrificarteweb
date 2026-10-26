@@ -32,7 +32,7 @@ import { camposDeImagen, subirFotos } from "@/lib/pdp-creacion/imagenes";
 import { validarFila } from "@/lib/pdp-creacion/validar";
 import type { FilaSheet } from "@/lib/pdp-creacion/encargo";
 import { getSupabase } from "@/lib/whatsapp/subscription";
-import { anotarSolicitud, cargarSolicitud, filaDeSolicitud } from "@/lib/pdp-creacion/solicitudes";
+import { anotarSolicitud, cargarSolicitud, fichasDe, filaDeSolicitud } from "@/lib/pdp-creacion/solicitudes";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -54,13 +54,17 @@ export async function POST(req: NextRequest): Promise<Response> {
   const { sessionId, solicitudId } = body;
   const sb = solicitudId ? getSupabase() : null;
   let fila = body.fila;
+  // Se anotan los campos que salieron de una ficha si se monto alguna (modelo o version); el
+  // precio solo puede salir de la del modelo (las versiones con ficha traen precio declarado).
   let conFicha = false;
+  let conFichaModelo = false;
   if (solicitudId && !fila) {
     if (!sb) return NextResponse.json({ error: "Supabase no configurado" }, { status: 500 });
     const s = await cargarSolicitud(sb, solicitudId);
     if (!s) return NextResponse.json({ error: `No existe la solicitud ${solicitudId}` }, { status: 404 });
     fila = filaDeSolicitud(s);
-    conFicha = Boolean(s.ficha_file_id);
+    conFichaModelo = Boolean(s.ficha_file_id);
+    conFicha = fichasDe(s).length > 0;
   }
   if (!sessionId || !fila) return NextResponse.json({ error: "Falta sessionId o fila/solicitudId" }, { status: 400 });
 
@@ -205,7 +209,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     const precioDeFuente = sinVersiones && typeof doc.basePrice === "number";
     // Lo que salio de la ficha tecnica adjunta: el re-check semanal relee la URL, no el PDF.
     const camposDeFicha = conFicha ? (contrato.campos_de_ficha ?? []).filter(Boolean) : [];
-    const precioDeFicha = conFicha && precioDeFuente && contrato.precio_desde_ficha === true;
+    const precioDeFicha = conFichaModelo && precioDeFuente && contrato.precio_desde_ficha === true;
     const lineaFicha = camposDeFicha.length
       ? `\n📄 De la ficha técnica adjunta: ${camposDeFicha.join(", ")}. El re-check semanal no los vuelve a verificar: revísalos.`
       : null;

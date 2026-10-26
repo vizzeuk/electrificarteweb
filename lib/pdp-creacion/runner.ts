@@ -42,12 +42,21 @@ export interface SesionRunner {
   segundos: number;
 }
 
-/** Abre la corrida. Devuelve el id ya con prefijo. */
-export async function abrirEnRunner(encargo: string, host: string, titulo: string, fichaId: string | null): Promise<{ id: string; status: string }> {
+/**
+ * Abre la corrida. Devuelve el id ya con prefijo. `fichas`: cada PDF ya subido al runner con la
+ * ruta que le da el encargo (la del modelo y las de cada version); el runner los pasa a texto y
+ * reescribe esas rutas.
+ */
+export async function abrirEnRunner(
+  encargo: string,
+  host: string,
+  titulo: string,
+  fichas: { id: string; ruta: string }[],
+): Promise<{ id: string; status: string }> {
   const r = await runner<{ id: string; status: string }>(
     "POST",
     "/v1/sesiones",
-    JSON.stringify({ encargo, host, titulo, ...(fichaId ? { ficha_id: fichaId } : {}) }),
+    JSON.stringify({ encargo, host, titulo, ...(fichas.length ? { fichas } : {}) }),
   );
   return { id: `${PREFIJO_RUNNER}${r.id}`, status: r.status };
 }

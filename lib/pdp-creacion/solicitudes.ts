@@ -8,6 +8,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { parseVersiones, sinTiposDelModelo, type FilaSheet, type VersionDeclarada } from "./encargo";
 import { n8nHeaders } from "@/lib/n8n";
+import { nombreFicha } from "./ficha";
 
 export const TABLA = "pdp_solicitudes";
 
@@ -77,12 +78,14 @@ const anioOpcional = (v: unknown) => (txt(v) === "" || Number(v) === 0 ? null : 
  */
 export function filaDesdeEntrada(e: EntradaPanel): FilaSheet {
   const versiones = Array.isArray(e.versiones)
-    ? (e.versiones as { nombre?: unknown; precio?: unknown; tipo?: unknown; electrificacion?: unknown }[]).map((v) => ({
+    ? (e.versiones as { nombre?: unknown; precio?: unknown; tipo?: unknown; electrificacion?: unknown; ficha_file_id?: unknown; ficha_nombre?: unknown }[]).map((v) => ({
         nombre: txt(v?.nombre),
         precio: Number(String(v?.precio ?? "").replace(/[^\d]/g, "")),
         // Opcionales: solo si la version es de otra carroceria/electrificacion que el modelo.
         ...(txt(v?.tipo) ? { tipo: txt(v?.tipo) } : {}),
         ...(txt(v?.electrificacion) ? { electrificacion: txt(v?.electrificacion).toUpperCase() } : {}),
+        // Ficha de la version (oct-2026). La ruta valida el id antes; parseVersiones descarta uno malo.
+        ...(txt(v?.ficha_file_id) ? { ficha_file_id: txt(v?.ficha_file_id), ficha_nombre: nombreFicha(v?.ficha_nombre) } : {}),
       }))
     : txt(e.versiones);
   return {
@@ -107,6 +110,23 @@ export function filaDeSolicitud(s: Pick<Solicitud, "marca" | "modelo" | "anio" |
     url_oficial: s.url_oficial || null,
     versiones: s.versiones ?? [],
   };
+}
+
+/** Todas las fichas que referencia una solicitud: la del modelo y las de sus versiones. */
+export function fichasDe(s: { ficha_file_id?: string | null; versiones?: unknown }): string[] {
+  const deVersiones = Array.isArray(s.versiones)
+    ? (s.versiones as { ficha_file_id?: unknown }[]).map((v) => v?.ficha_file_id).filter((id): id is string => typeof id === "string" && !!id)
+    : [];
+  return [...new Set([...(s.ficha_file_id ? [s.ficha_file_id] : []), ...deVersiones])];
+}
+
+/** El id de ficha de alguna version que no es un file_id valido (null si todas sirven). */
+export function fichaVersionInvalida(versiones: unknown, esValido: (v: unknown) => boolean): string | null {
+  if (!Array.isArray(versiones)) return null;
+  const mala = (versiones as { nombre?: unknown; ficha_file_id?: unknown }[]).find(
+    (v) => v?.ficha_file_id != null && v.ficha_file_id !== "" && !esValido(v.ficha_file_id),
+  );
+  return mala ? `La ficha tecnica de la version "${txt(mala.nombre)}" no se subio bien: vuelve a adjuntarla.` : null;
 }
 
 /** ¿Se puede volver a poner en "listo"? Finales con falla, o activas trabadas. */

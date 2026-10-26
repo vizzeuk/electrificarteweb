@@ -128,6 +128,15 @@ re-check semanal sigue leyendo la URL, nunca la ficha. Requiere
 `scripts/sql/2026-10-17_pdp_ficha_tecnica.sql`; sin esa migración la solicitud se crea igual y
 `avisos` dice que la ficha no se guardó. La lista devuelve `ficha_nombre` para mostrarla.
 
+**Ficha de una versión (oct-2026).** Cada versión puede traer su propio PDF, subido igual que el
+de arriba: `versiones: [{ nombre, precio, ficha_file_id?, ficha_nombre? }]`. Viaja dentro de
+`versiones` (jsonb, sin migración) y la lista la devuelve ahí mismo. Un `ficha_file_id` inválido
+da `422` con el nombre de la versión. En reintentar, `versiones` se reemplaza entera: para
+conservar la ficha de una versión hay que volver a mandar su `ficha_file_id`. Las fichas que
+dejan de usarse se borran. El agente las usa solo para las specs de **esa** versión (nunca para el
+precio, que es el declarado) y anota `versiones[<nombre>].<campo>` en `campos_de_ficha`. Solo las
+monta el pdp-runner (`docs/pdp-runner/`); con el Managed Agent de Anthropic se ignoran.
+
 ### Enviar
 
 ```http
