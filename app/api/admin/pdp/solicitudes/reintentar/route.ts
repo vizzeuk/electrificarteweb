@@ -27,6 +27,8 @@ import {
   AVISO_SIN_COLUMNA_FICHA,
   cargarSolicitud,
   despertarFlujo,
+  fichasDe,
+  fichaVersionInvalida,
   filaDeSolicitud,
   filaDesdeEntrada,
   sePuedeReintentar,
@@ -60,6 +62,8 @@ export async function POST(req: NextRequest): Promise<Response> {
   if (tocaFicha && fichaNueva !== null && !esFileId(fichaNueva)) {
     return NextResponse.json({ ok: false, errores: ["ficha_file_id invalido: sube la ficha de nuevo."] }, { status: 422 });
   }
+  const invalida = fichaVersionInvalida(body.cambios?.versiones, esFileId);
+  if (invalida) return NextResponse.json({ ok: false, errores: [invalida] }, { status: 422 });
   const cambiosFicha = tocaFicha
     ? { ficha_file_id: (fichaNueva as string | null) ?? null, ficha_nombre: fichaNueva ? nombreFicha(body.cambios!.ficha_nombre) : null }
     : {};
@@ -67,9 +71,16 @@ export async function POST(req: NextRequest): Promise<Response> {
   const fila = body.cambios
     ? filaDesdeEntrada({ ...filaDeSolicitud(actual), ...body.cambios })
     : filaDeSolicitud(actual);
+  // Fichas antes y despues (modelo + versiones): las nuevas que no se usen y las viejas que se
+  // reemplacen quedan huerfanas. Una version sin cambios conserva su ficha (viene en `versiones`).
+  const fichasAntes = fichasDe(actual);
+  const fichasDespues = fichasDe({
+    ficha_file_id: tocaFicha ? ((fichaNueva as string | null) ?? null) : actual.ficha_file_id,
+    versiones: parseVersiones(fila.versiones),
+  });
   const v = await validarFila(fila, sanity);
   if (!v.ok) {
-    if (fichaNueva) await borrarFicha(fichaNueva as string);
+    await Promise.all(fichasDespues.filter((id) => !fichasAntes.includes(id)).map(borrarFicha));
     return NextResponse.json({ ok: false, slug: v.slug, errores: v.errores }, { status: 422 });
   }
 
@@ -103,9 +114,10 @@ export async function POST(req: NextRequest): Promise<Response> {
     throw e;
   }
 
-  // La ficha reemplazada o quitada ya no la usa nadie.
-  if (tocaFicha && actual.ficha_file_id && actual.ficha_file_id !== fichaNueva && !avisos.length) {
-    await borrarFicha(actual.ficha_file_id);
+  // Las fichas reemplazadas o quitadas ya no las usa nadie. Con el aviso de la migracion la del
+  // modelo no se guardo: no se toca nada.
+  if (!avisos.length) {
+    await Promise.all(fichasAntes.filter((id) => !fichasDespues.includes(id)).map(borrarFicha));
   }
 
   const arrancaYa = await despertarFlujo();

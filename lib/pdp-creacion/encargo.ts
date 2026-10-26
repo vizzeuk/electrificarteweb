@@ -13,7 +13,7 @@
 //   cita textual (R3), marcado para que una persona lo confirme. Sin cita, la PDP queda sin
 //   precio y en "borrador con faltantes". Nunca se publica sola (R6).
 
-import { FICHA_RUTA } from "./ficha";
+import { esFileId, FICHA_RUTA, fichaVersionRuta, nombreFicha } from "./ficha";
 
 export interface FilaSheet {
   marca: string;
@@ -52,6 +52,12 @@ export interface VersionDeclarada {
    */
   tipo?: string;
   electrificacion?: string;
+  /**
+   * Ficha tecnica (PDF) de ESTA version, opcional (oct-2026). Mismo origen que la del modelo
+   * (POST /api/admin/pdp/ficha). Sirve para las specs de esta version que la web no publica.
+   */
+  ficha_file_id?: string;
+  ficha_nombre?: string;
 }
 
 /**
@@ -84,7 +90,9 @@ export function parseVersiones(raw: string | VersionDeclarada[] | null | undefin
       // Vacios = los del modelo: el campo no se guarda.
       const tipo = String(v?.tipo ?? "").trim();
       const electrificacion = String(v?.electrificacion ?? "").trim().toUpperCase();
-      return { nombre, precio, ...(tipo ? { tipo } : {}), ...(electrificacion ? { electrificacion } : {}) };
+      // La ficha de la version viaja con ella. Un id invalido no llega aca: lo rechaza la ruta.
+      const ficha = esFileId(v?.ficha_file_id) ? { ficha_file_id: v.ficha_file_id, ficha_nombre: nombreFicha(v.ficha_nombre) } : {};
+      return { nombre, precio, ...(tipo ? { tipo } : {}), ...(electrificacion ? { electrificacion } : {}), ...ficha };
     });
   }
   return String(raw ?? "")
@@ -223,6 +231,20 @@ export function armarEncargo(fila: FilaSheet): string {
       ...(versiones.length
         ? [`- El precio no sale de la ficha: lo declaro el humano.`]
         : [`- Precio, ULTIMO recurso: solo si la fuente web no publica ningun precio de lista, tomalo de la ficha (con cita textual y la pagina en \`evidencia_precio\`) y marca \`precio_desde_ficha: true\`.`]),
+      ``,
+    );
+  }
+
+  const conFichaPropia = versiones.map((v, i) => ({ v, i })).filter(({ v }) => v.ficha_file_id);
+  if (conFichaPropia.length) {
+    lineas.push(
+      `Fichas tecnicas de versiones: el humano adjunto el PDF oficial de algunas versiones. Leelas con la herramienta \`read\`:`,
+      ...conFichaPropia.map(({ v, i }) => `  - "${v.nombre}": ${fichaVersionRuta(i)}`),
+      `- Cada una sirve SOLO para las specs tecnicas de SU version que la fuente web no trae. Si es la version base, van en \`base\`; si no, en su entrada de \`versiones[]\` (con todas sus specs si es de otra electrificacion). Nunca para campos del modelo (tagline, descripcion, SEO, maletero, Euro NCAP).`,
+      `- Primero confirma que sea de ESA version y del mercado CHILENO. Si no, no uses nada de ella y dilo en \`discrepancias\`.`,
+      `- La fuente web manda: si dicen cosas distintas, queda la web y lo reportas en \`discrepancias\`. R3 sigue valiendo: el dato tiene que estar textual en la ficha.`,
+      `- Pon en \`campos_de_ficha\` lo que sacaste de ellas como "versiones[<nombre>].<campo>" (ej. "versiones[${conFichaPropia[0].v.nombre}].range").`,
+      `- El precio de esas versiones lo declaro el humano: no sale de su ficha.`,
       ``,
     );
   }

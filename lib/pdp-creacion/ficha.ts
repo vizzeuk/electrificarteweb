@@ -11,6 +11,12 @@ export const FICHA_MAX_BYTES = 4 * 1024 * 1024;
 /** Donde la monta la sesion: `mount_path` cae bajo /mnt/session/uploads. */
 export const FICHA_MOUNT = "/ficha-tecnica.pdf";
 export const FICHA_RUTA = `/mnt/session/uploads${FICHA_MOUNT}`;
+/**
+ * Ficha de UNA version (oct-2026): la `i` es la posicion de la version en `versiones` (la misma
+ * lista que arma el encargo). Cada una tiene su ruta, asi el agente sabe de que version es cada PDF.
+ */
+export const fichaVersionMount = (i: number) => `/ficha-version-${i + 1}.pdf`;
+export const fichaVersionRuta = (i: number) => `/mnt/session/uploads${fichaVersionMount(i)}`;
 
 import { borrarFichaDeRunner, esFichaRunner, runnerConfigurado, subirFichaARunner } from "./runner";
 

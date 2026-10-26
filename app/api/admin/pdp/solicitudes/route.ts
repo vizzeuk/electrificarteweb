@@ -6,8 +6,9 @@
  *        Antes de listar barre las trabadas (lib/pdp-creacion/trabadas.ts): una
  *        solicitud que n8n dejo a medias sale como "error" con la razon.
  *   POST {marca, modelo, anio, tipo, electrificacion, url_oficial,
- *         versiones: [{nombre, precio}], creado_por, ficha_file_id?, ficha_nombre?}
- *        (la ficha tecnica se sube antes a /api/admin/pdp/ficha)
+ *         versiones: [{nombre, precio, ficha_file_id?, ficha_nombre?}], creado_por,
+ *         ficha_file_id?, ficha_nombre?}
+ *        (las fichas tecnicas, del modelo y de cada version, se suben antes a /api/admin/pdp/ficha)
  *        → valida SIN IA (la misma validación que corre n8n) y, si pasa, deja
  *          la solicitud en "listo" y despierta al workflow.
  *
@@ -26,6 +27,8 @@ import {
   cargarSolicitud,
   crearSolicitud,
   despertarFlujo,
+  fichasDe,
+  fichaVersionInvalida,
   filaDesdeEntrada,
   listarSolicitudes,
   type EntradaPanel,
@@ -69,20 +72,24 @@ export async function POST(req: NextRequest): Promise<Response> {
   if (entrada.ficha_file_id != null && !esFileId(entrada.ficha_file_id)) {
     return NextResponse.json({ ok: false, errores: ["ficha_file_id invalido: sube la ficha de nuevo."] }, { status: 422 });
   }
+  const invalida = fichaVersionInvalida(entrada.versiones, esFileId);
+  if (invalida) return NextResponse.json({ ok: false, errores: [invalida] }, { status: 422 });
   const ficha = esFileId(entrada.ficha_file_id) ? { file_id: entrada.ficha_file_id, nombre: nombreFicha(entrada.ficha_nombre) } : null;
+  // Las que quedan huerfanas si la solicitud no se crea: la del modelo y las de las versiones.
+  const borrarFichas = () => Promise.all(fichasDe({ ficha_file_id: ficha?.file_id, versiones: fila.versiones }).map(borrarFicha));
   const v = await validarFila(fila, sanity);
 
   // 422 = la solicitud se entendió pero su contenido no sirve. `errores` va
   // tal cual al formulario: cada uno dice qué corregir. La ficha que se subió
   // para esta solicitud queda huérfana: se borra (el panel la vuelve a subir).
   if (!v.ok) {
-    await borrarFicha(ficha?.file_id);
+    await borrarFichas();
     return NextResponse.json({ ok: false, slug: v.slug, errores: v.errores }, { status: 422 });
   }
 
   const creada = await crearSolicitud(sb, fila, v.slug, String(entrada.creado_por ?? "").trim() || null, ficha);
   if (!creada.ok) {
-    await borrarFicha(ficha?.file_id);
+    await borrarFichas();
     return NextResponse.json({ ok: false, slug: v.slug, errores: [creada.error] }, { status: 409 });
   }
 

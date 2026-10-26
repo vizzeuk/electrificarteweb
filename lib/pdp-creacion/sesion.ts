@@ -7,11 +7,11 @@
 // Con PDP_RUNNER_URL configurada, las sesiones nuevas van al pdp-runner de la VPS (OpenCode)
 // en vez de Anthropic: ver runner.ts. Los ids `oc_…` se despachan alla; los `sesn_…` que
 // quedaron en vuelo siguen leyendose de Anthropic.
-import { armarEncargo, type FilaSheet } from "./encargo";
+import { armarEncargo, parseVersiones, sinTiposDelModelo, type FilaSheet } from "./encargo";
 import { abrirEnRunner, cancelarEnRunner, esFichaRunner, esSesionRunner, leerDeRunner, runnerConfigurado } from "./runner";
 import { toolsDeSesion } from "./agente";
 import type { ContratoPdp } from "./contrato";
-import { FICHA_MOUNT } from "./ficha";
+import { FICHA_MOUNT, FICHA_RUTA, fichaVersionRuta } from "./ficha";
 
 const API = "https://api.anthropic.com";
 const BETA = "managed-agents-2026-04-01";
@@ -61,9 +61,34 @@ export async function abrirSesion(
     // Una ficha subida a la Files API antes del cambio de motor no existe en el runner: se
     // sigue sin ella (y el encargo no la menciona) en vez de fallar la solicitud entera.
     const ficha = esFichaRunner(opciones.fichaFileId) ? opciones.fichaFileId : null;
-    return abrirEnRunner(armarEncargo({ ...fila, ficha: Boolean(ficha) }), host, tituloSesion(fila), ficha);
+    const conFichas = conFichasDeVersion(fila, esFichaRunner);
+    const fichas = [
+      ...(ficha ? [{ id: ficha, ruta: FICHA_RUTA }] : []),
+      ...versionesDe(conFichas).flatMap((v, i) => (v.ficha_file_id ? [{ id: v.ficha_file_id, ruta: fichaVersionRuta(i) }] : [])),
+    ];
+    return abrirEnRunner(armarEncargo({ ...conFichas, ficha: Boolean(ficha) }), host, tituloSesion(fila), fichas);
   }
   return api<SesionCreada>("POST", "/v1/sessions", cuerpoSesion(fila, host, opciones));
+}
+
+/** Las versiones tal como las numera el encargo (la `i` de `fichaVersionRuta`). */
+function versionesDe(fila: FilaSheet) {
+  return sinTiposDelModelo(parseVersiones(fila.versiones), fila);
+}
+
+/**
+ * La fila con la ficha solo en las versiones cuya ficha este motor puede montar. Las otras
+ * siguen sin ella y el encargo no la menciona: mejor una version sin ficha que una sesion que
+ * no abre. Anthropic no monta fichas de version (`() => false`): sus `resources` multiples no
+ * se probaron, y es el camino de vuelta atras.
+ */
+export function conFichasDeVersion(fila: FilaSheet, montable: (id: string) => boolean): FilaSheet {
+  return {
+    ...fila,
+    versiones: versionesDe(fila).map(({ ficha_file_id, ficha_nombre, ...v }) =>
+      ficha_file_id && montable(ficha_file_id) ? { ...v, ficha_file_id, ficha_nombre } : v,
+    ),
+  };
 }
 
 function tituloSesion(fila: FilaSheet): string {
@@ -90,7 +115,7 @@ export function cuerpoSesion(fila: FilaSheet, host: string, opciones: OpcionesSe
     // Tope duro por sesion. Una corrida medida costo US$0,26; el tope existe
     // para que una sesion que se enrede no se lleve el presupuesto del mes.
     budget: { type: "limit", max_list_cost: { amount: centavos, currency: "USD" } },
-    initial_events: [{ type: "user.message", content: [{ type: "text", text: armarEncargo({ ...fila, ficha: Boolean(opciones.fichaFileId) }) }] }],
+    initial_events: [{ type: "user.message", content: [{ type: "text", text: armarEncargo({ ...conFichasDeVersion(fila, () => false), ficha: Boolean(opciones.fichaFileId) }) }] }],
     // La sesion monta su propia copia: el original queda para los reintentos.
     ...(opciones.fichaFileId ? { resources: [{ type: "file", file_id: opciones.fichaFileId, mount_path: FICHA_MOUNT }] } : {}),
   };
