@@ -16,6 +16,7 @@ import { authorized } from "@/lib/catalog-recheck/admin";
 import { sanityCreacion } from "@/lib/pdp-creacion/sanity";
 import { validarFila } from "@/lib/pdp-creacion/validar";
 import { abrirSesion } from "@/lib/pdp-creacion/sesion";
+import { runnerConfigurado } from "@/lib/pdp-creacion/runner";
 import type { FilaSheet } from "@/lib/pdp-creacion/encargo";
 import { getSupabase } from "@/lib/whatsapp/subscription";
 import { anotarSolicitud, cargarSolicitud, filaDeSolicitud } from "@/lib/pdp-creacion/solicitudes";
@@ -26,9 +27,10 @@ export const maxDuration = 60;
 export async function POST(req: NextRequest): Promise<Response> {
   if (!authorized(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const agentId = process.env.PDP_AGENT_ID;
-  const environmentId = process.env.PDP_ENVIRONMENT_ID;
-  if (!agentId || !environmentId) {
+  // Con el pdp-runner (OpenCode en la VPS) no hace falta el Managed Agent.
+  const agentId = process.env.PDP_AGENT_ID ?? "";
+  const environmentId = process.env.PDP_ENVIRONMENT_ID ?? "";
+  if (!runnerConfigurado() && (!agentId || !environmentId)) {
     return NextResponse.json(
       { error: "Faltan PDP_AGENT_ID / PDP_ENVIRONMENT_ID (correr scripts/claude-agents-apply.ts)" },
       { status: 500 },
@@ -105,6 +107,6 @@ export async function POST(req: NextRequest): Promise<Response> {
     host: v.host,
     urlFinal: v.urlFinal,
     redirigida: v.redirigida,
-    consola: `https://platform.claude.com/sessions/${sesion.id}`,
+    consola: sesion.id.startsWith("oc_") ? null : `https://platform.claude.com/sessions/${sesion.id}`,
   });
 }

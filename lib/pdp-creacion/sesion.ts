@@ -3,7 +3,12 @@
 // n8n NO habla con Anthropic (Directriz 1: el contenedor de n8n es compartido
 // con 30 workflows de otros proyectos y no lleva secretos nuestros). La web abre
 // la sesion, la consulta y saca el resultado; n8n solo orquesta y avisa.
+//
+// Con PDP_RUNNER_URL configurada, las sesiones nuevas van al pdp-runner de la VPS (OpenCode)
+// en vez de Anthropic: ver runner.ts. Los ids `oc_…` se despachan alla; los `sesn_…` que
+// quedaron en vuelo siguen leyendose de Anthropic.
 import { armarEncargo, type FilaSheet } from "./encargo";
+import { abrirEnRunner, cancelarEnRunner, esFichaRunner, esSesionRunner, leerDeRunner, runnerConfigurado } from "./runner";
 import { toolsDeSesion } from "./agente";
 import type { ContratoPdp } from "./contrato";
 import { FICHA_MOUNT } from "./ficha";
@@ -52,10 +57,21 @@ export async function abrirSesion(
   host: string,
   opciones: OpcionesSesion,
 ): Promise<SesionCreada> {
+  if (runnerConfigurado()) {
+    // Una ficha subida a la Files API antes del cambio de motor no existe en el runner: se
+    // sigue sin ella (y el encargo no la menciona) en vez de fallar la solicitud entera.
+    const ficha = esFichaRunner(opciones.fichaFileId) ? opciones.fichaFileId : null;
+    return abrirEnRunner(armarEncargo({ ...fila, ficha: Boolean(ficha) }), host, tituloSesion(fila), ficha);
+  }
   return api<SesionCreada>("POST", "/v1/sessions", cuerpoSesion(fila, host, opciones));
 }
 
+function tituloSesion(fila: FilaSheet): string {
+  return `PDP ${fila.marca} ${fila.modelo}${Number(fila.anio) ? ` ${fila.anio}` : ""}`;
+}
+
 export interface OpcionesSesion {
+  /** Solo Anthropic: el runner no los usa. */
   agentId: string;
   environmentId: string;
   topeUsd?: number;
@@ -69,7 +85,7 @@ export function cuerpoSesion(fila: FilaSheet, host: string, opciones: OpcionesSe
   return {
     agent: { type: "agent_with_overrides", id: opciones.agentId, tools: toolsDeSesion(host) },
     environment_id: opciones.environmentId,
-    title: `PDP ${fila.marca} ${fila.modelo}${Number(fila.anio) ? ` ${fila.anio}` : ""}`,
+    title: tituloSesion(fila),
     metadata: { flujo: "pdp-v2", modelo: `${fila.marca} ${fila.modelo}`.slice(0, 512) },
     // Tope duro por sesion. Una corrida medida costo US$0,26; el tope existe
     // para que una sesion que se enrede no se lleve el presupuesto del mes.
@@ -86,6 +102,8 @@ export interface EstadoSesion {
 }
 
 export async function estadoSesion(sessionId: string): Promise<EstadoSesion> {
+  // El runner no cobra por token: el costo de la corrida es 0 para el panel.
+  if (esSesionRunner(sessionId)) return { status: (await leerDeRunner(sessionId)).status, listCostUsd: 0 };
   const s = await api<{ status: string; usage?: { list_cost?: { amount?: string } } }>(
     "GET",
     `/v1/sessions/${sessionId}`,
@@ -129,6 +147,19 @@ export interface Entrega {
  * concluye "el agente no entrego nada" cuando si lo hizo.
  */
 export async function leerEntrega(sessionId: string): Promise<Entrega> {
+  if (esSesionRunner(sessionId)) {
+    // El runner resuelve el navegador adentro (no hay pedido pendiente que contestar) y ya
+    // valido el contrato contra el esquema de `entregar_pdp` antes de guardarlo.
+    const r = await leerDeRunner(sessionId);
+    return {
+      contrato: (r.contrato as ContratoPdp | null) ?? null,
+      toolUseId: null,
+      pedidoNavegador: null,
+      ultimoMensaje: r.ultimoMensaje,
+      errores: r.errores ?? [],
+      stopReason: null,
+    };
+  }
   const res = await api<{ data: Record<string, unknown>[] }>(
     "GET",
     `/v1/sessions/${sessionId}/events?limit=100&order=desc`,
@@ -214,6 +245,7 @@ export async function responderTool(
   texto: string,
   esError = false,
 ): Promise<void> {
+  if (esSesionRunner(sessionId)) return;
   await api("POST", `/v1/sessions/${sessionId}/events`, {
     events: [{
       type: "user.custom_tool_result",
@@ -230,6 +262,7 @@ export async function responderTool(
  * sesion queda colgada consumiendo el tope hasta que expire.
  */
 export async function cerrarSesion(sessionId: string, toolUseId: string | null): Promise<void> {
+  if (esSesionRunner(sessionId)) return cancelarEnRunner(sessionId);
   try {
     if (toolUseId) {
       await api("POST", `/v1/sessions/${sessionId}/events`, {
