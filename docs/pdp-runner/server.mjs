@@ -27,6 +27,8 @@ const TIMEOUT_S = Number(process.env.PDP_TIMEOUT_S ?? 600);
 // opencode reintenta en silencio en vez de salir: sin esto esperariamos el timeout entero.
 const SILENCIO_S = Number(process.env.PDP_SILENCIO_S ?? 240);
 const MODELO = process.env.PDP_MODELO ?? "github-copilot/claude-sonnet-5";
+// Esfuerzo de razonamiento: el Managed Agent corria con effort "high" (claude/agents/extractor-pdp.json).
+const VARIANTE = process.env.PDP_VARIANTE ?? "high";
 const OPENCODE = process.env.OPENCODE_BIN ?? "opencode";
 // Donde la web le dice al agente que esta la ficha (lib/pdp-creacion/ficha.ts → FICHA_RUTA).
 const FICHAS = join(DIR, "fichas");
@@ -78,14 +80,21 @@ async function pdfATexto(pdfPath, txtPath) {
   const pdf = await getDocumentProxy(new Uint8Array(readFileSync(pdfPath)));
   const { text } = await extractText(pdf, { mergePages: false });
   writeFileSync(txtPath, text.map((t, i) => `--- pagina ${i + 1} ---\n${t}`).join("\n"));
+  // Fichas impresas como imagen (cidef.cl): el texto sale vacio. Esas se le adjuntan al modelo.
+  const letras = text.join("").replace(/\s+/g, "").length;
+  return { paginas: text.length, sinTexto: letras < 150 * Math.max(1, text.length) };
 }
+
+// Mas paginas que esto no se adjuntan como imagen: un catalogo entero no cabe en el contexto.
+const MAX_PAGINAS_ADJUNTAS = Number(process.env.PDP_MAX_PAGINAS_ADJUNTAS ?? 12);
 
 function arrancar(id) {
   const d = join(RUNS, id);
   const meta = JSON.parse(readFileSync(join(d, "meta.json"), "utf8"));
   const v = vivas.get(id);
   v.inicio = Date.now();
-  const proc = spawn(OPENCODE, ["run", "--agent", "pdp", "-m", meta.modelo, "--format", "json", readFileSync(join(d, "encargo.txt"), "utf8")], {
+  const adjuntos = (meta.adjuntos ?? []).flatMap((p) => ["-f", p]);
+  const proc = spawn(OPENCODE, ["run", "--agent", "pdp", "-m", meta.modelo, "--format", "json", readFileSync(join(d, "encargo.txt"), "utf8"), ...adjuntos, ...(VARIANTE ? ["--variant", VARIANTE] : [])], {
     cwd: DIR,
     // Solo lo que las herramientas necesitan: el secreto del runner no entra al proceso del agente.
     env: { ...entornoAgente, PDP_HOST: meta.host, PDP_OUT: join(d, "contrato.json"), PDP_FICHAS: (meta.fichas ?? []).join("\n") },
@@ -179,16 +188,24 @@ createServer(async (req, res) => {
       // Cada ficha se pasa a texto en su propio archivo y su ruta del encargo apunta a ese .txt:
       // el modelo sabe de que version es cada una. `read` solo puede abrir estos.
       const leibles = [];
+      const adjuntos = [];
       for (const [n, f] of fichas.entries()) {
-        const pdf = join(d, `ficha-${n + 1}.pdf`);
+        // Con el nombre de su ruta (ficha-tecnica.pdf, ficha-version-2.pdf): asi el modelo distingue
+        // de que version es cada adjunto.
+        const pdf = join(d, f.ruta.split("/").pop());
         const txt = join(d, `ficha-${n + 1}.txt`);
         writeFileSync(pdf, readFileSync(join(FICHAS, `${f.id}.pdf`)));
-        await pdfATexto(pdf, txt);
-        encargo = encargo.split(f.ruta).join(txt);
-        leibles.push(txt);
+        const { paginas, sinTexto } = await pdfATexto(pdf, txt);
+        if (sinTexto && paginas <= MAX_PAGINAS_ADJUNTAS) {
+          encargo = encargo.split(f.ruta).join(`el PDF adjunto a este mensaje "${f.ruta.split("/").pop()}" (es una imagen: leelo directo, no con \`read\`)`);
+          adjuntos.push(pdf);
+        } else {
+          encargo = encargo.split(f.ruta).join(txt);
+          leibles.push(txt);
+        }
       }
       writeFileSync(join(d, "encargo.txt"), encargo);
-      writeFileSync(join(d, "meta.json"), JSON.stringify({ host, modelo: String(b.modelo || MODELO), titulo: String(b.titulo ?? "").slice(0, 200), fichas: leibles, creada: new Date().toISOString() }));
+      writeFileSync(join(d, "meta.json"), JSON.stringify({ host, modelo: String(b.modelo || MODELO), titulo: String(b.titulo ?? "").slice(0, 200), fichas: leibles, adjuntos, creada: new Date().toISOString() }));
       vivas.set(id, { proc: null });
       cola.push(id);
       siguiente();

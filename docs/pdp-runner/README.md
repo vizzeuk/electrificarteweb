@@ -46,6 +46,21 @@ Herramientas apagadas para el agente: `bash`, `edit`, `write`, `webfetch` nativo
   ficha de la corrida. El agente no puede leer `.env` ni la sesión de Copilot, y
   `PDP_RUNNER_SECRET` no entra a su entorno.
 
+### Segunda ronda (26-10-2026, las 4 Dongfeng que Claude hizo en producción, mismas fichas)
+
+| Auto | Managed Agent | pdp-runner |
+|---|---|---|
+| Mage EV (ficha impresa como imagen) | 22/29 | 23/29 |
+| 007 (ficha impresa como imagen) | 21/31 | 20/31 |
+| 008 | 23/31 | 21/31 |
+| L7 | 27/31 | 25/31 |
+
+Corrida a corrida varía ±2 campos. Dos ajustes salieron de esta ronda:
+- **Fichas sin texto** (PDF impreso como imagen): el runner las adjunta al mensaje (`-f`) para que
+  el modelo las lea con visión; con `read` le llegaba una ficha vacía. Hasta 12 páginas.
+- **`--variant high`** (`PDP_VARIANTE`): el mismo esfuerzo que tenía el agente en Console. Sin eso
+  omitía el equipamiento que la página sí publica. Tarda más (2–5 min).
+
 ## Despliegue en la VPS
 
 `~/electrificarte-pdp/` es una copia de esta carpeta, más `prompt.md` y `entregar_pdp.schema.json`
