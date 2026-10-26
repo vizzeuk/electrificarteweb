@@ -29,13 +29,22 @@ Herramientas apagadas para el agente: `bash`, `edit`, `write`, `webfetch` nativo
 
 ## Evaluación (26-10-2026, 8 autos publicados, Sonnet 5 vía Copilot)
 
-8/8 entregaron un contrato válido. Tardan entre 30 y 99 s (con Anthropic eran ~155 s). Comparado
-contra lo publicado en Sanity, el 74 % de los campos comparables coincide. Las diferencias son
-casi siempre datos viejos de Sanity (ej. Equinox EV: la ficha oficial vigente dice eAWD 286 HP)
-o specs que la fuente no publica textualmente (R3 → se omiten, que es lo correcto). Lo único
-atribuible al modelo es un caso de potencia en kW en el campo de CV (MG S5). El prompt de hoy
-tiene la misma debilidad, así que no es algo que haya roto la migración. El navegador (Volvo,
-403) y la ficha PDF (Equinox EV) funcionaron.
+- **8/8 entregaron un contrato válido**, en 30–99 s (con Anthropic: ~155 s). El navegador
+  (Volvo, 403) y la ficha PDF (Equinox EV) funcionaron.
+- **Llenado igual al de hoy.** Ora 5: 23/29 con el runner y 23/29 con el Managed Agent. Los 8
+  quedan en `borrador_incompleto` (11–24 campos), igual que las 7 corridas que el agente de Claude
+  terminó en `pdp_solicitudes` (17–27/31). `seats` casi nunca está textual en la fuente.
+- **Contra lo publicado en Sanity**, el 74 % de los campos comparables coincide. Lo que difiere
+  son casi siempre datos viejos de Sanity (Equinox EV: la ficha oficial vigente dice eAWD 286 HP)
+  o specs sin cita en la fuente, que se omiten como manda R3. Lo único atribuible al modelo es
+  potencia en kW en el campo de CV (MG S5); el prompt de hoy tiene la misma debilidad.
+- **Fallas:** con un modelo o proveedor caído, la corrida termina en segundos como `idle` con
+  la razón en `errores`, y el panel la muestra en `error`. Si el proveedor queda mudo (cuota
+  agotada: opencode reintenta en silencio), se corta a los 4 min sin eventos. El techo es
+  10 min, bajo los 12 de n8n.
+- **Secretos:** el `read` nativo está reemplazado por `.opencode/tool/read.ts`, que solo lee la
+  ficha de la corrida. El agente no puede leer `.env` ni la sesión de Copilot, y
+  `PDP_RUNNER_SECRET` no entra a su entorno.
 
 ## Despliegue en la VPS
 

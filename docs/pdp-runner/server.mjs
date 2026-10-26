@@ -19,7 +19,12 @@ const RUNS = join(DIR, "runs");
 const SECRETO = process.env.PDP_RUNNER_SECRET ?? "";
 const PUERTO = Number(process.env.PORT ?? 4100);
 const MAX_PARALELO = Number(process.env.PDP_MAX_PARALELO ?? 2);
-const TIMEOUT_S = Number(process.env.PDP_TIMEOUT_S ?? 900);
+// Bajo el techo de n8n (12 min, FLUJO-PDP-N8N §3.5c): la corrida tiene que terminar con su
+// razon antes de que n8n se rinda y la marque por su cuenta.
+const TIMEOUT_S = Number(process.env.PDP_TIMEOUT_S ?? 600);
+// Sin un solo evento del modelo en este rato = el proveedor no responde. Con la cuota agotada,
+// opencode reintenta en silencio en vez de salir: sin esto esperariamos el timeout entero.
+const SILENCIO_S = Number(process.env.PDP_SILENCIO_S ?? 240);
 const MODELO = process.env.PDP_MODELO ?? "github-copilot/claude-sonnet-5";
 const OPENCODE = process.env.OPENCODE_BIN ?? "opencode";
 // Donde la web le dice al agente que esta la ficha (lib/pdp-creacion/ficha.ts → FICHA_RUTA).
@@ -29,6 +34,7 @@ const esFichaId = (v) => typeof v === "string" && /^file_oc_[a-f0-9]{32}$/.test(
 const RUTA_FICHA_WEB = /\/mnt\/session\/uploads\/\S*?\.pdf/g;
 
 if (!SECRETO) { console.error("Falta PDP_RUNNER_SECRET"); process.exit(1); }
+const { PDP_RUNNER_SECRET: _fuera, ...entornoAgente } = process.env;
 mkdirSync(RUNS, { recursive: true });
 mkdirSync(FICHAS, { recursive: true });
 
@@ -79,15 +85,22 @@ function arrancar(id) {
   v.inicio = Date.now();
   const proc = spawn(OPENCODE, ["run", "--agent", "pdp", "-m", meta.modelo, "--format", "json", readFileSync(join(d, "encargo.txt"), "utf8")], {
     cwd: DIR,
-    env: { ...process.env, PDP_HOST: meta.host, PDP_OUT: join(d, "contrato.json") },
+    // Solo lo que las herramientas necesitan: el secreto del runner no entra al proceso del agente.
+    env: { ...entornoAgente, PDP_HOST: meta.host, PDP_OUT: join(d, "contrato.json"), PDP_FICHA: join(d, "ficha.txt") },
     stdio: ["ignore", "pipe", "pipe"],
   });
   v.proc = proc;
-  proc.stdout.on("data", (c) => appendFileSync(join(d, "eventos.jsonl"), c));
+  const cortar = (razon) => { appendFileSync(join(d, "stderr.log"), `\n${razon}\n`); proc.kill("SIGTERM"); };
+  let silencio = setTimeout(() => cortar(`El modelo no respondio en ${SILENCIO_S / 60} min: cuota agotada o proveedor caido (${meta.modelo})`), SILENCIO_S * 1000);
+  proc.stdout.on("data", (c) => {
+    appendFileSync(join(d, "eventos.jsonl"), c);
+    silencio.refresh();
+  });
   proc.stderr.on("data", (c) => appendFileSync(join(d, "stderr.log"), c));
-  const corte = setTimeout(() => { appendFileSync(join(d, "stderr.log"), `\n[runner] timeout ${TIMEOUT_S}s\n`); proc.kill("SIGTERM"); }, TIMEOUT_S * 1000);
+  const corte = setTimeout(() => cortar(`La corrida supero ${TIMEOUT_S / 60} min y se corto`), TIMEOUT_S * 1000);
   proc.on("close", (code) => {
     clearTimeout(corte);
+    clearTimeout(silencio);
     writeFileSync(join(d, "fin.json"), JSON.stringify({ code, fin: Date.now(), segundos: Math.round((Date.now() - v.inicio) / 1000) }));
     v.proc = null; v.fin = Date.now();
     siguiente();
@@ -120,8 +133,8 @@ function estado(id) {
     }
   }
   if (fin && fin.code !== 0 && !contrato) {
-    const err = existsSync(join(d, "stderr.log")) ? readFileSync(join(d, "stderr.log"), "utf8").trim().split("\n").slice(-3).join(" ") : "";
-    errores.unshift(`opencode salio con codigo ${fin.code}${err ? `: ${err.slice(0, 300)}` : ""}`);
+    const err = existsSync(join(d, "stderr.log")) ? readFileSync(join(d, "stderr.log"), "utf8").trim().split("\n").filter((l) => l.trim()).slice(-1)[0] ?? "" : "";
+    errores.unshift(err ? err.slice(0, 300) : `opencode salio con codigo ${fin.code}`);
   }
   // `idle` = termino (igual que una sesion de Anthropic que espera el resultado del tool).
   // `terminated` = el runner se reinicio a mitad de la corrida: no va a terminar nunca.
