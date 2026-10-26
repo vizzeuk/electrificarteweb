@@ -12,6 +12,8 @@ export const FICHA_MAX_BYTES = 4 * 1024 * 1024;
 export const FICHA_MOUNT = "/ficha-tecnica.pdf";
 export const FICHA_RUTA = `/mnt/session/uploads${FICHA_MOUNT}`;
 
+import { borrarFichaDeRunner, esFichaRunner, runnerConfigurado, subirFichaARunner } from "./runner";
+
 const API = "https://api.anthropic.com";
 
 export const esFileId = (v: unknown): v is string => typeof v === "string" && /^file_[A-Za-z0-9_-]{6,}$/.test(v);
@@ -36,6 +38,8 @@ function headers(): Record<string, string> {
 
 /** Sube el PDF a la Files API. Devuelve el `file_id`. */
 export async function subirFicha(bytes: Uint8Array, nombre: string): Promise<string> {
+  // Con el runner, la ficha vive en la VPS: es donde corre el agente que la lee.
+  if (runnerConfigurado()) return subirFichaARunner(bytes);
   const form = new FormData();
   form.append("file", new Blob([bytes as BlobPart], { type: "application/pdf" }), nombre || "ficha-tecnica.pdf");
   const res = await fetch(`${API}/v1/files`, { method: "POST", headers: headers(), body: form, signal: AbortSignal.timeout(30_000) });
@@ -49,6 +53,7 @@ export async function subirFicha(bytes: Uint8Array, nombre: string): Promise<str
 /** Best-effort: una ficha huerfana no rompe nada, solo ocupa espacio. */
 export async function borrarFicha(fileId: string | null | undefined): Promise<void> {
   if (!esFileId(fileId)) return;
+  if (esFichaRunner(fileId)) return borrarFichaDeRunner(fileId);
   try {
     await fetch(`${API}/v1/files/${fileId}`, { method: "DELETE", headers: headers(), signal: AbortSignal.timeout(10_000) });
   } catch {

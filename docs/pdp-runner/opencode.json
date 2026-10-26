@@ -1,0 +1,20 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "github-copilot/claude-sonnet-5",
+  "autoupdate": false,
+  "share": "disabled",
+  "permission": { "edit": "deny", "bash": "deny", "webfetch": "deny", "external_directory": "deny" },
+  "agent": {
+    "pdp": {
+      "mode": "primary",
+      "description": "Extractor de fichas PDP de Electrificarte",
+      "prompt": "{file:./prompt.md}",
+      "tools": {
+        "bash": false, "edit": false, "write": false, "patch": false, "webfetch": false,
+        "websearch": false, "todowrite": false, "todoread": false, "task": false,
+        "glob": false, "grep": false, "list": false, "read": true,
+        "web_fetch": true, "leer_con_navegador": true, "entregar_pdp": true
+      }
+    }
+  }
+}
