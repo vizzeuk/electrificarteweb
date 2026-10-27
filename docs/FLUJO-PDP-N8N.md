@@ -145,6 +145,18 @@ arquitectura: el contrato de salida es el mismo.
 
 ## 2. Flujo C — Re-check semanal
 
+> **Cambio oct-2026 (lee esto primero).** El re-check pasó a ser **mensual** (una corrida al día a
+> las 09:00, días 1 a 28; `lib/catalog-recheck/slots.ts`) y lo lee el agente `revision` del
+> **pdp-runner** de la VPS (Copilot, Haiku 5.5 por defecto, `PDP_RECHECK_MODELO`), no la API de
+> Anthropic. Es asíncrono: `/api/admin/recheck/car` abre la revisión y n8n consulta cada 20 s.
+> Lee **dos precios** por modelo: lista (el más alto que publica la marca, `basePrice`) y con bonos
+> y/o financiamiento (el más bajo, `discountPrice`), y aplica los dos solo si la cifra aparece escrita
+> en la página. `discountPrice` dejó de ser el precio negociado (la negociación está apagada) y
+> `aplicar` de WhatsApp ya no existe. El cron diario del Flujo B (`price-check-scan`) salió de
+> `vercel.json`. Lo que sigue describe el diseño original semanal; las guardas siguen valiendo.
+
+## 2. Flujo C — Re-check (original)
+
 ### 2.1 Reparto de los 28 lotes
 
 Cron `0 9,15,19,23 * * *` · TZ `America/Santiago` → 4 corridas/día × 7 días = **28 lotes**.
