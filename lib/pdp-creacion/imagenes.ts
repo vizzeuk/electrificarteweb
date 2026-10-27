@@ -9,6 +9,7 @@
 // `PDP_GALERIA_MAX=0` vuelve al comportamiento del board (solo portada).
 import { createHash } from "node:crypto";
 import { SCRAPE_UA } from "@/lib/utils/scrape-ua";
+import { fetchConCadena } from "@/lib/http/fetch-cadena";
 import type { SanityWriteClient } from "./sanity";
 
 /** Menos que esto es un icono, un placeholder o un sprite, no una foto de un auto. */
@@ -69,14 +70,15 @@ async function bajar(url: string, referer?: string): Promise<{ ok: true; data: B
   let ultimo = "sin respuesta";
   for (let intento = 0; intento < 2; intento++) {
     try {
-      const res = await fetch(url, {
+      // Tolera sitios con la cadena de certificados incompleta: ver lib/http/fetch-cadena.ts.
+      const { response: res } = await fetchConCadena(url, {
         headers: {
           "user-agent": SCRAPE_UA,
           accept: "image/avif,image/webp,image/png,image/jpeg,*/*;q=0.8",
           // Algunos CDN niegan el hotlink sin Referer del propio sitio.
           ...(referer ? { referer } : {}),
         },
-        signal: AbortSignal.timeout(TIMEOUT_MS),
+        timeoutMs: TIMEOUT_MS,
       });
       if (!res.ok) { ultimo = `responde ${res.status}`; continue; }
 

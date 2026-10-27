@@ -284,7 +284,7 @@ export const car = defineType({
     }),
     defineField({
       name: "videoUrl", title: "Video (YouTube embed URL)", type: "url", group: "media",
-      description: 'URL de YouTube. Ej: "https://www.youtube.com/embed/xxxx"',
+      description: 'Link de YouTube: sirve el de "Compartir" (youtu.be/…), el de la barra (watch?v=…) o el de embed. Se muestra en la PDP después de "Sobre el modelo".',
     }),
     defineField({ name: "videoTitle",    title: "Título del video",   type: "string", group: "media" }),
     defineField({ name: "videoDuration", title: "Duración del video", type: "string", group: "media", description: 'Ej: "12:34"' }),

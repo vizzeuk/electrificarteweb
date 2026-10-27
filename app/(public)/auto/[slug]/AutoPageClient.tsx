@@ -8,6 +8,7 @@ import { Icon } from "@/components/ui/Icon";
 import { ElectricTypeBadge, electricTypeLabel } from "@/components/car/ElectricTypeBadge";
 import { OfferCta } from "@/components/waitlist/OfferCta";
 import { ASESORIA_PRICE, HOT_DEALS_ENABLED } from "@/lib/products";
+import { youtubeEmbedUrl } from "@/lib/youtube";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export interface VersionData {
@@ -599,7 +600,8 @@ export default function AutoPageClient({ car, similarCars, reviewsSlot }: AutoPa
   // Ritmo de fondos: después de "Lo destacado" (blanca), las secciones alternan Niebla y
   // blanco según cuáles se muestren (versiones y equipamiento son opcionales). Así nunca quedan
   // varias blancas seguidas ni dos Niebla juntas.
-  const afterAbout = [showVersionTable && "ver", equipGroups.length > 0 && "eq", "ficha", "nego", "sim"]
+  const videoEmbed = youtubeEmbedUrl(car.videoUrl);
+  const afterAbout = [videoEmbed && "video", showVersionTable && "ver", equipGroups.length > 0 && "eq", "ficha", "nego", "sim"]
     .filter(Boolean) as string[];
   const tone = (k: string) => (afterAbout.indexOf(k) % 2 === 0 ? "section--subtle" : undefined);
   const hasSimilar = similarCars.length > 0;
@@ -831,6 +833,29 @@ export default function AutoPageClient({ car, similarCars, reviewsSlot }: AutoPa
           ))}
         </div>
       </section>
+
+      {/* ─── Video (Studio → Multimedia). Cualquier link de YouTube sirve: ver lib/youtube.ts ── */}
+      {videoEmbed && (
+        <section className={cn("section", tone("video"))} aria-labelledby="pdp-video-t">
+          <div className="wrap">
+            <div className="section-head">
+              <div className="section-head__text">
+                <h2 className="t-h2" id="pdp-video-t">El {model} en video</h2>
+              </div>
+            </div>
+            <div className="pdp-video">
+              <iframe
+                src={videoEmbed}
+                title={car.videoTitle || `${model} en video`}
+                loading="lazy"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerPolicy="strict-origin-when-cross-origin"
+                allowFullScreen
+              />
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ─── Compara las versiones ──────────────────────────────────────── */}
       {showVersionTable && (
