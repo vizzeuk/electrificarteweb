@@ -143,7 +143,7 @@ arquitectura: el contrato de salida es el mismo.
 
 ---
 
-## 2. Flujo C — Re-check semanal
+## 2. Flujo C — Re-check mensual
 
 > **Cambio oct-2026 (lee esto primero).** El re-check pasó a ser **mensual** (una corrida al día a
 > las 09:00, días 1 a 28; `lib/catalog-recheck/slots.ts`) y lo lee el agente `revision` del
@@ -155,7 +155,7 @@ arquitectura: el contrato de salida es el mismo.
 > `aplicar` de WhatsApp ya no existe. El cron diario del Flujo B (`price-check-scan`) salió de
 > `vercel.json`. Lo que sigue describe el diseño original semanal; las guardas siguen valiendo.
 
-## 2. Flujo C — Re-check (original)
+### Diseño original (semanal)
 
 ### 2.1 Reparto de los 28 lotes
 
