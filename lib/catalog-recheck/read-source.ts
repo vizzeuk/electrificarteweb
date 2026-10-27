@@ -336,6 +336,9 @@ export async function confirmarEnFuente(
   precio: number,
   textoPrevio?: string,
 ): Promise<{ confirmado: boolean; via: string }> {
+  // Primero lo que ya leyó el agente: el modo de falla que esto cubre es una cifra inventada, y
+  // para eso basta con que la cifra esté en el texto que leyó. Ahorra una lectura y un credit.
+  if (textoPrevio && precioEnTexto(textoPrevio, precio)) return { confirmado: true, via: "texto que leyó el agente" };
   try {
     const { response } = await fetchConCadena(url, {
       timeoutMs: 15_000,
@@ -354,7 +357,6 @@ export async function confirmarEnFuente(
       return { confirmado: true, via: "lectura fresca con navegador" };
     }
   }
-  if (textoPrevio && precioEnTexto(textoPrevio, precio)) return { confirmado: true, via: "texto ya leído" };
   return { confirmado: false, via: "la cifra no aparece en la página" };
 }
 

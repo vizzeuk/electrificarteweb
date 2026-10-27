@@ -545,5 +545,15 @@ test("sanitize: precios negativos o cero quedan en null", () => {
   assert.equal(sanitize({ precio_base: 0 }).precio_base, null);
 });
 
+test("dos precios: un 'pie' o una cuota leída como precio con financiamiento no se aplica sola", () => {
+  // "Pie desde $6.990.000" en un auto de $25M: tiene cita, es plausible y menor que la lista.
+  const d = decide(car(), ok({ precio_financiamiento: 6_990_000, evidencia_financiamiento: "Pie desde $6.990.000" }));
+  assert.equal(d.autoApply.length, 0, "bajo el 55% de la lista lo decide una persona");
+  assert.ok(d.findings.some((f) => f.kind === "precio_financiamiento"), "el hallazgo queda registrado");
+  // Un precio con bonos real (Ora 03: 68% de la lista) sí entra.
+  const ora = decide(car({ basePrice: 26_490_000 }), ok({ precio_base: 26_490_000, precio_financiamiento: 17_990_000, evidencia_financiamiento: "Desde: $17.990.000*" }));
+  assert.deepEqual(ora.autoApply.map((a) => a.field), ["discountPrice"]);
+});
+
 console.log(`\n${failed === 0 ? "✓" : "✗"} ${passed} pasaron, ${failed} fallaron\n`);
 process.exit(failed === 0 ? 0 : 1);

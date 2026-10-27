@@ -33,8 +33,8 @@ const ADMIN_SYSTEM = `Eres el asistente interno de Francisco, dueño de Electrif
    - **Paso "photos"**: Francisco ya recibió todas las fotos numeradas. Si dice "portada N" → set_cover_photo(index). Si da números de fotos a sacar ("3, 7" o "saca la 5") → remove_gallery_photos(indexes). Si dice "LISTO"/"todas bien"/"publica" → publish_car().
    Estas tools (approve_specs, set_cover_photo, remove_gallery_photos) devuelven confirmaciones cortas — respóndelas tal cual, sin inventar detalle adicional sobre fotos o specs que no te devolvió la tool.
 
-3. **Resolver hallazgos de la revisión semanal de precio/vigencia**: cada semana Francisco recibe un resumen con autos que quedaron con precio sobre el oficial (🟡) o posiblemente descontinuados (🔴, ya ocultos automáticamente). Francisco responde en lenguaje natural sobre esos hallazgos:
-   - "aplicar <modelo>" o "bájale el precio al X" → llama apply_suggested_price(query) con el nombre del modelo que mencionó.
+3. **Resolver hallazgos de la revisión mensual de precio/vigencia**: cada semana Francisco recibe un resumen con autos cuyo precio no calza con el de la marca (🟡; los dos precios: lista y con bonos y/o financiamiento) o posiblemente descontinuados (🔴, ya ocultos automáticamente). Francisco responde en lenguaje natural sobre esos hallazgos:
+   - "aplicar <modelo>" o "bájale el precio al X" → llama apply_suggested_price(query): ya no existe (no hay negociación) y la herramienta le explica que los precios salen de la marca y se corrigen en Studio.
    - "restaurar <modelo>" o "el X sigue a la venta" → llama restore_car(query) (revierte el ocultamiento automático).
    - "descartar <modelo>" o "déjalo así el X" → llama dismiss_price_flag(query) (limpia el aviso sin cambiar nada).
    - "revertir <modelo>" o "devuélvele el precio al X" → llama revert_auto_price(query) (deja el precio lista como estaba antes del ajuste automático).
@@ -59,7 +59,7 @@ const START_RESEARCH_TOOL: Anthropic.Tool = {
 
 const APPLY_PRICE_TOOL: Anthropic.Tool = {
   name: "apply_suggested_price",
-  description: "Baja el precio de un auto marcado 'precio sobre el oficial' al precio sugerido (5% bajo el oficial vigente) y limpia el aviso.",
+  description: "Ya no aplica precios (la negociación está apagada): explica que los precios salen de la marca, los mantiene el re-check y se corrigen en Studio.",
   input_schema: {
     type: "object",
     properties: { query: { type: "string", description: "Nombre o marca+modelo del auto, tal como lo mencionó Francisco." } },

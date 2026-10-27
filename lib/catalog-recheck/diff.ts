@@ -38,6 +38,14 @@ const DEAD_SOURCE_STREAK = 2;
  */
 export const MAX_AUTO_APPLY_DRIFT = 0.25;
 
+/**
+ * Piso del precio con bonos y/o financiamiento para escribirlo solo: al menos este % del precio
+ * lista que va a quedar. Los casos reales están lejos (Ora 03 68 %, Poer P500 81 %); un "pie desde
+ * $6.990.000" de un auto de $25M (28 %) es una mala lectura que pasaría todas las demás guardas.
+ * Bajo el piso el hallazgo se registra igual y lo decide una persona.
+ */
+export const MIN_FINANCING_RATIO = 0.55;
+
 const SEVERITY: Record<PriceCheckFlag, number> = {
   discontinued: 5,
   fuente_muerta: 4,
@@ -226,7 +234,7 @@ export function decide(car: CarSnapshot, report: SourceReport): CheckDecision {
     // Mismas guardas que la lista: salto creíble (contra el nuestro, si lo teníamos) y
     // siempre bajo el precio lista que va a quedar.
     const drift = ourFin ? Math.abs(officialFin - ourFin) / ourFin : 0;
-    if (listaFinal && officialFin < listaFinal && drift <= MAX_AUTO_APPLY_DRIFT) {
+    if (listaFinal && officialFin < listaFinal && officialFin >= listaFinal * MIN_FINANCING_RATIO && drift <= MAX_AUTO_APPLY_DRIFT) {
       autoApply.push({
         field: "discountPrice",
         from: ourFin,
