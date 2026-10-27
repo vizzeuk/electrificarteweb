@@ -77,6 +77,10 @@
    ],
    "description": "Cita textual literal de donde sale precio_financiamiento."
   },
+  "precios_mas_iva": {
+   "type": "boolean",
+   "description": "true si los precios citados son netos ('+ IVA'). Las cifras se reportan tal cual."
+  },
   "nota": {
    "type": [
     "string",
@@ -94,6 +98,7 @@
   "versiones",
   "evidencia",
   "evidencia_financiamiento",
+  "precios_mas_iva",
   "nota"
  ],
  "additionalProperties": false

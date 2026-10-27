@@ -76,6 +76,9 @@ export const SYSTEM = [
   "bajo (null si la versión muestra uno solo).",
   "No son precios del auto: una cuota mensual, un pie, un arriendo, un precio con retoma o parte",
   "de pago, un precio de otro país, ni un 'bono hasta $X' sin precio final.",
+  "",
+  "IVA: reporta las cifras TAL CUAL están escritas. Si la página publica precios netos ('+ IVA',",
+  "'más IVA', 'neto'), marca precios_mas_iva = true; no hagas tú la cuenta.",
   "- 'modelo_vigente' es false solo si la página muestra que el modelo salió del catálogo",
   "  (descontinuado, 'ya no disponible', no aparece entre los modelos vigentes). Que no haya",
   "  precio visible no significa que el modelo no exista.",
@@ -108,9 +111,10 @@ export const OUTPUT_SCHEMA = {
     },
     evidencia: { type: ["string", "null"], description: "Cita textual literal de donde sale precio_base." },
     evidencia_financiamiento: { type: ["string", "null"], description: "Cita textual literal de donde sale precio_financiamiento." },
+    precios_mas_iva: { type: "boolean", description: "true si los precios citados son netos ('+ IVA'). Las cifras se reportan tal cual." },
     nota: { type: ["string", "null"], description: "Una línea si algo quedó ambiguo o si la lectura falló." },
   },
-  required: ["fuente_ok", "modelo_vigente", "precio_base", "precio_financiamiento", "anio_modelo", "versiones", "evidencia", "evidencia_financiamiento", "nota"],
+  required: ["fuente_ok", "modelo_vigente", "precio_base", "precio_financiamiento", "anio_modelo", "versiones", "evidencia", "evidencia_financiamiento", "precios_mas_iva", "nota"],
   additionalProperties: false,
 };
 
@@ -473,6 +477,7 @@ export function sanitize(raw: unknown): SourceReport {
     versiones,
     evidencia: str(o.evidencia),
     evidencia_financiamiento: str(o.evidencia_financiamiento),
+    precios_mas_iva: o.precios_mas_iva === true,
     nota: str(o.nota),
   };
 }

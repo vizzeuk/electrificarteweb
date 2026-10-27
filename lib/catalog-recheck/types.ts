@@ -22,6 +22,11 @@ export interface SourceReport {
   evidencia: string | null;
   /** Cita de `precio_financiamiento`. Sin cita, se descarta. */
   evidencia_financiamiento?: string | null;
+  /**
+   * true si la página publica los precios NETOS ("+ IVA"). Los precios del reporte vienen tal
+   * cual están escritos; el diff les suma el IVA con aritmética (el catálogo es con IVA).
+   */
+  precios_mas_iva?: boolean;
   nota: string | null;
 }
 
@@ -100,6 +105,8 @@ export interface AutoApply {
   to: number;
   /** Por qué se consideró seguro aplicarlo — va al hallazgo y al digest. */
   reason: string;
+  /** La cifra tal como está escrita en la página (sin IVA si la página es "+ IVA"), para confirmarla. */
+  enPagina?: number;
 }
 
 export interface CheckDecision {

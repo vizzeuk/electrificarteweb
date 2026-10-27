@@ -178,7 +178,7 @@ export async function POST(req: NextRequest): Promise<Response> {
   if (decision.autoApply.length && autoApplyEnabled()) {
     for (const a of decision.autoApply) {
       try {
-        const check = await confirmarEnFuente(car.sourceUrl, a.to, scrapedText);
+        const check = await confirmarEnFuente(car.sourceUrl, a.enPagina ?? a.to, scrapedText);
         if (check.confirmado) {
           applied.push(a);
           log(`✓ ${nombreCampo(a)} ${clp(a.to)} confirmado por ${check.via}`);

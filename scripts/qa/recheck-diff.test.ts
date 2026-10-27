@@ -555,5 +555,15 @@ test("dos precios: un 'pie' o una cuota leída como precio con financiamiento no
   assert.deepEqual(ora.autoApply.map((a) => a.field), ["discountPrice"]);
 });
 
+test("IVA: una página '+ IVA' (Poer P500) se compara con IVA incluido y se confirma la cifra escrita", () => {
+  const p500 = car({ basePrice: 57_108_100, discountPrice: 46_398_100, versions: [] });
+  const d = decide(p500, ok({ precio_base: 47_990_000, precio_financiamiento: 38_990_000, evidencia_financiamiento: "Desde: $38.990.000 + IVA", precios_mas_iva: true, versiones: [] }));
+  assert.equal(d.outcome, "sin_cambios", "47.990.000 + IVA = 57.108.100: no es un cambio de precio");
+  const sube = decide(p500, ok({ precio_base: 49_990_000, evidencia: "Precio lista $49.990.000 + IVA", precio_financiamiento: 38_990_000, evidencia_financiamiento: "x", precios_mas_iva: true, versiones: [] }));
+  const a = sube.autoApply.find((x) => x.field === "basePrice");
+  assert.equal(a?.to, 59_488_100, "se escribe con IVA");
+  assert.equal(a?.enPagina, 49_990_000, "y se confirma la cifra que está escrita en la página");
+});
+
 console.log(`\n${failed === 0 ? "✓" : "✗"} ${passed} pasaron, ${failed} fallaron\n`);
 process.exit(failed === 0 ? 0 : 1);

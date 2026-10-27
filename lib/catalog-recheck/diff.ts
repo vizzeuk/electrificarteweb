@@ -46,6 +46,11 @@ export const MAX_AUTO_APPLY_DRIFT = 0.25;
  */
 export const MIN_FINANCING_RATIO = 0.55;
 
+/** El catálogo es con IVA. Una página "+ IVA" publica netos: se les suma acá, no en el modelo. */
+export const IVA = 0.19;
+const conIva = (n: number | null | undefined, masIva: boolean | undefined) =>
+  typeof n === "number" && masIva ? Math.round(n * (1 + IVA)) : n ?? null;
+
 const SEVERITY: Record<PriceCheckFlag, number> = {
   discontinued: 5,
   fuente_muerta: 4,
@@ -135,7 +140,22 @@ export function proposeAutoApply(
   };
 }
 
-export function decide(car: CarSnapshot, report: SourceReport): CheckDecision {
+export function decide(car: CarSnapshot, reportOriginal: SourceReport): CheckDecision {
+  // Todo el diff trabaja con IVA incluido; `enPagina` guarda la cifra escrita para confirmarla.
+  const masIva = reportOriginal.precios_mas_iva === true;
+  const report: SourceReport = masIva
+    ? {
+        ...reportOriginal,
+        precio_base: conIva(reportOriginal.precio_base, true),
+        precio_financiamiento: conIva(reportOriginal.precio_financiamiento, true),
+        versiones: (reportOriginal.versiones ?? []).map((v) => ({
+          ...v,
+          precio: conIva(v.precio, true),
+          precio_financiamiento: conIva(v.precio_financiamiento, true),
+        })),
+      }
+    : reportOriginal;
+  const enPagina = (n: number) => (masIva ? Math.round(n / (1 + IVA)) : n);
   const previous = new Set((car.catalogFindings ?? []).map(fingerprint));
   const finish = (d: Omit<CheckDecision, "hasNewFindings" | "autoApply"> & { autoApply?: AutoApply[] }): CheckDecision => ({
     ...d,
@@ -211,13 +231,13 @@ export function decide(car: CarSnapshot, report: SourceReport): CheckDecision {
   if (officialBase && ourBase && !isNoise(ourBase, officialBase)) {
     findings.push({
       kind: "precio_base",
-      detail: `Nuestro precio lista ${clp(ourBase)} · la fuente publica ${clp(officialBase)}.`,
+      detail: `Nuestro precio lista ${clp(ourBase)} · la fuente publica ${clp(officialBase)}${masIva ? " (con IVA; la página lo publica + IVA)" : ""}.`,
       proposedPrice: officialBase,
       evidence: report.evidencia ?? undefined,
     });
     raise("price_high");
     const a = proposeAutoApply(car, ourBase, officialBase, officialFin ?? ourFin);
-    if (a) autoApply.push(a);
+    if (a) autoApply.push({ ...a, enPagina: enPagina(officialBase) });
   }
 
   const listaFinal = autoApply.find((a) => a.field === "basePrice")?.to ?? ourBase;
@@ -239,6 +259,7 @@ export function decide(car: CarSnapshot, report: SourceReport): CheckDecision {
         field: "discountPrice",
         from: ourFin,
         to: officialFin,
+        enPagina: enPagina(officialFin),
         reason: ourFin
           ? `delta ${(drift * 100).toFixed(1)}% (techo ${MAX_AUTO_APPLY_DRIFT * 100}%), con cita textual y bajo el precio lista`
           : "la marca publica un precio con bonos y/o financiamiento, con cita textual y bajo el precio lista",

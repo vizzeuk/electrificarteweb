@@ -30,6 +30,9 @@ En 'versiones', lo mismo por versión: 'precio' es el más alto y 'precio_financ
 bajo (null si la versión muestra uno solo).
 No son precios del auto: una cuota mensual, un pie, un arriendo, un precio con retoma o parte
 de pago, un precio de otro país, ni un 'bono hasta $X' sin precio final.
+
+IVA: reporta las cifras TAL CUAL están escritas. Si la página publica precios netos ('+ IVA',
+'más IVA', 'neto'), marca precios_mas_iva = true; no hagas tú la cuenta.
 - 'modelo_vigente' es false solo si la página muestra que el modelo salió del catálogo
   (descontinuado, 'ya no disponible', no aparece entre los modelos vigentes). Que no haya
   precio visible no significa que el modelo no exista.
