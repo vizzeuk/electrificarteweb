@@ -9,6 +9,7 @@ import { ElectricTypeBadge, electricTypeLabel } from "@/components/car/ElectricT
 import { OfferCta } from "@/components/waitlist/OfferCta";
 import { ASESORIA_PRICE, HOT_DEALS_ENABLED } from "@/lib/products";
 import { youtubeEmbedUrl } from "@/lib/youtube";
+import { ETIQUETA_FINANCIAMIENTO, NOTA_FINANCIAMIENTO, NOTA_LISTA, tieneFinanciamiento } from "@/lib/precios";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export interface VersionData {
@@ -431,14 +432,11 @@ export default function AutoPageClient({ car, similarCars, reviewsSlot }: AutoPa
   const vcar = carForVersion(car, car.versions[activeVersion]);
   const cls = classifyElectric(vcar);
 
-  // Precio con bonos siempre que la versión traiga un ahorro real, igual que las tarjetas
-  // (CarCard). Antes dependía de isHotDeal: con el Hot Deal retirado la ficha mostraba solo el
-  // precio de lista mientras la tarjeta del mismo auto mostraba el precio con bonos.
+  // Dos precios por versión (oct-2026): en grande el más bajo (con bonos y/o financiamiento) si
+  // la marca lo publica, igual que las tarjetas (CarCard); el de lista al lado, sin tachar.
   const priceOf = (v: VersionData) => {
-    const savings = v.price - v.discountPrice;
-    const pct = Math.round((savings / v.price) * 100);
-    const discounted = pct > 0;
-    return { list: v.price, final: discounted ? v.discountPrice : v.price, discounted, savings };
+    const discounted = tieneFinanciamiento(v.price, v.discountPrice);
+    return { list: v.price, final: discounted ? v.discountPrice : v.price, discounted };
   };
   const price = priceOf(ver);
 
@@ -757,16 +755,15 @@ export default function AutoPageClient({ car, similarCars, reviewsSlot }: AutoPa
                 {price.discounted ? (
                   <>
                     <div className="pricebox__row">
-                      <span className="pricebox__label">Precio de lista</span>
-                      <span className="price-was">{formatCLP(price.list)}</span>
-                    </div>
-                    <div className="pricebox__row">
-                      <span className="pricebox__label">Con bonos</span>
+                      <span className="pricebox__label">{ETIQUETA_FINANCIAMIENTO}</span>
                       <span className="price price--lg">{formatCLP(price.final)}</span>
                     </div>
+                    <div className="pricebox__row">
+                      <span className="pricebox__label">Precio de lista</span>
+                      <span className="price-list">{formatCLP(price.list)}</span>
+                    </div>
                     <div className="pricebox__foot">
-                      <span className="price-save">Ahorras {formatCLP(price.savings)}</span>
-                      <span className="t-micro">Incluye bonos. Precio referencial.</span>
+                      <span className="t-micro">{NOTA_FINANCIAMIENTO}</span>
                     </div>
                   </>
                 ) : (
@@ -776,7 +773,7 @@ export default function AutoPageClient({ car, similarCars, reviewsSlot }: AutoPa
                       <span className="price price--lg">{formatCLP(price.final)}</span>
                     </div>
                     <div className="pricebox__foot">
-                      <span className="t-micro">Precio referencial. Consulta por financiamiento y bonos disponibles.</span>
+                      <span className="t-micro">{NOTA_LISTA}</span>
                     </div>
                   </>
                 )}

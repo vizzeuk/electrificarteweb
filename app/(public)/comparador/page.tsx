@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { client } from "@/lib/sanity/client";
 import { allCarsForComparadorQuery } from "@/lib/queries/car";
 import ComparadorClient, { type Car } from "./ComparadorClient";
+import { financiamientoDeVersion } from "@/lib/precios";
 
 export const revalidate = 60;
 
@@ -115,7 +116,8 @@ export default async function ComparadorPage({ searchParams }: PageProps) {
         // Show version badge in picker only when there are 2+ versions
         showVersionBadge,
         basePrice:     v.price         ?? c.basePrice        ?? 0,
-        discountPrice: v.discountPrice ?? c.discountPrice     ?? v.price ?? c.basePrice ?? 0,
+        // Nunca el precio con bonos de OTRA versión: el suyo, o el del modelo si es su versión base.
+        discountPrice: financiamientoDeVersion(v, c) ?? v.price ?? c.basePrice ?? 0,
         battery:       v.batteryCapacity ?? cb.batteryCapacity ?? 0,
         range:         v.range          ?? cb.range            ?? 0,
         power:         v.power          ?? cb.power            ?? 0,

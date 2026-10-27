@@ -60,7 +60,7 @@ interface Row {
 
 // Etiquetas completas, las mismas de la ficha técnica de la PDP.
 const ROWS: Row[] = [
-  { label: "Precio con descuento",  key: "discountPrice", type: "price" },
+  { label: "Con bonos y/o financiamiento", key: "discountPrice", type: "price" },
   { label: "Precio de lista",       key: "basePrice",     type: "price" },
   { label: "Autonomía",             key: "range",         unit: " km",   type: "number", highlight: "high" },
   { label: "Batería",               key: "battery",       unit: " kWh",  type: "number", highlight: "high" },
@@ -149,8 +149,8 @@ function HeroInfo() {
     },
     {
       icon: "sell",
-      title: "Precio de lista y con descuento",
-      desc: "Ves el precio de lista y el precio con descuento, lado a lado, para cada auto.",
+      title: "Precio de lista y con bonos",
+      desc: "Ves el precio de lista y el precio con bonos y/o financiamiento de cada marca, lado a lado.",
     },
     {
       // "emoji_events" no existe en el build de Material Symbols que servimos:
@@ -450,9 +450,6 @@ export default function ComparadorClient({ allCars, initialId }: ComparadorClien
                 ) : (
                   <ul className="divide-y divide-line">
                     {filteredPicker.map(car => {
-                      const pct = car.basePrice > 0
-                        ? Math.round(((car.basePrice - car.discountPrice) / car.basePrice) * 100)
-                        : 0;
                       const displayName = carDisplayName(car);
                       const specs = [
                         car.range > 0 ? `${formatNumber(car.range)} km` : null,
@@ -489,7 +486,6 @@ export default function ComparadorClient({ allCars, initialId }: ComparadorClien
                               <span className="block font-semibold tabular-nums text-ink">
                                 {formatCLP(car.discountPrice)}
                               </span>
-                              {pct > 0 && <span className="price-save block">-{pct}%</span>}
                             </span>
                           </button>
                         </li>

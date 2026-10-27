@@ -137,6 +137,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     if (estado.estado === "error") return fallaNuestra(estado.motivo);
     report = estado.report;
     via = "runner";
+    scrapedText = estado.texto;
   } else try {
     const read = await readSource({
       anthropic: new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY }),

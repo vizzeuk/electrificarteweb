@@ -39,6 +39,8 @@ export interface SesionRunner {
   contrato: unknown;
   ultimoMensaje: string | null;
   errores: string[];
+  /** El texto de las paginas que leyo el agente (solo al terminar). */
+  paginas?: string;
   segundos: number;
 }
 

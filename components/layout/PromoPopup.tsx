@@ -33,7 +33,6 @@ export function PromoPopup({ car, urgencyLabel }: PromoPopupProps) {
   const label = urgencyLabel ?? DEFAULT_HOT_DEAL_LABEL;
   const brandName = c.brand?.name ?? c.name.split(" ")[0];
   const modelName = c.brand ? c.name : c.name.split(" ").slice(1).join(" ");
-  const savings   = c.basePrice - c.discountPrice;
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -106,16 +105,12 @@ export function PromoPopup({ car, urgencyLabel }: PromoPopupProps) {
 
               <dl className="deal__prices !mt-5">
                 <div>
-                  <dt>Precio de lista</dt>
-                  <dd className="price-was">{formatCLP(c.basePrice)}</dd>
-                </div>
-                <div>
-                  <dt>Con bonos</dt>
+                  <dt>Con bonos y/o financiamiento</dt>
                   <dd className="price price--lg">{formatCLP(c.discountPrice)}</dd>
                 </div>
                 <div>
-                  <dt>Ahorras</dt>
-                  <dd className="save">{formatCLP(savings)}</dd>
+                  <dt>Precio de lista</dt>
+                  <dd className="price-list">{formatCLP(c.basePrice)}</dd>
                 </div>
               </dl>
 

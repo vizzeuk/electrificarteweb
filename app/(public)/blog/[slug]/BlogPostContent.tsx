@@ -383,15 +383,14 @@ export function BlogPostContent({ post }: { post: BlogPost }) {
                 <h2 className={`mb-6 ${H2_CLASS}`}>Autos mencionados en este artículo</h2>
                 <div className="grid gap-4 sm:grid-cols-2">
                   {post.relatedCars.map((car) => {
-                    const pct = Math.round(((car.basePrice - car.discountPrice) / car.basePrice) * 100);
                     return (
                       <Link key={car._id} href={`/auto/${car.slug}`} className="card card--link p-5">
                         <p className="car__brand">{car.brand?.name}</p>
                         <p className="mt-0.5 truncate font-semibold text-ink">{car.name}</p>
                         {car.tagline && <p className="t-small mt-1 truncate">{car.tagline}</p>}
                         <p className="mt-3 flex items-baseline gap-2">
-                          <span className="font-semibold tabular-nums text-ink">{formatCLP(car.discountPrice)}</span>
-                          {pct > 0 && <span className="price-save">-{pct}%</span>}
+                          {/* El más bajo que publica la marca (con bonos y/o financiamiento) o, si publica uno solo, el de lista. */}
+                          <span className="font-semibold tabular-nums text-ink">{formatCLP(car.discountPrice && car.discountPrice < car.basePrice ? car.discountPrice : car.basePrice)}</span>
                         </p>
                       </Link>
                     );

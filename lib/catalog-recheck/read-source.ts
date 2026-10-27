@@ -313,6 +313,8 @@ export function needsBrowserFallback(report: SourceReport): boolean {
  * "25990000": cualquiera de las formas en que una marca chilena lo escribe.
  */
 export function precioEnTexto(texto: string, precio: number): boolean {
+  // "CLP 23990000.00" (configurador de BYD): los centavos en cero no son parte de la cifra.
+  texto = texto.replace(/(\d)[.,]00(?![\d])/g, "$1");
   const n = Math.round(precio);
   const conPuntos = n.toLocaleString("es-CL");
   const conComas = n.toLocaleString("en-US");

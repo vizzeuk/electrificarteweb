@@ -176,7 +176,7 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes, adCar, p
     .sort((a, b) => (TECH_ORDER.indexOf(a) + 1 || 99) - (TECH_ORDER.indexOf(b) + 1 || 99));
   const kpis = [
     n > 0 && { num: String(n), label: n === 1 ? "modelo en el catálogo" : "modelos en el catálogo" },
-    cheapest && { num: formatCLP(cheapest.eff), label: cheapest.eff < cheapest.base ? "precio más bajo con descuento" : "precio de lista más bajo" },
+    cheapest && { num: formatCLP(cheapest.eff), label: cheapest.eff < cheapest.base ? "precio más bajo con bonos y/o financiamiento" : "precio de lista más bajo" },
     brandCount > 0 && { num: String(brandCount), label: `${brandCount === 1 ? "marca" : "marcas"} con modelos ${inline}` },
     techs.length > 0 && { num: String(techs.length), label: `${techs.length === 1 ? "tecnología" : "tecnologías"}: ${joinList(techs)}` },
   ].filter(Boolean) as { num: string; label: string }[];
@@ -284,14 +284,14 @@ export default function TipoPageContent({ slug, meta, cars, otherTypes, adCar, p
                       <dl className="deal__prices">
                         {hasDiscount ? (
                           <>
-                            <div><dt>Precio de lista</dt><dd className="price-was">{formatCLP(car.basePrice)}</dd></div>
-                            <div><dt>Con bonos</dt><dd className="price price--lg">{formatCLP(car.discountPrice)}</dd></div>
-                            <div><dt>Ahorras</dt><dd className="save">{formatCLP(car.basePrice - car.discountPrice)}</dd></div>
+                            <div><dt>Con bonos y/o financiamiento</dt><dd className="price price--lg">{formatCLP(car.discountPrice)}</dd></div>
+                            <div><dt>Precio de lista</dt><dd className="price-list">{formatCLP(car.basePrice)}</dd></div>
                           </>
                         ) : (
                           <div><dt>Precio de lista</dt><dd className="price price--lg">{formatCLP(car.basePrice)}</dd></div>
                         )}
                       </dl>
+                      {hasDiscount && <p className="t-micro">Precio con bonos y/o financiamiento, sujeto a cada marca.</p>}
                       {specs && <p className="t-small">{specs}</p>}
                       <div className="deal-card__actions">
                         <OfferCta carSlug={car.slug} model={model} source="plp" className="btn btn--primary">

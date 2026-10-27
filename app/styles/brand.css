@@ -114,6 +114,8 @@ a.card:hover, .card--link:hover { border-color: var(--line-2); }
 .price--lg { font-size: var(--text-price-lg); letter-spacing: -0.02em; }
 .price-was { font-size: var(--text-small); color: var(--ink-3); text-decoration: line-through; font-variant-numeric: tabular-nums; }
 .price-save { font-size: var(--text-small); font-weight: 600; color: var(--link); font-variant-numeric: tabular-nums; }
+/* Precio de lista junto al precio con bonos y/o financiamiento (oct-2026): sin tachar, no es un descuento. */
+.price-list { font-size: var(--text-small); color: var(--ink-3); font-variant-numeric: tabular-nums; }
 
 /* ---- Fila de specs ---- */
 .specs { display: grid; }
