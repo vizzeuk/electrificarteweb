@@ -1,5 +1,6 @@
 // Utilidades compartidas por las herramientas del extractor. El cerco de dominio (R2) vive aca:
 // el runner fija PDP_HOST por corrida y ninguna herramienta lee fuera de ese host.
+import { appendFileSync } from "node:fs";
 import TurndownService from "turndown";
 
 const UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36";
@@ -109,6 +110,21 @@ export async function bajar(url: string): Promise<{ final: string; tipo: string;
     res = await fetch(url, { ...init, signal: AbortSignal.timeout(30_000), tls: { ca: [...rootCertificates, ...(await p)] } } as RequestInit);
   }
   return { final: res.url || url, tipo: res.headers.get("content-type") ?? "", cuerpo: await res.arrayBuffer(), status: res.status };
+}
+
+/**
+ * Guarda lo que leyo el agente junto a su entrega (PDP_OUT + ".paginas.txt"). La web lo usa para
+ * confirmar que una cifra que va a escribir sola esta de verdad en la pagina: la varianza del
+ * modelo no puede inventar un numero que el texto no tiene.
+ */
+export function anotarPagina(url: string, texto: string): void {
+  const out = process.env.PDP_OUT;
+  if (!out) return;
+  try {
+    appendFileSync(`${out}.paginas.txt`, `\n\n=== ${url} ===\n${texto.slice(0, 120_000)}`);
+  } catch {
+    // no fatal
+  }
 }
 
 export function recortar(texto: string): string {

@@ -155,7 +155,10 @@ function estado(id) {
   // `idle` = termino (igual que una sesion de Anthropic que espera el resultado del tool).
   // `terminated` = el runner se reinicio a mitad de la corrida: no va a terminar nunca.
   const status = enCurso ? "running" : fin ? "idle" : "terminated";
-  return { id, status, contrato, ultimoMensaje, errores, segundos: fin?.segundos ?? (viva?.inicio ? Math.round((Date.now() - viva.inicio) / 1000) : 0), modelo: JSON.parse(readFileSync(join(d, "meta.json"), "utf8")).modelo };
+  // Lo que leyo el agente, solo al terminar (la web confirma cifras contra esto).
+  const pagPath = join(d, "contrato.json.paginas.txt");
+  const paginas = status !== "running" && existsSync(pagPath) ? readFileSync(pagPath, "utf8").slice(0, 300_000) : undefined;
+  return { id, status, contrato, ultimoMensaje, errores, paginas, segundos: fin?.segundos ?? (viva?.inicio ? Math.round((Date.now() - viva.inicio) / 1000) : 0), modelo: JSON.parse(readFileSync(join(d, "meta.json"), "utf8")).modelo };
 }
 
 /** Borra corridas de mas de 30 dias: los logs son para depurar, no un archivo historico. */
