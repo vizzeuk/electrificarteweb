@@ -26,14 +26,21 @@ export interface BasePdp {
 export interface VersionPdp extends Omit<BasePdp, "cargo" | "tagline" | "description" | "metaTitle" | "metaDescription" | "keywords" | "groundClearance" | "euroNcap" | "airbags" | "safetyFeatures" | "techFeatures" | "comfortFeatures" | "warranty"> {
   nombre: string;
   trunkCapacity?: number;
+  /** El precio mas bajo de ESTA version (con bonos y/o financiamiento), con su cita. */
+  precio_financiamiento_leido?: number;
+  evidencia_precio_financiamiento?: string;
 }
 
 export interface ContratoPdp {
   estado: "listo" | "sin_datos";
   motivo?: string;
   fuente_leida: string;
+  /** El precio MAS ALTO que publica la fuente (lista). Uno solo publicado = va aca. */
   precio_lista_leido?: number;
   evidencia_precio?: string;
+  /** El MAS BAJO: con bonos y/o financiamiento de la marca (oct-2026). */
+  precio_financiamiento_leido?: number;
+  evidencia_precio_financiamiento?: string;
   base?: BasePdp;
   versiones?: VersionPdp[];
   portada_url?: string;

@@ -20,8 +20,8 @@ const batteryTypeList = [
 
 const versionFields = [
   defineField({ name: "name",        title: "Nombre de versión",         type: "string", validation: (r) => r.required() }),
-  defineField({ name: "price",       title: "Precio (CLP)",              type: "number", validation: (r) => r.required().positive() }),
-  defineField({ name: "discountPrice", title: "Precio con descuento (CLP)", type: "number" }),
+  defineField({ name: "price",       title: "Precio de lista (CLP)",     type: "number", validation: (r) => r.required().positive(), description: "El precio MÁS ALTO que publica la marca para esta versión (sin bonos ni financiamiento). Si publica uno solo, va acá." }),
+  defineField({ name: "discountPrice", title: "Precio con bonos y/o financiamiento (CLP)", type: "number", description: "El precio MÁS BAJO que publica la marca para esta versión. Vacío si la marca publica un solo precio. Es el que el sitio muestra en grande." }),
   // Versiones de otra electrificación o carrocería que el auto (ej. DS 3 Hybrid + DS 3 E-Tense):
   // el auto aparece en los filtros de las dos. Vacío = igual que el auto.
   defineField({
@@ -122,14 +122,14 @@ export const car = defineType({
 
     // ─── Specs ──────────────────────────────────────────────────────────────
     defineField({
-      name: "basePrice", title: "Precio lista (CLP)", type: "number",
+      name: "basePrice", title: "Precio de lista desde (CLP)", type: "number",
       group: "specs", validation: (r) => r.required().positive(),
-      description: "Precio oficial sin descuentos",
+      description: "Precio de lista (el más alto que publica la marca, sin bonos ni financiamiento) de la versión más barata del modelo. Si la marca publica un solo precio, va acá.",
     }),
     defineField({
-      name: "discountPrice", title: "Precio con descuento Electrificarte (CLP)", type: "number",
+      name: "discountPrice", title: "Precio con bonos y/o financiamiento desde (CLP)", type: "number",
       group: "specs",
-      description: "Precio negociado. Si no hay descuento, dejar vacío.",
+      description: "El precio más bajo que publica la marca para esa MISMA versión (con bonos y/o financiamiento). Vacío si publica un solo precio. Es el que el sitio muestra en grande.",
     }),
     defineField({
       name: "priceNote", title: "Nota de precio", type: "string",
@@ -402,6 +402,7 @@ export const car = defineType({
               list: [
                 { title: "Precio base distinto", value: "precio_base" },
                 { title: "Precio de versión distinto", value: "precio_version" },
+                { title: "Precio con bonos/financiamiento distinto", value: "precio_financiamiento" },
                 { title: "Versión nueva en la fuente", value: "version_nueva" },
                 { title: "Versión que desapareció de la fuente", value: "version_faltante" },
                 { title: "Año de modelo nuevo", value: "anio_nuevo" },

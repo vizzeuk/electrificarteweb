@@ -48,6 +48,8 @@ export function armarVersiones(
   deltas: VersionPdp[] = [],
   base: BasePdp = {},
   refsVersiones: RefsSanity["versiones"] = [],
+  /** El precio con bonos/financiamiento que leyo el agente para la version base (con cita). */
+  financiamientoBaseLeido?: number,
 ) {
   const porNombre = new Map(deltas.map((d) => [d.nombre.trim().toLowerCase(), d]));
   // La base es la mas barata de la electrificacion del modelo (ver versionBase).
@@ -55,6 +57,7 @@ export function armarVersiones(
 
   return declaradas.map((v, i) => {
     const delta: Partial<VersionPdp> = porNombre.get(v.nombre.trim().toLowerCase()) ?? {};
+    const financiamiento = precioFinanciamiento(v, delta, masBarata?.nombre === v.nombre ? financiamientoBaseLeido : undefined);
     // La version base hereda las specs de `base`; las otras solo su delta. Asi el
     // comparador no muestra una version vacia al lado de otra completa. Una version de otra
     // electrificacion trae sus specs completas en el delta (lo pide el encargo).
@@ -65,6 +68,7 @@ export function armarVersiones(
       _key: `v${i}`,
       name: v.nombre,
       price: v.precio,
+      discountPrice: financiamiento,
       electricType: refs.electricTypeId ? { _type: "reference", _ref: refs.electricTypeId } : undefined,
       vehicleType: refs.vehicleTypeId ? { _type: "reference", _ref: refs.vehicleTypeId } : undefined,
       batteryCapacity: limpio(specs.batteryCapacity),
@@ -91,6 +95,25 @@ export function armarVersiones(
       frunkCapacity: limpio(specs.frunkCapacity),
     });
   });
+}
+
+/** Lo que el agente leyo como precio con bonos/financiamiento, solo si trae cita (R3). */
+function leidoConCita(precio: unknown, cita: unknown): number | undefined {
+  return typeof precio === "number" && precio > 0 && typeof cita === "string" && cita.trim() ? precio : undefined;
+}
+
+/**
+ * El precio con bonos y/o financiamiento de una version (el mas bajo que publica la marca): el
+ * que declaro el humano o, si no declaro, el que leyo el agente con su cita. Solo si es menor
+ * que el de lista: igual o mayor no es un segundo precio.
+ */
+export function precioFinanciamiento(
+  v: VersionDeclarada,
+  delta: Partial<VersionPdp> = {},
+  leidoBase?: number,
+): number | undefined {
+  const p = v.precio_financiamiento ?? leidoBase ?? leidoConCita(delta.precio_financiamiento_leido, delta.evidencia_precio_financiamiento);
+  return p && p < v.precio ? p : undefined;
 }
 
 /**
@@ -144,6 +167,14 @@ export function armarDocumentoCar(
   // tecnologia se ve en esa version (y en la PLP de ese tipo), no como precio del modelo.
   const delModelo = versionesDelModelo(declaradas);
   const basePrice = declaradas.length ? Math.min(...delModelo.map((v) => v.precio)) : precioLeido;
+  // El precio con bonos/financiamiento del modelo es el de la MISMA version que el de lista
+  // (la base): los dos precios de la PDP siempre son de una misma version.
+  const financiamientoLeido = leidoConCita(contrato.precio_financiamiento_leido, contrato.evidencia_precio_financiamiento);
+  const versionBaseDeclarada = declaradas.length ? versionBase(declaradas) : null;
+  const deltasFin = new Map((contrato.versiones ?? []).map((d) => [d.nombre.trim().toLowerCase(), d]));
+  const discountPrice = versionBaseDeclarada
+    ? precioFinanciamiento(versionBaseDeclarada, {}, financiamientoLeido)
+    : financiamientoLeido && basePrice && financiamientoLeido < basePrice ? financiamientoLeido : undefined;
 
   const hallazgos: Record<string, unknown>[] = [];
   if (!declaradas.length && precioLeido) {
@@ -164,6 +195,40 @@ export function armarDocumentoCar(
         detail: `La fila declara $${basePrice.toLocaleString("es-CL")} como precio mas bajo; la fuente publica $${precioLeido.toLocaleString("es-CL")}. No se aplico: el precio es del humano.`,
         proposedPrice: precioLeido,
         evidence: contrato.evidencia_precio,
+      });
+    }
+  }
+  // Precios con bonos/financiamiento: el que salio de la fuente (no lo declaro el humano) se
+  // usa, pero queda para confirmar; el declarado que no calza con la fuente queda como control.
+  const finPorVersion = declaradas.length
+    ? declaradas.map((v) => {
+        const delta: Partial<VersionPdp> = deltasFin.get(v.nombre.trim().toLowerCase()) ?? {};
+        const esBase = v.nombre === versionBaseDeclarada?.nombre;
+        const leido = esBase ? financiamientoLeido : leidoConCita(delta.precio_financiamiento_leido, delta.evidencia_precio_financiamiento);
+        const cita = esBase ? contrato.evidencia_precio_financiamiento : delta.evidencia_precio_financiamiento;
+        return { nombre: v.nombre, declarado: v.precio_financiamiento, leido, cita, lista: v.precio };
+      })
+    : [{ nombre: undefined, declarado: undefined, leido: financiamientoLeido, cita: contrato.evidencia_precio_financiamiento, lista: basePrice ?? 0 }];
+  for (const [i, f] of finPorVersion.entries()) {
+    if (!f.leido || f.leido >= f.lista) continue;
+    const quien = f.nombre ? `la version "${f.nombre}"` : "el modelo";
+    if (!f.declarado) {
+      hallazgos.push({
+        _key: `financiamiento-de-fuente-${i}`,
+        kind: "precio_financiamiento",
+        ...(f.nombre ? { versionName: f.nombre } : {}),
+        detail: `El precio con bonos y/o financiamiento de ${quien} ($${f.leido.toLocaleString("es-CL")}) es el que publica la fuente oficial. Confirmalo antes de publicar.`,
+        proposedPrice: f.leido,
+        evidence: f.cita,
+      });
+    } else if (Math.abs(f.leido - f.declarado) > f.declarado * 0.01) {
+      hallazgos.push({
+        _key: `financiamiento-leido-${i}`,
+        kind: "precio_financiamiento",
+        ...(f.nombre ? { versionName: f.nombre } : {}),
+        detail: `Se declaro $${f.declarado.toLocaleString("es-CL")} con bonos y/o financiamiento para ${quien}; la fuente publica $${f.leido.toLocaleString("es-CL")}. No se aplico: el precio es del humano.`,
+        proposedPrice: f.leido,
+        evidence: f.cita,
       });
     }
   }
@@ -206,7 +271,8 @@ export function armarDocumentoCar(
     aiGenerated: true,
     sourceUrls: [fuenteDelDocumento(fila, contrato)],
     basePrice,
-    versions: armarVersiones(declaradas, contrato.versiones, base, refs.versiones),
+    discountPrice,
+    versions: armarVersiones(declaradas, contrato.versiones, base, refs.versiones, financiamientoLeido),
 
     tagline: limpio(base.tagline),
     description: limpio(base.description),
