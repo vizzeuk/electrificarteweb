@@ -8,6 +8,7 @@ import type { SanityWriteClient } from "./sanity";
 import { isChileConfirmedUrl } from "@/lib/chile-url";
 import { parseVersiones, sinTiposDelModelo, hostDe, type FilaSheet, type VersionDeclarada } from "./encargo";
 import { slugify, type RefsSanity } from "./sanity-doc";
+import { fetchConCadena } from "@/lib/http/fetch-cadena";
 
 export interface Validacion {
   ok: boolean;
@@ -45,25 +46,31 @@ interface Alcance {
  * minutos. Chequear el destino acá cuesta un GET.
  */
 async function alcanzar(url: string): Promise<Alcance> {
-  const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort(), 15_000);
   try {
-    const res = await fetch(url, {
-      signal: ctrl.signal,
-      redirect: "follow",
+    // Tolera sitios con la cadena de certificados incompleta (jmcchile.cl): ver lib/http/fetch-cadena.ts.
+    const { response: res, url: urlFinal } = await fetchConCadena(url, {
+      timeoutMs: 15_000,
       headers: { "user-agent": "Mozilla/5.0 (compatible; ElectrificarteBot/1.0)" },
     });
-    const urlFinal = res.url || url;
     // 403 y 429 son el sitio bloqueando bots, no una URL muerta: el agente la lee
     // por los servidores de Anthropic, que pasan donde nosotros no.
     if (res.status === 403 || res.status === 429) return { problema: null, urlFinal: url };
     if (!res.ok) return { problema: `La URL responde ${res.status}`, urlFinal };
     return { problema: null, urlFinal };
-  } catch {
-    return { problema: "La URL no responde (timeout o DNS)", urlFinal: url };
-  } finally {
-    clearTimeout(t);
+  } catch (e) {
+    return { problema: porQueNoResponde(e), urlFinal: url };
   }
+}
+
+/** El motivo real, para que el formulario no diga "timeout o DNS" cuando es otra cosa. */
+function porQueNoResponde(e: unknown): string {
+  const err = e as { name?: string; message?: string; code?: string; cause?: { code?: string; message?: string } } | null;
+  const code = err?.cause?.code ?? err?.code ?? "";
+  if (err?.name === "TimeoutError" || err?.name === "AbortError" || /timeout/i.test(err?.message ?? "")) return "La URL no respondio en 15 s";
+  if (code === "ENOTFOUND" || code === "EAI_AGAIN") return "El dominio de la URL no existe (DNS)";
+  if (code === "ECONNREFUSED" || code === "ECONNRESET") return "El sitio rechazo la conexion";
+  if (/CERT|SSL|TLS|SIGNATURE/i.test(code)) return `El sitio tiene un problema con su certificado SSL (${code})`;
+  return `La URL no responde (${code || err?.cause?.message || err?.message || "error de red"})`;
 }
 
 export async function validarFila(fila: FilaSheet, sanity: SanityWriteClient): Promise<Validacion> {

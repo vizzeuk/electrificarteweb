@@ -50,13 +50,65 @@ export async function pdfATexto(buf: ArrayBuffer): Promise<string> {
   return (text as string[]).map((t, i) => `--- pagina ${i + 1} ---\n${t}`).join("\n");
 }
 
-export async function bajar(url: string): Promise<{ final: string; tipo: string; cuerpo: ArrayBuffer; status: number }> {
-  const res = await fetch(url, {
-    headers: { "user-agent": UA, "accept-language": "es-CL,es;q=0.9" },
-    redirect: "follow",
-    signal: AbortSignal.timeout(30_000),
+// Sitios con la cadena de certificados incompleta (jmcchile.cl): el navegador baja el intermedio
+// de la URL "CA Issuers" del certificado (AIA) y Bun no. Se hace lo mismo y se repite el pedido
+// verificando contra raices + intermedio: la verificacion nunca se apaga. Igual que
+// lib/http/fetch-cadena.ts en la web.
+const CADENA_INCOMPLETA = /UNABLE_TO_VERIFY_LEAF_SIGNATURE|UNABLE_TO_GET_ISSUER_CERT|unable to verify the first certificate|unable to get local issuer/i;
+const intermediosPorHost = new Map<string, Promise<string[]>>();
+
+function caIssuers(info: unknown): string | null {
+  if (info && typeof info === "object") return (info as Record<string, string[] | undefined>)["CA Issuers - URI"]?.[0] ?? null;
+  const m = /CA Issuers - URI:(\S+)/.exec(typeof info === "string" ? info : "");
+  return m ? m[1] : null;
+}
+
+async function intermedios(host: string): Promise<string[]> {
+  const tls = await import("node:tls");
+  const { X509Certificate } = await import("node:crypto");
+  // Solo para LEER el certificado publico; no se manda nada por esta conexion.
+  const hoja = await new Promise<{ infoAccess?: unknown }>((ok, mal) => {
+    const s = tls.connect({ host, port: 443, servername: host, rejectUnauthorized: false }, () => {
+      ok(s.getPeerCertificate() as { infoAccess?: unknown });
+      s.end();
+    });
+    s.setTimeout(10_000, () => s.destroy(new Error("timeout leyendo el certificado")));
+    s.on("error", mal);
   });
-  return { final: res.url, tipo: res.headers.get("content-type") ?? "", cuerpo: await res.arrayBuffer(), status: res.status };
+  const pems: string[] = [];
+  let url = caIssuers(hoja.infoAccess);
+  for (let i = 0; url && i < 3; i++) {
+    const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
+    if (!res.ok) break;
+    const cert = new X509Certificate(Buffer.from(await res.arrayBuffer()));
+    pems.push(cert.toString());
+    if (cert.issuer === cert.subject) break;
+    url = caIssuers(cert.infoAccess);
+  }
+  if (!pems.length) throw new Error(`${host} no publica su certificado intermedio`);
+  return pems;
+}
+
+export async function bajar(url: string): Promise<{ final: string; tipo: string; cuerpo: ArrayBuffer; status: number }> {
+  const init = {
+    headers: { "user-agent": UA, "accept-language": "es-CL,es;q=0.9" },
+    redirect: "follow" as const,
+    signal: AbortSignal.timeout(30_000),
+  };
+  let res: Response;
+  try {
+    res = await fetch(url, init);
+  } catch (e) {
+    const err = e as { code?: string; message?: string };
+    if (!CADENA_INCOMPLETA.test(`${err?.code ?? ""} ${err?.message ?? ""}`)) throw e;
+    const host = new URL(url).hostname;
+    let p = intermediosPorHost.get(host);
+    if (!p) { p = intermedios(host); intermediosPorHost.set(host, p); p.catch(() => intermediosPorHost.delete(host)); }
+    const { rootCertificates } = await import("node:tls");
+    // `tls.ca` es de Bun: reemplaza las raices, por eso van las de siempre + los intermedios.
+    res = await fetch(url, { ...init, signal: AbortSignal.timeout(30_000), tls: { ca: [...rootCertificates, ...(await p)] } } as RequestInit);
+  }
+  return { final: res.url || url, tipo: res.headers.get("content-type") ?? "", cuerpo: await res.arrayBuffer(), status: res.status };
 }
 
 export function recortar(texto: string): string {

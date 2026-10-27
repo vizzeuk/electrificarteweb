@@ -287,6 +287,9 @@
 .hl__text p { margin-top: var(--space-4); color: var(--ink-2); font-size: 1.0625rem; max-width: 44ch; }
 @media (max-width: 899px) { .hl { grid-template-columns: minmax(0, 1fr); } .hl--flip .hl__media { order: 0; } }
 
+.pdp-video { aspect-ratio: 16 / 9; max-width: 960px; border-radius: var(--radius-card); overflow: hidden; background: var(--canvas-2); }
+.pdp-video iframe { display: block; width: 100%; height: 100%; border: 0; }
+
 .vtable-wrap { overflow-x: auto; border: var(--border-hairline) solid var(--line); border-radius: var(--radius-card); background: var(--surface); }
 .vtable { width: 100%; border-collapse: collapse; min-width: 720px; font-variant-numeric: tabular-nums; }
 .vtable th, .vtable td { padding: 14px var(--space-5); text-align: left; border-bottom: var(--border-hairline) solid var(--line); font-size: 0.9375rem; }
