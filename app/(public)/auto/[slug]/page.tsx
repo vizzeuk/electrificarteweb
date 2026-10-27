@@ -11,6 +11,7 @@ import { CarReviews } from "@/components/reviews/CarReviews";
 import { CarStructuredData } from "@/components/car/CarStructuredData";
 import { Icon } from "@/components/ui/Icon";
 import { OfferCta } from "@/components/waitlist/OfferCta";
+import { financiamientoDeVersion } from "@/lib/precios";
 
 export const revalidate = 60;
 
@@ -166,7 +167,8 @@ export default async function CarDetailPage({ params }: PageProps) {
         key:           v._key,
         name:          v.name,
         price:         v.price,
-        discountPrice: v.discountPrice ?? v.price,
+        // El suyo, o el del modelo si es la versión de los precios del modelo (lib/precios.ts).
+        discountPrice: financiamientoDeVersion(v, sanity) ?? v.price,
         electricTypeTag: v.electricType?.tag ?? sanity.electricType?.tag ?? null,
         category:      v.vehicleType?.label ?? sanity.vehicleType?.label ?? null,
         ownType,

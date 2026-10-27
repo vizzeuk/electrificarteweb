@@ -3,6 +3,7 @@ import { Icon } from "@/components/ui/Icon";
 import { ElectricTypeBadge } from "@/components/car/ElectricTypeBadge";
 import { formatCLP, carStats } from "@/lib/utils";
 import { sanityImg } from "@/lib/sanityImage";
+import { ETIQUETA_FINANCIAMIENTO, NOTA_FINANCIAMIENTO, NOTA_LISTA } from "@/lib/precios";
 
 interface CarCardProps {
   name: string;
@@ -113,17 +114,10 @@ export function CarCard({
 
         <div className="car__foot">
           <div className="car__price">
-            <p className="car__price-label">{hasDiscount ? "Con descuento" : "Precio de lista"}</p>
-            {hasDiscount ? (
-              <>
-                <p className="price-was">{formatCLP(basePrice)}</p>
-                <p className="price">{formatCLP(discountPrice)}</p>
-                <p className="price-save">Ahorras {formatCLP(basePrice - (discountPrice ?? basePrice))}</p>
-              </>
-            ) : (
-              <p className="price">{formatCLP(basePrice)}</p>
-            )}
-            <p className="t-micro">Precio referencial. Consulta por financiamiento.</p>
+            <p className="car__price-label">{hasDiscount ? ETIQUETA_FINANCIAMIENTO : "Precio de lista"}</p>
+            <p className="price">{formatCLP(hasDiscount ? discountPrice : basePrice)}</p>
+            {hasDiscount && <p className="price-list">Precio de lista {formatCLP(basePrice)}</p>}
+            <p className="t-micro">{hasDiscount ? NOTA_FINANCIAMIENTO : NOTA_LISTA}</p>
           </div>
           <div className="car__actions">
             <Link href={carHref} className="btn btn--secondary btn--sm btn--block">

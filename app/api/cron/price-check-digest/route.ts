@@ -81,7 +81,7 @@ function buildDigestMessage(
   }
 
   if (priceHigh.length > 0) {
-    lines.push("", `🟡 *${priceHigh.length} con precio sobre el oficial*:`);
+    lines.push("", `🟡 *${priceHigh.length} con precio distinto al de la marca*:`);
     priceHigh.forEach((c) => lines.push(`   - ${c.brand} ${c.name}: ${c.priceCheckNote ?? ""}`));
   }
 
@@ -124,7 +124,7 @@ function buildDigestMessage(
   } else {
     lines.push(
       "",
-      `Escríbeme "aplicar <modelo>" para bajar el precio al sugerido, "revertir <modelo>" para deshacer un ajuste automático, "restaurar <modelo>" si un descontinuado fue un error, o "descartar <modelo>" para dejarlo como está.`,
+      `Escríbeme "revertir <modelo>" para deshacer un ajuste automático de precio, "restaurar <modelo>" si un descontinuado fue un error, o "descartar <modelo>" para dejarlo como está. Los precios se corrigen a mano en Studio.`,
     );
   }
 

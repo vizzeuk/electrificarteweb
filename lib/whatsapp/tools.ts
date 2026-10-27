@@ -62,9 +62,9 @@ function otherVersionsOut(c: CarRow) {
   });
 }
 
-/** Precios válidos para el guard de salida: el del auto y los de sus versiones de otro tipo. */
+/** Precios válidos para el guard de salida: los dos del auto (lista y con bonos) y los de sus versiones de otro tipo. */
 function pricesOf(c: CarRow): number[] {
-  return [effectivePrice(c), ...otherVersionsOut(c).map((v) => v.price ?? 0)].filter((p) => p > 0);
+  return [effectivePrice(c), c.basePrice, ...otherVersionsOut(c).map((v) => v.price ?? 0)].filter((p) => p > 0);
 }
 
 const OTHER_VERSIONS = groq`"otherVersions": versions[(defined(electricType) && electricType._ref != ^.electricType._ref) || (defined(vehicleType) && vehicleType._ref != ^.vehicleType._ref)]{
@@ -334,6 +334,7 @@ async function getVehicleDetail(input: Record<string, unknown>): Promise<ToolRun
   if (!car) return { output: { error: "not_found", slug }, slugs: [], prices: [] };
 
   const price = effectivePrice(car);
+  const conFinanciamiento = price < car.basePrice;
   return {
     output: {
       slug: car.slug,
@@ -342,7 +343,11 @@ async function getVehicleDetail(input: Record<string, unknown>): Promise<ToolRun
       drivetrainType: car.drivetrainType,
       vehicleType: car.vehicleType,
       price,
-      priceFormatted: fmtCLP(price),
+      // Dos precios de la marca (oct-2026): el más bajo con bonos y/o financiamiento, sujeto a
+      // cada marca; el de lista es el más alto.
+      priceFormatted: conFinanciamiento
+        ? `${fmtCLP(price)} con bonos y/o financiamiento, sujeto a cada marca (lista ${fmtCLP(car.basePrice)})`
+        : `${fmtCLP(price)} de lista`,
       hasDiscount: !!(car.discountPrice && car.discountPrice < car.basePrice),
       range: car.range,
       electricRangeKm: car.electricRangeKm,

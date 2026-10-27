@@ -3,6 +3,7 @@ import { Icon } from "@/components/ui/Icon";
 import { ElectricTypeBadge } from "@/components/car/ElectricTypeBadge";
 import { sanityImg } from "@/lib/sanityImage";
 import { carStats, cleanSeparators, formatCLP, type CarStatInput } from "@/lib/utils";
+import { ETIQUETA_FINANCIAMIENTO, NOTA_FINANCIAMIENTO } from "@/lib/precios";
 
 /**
  * Auto destacado del encabezado de las PLP (tipo, electrificado y marca). Foto grande con
@@ -79,9 +80,10 @@ export function FeaturedCar({ slug, name, brand, imageUrl, basePrice, discountPr
           <div>
             {hasDiscount ? (
               <>
-                <p className="price-was">{formatCLP(basePrice)}</p>
+                <p className="car__price-label">{ETIQUETA_FINANCIAMIENTO}</p>
                 <p className="price price--lg">{formatCLP(discountPrice)}</p>
-                <p className="price-save">Ahorras {formatCLP(basePrice - (discountPrice ?? basePrice))}</p>
+                <p className="price-list">Precio de lista {formatCLP(basePrice)}</p>
+                <p className="t-micro">{NOTA_FINANCIAMIENTO}</p>
               </>
             ) : (
               <>

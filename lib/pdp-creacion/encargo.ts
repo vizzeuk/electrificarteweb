@@ -44,7 +44,13 @@ export interface FilaSheet {
 
 export interface VersionDeclarada {
   nombre: string;
+  /** Precio de lista (el mas alto que publica la marca). */
   precio: number;
+  /**
+   * Precio con bonos y/o financiamiento (el mas bajo), opcional (oct-2026). Lo declara el humano
+   * como el de lista (R4); sin el, la PDP usa el que el agente lea de la fuente con su cita.
+   */
+  precio_financiamiento?: number;
   /**
    * Carroceria y electrificacion de la version, SOLO si difieren de las del modelo (ej. DS 3
    * Hybrid + DS 3 E-Tense). Ausentes = las del modelo. Las declara el humano (R4), como el
@@ -87,12 +93,16 @@ export function parseVersiones(raw: string | VersionDeclarada[] | null | undefin
       const precio = Number(String(v?.precio ?? "").replace(/[^\d]/g, ""));
       if (!nombre) throw new Error(`Version ${i + 1} sin nombre`);
       if (!Number.isFinite(precio) || precio <= 0) throw new Error(`Precio invalido en la version "${nombre}"`);
+      const pf = Number(String((v as { precio_financiamiento?: unknown })?.precio_financiamiento ?? "").replace(/[^\d]/g, ""));
+      if (pf > 0 && pf >= precio) {
+        throw new Error(`El precio con financiamiento de "${nombre}" tiene que ser menor que el de lista`);
+      }
       // Vacios = los del modelo: el campo no se guarda.
       const tipo = String(v?.tipo ?? "").trim();
       const electrificacion = String(v?.electrificacion ?? "").trim().toUpperCase();
       // La ficha de la version viaja con ella. Un id invalido no llega aca: lo rechaza la ruta.
       const ficha = esFileId(v?.ficha_file_id) ? { ficha_file_id: v.ficha_file_id, ficha_nombre: nombreFicha(v.ficha_nombre) } : {};
-      return { nombre, precio, ...(tipo ? { tipo } : {}), ...(electrificacion ? { electrificacion } : {}), ...ficha };
+      return { nombre, precio, ...(pf > 0 ? { precio_financiamiento: pf } : {}), ...(tipo ? { tipo } : {}), ...(electrificacion ? { electrificacion } : {}), ...ficha };
     });
   }
   return String(raw ?? "")
@@ -191,14 +201,16 @@ export function armarEncargo(fila: FilaSheet): string {
     const distintas = versiones.filter((v) => v.electrificacion || v.tipo);
     const otraTecnologia = versiones.filter((v) => v.electrificacion);
     lineas.push(
-      `Versiones declaradas por el humano (nombre, precio, carroceria y electrificacion son suyos, no los cambies):`,
+      `Versiones declaradas por el humano (nombre, precios, carroceria y electrificacion son suyos, no los cambies):`,
       ...versiones.map((v) => {
         const tipos = [
           v.electrificacion ? `electrificacion ${v.electrificacion}` : "",
           v.tipo ? `carroceria ${v.tipo}` : "",
         ].filter(Boolean).join(", ");
-        return `  - ${v.nombre} — $${v.precio.toLocaleString("es-CL")} CLP${tipos ? ` (${tipos}, distinta a la del modelo)` : ""}`;
+        const fin = v.precio_financiamiento ? ` / con bonos y/o financiamiento $${v.precio_financiamiento.toLocaleString("es-CL")}` : "";
+        return `  - ${v.nombre} — lista $${v.precio.toLocaleString("es-CL")} CLP${fin}${tipos ? ` (${tipos}, distinta a la del modelo)` : ""}`;
       }),
+      `Igual reporta los precios que publique la fuente (el mas alto y el mas bajo de cada version, con su cita): son el control de lo declarado y, donde el humano no puso precio con financiamiento, el que se usa.`,
       ``,
       `Usa "${base!.nombre}" como version base: sus specs van en \`base\`.`,
       versiones.length > 1
@@ -215,7 +227,7 @@ export function armarEncargo(fila: FilaSheet): string {
   } else {
     lineas.push(
       `El humano no declaro versiones ni precios. Deja \`versiones\` vacio y pon en \`base\` las specs de la version mas economica que publique la fuente.`,
-      `Reporta en \`precio_lista_leido\` el precio de lista MAS BAJO que publica la fuente para este modelo (sin bonos ni descuentos), con su cita textual en \`evidencia_precio\`. Sin cita, omite el precio: una persona lo completa.`,
+      `De la version mas barata, reporta el precio MAS ALTO que publica la fuente (lista) en \`precio_lista_leido\` + \`evidencia_precio\`, y el MAS BAJO (con bonos y/o financiamiento) en \`precio_financiamiento_leido\` + \`evidencia_precio_financiamiento\`. Si publica uno solo, va en \`precio_lista_leido\`. Sin cita, omite el precio: una persona lo completa.`,
       ``,
     );
   }

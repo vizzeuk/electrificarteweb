@@ -83,14 +83,14 @@ export async function POST(req: NextRequest): Promise<Response> {
   const cutoff = daysAgoIso(MIN_DAYS_BETWEEN_CHECKS);
 
   // `revisable` = publicado, con fuente, y sin revisar en los últimos 5 días
-  // (C14: un auto no se revisa dos veces en la misma semana).
+  // (C14: un auto no se revisa dos veces en el mismo mes).
   const revisable = `${PUBLISHED} && count(sourceUrls) > 0 && (!defined(lastPriceCheckAt) || lastPriceCheckAt < $cutoff)`;
 
-  const { delSlot, relleno, sinFuente, revisadosEstaSemana } = await sanity.fetch<{
+  const { delSlot, relleno, sinFuente, revisadosEsteMes } = await sanity.fetch<{
     delSlot: QueueCar[];
     relleno: QueueCar[];
     sinFuente: NoSourceCar[];
-    revisadosEstaSemana: number;
+    revisadosEsteMes: number;
   }>(
     `{
       "delSlot": *[${revisable} && checkSlot == $slot]
@@ -100,9 +100,9 @@ export async function POST(req: NextRequest): Promise<Response> {
       "sinFuente": *[${PUBLISHED} && count(sourceUrls) == 0] {
         "carId": _id, "nombre": name, "marca": brand->name, "slug": slug.current
       },
-      "revisadosEstaSemana": count(*[${PUBLISHED} && defined(lastPriceCheckAt) && lastPriceCheckAt >= $semana])
+      "revisadosEsteMes": count(*[${PUBLISHED} && defined(lastPriceCheckAt) && lastPriceCheckAt >= $semana])
     }`,
-    { cutoff, limit, slot, semana: daysAgoIso(7) }
+    { cutoff, limit, slot, semana: daysAgoIso(30) }
   );
 
   // Ojo: `checkSlot != $slot` en GROQ también matchea null/undefined, así que el
@@ -137,6 +137,6 @@ export async function POST(req: NextRequest): Promise<Response> {
     // n8n avisa esto agrupado, una vez, no un mensaje por auto.
     sinFuente: sinFuente.slice(0, 50),
     sinFuenteTotal: sinFuente.length,
-    cobertura: { publicados: published, revisadosEstaSemana, lote: cars.length },
+    cobertura: { publicados: published, revisadosEsteMes, lote: cars.length },
   });
 }

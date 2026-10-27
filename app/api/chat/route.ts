@@ -154,15 +154,21 @@ function fmt(n: number) {
   return `$${Math.round(n).toLocaleString("es-CL")} CLP`;
 }
 
+/** "$X CLP con bonos y/o financiamiento (lista $Y CLP)", o solo el de lista si la marca publica uno. */
+function precioTexto(c: { basePrice: number; discountPrice?: number | null }): string {
+  return c.discountPrice && c.discountPrice < c.basePrice
+    ? `${fmt(c.discountPrice)} con bonos y/o financiamiento (lista ${fmt(c.basePrice)})`
+    : `${fmt(c.basePrice)} de lista`;
+}
+
 function carCard(c: CarResult): string {
-  const price = c.discountPrice && c.discountPrice < c.basePrice ? c.discountPrice : c.basePrice;
   const specs = [
     c.range        ? `${c.range} km autonomía`     : null,
     c.power        ? `${c.power} CV`               : null,
     c.traction     ?? null,
     c.acceleration ? `0–100 en ${c.acceleration}s` : null,
   ].filter(Boolean).join(" · ");
-  return `**${c.brand.name} ${c.name}** — ${fmt(price)}\n${specs}\n[Ver detalle](/auto/${c.slug})`;
+  return `**${c.brand.name} ${c.name}** — ${precioTexto(c)}\n${specs}\n[Ver detalle](/auto/${c.slug})`;
 }
 
 // ─── Recommendation handler ───────────────────────────────────────────────────
@@ -230,14 +236,13 @@ async function handleRecommendation(body: {
 
 function carsToText(cars: CarResult[]): string {
   return cars.map((c) => {
-    const price = c.discountPrice && c.discountPrice < c.basePrice ? c.discountPrice : c.basePrice;
     const specs = [
       c.range        ? `${c.range}km`              : null,
       c.power        ? `${c.power}CV`              : null,
       c.traction     ?? null,
       c.acceleration ? `0-100: ${c.acceleration}s` : null,
     ].filter(Boolean).join(", ");
-    return `- ${c.brand.name} ${c.name} | ${fmt(price)} | ${specs} | /auto/${c.slug}`;
+    return `- ${c.brand.name} ${c.name} | ${precioTexto(c)} | ${specs} | /auto/${c.slug}`;
   }).join("\n");
 }
 
@@ -295,11 +300,12 @@ async function handleChat(messages: ChatMessage[]): Promise<string> {
   // Slugs y precios válidos para la validación de output
   const allCars = [...cheapCars, ...longRangeCars, ...brandCars];
   const validSlugs = new Set(allCars.map((c) => c.slug));
+  // Los dos precios de cada auto (lista y con bonos y/o financiamiento) son válidos.
   const validPrices = allCars
-    .map((c) => c.discountPrice ?? c.basePrice)
+    .flatMap((c) => [c.discountPrice, c.basePrice])
     .filter((p): p is number => typeof p === "number" && p > 0);
 
-  const systemPrompt = `Eres Francisco, el asistente virtual de Electrificarte, el sitio para elegir autos eléctricos e híbridos en Chile: catálogo con fichas y precios de lista, comparador, calculadora de ahorro y asesoría por WhatsApp. Eres amable, experto y conciso.
+  const systemPrompt = `Eres Francisco, el asistente virtual de Electrificarte, el sitio para elegir autos eléctricos e híbridos en Chile: catálogo con fichas y precios (de lista y con bonos y/o financiamiento de cada marca), comparador, calculadora de ahorro y asesoría por WhatsApp. Eres amable, experto y conciso.
 
 MARCAS DISPONIBLES: ${allBrands.map((b) => b.name).join(", ")}
 

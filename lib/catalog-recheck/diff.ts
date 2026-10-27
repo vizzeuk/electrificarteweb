@@ -27,9 +27,6 @@ export const MIN_PLAUSIBLE_PRICE = 3_000_000;
 const NOISE_RATIO = 0.01;
 const NOISE_FLOOR = 200_000;
 
-/** El precio que sugerimos aplicar queda 5% bajo el oficial — regla de negocio ya vigente. */
-const UNDERCUT_RATIO = 0.95;
-
 /** Tras 2 corridas seguidas sin poder leer la fuente, se marca muerta (C11). */
 const DEAD_SOURCE_STREAK = 2;
 
@@ -40,6 +37,19 @@ const DEAD_SOURCE_STREAK = 2;
  * techo el hallazgo se registra igual, pero lo aplica una persona.
  */
 export const MAX_AUTO_APPLY_DRIFT = 0.25;
+
+/**
+ * Piso del precio con bonos y/o financiamiento para escribirlo solo: al menos este % del precio
+ * lista que va a quedar. Los casos reales están lejos (Ora 03 68 %, Poer P500 81 %); un "pie desde
+ * $6.990.000" de un auto de $25M (28 %) es una mala lectura que pasaría todas las demás guardas.
+ * Bajo el piso el hallazgo se registra igual y lo decide una persona.
+ */
+export const MIN_FINANCING_RATIO = 0.55;
+
+/** El catálogo es con IVA. Una página "+ IVA" publica netos: se les suma acá, no en el modelo. */
+export const IVA = 0.19;
+const conIva = (n: number | null | undefined, masIva: boolean | undefined) =>
+  typeof n === "number" && masIva ? Math.round(n * (1 + IVA)) : n ?? null;
 
 const SEVERITY: Record<PriceCheckFlag, number> = {
   discontinued: 5,
@@ -84,10 +94,10 @@ function fingerprint(f: Finding): string {
  * Deja solo las versiones de la fuente que le corresponden a ESTA PDP, según el
  * reparto que declaró el humano. Sin reparto declarado devuelve todo tal cual.
  */
-export function filterVersionsForCar(
+export function filterVersionsForCar<V extends { nombre: string; precio: number | null }>(
   car: CarSnapshot,
-  versions: { nombre: string; precio: number | null }[],
-): { nombre: string; precio: number | null }[] {
+  versions: V[],
+): V[] {
   const scope = (car.versionScope ?? []).map(normalizeVersionName).filter(Boolean);
   const exclude = (car.versionExclude ?? []).map(normalizeVersionName).filter(Boolean);
 
@@ -111,15 +121,16 @@ export function proposeAutoApply(
   car: CarSnapshot,
   ourBase: number,
   officialBase: number,
+  /** El precio con bonos/financiamiento que va a quedar (el leído, o el nuestro si no se leyó). */
+  financiamientoFinal: number | null = car.discountPrice ?? null,
 ): AutoApply | undefined {
   // El salto tiene que ser creíble. Sobre el techo, decide una persona.
   const drift = Math.abs(officialBase - ourBase) / ourBase;
   if (drift > MAX_AUTO_APPLY_DRIFT) return undefined;
 
-  // Nunca dejar el precio lista bajo el precio con descuento: la PDP mostraría
-  // un "descuento" más caro que la lista. Eso es decisión comercial, no lectura.
-  const ourDiscount = car.discountPrice ?? null;
-  if (ourDiscount && officialBase <= ourDiscount) return undefined;
+  // Nunca dejar el precio lista bajo (o igual) al precio con bonos/financiamiento: la PDP
+  // mostraría un segundo precio más caro que la lista. Eso es una mala lectura.
+  if (financiamientoFinal && officialBase <= financiamientoFinal) return undefined;
 
   return {
     field: "basePrice",
@@ -129,10 +140,26 @@ export function proposeAutoApply(
   };
 }
 
-export function decide(car: CarSnapshot, report: SourceReport): CheckDecision {
+export function decide(car: CarSnapshot, reportOriginal: SourceReport): CheckDecision {
+  // Todo el diff trabaja con IVA incluido; `enPagina` guarda la cifra escrita para confirmarla.
+  const masIva = reportOriginal.precios_mas_iva === true;
+  const report: SourceReport = masIva
+    ? {
+        ...reportOriginal,
+        precio_base: conIva(reportOriginal.precio_base, true),
+        precio_financiamiento: conIva(reportOriginal.precio_financiamiento, true),
+        versiones: (reportOriginal.versiones ?? []).map((v) => ({
+          ...v,
+          precio: conIva(v.precio, true),
+          precio_financiamiento: conIva(v.precio_financiamiento, true),
+        })),
+      }
+    : reportOriginal;
+  const enPagina = (n: number) => (masIva ? Math.round(n / (1 + IVA)) : n);
   const previous = new Set((car.catalogFindings ?? []).map(fingerprint));
-  const finish = (d: Omit<CheckDecision, "hasNewFindings">): CheckDecision => ({
+  const finish = (d: Omit<CheckDecision, "hasNewFindings" | "autoApply"> & { autoApply?: AutoApply[] }): CheckDecision => ({
     ...d,
+    autoApply: d.autoApply ?? [],
     hasNewFindings: d.findings.some((f) => !previous.has(fingerprint(f))),
   });
 
@@ -182,36 +209,70 @@ export function decide(car: CarSnapshot, report: SourceReport): CheckDecision {
   // todas las semanas, y la del Cross Turismo vería las 8 del Taycan).
   const hasScope = Boolean(car.versionScope?.length || car.versionExclude?.length);
   const inventoryComparable = !car.sharedSource || hasScope;
-  let suggestedPrice: number | undefined;
   let flag: PriceCheckFlag = "none";
   const raise = (f: PriceCheckFlag) => {
     if (SEVERITY[f] > SEVERITY[flag]) flag = f;
   };
 
-  // ── Precio base ───────────────────────────────────────────────────────────
+  // ── Los dos precios del modelo ────────────────────────────────────────────
   // Sin cita textual no hay hallazgo: es la regla R3/C4 del board aplicada al
   // caso que más duele, porque un precio inventado se aplica y llega al sitio.
+  // Lista = el más alto que publica la marca; financiamiento = el más bajo (bonos y/o
+  // financiamiento) de la MISMA versión. Un "segundo precio" igual o mayor que la lista
+  // no es un segundo precio: se descarta.
   const officialBase = report.evidencia ? plausible(report.precio_base) : null;
+  let officialFin = report.evidencia_financiamiento ? plausible(report.precio_financiamiento) : null;
+  if (officialFin && officialBase && officialFin >= officialBase) officialFin = null;
   const ourBase = car.basePrice ?? null;
+  const ourFin = car.discountPrice ?? null;
 
-  let autoApply: AutoApply | undefined;
+  const autoApply: AutoApply[] = [];
 
   if (officialBase && ourBase && !isNoise(ourBase, officialBase)) {
     findings.push({
       kind: "precio_base",
-      detail: `Nuestro precio lista ${clp(ourBase)} · la fuente publica ${clp(officialBase)}.`,
+      detail: `Nuestro precio lista ${clp(ourBase)} · la fuente publica ${clp(officialBase)}${masIva ? " (con IVA; la página lo publica + IVA)" : ""}.`,
       proposedPrice: officialBase,
       evidence: report.evidencia ?? undefined,
     });
-    // Solo es accionable cuando conviene bajar el nuestro. Si ya estamos bajo el
-    // oficial el hallazgo queda registrado, pero no hay nada que aplicar.
-    const suggested = Math.round(officialBase * UNDERCUT_RATIO);
-    const ourEffective = car.discountPrice ?? ourBase;
-    if (ourEffective > suggested) {
-      suggestedPrice = suggested;
-      raise("price_high");
+    raise("price_high");
+    const a = proposeAutoApply(car, ourBase, officialBase, officialFin ?? ourFin);
+    if (a) autoApply.push({ ...a, enPagina: enPagina(officialBase) });
+  }
+
+  const listaFinal = autoApply.find((a) => a.field === "basePrice")?.to ?? ourBase;
+  if (officialFin && (!ourFin || !isNoise(ourFin, officialFin))) {
+    findings.push({
+      kind: "precio_financiamiento",
+      detail: ourFin
+        ? `Nuestro precio con bonos y/o financiamiento ${clp(ourFin)} · la fuente publica ${clp(officialFin)}.`
+        : `La fuente publica ${clp(officialFin)} con bonos y/o financiamiento y no lo tenemos.`,
+      proposedPrice: officialFin,
+      evidence: report.evidencia_financiamiento ?? undefined,
+    });
+    raise("price_high");
+    // Mismas guardas que la lista: salto creíble (contra el nuestro, si lo teníamos) y
+    // siempre bajo el precio lista que va a quedar.
+    const drift = ourFin ? Math.abs(officialFin - ourFin) / ourFin : 0;
+    if (listaFinal && officialFin < listaFinal && officialFin >= listaFinal * MIN_FINANCING_RATIO && drift <= MAX_AUTO_APPLY_DRIFT) {
+      autoApply.push({
+        field: "discountPrice",
+        from: ourFin,
+        to: officialFin,
+        enPagina: enPagina(officialFin),
+        reason: ourFin
+          ? `delta ${(drift * 100).toFixed(1)}% (techo ${MAX_AUTO_APPLY_DRIFT * 100}%), con cita textual y bajo el precio lista`
+          : "la marca publica un precio con bonos y/o financiamiento, con cita textual y bajo el precio lista",
+      });
     }
-    autoApply = proposeAutoApply(car, ourBase, officialBase);
+  } else if (!officialFin && ourFin && officialBase) {
+    // La fuente se leyó (trae precio lista) y ya no publica un segundo precio. Puede ser que el
+    // bono terminó o una mala lectura: se avisa, no se borra solo.
+    findings.push({
+      kind: "precio_financiamiento",
+      detail: `Tenemos ${clp(ourFin)} con bonos y/o financiamiento y la fuente ya no publica un segundo precio. Revisar si el bono terminó.`,
+    });
+    raise("price_high");
   }
 
   // ── Versiones ─────────────────────────────────────────────────────────────
@@ -243,6 +304,17 @@ export function decide(car: CarSnapshot, report: SourceReport): CheckDecision {
 
     // Comparar el precio de una versión que YA tenemos es seguro incluso con la
     // fuente compartida: el nombre calza con el nuestro, no hay ambigüedad.
+    const fin = plausible(v.precio_financiamiento);
+    const mineFin = mine.discountPrice ?? null;
+    if (fin && (!price || fin < price) && (!mineFin || !isNoise(mineFin, fin))) {
+      findings.push({
+        kind: "precio_financiamiento",
+        detail: `"${mine.name}": ${mineFin ? `tenemos ${clp(mineFin)}` : "no tenemos precio"} con bonos y/o financiamiento · la fuente publica ${clp(fin)}.`,
+        proposedPrice: fin,
+        versionName: mine.name,
+      });
+      raise("version_nueva");
+    }
     const minePrice = mine.price ?? null;
     if (price && minePrice && !isNoise(minePrice, price)) {
       findings.push({
@@ -308,7 +380,6 @@ export function decide(car: CarSnapshot, report: SourceReport): CheckDecision {
     findings,
     flag,
     note,
-    suggestedPrice,
     autoApply,
     hide: false,
     sourceFailStreak: 0,

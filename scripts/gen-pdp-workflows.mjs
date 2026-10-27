@@ -1,4 +1,4 @@
-// Genera n8n/pdp-recheck.json — el re-check semanal de PDPs (Flujo C del board
+// Genera n8n/pdp-recheck.json — el re-check MENSUAL de PDPs (semanal hasta oct-2026) (Flujo C del board
 // de Miro; ver docs/FLUJO-PDP-N8N.md §2.6).
 //   node scripts/gen-pdp-workflows.mjs
 //
@@ -106,16 +106,20 @@ const nodes = [
   {
     parameters: {
       content: [
-        "## Flujo C — Re-check semanal de precios de PDP",
+        "## Flujo C — Re-check MENSUAL de precios de PDP",
         "",
-        "4 corridas al día × 7 días = **28 lotes por semana**. Lote = techo(publicados / 28) → hoy 7 autos.",
-        "Cada auto lleva un `checkSlot` 0–27 asignado al crearse, así que se revisa siempre el mismo día y hora.",
+        "Una corrida al día (09:00) los días 1 a 28 = **28 lotes por mes**. Lote = techo(publicados / 28) → hoy 7 autos.",
+        "Cada auto lleva un `checkSlot` 0–27 asignado al crearse, así que se revisa siempre el mismo día del mes.",
         "La corrida toma primero los de su lote y, si no llenan, completa con la cola por antigüedad —",
-        "así una corrida caída no hace que esos autos se salten la semana.",
+        "así una corrida caída no hace que esos autos se salten el mes.",
         "",
-        "**Precios**: si el precio oficial cambió y una segunda lectura lo confirma, se actualiza solo en Sanity",
-        "(solo `basePrice`, nunca el precio con descuento, nunca versiones ni año). Apagable con",
-        "`RECHECK_AUTOAPPLY=false` en Vercel. El digest lo reporta y `revertir <modelo>` lo deshace.",
+        "**Quién lee**: el agente `revision` del pdp-runner de la VPS (Copilot; modelo en `PDP_RECHECK_MODELO`",
+        "en Vercel). Tarda de 20 s a unos minutos por auto: la web abre la revisión y este flujo vuelve a",
+        "consultar cada 20 s hasta que termina.",
+        "",
+        "**Precios**: los dos del modelo — lista (el más alto) y con bonos y/o financiamiento (el más bajo).",
+        "Si cambiaron y la cifra aparece escrita en una lectura fresca de la página, se actualizan solos en",
+        "Sanity (nunca versiones ni año). Apagable con `RECHECK_AUTOAPPLY=false` en Vercel.",
         "",
         "### Antes de activar",
         "1. **Credenciales**: ya vienen enchufadas — `Electrificarte Admin` (Header Auth) y `Sheets Cadre`",
@@ -148,11 +152,11 @@ const nodes = [
   },
   {
     parameters: {
-      rule: { interval: [{ field: "cronExpression", expression: "0 9,15,19,23 * * *" }] },
+      rule: { interval: [{ field: "cronExpression", expression: "0 9 1-28 * *" }] },
     },
-    id: "cron", name: "09:00 · 15:00 · 19:00 · 23:00",
+    id: "cron", name: "09:00 · días 1 a 28",
     type: "n8n-nodes-base.scheduleTrigger", typeVersion: 1.2, position: [-80, 300],
-    notes: "TZ del contenedor: America/Santiago (GENERIC_TIMEZONE). 4 corridas al día = 28 lotes por semana.",
+    notes: "TZ del contenedor: America/Santiago (GENERIC_TIMEZONE). Una corrida al día, días 1 a 28 = 28 lotes por mes.",
   },
   {
     parameters: {
@@ -212,10 +216,10 @@ const nodes = [
     notes: "Sin esto solo se revisaría el primer auto del lote.",
   },
   {
-    parameters: { batchSize: 3, options: {} },
-    id: "loop", name: "Loop (3 en paralelo)",
+    parameters: { batchSize: 1, options: {} },
+    id: "loop", name: "Loop (de a uno)",
     type: "n8n-nodes-base.splitInBatches", typeVersion: 3, position: [860, 460],
-    notes: "Concurrencia 3 para no pegarle al rate limit de Anthropic. Salida 'done' (arriba) = todos los autos ya revisados.",
+    notes: "De a un auto: cada uno espera su revisión en el runner antes de pasar al siguiente. Salida 'done' (arriba) = todos los autos ya revisados.",
   },
 
   http("car", "Revisar un auto", "/api/admin/recheck/car",
@@ -223,8 +227,8 @@ const nodes = [
       { name: "carId", value: "={{ $json.carId }}" },
       { name: "runId", value: "={{ $('Tomar el lote').first().json.runId }}" },
     ],
-    [1340, 560],
-    "Lee la fuente (1 llamada a Claude), hace el diff aritmético y escribe los campos de auditoría. 10–20 s.",
+    [1100, 560],
+    "Abre la revisión en el runner (responde `corriendo` + sessionId). Sin runner, lee con la API de Anthropic y responde el resultado de una.",
     {
       node: {
         retryOnFail: true,
@@ -236,6 +240,45 @@ const nodes = [
       },
     }),
 
+  {
+    parameters: {
+      conditions: {
+        options: { caseSensitive: true, leftValue: "", typeValidation: "loose", version: 2 },
+        conditions: [{
+          id: "corre-c1",
+          leftValue: "={{ $json.resultado === 'corriendo' && ($json.intento ?? 0) < 40 }}",
+          rightValue: true,
+          operator: { type: "boolean", operation: "true", singleValue: true },
+        }],
+        combinator: "and",
+      },
+      looseTypeValidation: true,
+      options: {},
+    },
+    id: "corre", name: "¿Sigue corriendo?",
+    type: "n8n-nodes-base.if", typeVersion: 2.2, position: [1340, 560],
+    notes: "40 consultas × 20 s ≈ 13 min, sobre el techo de 10 min del runner: lo normal es que termine antes y salga por 'false'.",
+  },
+  {
+    parameters: { amount: 20, unit: "seconds" },
+    id: "espera-rev", name: "Esperar 20 s",
+    type: "n8n-nodes-base.wait", typeVersion: 1.1, position: [1580, 720],
+    webhookId: "pdp-recheck-espera",
+    notes: "Consultar es gratis: solo lee el estado de la corrida en el runner.",
+  },
+  http("car-poll", "Consultar la revisión", "/api/admin/recheck/car",
+    [
+      { name: "carId", value: "={{ $json.carId }}" },
+      { name: "runId", value: "={{ $('Tomar el lote').first().json.runId }}" },
+      { name: "sessionId", value: "={{ $json.sessionId }}" },
+      { name: "intento", value: "={{ ($json.intento ?? 0) + 1 }}" },
+    ],
+    [1820, 720],
+    "Mismo endpoint con el sessionId: `corriendo` mientras el agente lee; al terminar hace el diff y escribe en Sanity.",
+    {
+      node: { retryOnFail: true, maxTries: 2, waitBetweenTries: 5000, onError: "continueRegularOutput" },
+    }),
+
   code("norm", "Normalizar resultado",
     [
       "// El endpoint devuelve 502 cuando falla NUESTRA API (rate limit, 5xx), no cuando",
@@ -243,6 +286,7 @@ const nodes = [
       "// con `error`, y hay que darle la misma forma que un resultado normal para que el",
       "// log y el digest no tengan que distinguir dos formatos.",
       "const j = $input.first().json ?? {};",
+      "if (j.resultado === 'corriendo') return [{ json: { carId: j.carId ?? null, nombre: j.nombre ?? 'desconocido', resultado: 'error', hallazgos: [], error: 'La revisión no terminó en ~13 min' } }];",
       "if (j.resultado) return [{ json: j }];",
       "return [{ json: {",
       "  carId: j.carId ?? null,",
@@ -269,7 +313,7 @@ const nodes = [
       "  urgentesTotal: urgentes.length,",
       "  urgentesTexto: urgentes",
       "    .map((r) => r.aplicado",
-      "      ? '• ' + r.nombre + ' — precio lista ' + clp(r.aplicado.from) + ' → ' + clp(r.aplicado.to) + ' (ya en el sitio)'",
+      "      ? '• ' + r.nombre + ' — ' + r.aplicado.map((a) => (a.field === 'basePrice' ? 'precio lista ' : 'precio con bonos/financiamiento ') + (a.from ? clp(a.from) : '—') + ' → ' + clp(a.to)).join(', ') + ' (ya en el sitio)'",
       "      : '• ' + r.nombre + ' — ' + (r.nota ?? r.flag))",
       "    .join('\\n'),",
       "} }];",
@@ -317,7 +361,7 @@ const nodes = [
 ];
 
 const connections = {
-  "09:00 · 15:00 · 19:00 · 23:00": { main: [[{ node: "Config", type: "main", index: 0 }]] },
+  "09:00 · días 1 a 28": { main: [[{ node: "Config", type: "main", index: 0 }]] },
   "Config": { main: [[{ node: "Tomar el lote", type: "main", index: 0 }]] },
   "Tomar el lote": {
     main: [[
@@ -337,15 +381,23 @@ const connections = {
       { node: "Avisar faltantes (agrupado)", type: "main", index: 0 },
     ]],
   },
-  "Un item por auto": { main: [[{ node: "Loop (3 en paralelo)", type: "main", index: 0 }]] },
-  "Loop (3 en paralelo)": {
+  "Un item por auto": { main: [[{ node: "Loop (de a uno)", type: "main", index: 0 }]] },
+  "Loop (de a uno)": {
     main: [
       [{ node: "Armar el cierre", type: "main", index: 0 }],
       [{ node: "Revisar un auto", type: "main", index: 0 }],
     ],
   },
-  "Revisar un auto": { main: [[{ node: "Normalizar resultado", type: "main", index: 0 }]] },
-  "Normalizar resultado": { main: [[{ node: "Loop (3 en paralelo)", type: "main", index: 0 }]] },
+  "Revisar un auto": { main: [[{ node: "¿Sigue corriendo?", type: "main", index: 0 }]] },
+  "¿Sigue corriendo?": {
+    main: [
+      [{ node: "Esperar 20 s", type: "main", index: 0 }],
+      [{ node: "Normalizar resultado", type: "main", index: 0 }],
+    ],
+  },
+  "Esperar 20 s": { main: [[{ node: "Consultar la revisión", type: "main", index: 0 }]] },
+  "Consultar la revisión": { main: [[{ node: "¿Sigue corriendo?", type: "main", index: 0 }]] },
+  "Normalizar resultado": { main: [[{ node: "Loop (de a uno)", type: "main", index: 0 }]] },
   "Armar el cierre": { main: [[{ node: "Cerrar la corrida", type: "main", index: 0 }]] },
   "Cerrar la corrida": { main: [[{ node: "Sheet · corridas", type: "main", index: 0 }]] },
   "Sheet · corridas": { main: [[{ node: "¿Hay urgentes?", type: "main", index: 0 }]] },
@@ -361,7 +413,7 @@ const workflow = {
   // ID fijo a propósito: `n8n import:workflow` es idempotente contra el mismo ID,
   // así que re-importar actualiza este workflow en vez de dejar copias sueltas.
   id: "ecRecheckFlujoC1",
-  name: "Electrificarte — Re-check semanal de PDPs (Flujo C)",
+  name: "Electrificarte — Re-check mensual de PDPs (Flujo C)",
   nodes,
   connections,
   settings: { executionOrder: "v1", timezone: "America/Santiago" },

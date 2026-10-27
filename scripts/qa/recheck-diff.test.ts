@@ -126,28 +126,52 @@ test("precio base sin cita textual se ignora entero", () => {
 
 // ─── Precio base cambiado ─────────────────────────────────────────────────────
 
-test("oficial más alto que el nuestro: hallazgo registrado pero nada que aplicar", () => {
-  // Oficial 31M → sugerido 29,45M. El nuestro (25M) ya está bajo eso.
-  const d = decide(car(), ok({ precio_base: 31_000_000 }));
-  assert.equal(d.outcome, "cambios");
-  const f = d.findings.find((x) => x.kind === "precio_base");
-  assert.ok(f, "debe registrar el cambio de precio oficial");
-  assert.equal(f!.proposedPrice, 31_000_000);
-  assert.equal(d.flag, "none", "no hay acción: ya somos más baratos que el sugerido");
-  assert.equal(d.suggestedPrice, undefined);
+test("precio lista distinto (arriba o abajo): hallazgo + flag de precio distinto, sin precio sugerido", () => {
+  for (const oficial of [31_000_000, 20_000_000]) {
+    const d = decide(car(), ok({ precio_base: oficial }));
+    assert.equal(d.outcome, "cambios");
+    const f = d.findings.find((x) => x.kind === "precio_base");
+    assert.equal(f?.proposedPrice, oficial);
+    assert.equal(d.flag, "price_high");
+    assert.equal(d.suggestedPrice, undefined, "la negociación está apagada: no hay 5% bajo el oficial");
+  }
 });
 
-test("oficial más bajo que el nuestro: price_high + precio sugerido 5% bajo el oficial", () => {
-  const d = decide(car({ basePrice: 25_000_000 }), ok({ precio_base: 20_000_000 }));
-  assert.equal(d.flag, "price_high");
-  assert.equal(d.suggestedPrice, 19_000_000, "5% bajo $20.000.000");
+test("dos precios: el de financiamiento se compara contra nuestro discountPrice, no contra la lista", () => {
+  const d = decide(
+    car({ discountPrice: 23_000_000 }),
+    ok({ precio_financiamiento: 22_000_000, evidencia_financiamiento: "Con financiamiento $22.000.000" }),
+  );
+  const f = d.findings.find((x) => x.kind === "precio_financiamiento");
+  assert.equal(f?.proposedPrice, 22_000_000);
+  assert.deepEqual(d.autoApply.map((a) => [a.field, a.from, a.to]), [["discountPrice", 23_000_000, 22_000_000]]);
 });
 
-test("el precio que se compara es el con descuento, no el de lista", () => {
-  // Lista 25M pero vendemos a 18M: ya estamos bajo el sugerido (19M) → no hay acción.
-  const d = decide(car({ discountPrice: 18_000_000 }), ok({ precio_base: 20_000_000 }));
-  assert.equal(d.flag, "none");
-  assert.equal(d.suggestedPrice, undefined);
+test("dos precios: la marca empieza a publicar un precio con financiamiento → se agrega", () => {
+  const d = decide(car(), ok({ precio_financiamiento: 23_990_000, evidencia_financiamiento: "Precio con bonos $23.990.000" }));
+  assert.deepEqual(d.autoApply.map((a) => [a.field, a.from, a.to]), [["discountPrice", null, 23_990_000]]);
+});
+
+test("dos precios: un 'segundo precio' igual o mayor que la lista, o sin cita, se descarta", () => {
+  assert.equal(decide(car(), ok({ precio_financiamiento: 25_000_000, evidencia_financiamiento: "x" })).autoApply.length, 0);
+  assert.equal(decide(car(), ok({ precio_financiamiento: 22_000_000, evidencia_financiamiento: null })).autoApply.length, 0);
+});
+
+test("dos precios: si la fuente ya no publica el segundo precio, se avisa pero no se borra", () => {
+  const d = decide(car({ discountPrice: 23_000_000 }), ok());
+  const f = d.findings.find((x) => x.kind === "precio_financiamiento");
+  assert.ok(f && /ya no publica/.test(f.detail));
+  assert.equal(d.autoApply.length, 0);
+});
+
+test("dos precios: el de financiamiento de una versión se compara con el suyo", () => {
+  const d = decide(
+    car({ versions: [{ name: "GLX", price: 25_000_000, discountPrice: 24_000_000 }, { name: "GLS AWD", price: 28_000_000 }] }),
+    ok({ versiones: [{ nombre: "GLX", precio: 25_000_000, precio_financiamiento: 22_500_000 }, { nombre: "GLS AWD", precio: 28_000_000 }] }),
+  );
+  const f = d.findings.find((x) => x.kind === "precio_financiamiento" && x.versionName === "GLX");
+  assert.equal(f?.proposedPrice, 22_500_000);
+  assert.equal(d.autoApply.length, 0, "los precios de versión nunca se aplican solos");
 });
 
 // ─── Versiones ────────────────────────────────────────────────────────────────
@@ -282,39 +306,39 @@ test("autos sin versions[] ni modelYear no rompen el diff", () => {
 
 test("auto-aplicar: delta creíble con cita → propone escribir basePrice", () => {
   const d = decide(car(), ok({ precio_base: 27_000_000 }));
-  assert.ok(d.autoApply, "delta 8% es creíble");
-  assert.equal(d.autoApply!.field, "basePrice");
-  assert.equal(d.autoApply!.from, 25_000_000);
-  assert.equal(d.autoApply!.to, 27_000_000);
+  assert.equal(d.autoApply.length, 1, "delta 8% es creíble");
+  assert.equal(d.autoApply[0].field, "basePrice");
+  assert.equal(d.autoApply[0].from, 25_000_000);
+  assert.equal(d.autoApply[0].to, 27_000_000);
 });
 
 test("auto-aplicar: salto sobre el techo del 25% NO se escribe, queda como hallazgo", () => {
   // 25M → 40M es +60%: error de lectura mucho más seguido que cambio de lista.
   const d = decide(car(), ok({ precio_base: 40_000_000 }));
-  assert.equal(d.autoApply, undefined);
+  assert.equal(d.autoApply.length, 0);
   assert.ok(d.findings.some((f) => f.kind === "precio_base"), "el hallazgo se registra igual");
 });
 
-test("auto-aplicar: nunca deja el precio lista bajo el precio con descuento", () => {
-  // Vendemos a 24M. Si la lista oficial baja a 23M, escribirlo mostraría un
-  // "descuento" más caro que la lista. Es decisión comercial, no lectura.
+test("auto-aplicar: nunca deja el precio lista bajo el precio con bonos/financiamiento", () => {
+  // Tenemos 24M con financiamiento. Una lista oficial de 23M mostraría un segundo precio más
+  // caro que la lista: es una mala lectura.
   const d = decide(car({ discountPrice: 24_000_000 }), ok({ precio_base: 23_000_000 }));
-  assert.equal(d.autoApply, undefined);
+  assert.equal(d.autoApply.length, 0);
 });
 
 test("auto-aplicar: sin cita textual no hay nada que aplicar", () => {
   const d = decide(car(), ok({ precio_base: 27_000_000, evidencia: null }));
-  assert.equal(d.autoApply, undefined);
+  assert.equal(d.autoApply.length, 0);
 });
 
 test("auto-aplicar: un precio implausible no llega ni a proponerse", () => {
   const d = decide(car(), ok({ precio_base: 151_900 }));
-  assert.equal(d.autoApply, undefined);
+  assert.equal(d.autoApply.length, 0);
 });
 
 test("auto-aplicar: un delta que es ruido no dispara escritura", () => {
   const d = decide(car(), ok({ precio_base: 25_100_000 }));
-  assert.equal(d.autoApply, undefined);
+  assert.equal(d.autoApply.length, 0);
 });
 
 test("proposeAutoApply: el techo es exactamente 25%", () => {
@@ -328,7 +352,7 @@ test("auto-aplicar: versiones y año NUNCA se aplican solos", () => {
     car(),
     ok({ anio_modelo: 2026, versiones: [...ok().versiones, { nombre: "GT", precio: 32_000_000 }] })
   );
-  assert.equal(d.autoApply, undefined, "solo basePrice se puede escribir solo");
+  assert.equal(d.autoApply.length, 0, "solo basePrice se puede escribir solo");
 });
 
 // ─── Fuente compartida por varias PDPs ────────────────────────────────────────
@@ -415,31 +439,26 @@ test("filterVersionsForCar: exclude gana sobre scope", () => {
 
 // ─── Los 28 lotes ─────────────────────────────────────────────────────────────
 
-test("slotFor: lunes 09:00 es el lote 0, domingo 23:00 el 27", () => {
-  // 2026-09-21 es lunes. Chile en septiembre está en UTC-3 (horario de verano).
-  assert.equal(slotFor(new Date("2026-09-21T12:00:00Z")), 0, "lunes 09:00 CLST");
-  // Chile en septiembre está en UTC-3, así que domingo 23:00 local es lunes 02:00 UTC.
-  assert.equal(slotFor(new Date("2026-09-28T02:00:00Z")), 27, "domingo 23:00 CLST");
-  assert.equal(TOTAL_SLOTS, 28);
+test("slotFor: el día 1 a las 09:00 es el lote 0, el 28 el 27", () => {
+  // Chile en octubre está en horario de verano (UTC-3).
+  assert.equal(slotFor(new Date("2026-10-01T12:00:00Z")), 0, "1 de octubre 09:00");
+  assert.equal(slotFor(new Date("2026-10-28T12:00:00Z")), 27, "28 de octubre 09:00");
 });
 
-test("slotFor: las 4 corridas del día caen en lotes consecutivos", () => {
-  const base = "2026-09-22"; // martes
-  const slots = ["12:00", "18:00", "22:00"].map((h) => slotFor(new Date(`${base}T${h}:00Z`)));
-  assert.deepEqual(slots, [4, 5, 6], "martes 09:00 / 15:00 / 19:00");
-  assert.equal(slotFor(new Date("2026-09-23T02:00:00Z")), 7, "martes 23:00");
+test("slotFor: los días 29 a 31 no tienen lote (solo relleno)", () => {
+  assert.equal(slotFor(new Date("2026-10-30T12:00:00Z")), -1);
+  assert.equal(describeSlot(-1), "sin lote asignado");
 });
 
-test("slotFor: una corrida de las 23:00 que se atrasa a las 00:20 NO cambia de lote", () => {
-  // Sin el ajuste caería en el lote 0 del día nuevo y revisaría el lote equivocado.
-  const atrasada = slotFor(new Date("2026-09-22T03:20:00Z")); // martes 00:20 CLST
-  assert.equal(atrasada, 3, "sigue siendo el lote del lunes 23:00, no el del martes 09:00");
+test("slotFor: una corrida que se atrasa a la madrugada sigue siendo la del día anterior", () => {
+  assert.equal(slotFor(new Date("2026-10-13T05:20:00Z")), 11, "13 de octubre 02:20 → lote del día 12");
+  assert.equal(slotFor(new Date("2026-11-01T05:00:00Z")), -1, "1 de noviembre 02:00 → 31 de octubre, sin lote");
 });
 
 test("describeSlot: se puede explicar en palabras", () => {
-  assert.equal(describeSlot(0), "lunes a las 09:00");
-  assert.equal(describeSlot(5), "martes a las 15:00");
-  assert.equal(describeSlot(27), "domingo a las 23:00");
+  assert.equal(describeSlot(0), "el día 1 de cada mes");
+  assert.equal(describeSlot(11), "el día 12 de cada mes");
+  assert.equal(describeSlot(27), "el día 28 de cada mes");
   assert.equal(describeSlot(99), "sin lote asignado");
 });
 
@@ -518,12 +537,32 @@ test("sanitize: un año imposible se descarta", () => {
 
 test("sanitize: versiones sin nombre se descartan, no rompen", () => {
   const r = sanitize({ versiones: [{ precio: 1 }, { nombre: "  " }, { nombre: "GT", precio: null }] });
-  assert.deepEqual(r.versiones, [{ nombre: "GT", precio: null }]);
+  assert.deepEqual(r.versiones, [{ nombre: "GT", precio: null, precio_financiamiento: null }]);
 });
 
 test("sanitize: precios negativos o cero quedan en null", () => {
   assert.equal(sanitize({ precio_base: -5 }).precio_base, null);
   assert.equal(sanitize({ precio_base: 0 }).precio_base, null);
+});
+
+test("dos precios: un 'pie' o una cuota leída como precio con financiamiento no se aplica sola", () => {
+  // "Pie desde $6.990.000" en un auto de $25M: tiene cita, es plausible y menor que la lista.
+  const d = decide(car(), ok({ precio_financiamiento: 6_990_000, evidencia_financiamiento: "Pie desde $6.990.000" }));
+  assert.equal(d.autoApply.length, 0, "bajo el 55% de la lista lo decide una persona");
+  assert.ok(d.findings.some((f) => f.kind === "precio_financiamiento"), "el hallazgo queda registrado");
+  // Un precio con bonos real (Ora 03: 68% de la lista) sí entra.
+  const ora = decide(car({ basePrice: 26_490_000 }), ok({ precio_base: 26_490_000, precio_financiamiento: 17_990_000, evidencia_financiamiento: "Desde: $17.990.000*" }));
+  assert.deepEqual(ora.autoApply.map((a) => a.field), ["discountPrice"]);
+});
+
+test("IVA: una página '+ IVA' (Poer P500) se compara con IVA incluido y se confirma la cifra escrita", () => {
+  const p500 = car({ basePrice: 57_108_100, discountPrice: 46_398_100, versions: [] });
+  const d = decide(p500, ok({ precio_base: 47_990_000, precio_financiamiento: 38_990_000, evidencia_financiamiento: "Desde: $38.990.000 + IVA", precios_mas_iva: true, versiones: [] }));
+  assert.equal(d.outcome, "sin_cambios", "47.990.000 + IVA = 57.108.100: no es un cambio de precio");
+  const sube = decide(p500, ok({ precio_base: 49_990_000, evidencia: "Precio lista $49.990.000 + IVA", precio_financiamiento: 38_990_000, evidencia_financiamiento: "x", precios_mas_iva: true, versiones: [] }));
+  const a = sube.autoApply.find((x) => x.field === "basePrice");
+  assert.equal(a?.to, 59_488_100, "se escribe con IVA");
+  assert.equal(a?.enPagina, 49_990_000, "y se confirma la cifra que está escrita en la página");
 });
 
 console.log(`\n${failed === 0 ? "✓" : "✗"} ${passed} pasaron, ${failed} fallaron\n`);

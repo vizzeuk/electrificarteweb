@@ -128,6 +128,13 @@ re-check semanal sigue leyendo la URL, nunca la ficha. Requiere
 `scripts/sql/2026-10-17_pdp_ficha_tecnica.sql`; sin esa migración la solicitud se crea igual y
 `avisos` dice que la ficha no se guardó. La lista devuelve `ficha_nombre` para mostrarla.
 
+**Dos precios por versión (oct-2026).** `versiones: [{ nombre, precio, precio_financiamiento?, … }]`.
+`precio` es el de lista (el más alto que publica la marca) y `precio_financiamiento`, opcional, el
+más bajo (con bonos y/o financiamiento); tiene que ser menor que `precio` o la validación responde
+422. Si no se declara, la web usa el que el agente lea de la fuente con su cita y deja un hallazgo
+para confirmarlo. En Sanity quedan en `versions[].price` / `discountPrice`, y el par del modelo
+(`basePrice` / `discountPrice`) sale siempre de la misma versión base.
+
 **Ficha de una versión (oct-2026).** Cada versión puede traer su propio PDF, subido igual que el
 de arriba: `versiones: [{ nombre, precio, ficha_file_id?, ficha_nombre? }]`. Viaja dentro de
 `versiones` (jsonb, sin migración) y la lista la devuelve ahí mismo. Un `ficha_file_id` inválido

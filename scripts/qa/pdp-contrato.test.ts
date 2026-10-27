@@ -273,7 +273,7 @@ test("armarEncargo: sin URL de ficha manda a buscar dentro del dominio de la mar
   assert.match(e, /sitio oficial de la marca/);
   assert.match(e, /SOLO dentro del dominio gwm\.cl/);
   assert.match(e, /no declarado/, "el año se dice no declarado, no se inventa");
-  assert.match(e, /precio de lista MAS BAJO/);
+  assert.match(e, /precio MAS ALTO que publica la fuente \(lista\)[\s\S]*MAS BAJO \(con bonos y\/o financiamiento\)/);
   assert.doesNotMatch(e, /null|undefined/);
 });
 
@@ -471,7 +471,7 @@ test("versionBase: la mas barata de la electrificacion del modelo, aunque otra s
 
 test("armarEncargo: marca las versiones de otra tecnologia y pide sus specs completas", () => {
   const e = armarEncargo(FILA_DS3);
-  assert.match(e, /E-Tense Opera — \$41\.490\.000 CLP \(electrificacion EV, carroceria SUV, distinta a la del modelo\)/);
+  assert.match(e, /E-Tense Opera — lista \$41\.490\.000 CLP \(electrificacion EV, carroceria SUV, distinta a la del modelo\)/);
   assert.match(e, /Usa "Etoile Hybrid" como version base/);
   assert.match(e, /TODAS sus specs propias/);
   assert.doesNotMatch(e, /Etoile Hybrid Plus — [^\n]*distinta/);
@@ -585,6 +585,54 @@ test("ficha por version: nunca llega a Sanity", () => {
   const fila = filaDesdeEntrada(ENTRADA_FICHAS);
   const vs = armarVersiones(parseVersiones(fila.versiones), [], { range: 400 });
   assert.ok(vs.every((v) => !JSON.stringify(v).includes("ficha")));
+});
+
+
+// ─── Dos precios: lista (el mas alto) y con bonos y/o financiamiento (el mas bajo) ───
+
+const FILA_FIN: FilaSheet = {
+  marca: "BAIC", modelo: "BJ30", anio: null, tipo: "SUV", electrificacion: "HEV",
+  url_oficial: "https://www.baic.cl/bj30",
+  versiones: [
+    { nombre: "LV5", precio: 27990000, precio_financiamiento: 26990000 },
+    { nombre: "LV6", precio: 29990000 },
+  ],
+};
+const REFS_FIN = { brandId: "b", vehicleTypeId: "t", electricTypeId: "e" };
+
+test("dos precios: el declarado manda; el leido llena la version sin declarar y queda para confirmar", () => {
+  const contrato: ContratoPdp = {
+    estado: "listo", fuente_leida: "https://www.baic.cl/bj30",
+    precio_lista_leido: 27990000, evidencia_precio: "Precio lista $27.990.000",
+    precio_financiamiento_leido: 26500000, evidencia_precio_financiamiento: "Con financiamiento $26.500.000",
+    versiones: [{ nombre: "LV6", precio_financiamiento_leido: 28490000, evidencia_precio_financiamiento: "LV6 con financiamiento $28.490.000" }],
+  };
+  const doc = armarDocumentoCar(FILA_FIN, contrato, REFS_FIN) as { basePrice: number; discountPrice?: number; versions: { name: string; price: number; discountPrice?: number }[]; catalogFindings: { kind: string; versionName?: string; proposedPrice?: number }[] };
+  assert.equal(doc.basePrice, 27990000);
+  assert.equal(doc.discountPrice, 26990000, "el del modelo es el declarado de la version base");
+  assert.equal(doc.versions[0].discountPrice, 26990000);
+  assert.equal(doc.versions[1].discountPrice, 28490000, "la version sin declarar toma el leido con cita");
+  const fin = doc.catalogFindings.filter((f) => f.kind === "precio_financiamiento");
+  assert.ok(fin.some((f) => f.versionName === "LV6" && /Confirmalo/.test(JSON.stringify(f))));
+  assert.ok(fin.some((f) => f.versionName === "LV5" && f.proposedPrice === 26500000), "el declarado que no calza queda como control");
+});
+
+test("dos precios: sin cita, o no menor que el de lista, no hay precio con financiamiento", () => {
+  const sinVersiones: FilaSheet = { ...FILA_FIN, versiones: [] };
+  const sinCita = armarDocumentoCar(sinVersiones, { estado: "listo", fuente_leida: "x", precio_lista_leido: 27990000, evidencia_precio: "Lista $27.990.000", precio_financiamiento_leido: 26990000 }, REFS_FIN) as { discountPrice?: number };
+  assert.equal(sinCita.discountPrice, undefined);
+  const mayor = armarDocumentoCar(sinVersiones, { estado: "listo", fuente_leida: "x", precio_lista_leido: 27990000, evidencia_precio: "Lista $27.990.000", precio_financiamiento_leido: 27990000, evidencia_precio_financiamiento: "x" }, REFS_FIN) as { discountPrice?: number };
+  assert.equal(mayor.discountPrice, undefined);
+  const ok = armarDocumentoCar(sinVersiones, { estado: "listo", fuente_leida: "x", precio_lista_leido: 27990000, evidencia_precio: "Lista $27.990.000", precio_financiamiento_leido: 25990000, evidencia_precio_financiamiento: "Financiamiento $25.990.000" }, REFS_FIN) as { basePrice: number; discountPrice?: number };
+  assert.equal(ok.basePrice, 27990000);
+  assert.equal(ok.discountPrice, 25990000);
+});
+
+test("dos precios: el panel no puede declarar un precio con financiamiento igual o mayor al de lista", () => {
+  assert.throws(() => parseVersiones([{ nombre: "GT", precio: 25000000, precio_financiamiento: 25000000 }]), /menor que el de lista/);
+  assert.deepEqual(parseVersiones([{ nombre: "GT", precio: 25000000, precio_financiamiento: "24.000.000" as unknown as number }])[0].precio_financiamiento, 24000000);
+  const enc = armarEncargo(FILA_FIN);
+  assert.match(enc, /LV5 — lista \$27\.990\.000 CLP \/ con bonos y\/o financiamiento \$26\.990\.000/);
 });
 
 console.log(`\n${failed === 0 ? "✓" : "✗"} ${passed} pasaron, ${failed} fallaron\n`);

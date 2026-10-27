@@ -207,7 +207,7 @@ export default function BrandPageContent({ slug, brand, hotDealUrgencyLabel }: B
   const bodyTypes = Array.from(new Set(cars.flatMap((c) => [c.vehicleTypeLabel ?? "", ...(c.extraVehicleTypes ?? []).map((t) => t.label)]).filter(Boolean).map(inlineLabel)));
   const kpis = [
     n > 0 && { num: String(n), label: n === 1 ? "modelo en el catálogo" : "modelos en el catálogo" },
-    cheapest && { num: formatCLP(cheapest.eff), label: cheapest.eff < cheapest.base ? "precio más bajo con descuento" : "precio de lista más bajo" },
+    cheapest && { num: formatCLP(cheapest.eff), label: cheapest.eff < cheapest.base ? "precio más bajo con bonos y/o financiamiento" : "precio de lista más bajo" },
     techs.length > 0 && { num: String(techs.length), label: `${techs.length === 1 ? "tecnología" : "tecnologías"}: ${joinList(techs)}` },
     bodyTypes.length > 0 && { num: String(bodyTypes.length), label: `${bodyTypes.length === 1 ? "tipo de vehículo" : "tipos de vehículo"}: ${joinList(bodyTypes)}` },
   ].filter(Boolean) as { num: string; label: string }[];
@@ -332,9 +332,8 @@ export default function BrandPageContent({ slug, brand, hotDealUrgencyLabel }: B
                       <dl className="deal__prices">
                         {hasDiscount ? (
                           <>
-                            <div><dt>Precio de lista</dt><dd className="price-was">{formatCLP(deal.basePrice)}</dd></div>
-                            <div><dt>Con bonos</dt><dd className="price price--lg">{formatCLP(deal.discountPrice)}</dd></div>
-                            <div><dt>Ahorras</dt><dd className="save">{formatCLP(deal.basePrice - deal.discountPrice)}</dd></div>
+                            <div><dt>Con bonos y/o financiamiento</dt><dd className="price price--lg">{formatCLP(deal.discountPrice)}</dd></div>
+                            <div><dt>Precio de lista</dt><dd className="price-list">{formatCLP(deal.basePrice)}</dd></div>
                           </>
                         ) : (
                           <>
@@ -343,6 +342,7 @@ export default function BrandPageContent({ slug, brand, hotDealUrgencyLabel }: B
                           </>
                         )}
                       </dl>
+                      {hasDiscount && <p className="t-micro">Precio con bonos y/o financiamiento, sujeto a cada marca.</p>}
                       {specs && <p className="t-small">{specs}</p>}
                       <div className="deal-card__actions">
                         <OfferCta carSlug={deal.carSlug} model={model} source="plp" className="btn btn--primary">

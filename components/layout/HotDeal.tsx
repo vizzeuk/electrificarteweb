@@ -63,7 +63,7 @@ function DealSlide({ c, index, total, active }: {
   const hasDiscount = !!c.discountPrice && c.discountPrice < c.basePrice;
 
   const sub = hasDiscount
-    ? `Ahorras ${formatCLP(c.basePrice - c.discountPrice)} sobre el precio de lista.`
+    ? "Precio con bonos y/o financiamiento, sujeto a cada marca."
     : bonus > 0
     ? `Bonos de hasta ${formatCLP(bonus)} sobre el precio de lista.`
     : null;
@@ -88,8 +88,8 @@ function DealSlide({ c, index, total, active }: {
         <dl className="deal__prices">
           {hasDiscount ? (
             <>
-              <div><dt>Precio de lista</dt><dd className="price-was">{formatCLP(c.basePrice)}</dd></div>
-              <div><dt>Con bonos</dt><dd className="price price--lg">{formatCLP(c.discountPrice)}</dd></div>
+              <div><dt>Con bonos y/o financiamiento</dt><dd className="price price--lg">{formatCLP(c.discountPrice)}</dd></div>
+              <div><dt>Precio de lista</dt><dd className="price-list">{formatCLP(c.basePrice)}</dd></div>
               {bonus > 0 && (
                 <div><dt>Incluye bono Electrificarte</dt><dd className="save">{formatCLP(bonus)}</dd></div>
               )}

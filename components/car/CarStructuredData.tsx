@@ -36,7 +36,11 @@ export function CarStructuredData(props: CarSchemaInput) {
   const { name, brand, brandSlug, slug, description, image } = props;
   const url = `${SITE_URL}/auto/${slug}`;
   const fullName = `${brand} ${name}`.trim();
-  const price = props.discountPrice || props.basePrice;
+  // Los dos precios de la marca (oct-2026): lista (el más alto) y con bonos y/o financiamiento
+  // (el más bajo). Con los dos va un AggregateOffer de rango; con uno, un Offer simple.
+  const lista = props.basePrice || props.discountPrice || 0;
+  const bajo = props.discountPrice && props.basePrice && props.discountPrice < props.basePrice ? props.discountPrice : lista;
+  const price = lista;
 
   const specs: { "@type": "PropertyValue"; name: string; value: string }[] = [];
   if (props.range)   specs.push({ "@type": "PropertyValue", name: "Autonomía", value: `${props.range} km` });
@@ -71,8 +75,9 @@ export function CarStructuredData(props: CarSchemaInput) {
     ...(price
       ? {
           offers: {
-            "@type": "Offer",
-            price: String(price),
+            ...(bajo < lista
+              ? { "@type": "AggregateOffer", lowPrice: String(bajo), highPrice: String(lista), offerCount: "2" }
+              : { "@type": "Offer", price: String(price) }),
             priceCurrency: "CLP",
             availability: "https://schema.org/InStock",
             url,

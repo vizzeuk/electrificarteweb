@@ -1,5 +1,5 @@
 import { tool } from "@opencode-ai/plugin";
-import { dentroDelCerco, fueraDelCerco, recortar } from "./_comun";
+import { anotarPagina, dentroDelCerco, fueraDelCerco, recortar } from "./_comun";
 
 // Mismo contrato que el custom tool del Managed Agent: Firecrawl renderiza el JS. Cuesta 1 credit,
 // por eso es el ultimo recurso. Sin FIRECRAWL_API_KEY degrada avisando, no rompe.
@@ -23,6 +23,7 @@ export default tool({
       });
       const j = (await res.json()) as { success?: boolean; data?: { markdown?: string } };
       if (!res.ok || !j.success) return `El navegador fallo (HTTP ${res.status}).`;
+      anotarPagina(url, j.data?.markdown ?? "");
       return recortar(j.data?.markdown ?? "(vacio)");
     } catch (e) {
       return `El navegador fallo: ${e instanceof Error ? e.message : String(e)}`;

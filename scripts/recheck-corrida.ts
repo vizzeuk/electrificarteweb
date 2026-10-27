@@ -177,7 +177,7 @@ async function main(): Promise<void> {
       }
     }
 
-    console.log(`  \x1b[1m→ ${d.outcome}\x1b[0m · flag=${d.flag}${d.autoApply ? ` · aplicaría ${clp(d.autoApply.from)} → ${clp(d.autoApply.to)}` : ""}`);
+    console.log(`  \x1b[1m→ ${d.outcome}\x1b[0m · flag=${d.flag}${d.autoApply.map((a) => ` · aplicaría ${a.field} ${a.from ? clp(a.from) : "—"} → ${clp(a.to)}`).join("")}`);
     for (const f of d.findings) console.log(`    ⚑ ${f.kind}: ${f.detail.slice(0, 120)}`);
     if (r.nota) console.log(`    nota: ${r.nota.replace(/\s+/g, " ").slice(0, 150)}`);
 

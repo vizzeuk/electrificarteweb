@@ -186,9 +186,9 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
   const discounted = cars.filter((c) => c.discountPrice > 0 && c.discountPrice < c.basePrice).length;
   const kpis = [
     n > 0 && { num: String(n), label: n === 1 ? "modelo en el catálogo" : `${words.many} en el catálogo` },
-    cheapest && { num: formatCLP(cheapest.eff), label: cheapest.eff < cheapest.base ? "precio más bajo con descuento" : "precio de lista más bajo" },
+    cheapest && { num: formatCLP(cheapest.eff), label: cheapest.eff < cheapest.base ? "precio más bajo con bonos y/o financiamiento" : "precio de lista más bajo" },
     brandCount > 0 && { num: String(brandCount), label: `${brandCount === 1 ? "marca" : "marcas"} con ${words.one}` },
-    discounted > 0 && { num: String(discounted), label: discounted === 1 ? "modelo con descuento" : "modelos con descuento" },
+    discounted > 0 && { num: String(discounted), label: discounted === 1 ? "modelo con bonos y/o financiamiento" : "modelos con bonos y/o financiamiento" },
   ].filter(Boolean) as { num: string; label: string }[];
 
   // Specs del destacado: salen del mismo listado (si el auto elegido en Sanity no está en él, va sin specs).
@@ -320,14 +320,14 @@ export default function ElectricoPageContent({ slug, meta, cars, otherTypes, adC
                       <dl className="deal__prices">
                         {hasDiscount ? (
                           <>
-                            <div><dt>Precio de lista</dt><dd className="price-was">{formatCLP(car.basePrice)}</dd></div>
-                            <div><dt>Con bonos</dt><dd className="price price--lg">{formatCLP(car.discountPrice)}</dd></div>
-                            <div><dt>Ahorras</dt><dd className="save">{formatCLP(car.basePrice - car.discountPrice)}</dd></div>
+                            <div><dt>Con bonos y/o financiamiento</dt><dd className="price price--lg">{formatCLP(car.discountPrice)}</dd></div>
+                            <div><dt>Precio de lista</dt><dd className="price-list">{formatCLP(car.basePrice)}</dd></div>
                           </>
                         ) : (
                           <div><dt>Precio de lista</dt><dd className="price price--lg">{formatCLP(car.basePrice)}</dd></div>
                         )}
                       </dl>
+                      {hasDiscount && <p className="t-micro">Precio con bonos y/o financiamiento, sujeto a cada marca.</p>}
                       {specs && <p className="t-small">{specs}</p>}
                       <div className="deal-card__actions">
                         <OfferCta carSlug={car.slug} model={model} source="plp" className="btn btn--primary">

@@ -2,6 +2,8 @@
 // lib/queries/car.ts). Los filtros son no excluyentes: el auto aparece en su tipo principal y en
 // los de sus versiones. Estas funciones adaptan el auto crudo de Sanity para las PLP.
 
+import { financiamientoDeVersion } from "@/lib/precios";
+
 interface TypeRef { slug?: string | null; label?: string | null; tag?: string | null }
 
 interface MatchVersion {
@@ -63,7 +65,7 @@ export function showMatchVersion<T extends RawTypedCar & Record<string, unknown>
     // La card abre la ficha con esta versión elegida (ver AutoPageClient).
     versionKey: v._key ?? null,
     basePrice: v.price ?? car.basePrice,
-    discountPrice: v.price ? v.discountPrice ?? null : car.discountPrice,
+    discountPrice: v.price ? financiamientoDeVersion(v, car) : car.discountPrice,
     range: pick("range", "range"),
     maxVersionRange: null,
     batteryCapacity: pick("batteryCapacity", "batteryCapacity"),

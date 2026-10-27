@@ -1,0 +1,105 @@
+{
+ "type": "object",
+ "properties": {
+  "fuente_ok": {
+   "type": "boolean",
+   "description": "false si la página no se pudo leer."
+  },
+  "modelo_vigente": {
+   "type": "boolean",
+   "description": "false solo si la página muestra que el modelo salió del catálogo."
+  },
+  "precio_base": {
+   "type": [
+    "number",
+    "null"
+   ],
+   "description": "El precio MÁS ALTO (lista) de la versión más barata, en CLP, entero. null si no está explícito."
+  },
+  "precio_financiamiento": {
+   "type": [
+    "number",
+    "null"
+   ],
+   "description": "El precio MÁS BAJO (con bonos y/o financiamiento) de esa misma versión, en CLP. null si la página publica uno solo."
+  },
+  "anio_modelo": {
+   "type": [
+    "number",
+    "null"
+   ],
+   "description": "Año de modelo que declara la página. null si no lo dice."
+  },
+  "versiones": {
+   "type": "array",
+   "description": "Una entrada por versión listada en la página.",
+   "items": {
+    "type": "object",
+    "properties": {
+     "nombre": {
+      "type": "string",
+      "description": "Nombre de la versión tal como lo escribe la marca."
+     },
+     "precio": {
+      "type": [
+       "number",
+       "null"
+      ],
+      "description": "El precio MÁS ALTO (lista) de esa versión en CLP. null si no está explícito."
+     },
+     "precio_financiamiento": {
+      "type": [
+       "number",
+       "null"
+      ],
+      "description": "El MÁS BAJO (con bonos y/o financiamiento) de esa versión. null si muestra uno solo."
+     }
+    },
+    "required": [
+     "nombre",
+     "precio",
+     "precio_financiamiento"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "evidencia": {
+   "type": [
+    "string",
+    "null"
+   ],
+   "description": "Cita textual literal de donde sale precio_base."
+  },
+  "evidencia_financiamiento": {
+   "type": [
+    "string",
+    "null"
+   ],
+   "description": "Cita textual literal de donde sale precio_financiamiento."
+  },
+  "precios_mas_iva": {
+   "type": "boolean",
+   "description": "true si los precios citados son netos ('+ IVA'). Las cifras se reportan tal cual."
+  },
+  "nota": {
+   "type": [
+    "string",
+    "null"
+   ],
+   "description": "Una línea si algo quedó ambiguo o si la lectura falló."
+  }
+ },
+ "required": [
+  "fuente_ok",
+  "modelo_vigente",
+  "precio_base",
+  "precio_financiamiento",
+  "anio_modelo",
+  "versiones",
+  "evidencia",
+  "evidencia_financiamiento",
+  "precios_mas_iva",
+  "nota"
+ ],
+ "additionalProperties": false
+}

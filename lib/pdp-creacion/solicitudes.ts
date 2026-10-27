@@ -78,9 +78,13 @@ const anioOpcional = (v: unknown) => (txt(v) === "" || Number(v) === 0 ? null : 
  */
 export function filaDesdeEntrada(e: EntradaPanel): FilaSheet {
   const versiones = Array.isArray(e.versiones)
-    ? (e.versiones as { nombre?: unknown; precio?: unknown; tipo?: unknown; electrificacion?: unknown; ficha_file_id?: unknown; ficha_nombre?: unknown }[]).map((v) => ({
+    ? (e.versiones as { nombre?: unknown; precio?: unknown; precio_financiamiento?: unknown; tipo?: unknown; electrificacion?: unknown; ficha_file_id?: unknown; ficha_nombre?: unknown }[]).map((v) => ({
         nombre: txt(v?.nombre),
         precio: Number(String(v?.precio ?? "").replace(/[^\d]/g, "")),
+        // Opcional (oct-2026): el precio con bonos y/o financiamiento. parseVersiones exige que sea menor.
+        ...(Number(String(v?.precio_financiamiento ?? "").replace(/[^\d]/g, "")) > 0
+          ? { precio_financiamiento: Number(String(v?.precio_financiamiento).replace(/[^\d]/g, "")) }
+          : {}),
         // Opcionales: solo si la version es de otra carroceria/electrificacion que el modelo.
         ...(txt(v?.tipo) ? { tipo: txt(v?.tipo) } : {}),
         ...(txt(v?.electrificacion) ? { electrificacion: txt(v?.electrificacion).toUpperCase() } : {}),

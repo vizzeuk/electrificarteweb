@@ -1,3 +1,5 @@
+// DESACTIVADO (oct-2026): este cron salió de vercel.json. Lo reemplaza el re-check mensual (Flujo C)
+// en el pdp-runner (Copilot), que además lee los dos precios. Se deja para correrlo a mano si hace falta.
 // Cron diario: revisa un lote rotativo de autos (los de lastPriceCheckAt más antiguo) contra su
 // sitio oficial en Chile — vigencia + precio. No manda WhatsApp (eso lo hace price-check-digest,
 // semanal) — solo actualiza priceCheckFlag/priceCheckNote/lastPriceCheckAt en Sanity.

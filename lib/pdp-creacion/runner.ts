@@ -39,6 +39,8 @@ export interface SesionRunner {
   contrato: unknown;
   ultimoMensaje: string | null;
   errores: string[];
+  /** El texto de las paginas que leyo el agente (solo al terminar). */
+  paginas?: string;
   segundos: number;
 }
 
@@ -52,11 +54,13 @@ export async function abrirEnRunner(
   host: string,
   titulo: string,
   fichas: { id: string; ruta: string }[],
+  /** Otro agente del runner (`revision` = re-check de precios), modelo y esfuerzo. */
+  opciones: { agente?: "pdp" | "revision"; modelo?: string; variante?: string } = {},
 ): Promise<{ id: string; status: string }> {
   const r = await runner<{ id: string; status: string }>(
     "POST",
     "/v1/sesiones",
-    JSON.stringify({ encargo, host, titulo, ...(fichas.length ? { fichas } : {}) }),
+    JSON.stringify({ encargo, host, titulo, ...(fichas.length ? { fichas } : {}), ...opciones }),
   );
   return { id: `${PREFIJO_RUNNER}${r.id}`, status: r.status };
 }
