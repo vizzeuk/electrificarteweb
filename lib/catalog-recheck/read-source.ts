@@ -11,6 +11,7 @@
 
 import type Anthropic from "@anthropic-ai/sdk";
 import { firecrawlConfigured, scrapeMarkdown } from "./firecrawl";
+import { fetchConCadena } from "@/lib/http/fetch-cadena";
 import type { SourceReport } from "./types";
 
 /**
@@ -42,7 +43,7 @@ const MAX_CONTENT_TOKENS = 8_000;
  */
 const MAX_TEXT_CHARS = 40_000;
 
-const SYSTEM = [
+export const SYSTEM = [
   "Lees UNA página oficial de una marca de autos en Chile y reportas EXACTAMENTE lo que dice",
   "sobre precios, versiones, año de modelo y vigencia del modelo. No investigas, no buscas en",
   "otras páginas, no completas con lo que sabes.",
@@ -55,21 +56,26 @@ const SYSTEM = [
   "- Los precios van en pesos chilenos, como número entero, sin puntos ni símbolos.",
   "  '$25.990.000' es 25990000.",
   "",
-  "CUÁL PRECIO ES EL DE LISTA (lo que más se equivoca):",
-  "Las marcas chilenas muestran casi siempre DOS precios en la misma página. El de lista es el",
-  "más alto y suele estar etiquetado 'Precio Lista', 'Precio normal' o 'Valor'. El otro es el",
-  "precio promocional, y NO sirve: aparece como 'Desde $X', 'Precio con bonos', 'Precio web',",
-  "'Oferta', o con asterisco, y está calculado restando bonos de marca, bonos de financiamiento,",
-  "descuentos por pago contado o canje. Reporta SIEMPRE el precio de lista.",
+  "DOS PRECIOS (lo que más se equivoca):",
+  "Las marcas chilenas muestran casi siempre VARIOS precios para la misma versión: el de lista",
+  "('Precio Lista', 'Precio normal', 'Valor') y otros más bajos con bonos ('Precio con bonos',",
+  "'Desde $X', 'Precio con financiamiento', 'Precio web', 'Oferta', con asterisco). Reporta DOS,",
+  "de la versión MÁS BARATA del modelo:",
+  "- precio_base: el MÁS ALTO (el de lista, sin bonos ni financiamiento), con su cita en 'evidencia'.",
+  "- precio_financiamiento: el MÁS BAJO (con bonos y/o financiamiento de la marca), con su cita en",
+  "  'evidencia_financiamiento'.",
+  "Si hay más de dos, el más alto y el más bajo. Si la página publica UNO solo, va en precio_base y",
+  "precio_financiamiento es null.",
   "",
   "Ejemplo real: la página del GWM Ora 03 muestra 'Desde: $17.990.000*' arriba y",
-  "'Precio Lista $26.490.000' más abajo (la diferencia son $7.000.000 de bono de marca y",
-  "$1.500.000 de bono de financiamiento). La respuesta correcta es precio_base = 26490000,",
-  "con evidencia 'Precio Lista $26.490.000'. El valor de 'Desde' se descarta.",
+  "'Precio Lista $26.490.000' más abajo. La respuesta correcta es precio_base = 26490000 con",
+  "evidencia 'Precio Lista $26.490.000', y precio_financiamiento = 17990000 con evidencia",
+  "'Desde: $17.990.000*'.",
   "",
-  "Si la página SOLO muestra un precio promocional y en ninguna parte el de lista, manda",
-  "precio_base en null y explica por qué en 'nota'. Es mejor que reportar el promocional.",
-  "Tampoco son precio de lista: una cuota mensual, un pie, un arriendo, ni un precio de otro país.",
+  "En 'versiones', lo mismo por versión: 'precio' es el más alto y 'precio_financiamiento' el más",
+  "bajo (null si la versión muestra uno solo).",
+  "No son precios del auto: una cuota mensual, un pie, un arriendo, un precio con retoma o parte",
+  "de pago, un precio de otro país, ni un 'bono hasta $X' sin precio final.",
   "- 'modelo_vigente' es false solo si la página muestra que el modelo salió del catálogo",
   "  (descontinuado, 'ya no disponible', no aparece entre los modelos vigentes). Que no haya",
   "  precio visible no significa que el modelo no exista.",
@@ -78,12 +84,13 @@ const SYSTEM = [
   "  el nombre tal como lo escribe la marca. Si la página no distingue versiones, manda [].",
 ].join("\n");
 
-const OUTPUT_SCHEMA = {
+export const OUTPUT_SCHEMA = {
   type: "object",
   properties: {
     fuente_ok: { type: "boolean", description: "false si la página no se pudo leer." },
     modelo_vigente: { type: "boolean", description: "false solo si la página muestra que el modelo salió del catálogo." },
-    precio_base: { type: ["number", "null"], description: "Precio de lista del modelo en CLP, entero. null si no está explícito." },
+    precio_base: { type: ["number", "null"], description: "El precio MÁS ALTO (lista) de la versión más barata, en CLP, entero. null si no está explícito." },
+    precio_financiamiento: { type: ["number", "null"], description: "El precio MÁS BAJO (con bonos y/o financiamiento) de esa misma versión, en CLP. null si la página publica uno solo." },
     anio_modelo: { type: ["number", "null"], description: "Año de modelo que declara la página. null si no lo dice." },
     versiones: {
       type: "array",
@@ -92,16 +99,18 @@ const OUTPUT_SCHEMA = {
         type: "object",
         properties: {
           nombre: { type: "string", description: "Nombre de la versión tal como lo escribe la marca." },
-          precio: { type: ["number", "null"], description: "Precio de esa versión en CLP. null si no está explícito." },
+          precio: { type: ["number", "null"], description: "El precio MÁS ALTO (lista) de esa versión en CLP. null si no está explícito." },
+          precio_financiamiento: { type: ["number", "null"], description: "El MÁS BAJO (con bonos y/o financiamiento) de esa versión. null si muestra uno solo." },
         },
-        required: ["nombre", "precio"],
+        required: ["nombre", "precio", "precio_financiamiento"],
         additionalProperties: false,
       },
     },
     evidencia: { type: ["string", "null"], description: "Cita textual literal de donde sale precio_base." },
+    evidencia_financiamiento: { type: ["string", "null"], description: "Cita textual literal de donde sale precio_financiamiento." },
     nota: { type: ["string", "null"], description: "Una línea si algo quedó ambiguo o si la lectura falló." },
   },
-  required: ["fuente_ok", "modelo_vigente", "precio_base", "anio_modelo", "versiones", "evidencia", "nota"],
+  required: ["fuente_ok", "modelo_vigente", "precio_base", "precio_financiamiento", "anio_modelo", "versiones", "evidencia", "evidencia_financiamiento", "nota"],
   additionalProperties: false,
 };
 
@@ -111,9 +120,11 @@ function failed(nota: string): SourceReport {
     fuente_ok: false,
     modelo_vigente: true,
     precio_base: null,
+    precio_financiamiento: null,
     anio_modelo: null,
     versiones: [],
     evidencia: null,
+    evidencia_financiamiento: null,
     nota,
   };
 }
@@ -298,6 +309,54 @@ export function needsBrowserFallback(report: SourceReport): boolean {
 }
 
 /**
+ * ¿El precio aparece escrito en la página? "$25.990.000", "25.990.000", "25,990,000" o
+ * "25990000": cualquiera de las formas en que una marca chilena lo escribe.
+ */
+export function precioEnTexto(texto: string, precio: number): boolean {
+  const n = Math.round(precio);
+  const conPuntos = n.toLocaleString("es-CL");
+  const conComas = n.toLocaleString("en-US");
+  const plano = String(n);
+  // Entre separadores, para que 2.599.000 no calce dentro de 22.599.000.
+  return [conPuntos, conComas, plano].some((forma) =>
+    new RegExp(`(^|[^\\d.,])${forma.replace(/[.,]/g, (c) => `\\${c}`)}(?![\\d]|[.,]\\d)`).test(texto),
+  );
+}
+
+/**
+ * Confirma un precio antes de escribirlo solo, SIN otra llamada al modelo: el número tiene
+ * que aparecer escrito en una lectura fresca de la misma página (o, si la página no se deja
+ * leer, en el texto que ya leyó el agente). La varianza del modelo no puede inventar una cifra
+ * que la página no tiene.
+ */
+export async function confirmarEnFuente(
+  url: string,
+  precio: number,
+  textoPrevio?: string,
+): Promise<{ confirmado: boolean; via: string }> {
+  try {
+    const { response } = await fetchConCadena(url, {
+      timeoutMs: 15_000,
+      headers: { "user-agent": "Mozilla/5.0 (compatible; ElectrificarteBot/1.0)" },
+    });
+    if (response.ok) {
+      const html = await response.text();
+      if (precioEnTexto(html.replace(/<[^>]+>/g, " "), precio)) return { confirmado: true, via: "lectura fresca de la página" };
+    }
+  } catch {
+    // la lectura fresca falló: se prueba con el navegador o con lo ya leído
+  }
+  if (firecrawlConfigured()) {
+    const fresh = await scrapeMarkdown(url, { fresh: true });
+    if (fresh.ok && fresh.markdown && precioEnTexto(fresh.markdown, precio)) {
+      return { confirmado: true, via: "lectura fresca con navegador" };
+    }
+  }
+  if (textoPrevio && precioEnTexto(textoPrevio, precio)) return { confirmado: true, via: "texto ya leído" };
+  return { confirmado: false, via: "la cifra no aparece en la página" };
+}
+
+/**
  * Segunda lectura para confirmar un precio antes de escribirlo solo.
  *
  * Prefiere una lectura **independiente** con Firecrawl (`maxAge: 0`, navegador
@@ -390,9 +449,9 @@ export function sanitize(raw: unknown): SourceReport {
         .map((v) => {
           const e = (v ?? {}) as Record<string, unknown>;
           const nombre = str(e.nombre);
-          return nombre ? { nombre, precio: num(e.precio) } : null;
+          return nombre ? { nombre, precio: num(e.precio), precio_financiamiento: num(e.precio_financiamiento) } : null;
         })
-        .filter((v): v is { nombre: string; precio: number | null } => v !== null)
+        .filter((v): v is { nombre: string; precio: number | null; precio_financiamiento: number | null } => v !== null)
     : [];
 
   return {
@@ -402,12 +461,14 @@ export function sanitize(raw: unknown): SourceReport {
     // automática sobre contenido, y tiene que costar).
     modelo_vigente: o.modelo_vigente !== false,
     precio_base: num(o.precio_base),
+    precio_financiamiento: num(o.precio_financiamiento),
     anio_modelo: (() => {
       const y = num(o.anio_modelo);
       return y && y >= 2000 && y <= 2100 ? y : null;
     })(),
     versiones,
     evidencia: str(o.evidencia),
+    evidencia_financiamiento: str(o.evidencia_financiamiento),
     nota: str(o.nota),
   };
 }

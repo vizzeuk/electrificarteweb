@@ -12,11 +12,16 @@ export interface SourceReport {
   fuente_ok: boolean;
   /** false si el modelo ya no aparece en el catálogo oficial vigente. */
   modelo_vigente: boolean;
+  /** El precio MAS ALTO de la version mas barata (lista). Uno solo publicado = va aca. */
   precio_base: number | null;
+  /** El MAS BAJO de esa misma version: con bonos y/o financiamiento (oct-2026). */
+  precio_financiamiento?: number | null;
   anio_modelo: number | null;
-  versiones: { nombre: string; precio: number | null }[];
+  versiones: { nombre: string; precio: number | null; precio_financiamiento?: number | null }[];
   /** Cita textual de donde salió `precio_base`. Sin cita, el precio se descarta. */
   evidencia: string | null;
+  /** Cita de `precio_financiamiento`. Sin cita, se descarta. */
+  evidencia_financiamiento?: string | null;
   nota: string | null;
 }
 
@@ -30,7 +35,7 @@ export interface CarSnapshot {
   basePrice?: number | null;
   discountPrice?: number | null;
   modelYear?: number | null;
-  versions?: { name: string; price?: number | null }[];
+  versions?: { name: string; price?: number | null; discountPrice?: number | null }[];
   /** Corridas seguidas con la fuente caída, antes de esta. */
   sourceFailStreak?: number | null;
   /** Hallazgos ya registrados — para no re-avisar lo mismo (C12). */
@@ -52,6 +57,7 @@ export interface CarSnapshot {
 export type FindingKind =
   | "precio_base"
   | "precio_version"
+  | "precio_financiamiento"
   | "version_nueva"
   | "version_faltante"
   | "anio_nuevo"
@@ -81,14 +87,16 @@ export type PriceCheckFlag =
 export type CheckOutcome = "sin_cambios" | "cambios" | "descontinuado" | "fuente_caida";
 
 /**
- * Un cambio que la revisión escribe sola en el documento publicado. Solo precio
- * lista, solo con todas las guardas de diff.ts cumplidas, y siempre guardando el
- * valor anterior para poder revertir. Nunca versiones, nunca año, nunca el
- * precio con descuento (ese es el número negociado de Francisco).
+ * Un cambio que la revisión escribe sola en el documento publicado: los dos precios del
+ * modelo (lista y con bonos/financiamiento), solo con todas las guardas de diff.ts cumplidas
+ * y siempre guardando el valor anterior para poder revertir. Nunca versiones, nunca año.
+ * (Hasta oct-2026 `discountPrice` era el precio negociado de Francisco y nunca se tocaba;
+ * la negociación está apagada y ahora es el precio con bonos y/o financiamiento de la marca.)
  */
 export interface AutoApply {
-  field: "basePrice";
-  from: number;
+  field: "basePrice" | "discountPrice";
+  /** null = no lo teniamos (la marca empezo a publicar un precio con bonos/financiamiento). */
+  from: number | null;
   to: number;
   /** Por qué se consideró seguro aplicarlo — va al hallazgo y al digest. */
   reason: string;
@@ -100,7 +108,7 @@ export interface CheckDecision {
   /** El hallazgo más grave, resumido — lo que leen el digest y los comandos de WhatsApp. */
   flag: PriceCheckFlag;
   note?: string;
-  /** 5% bajo el precio oficial, solo si conviene bajar el nuestro. */
+  /** Ya no se usa (la negociación está apagada): siempre undefined. */
   suggestedPrice?: number;
   /** Ocultar el auto del sitio (C7 — reversible). */
   hide: boolean;
@@ -112,8 +120,7 @@ export interface CheckDecision {
   /** Hay algo que no estaba en los hallazgos anteriores (C12 — dedup). */
   hasNewFindings: boolean;
   /**
-   * Cambio que se puede escribir solo, si una segunda lectura lo confirma.
-   * `undefined` = no hay nada que aplicar automáticamente.
+   * Cambios que se pueden escribir solos, si la página los confirma. Vacío = nada que aplicar.
    */
-  autoApply?: AutoApply;
+  autoApply: AutoApply[];
 }

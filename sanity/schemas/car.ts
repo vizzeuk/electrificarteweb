@@ -369,7 +369,7 @@ export const car = defineType({
       options: {
         list: [
           { title: "Sin novedad", value: "none" },
-          { title: "🟡 Precio sobre el oficial", value: "price_high" },
+          { title: "🟡 Precio distinto al de la fuente", value: "price_high" },
           { title: "🔴 Posiblemente descontinuado", value: "discontinued" },
           { title: "🔴 Fuente caída", value: "fuente_muerta" },
           { title: "🟡 Versión nueva en la fuente", value: "version_nueva" },
@@ -447,6 +447,10 @@ export const car = defineType({
     defineField({
       name: "priceCheckPreviousBasePrice", title: "Precio lista anterior (antes del último ajuste automático)", type: "number", group: "ai",
       description: "Lo deja la revisión cuando aplica un precio sola. Es lo que restaura 'revertir <modelo>'. Si está vacío, nadie tocó el precio automáticamente.",
+    }),
+    defineField({
+      name: "priceCheckPreviousDiscountPrice", title: "Precio con bonos/financiamiento anterior (antes del último ajuste automático)", type: "number", group: "ai",
+      description: "Lo deja la revisión cuando aplica un precio sola. Si está vacío, nadie tocó el precio automáticamente.",
     }),
 
     // Reparto de versiones cuando una página oficial cubre más de una PDP.

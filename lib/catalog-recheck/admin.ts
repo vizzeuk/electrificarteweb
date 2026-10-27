@@ -36,8 +36,8 @@ export function sanityWrite(): SanityWriteClient | null {
  */
 export const SLOTS_PER_WEEK = 28;
 
-/** Un auto no se revisa dos veces en la misma semana (C14). */
-export const MIN_DAYS_BETWEEN_CHECKS = 5;
+/** Un auto no se revisa dos veces en el mismo mes (C14; era una semana hasta oct-2026). */
+export const MIN_DAYS_BETWEEN_CHECKS = 25;
 
 export function daysAgoIso(days: number): string {
   return new Date(Date.now() - days * 86_400_000).toISOString();

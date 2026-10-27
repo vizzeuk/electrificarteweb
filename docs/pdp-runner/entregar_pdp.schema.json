@@ -1,0 +1,361 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "estado",
+  "fuente_leida"
+ ],
+ "properties": {
+  "estado": {
+   "type": "string",
+   "enum": [
+    "listo",
+    "sin_datos"
+   ],
+   "description": "\"sin_datos\" solo si la fuente no se pudo leer o no contiene ninguna spec del modelo pedido."
+  },
+  "motivo": {
+   "type": "string",
+   "description": "Obligatorio si estado = sin_datos. Que paso, en una linea."
+  },
+  "fuente_leida": {
+   "type": "string",
+   "description": "La URL que realmente leiste: la ficha del modelo (no la home de la marca). Si abriste un PDF, agregalo separado por coma."
+  },
+  "precio_lista_leido": {
+   "type": "number",
+   "description": "Precio MAS ALTO que publica la fuente para la version base (el de lista, sin bonos ni financiamiento), en CLP. Si el encargo declara versiones es un dato de control; si no declara, es el precio provisorio del catalogo (version mas barata) que confirma una persona. Si la fuente publica un solo precio, va aca."
+  },
+  "evidencia_precio": {
+   "type": "string",
+   "description": "Cita textual de donde salio precio_lista_leido. Sin cita el precio se descarta."
+  },
+  "precio_financiamiento_leido": {
+   "type": "number",
+   "description": "Precio MAS BAJO que publica la fuente para la version base: con bonos y/o financiamiento de la marca, en CLP. Solo si es distinto (menor) que precio_lista_leido. Nunca una cuota, pie, arriendo ni precio con retoma."
+  },
+  "evidencia_precio_financiamiento": {
+   "type": "string",
+   "description": "Cita textual de donde salio precio_financiamiento_leido. Sin cita el precio se descarta."
+  },
+  "base": {
+   "type": "object",
+   "additionalProperties": false,
+   "description": "Specs de la version mas economica declarada en el encargo, mas los textos redactados.",
+   "properties": {
+    "motorDescription": {
+     "type": "string",
+     "description": "Ej: \"2 motores electricos\", \"1.5 turbo + motor electrico\"."
+    },
+    "transmission": {
+     "type": "string"
+    },
+    "batteryCapacity": {
+     "type": "number",
+     "description": "kWh"
+    },
+    "batteryType": {
+     "type": "string",
+     "enum": [
+      "LFP",
+      "NMC",
+      "NCA",
+      "NMCA",
+      "other"
+     ]
+    },
+    "range": {
+     "type": "number",
+     "description": "Autonomia WLTP en km. Si la fuente da ciclo CLTC o NEDC, usalo igual y dilo en notas."
+    },
+    "electricRangeKm": {
+     "type": "number",
+     "description": "Solo PHEV/EREV: km en modo 100% electrico."
+    },
+    "fuelConsumption": {
+     "type": "number",
+     "description": "Solo HEV/PHEV/MHEV: km/L ponderado."
+    },
+    "rendimientoElectrico": {
+     "type": "number",
+     "description": "Solo BEV/PHEV: km/kWh."
+    },
+    "power": {
+     "type": "number",
+     "description": "CV/HP"
+    },
+    "torque": {
+     "type": "number",
+     "description": "Nm"
+    },
+    "acceleration": {
+     "type": "number",
+     "description": "0-100 km/h en segundos"
+    },
+    "topSpeed": {
+     "type": "number",
+     "description": "km/h"
+    },
+    "traction": {
+     "type": "string",
+     "enum": [
+      "FWD",
+      "RWD",
+      "AWD"
+     ]
+    },
+    "seats": {
+     "type": "number"
+    },
+    "seatRows": {
+     "type": "number"
+    },
+    "cargo": {
+     "type": "number",
+     "description": "Maletero en litros"
+    },
+    "frunkCapacity": {
+     "type": "number",
+     "description": "Maletero delantero en litros"
+    },
+    "groundClearance": {
+     "type": "number",
+     "description": "Altura al piso en mm"
+    },
+    "warranty": {
+     "type": "string",
+     "description": "Ej: \"8 anos o 160.000 km para la bateria\""
+    },
+    "connectorType": {
+     "type": "string",
+     "enum": [
+      "CCS2",
+      "Type2",
+      "CHAdeMO",
+      "GBT",
+      "NACS",
+      "Type1"
+     ]
+    },
+    "maxDCChargingPower": {
+     "type": "number",
+     "description": "kW"
+    },
+    "maxACChargingPower": {
+     "type": "number",
+     "description": "kW"
+    },
+    "chargeTimeDC": {
+     "type": "string",
+     "description": "Ej: \"30 min (10-80%)\""
+    },
+    "chargeTimeAC": {
+     "type": "string",
+     "description": "Ej: \"7 h (0-100%)\""
+    },
+    "euroNcap": {
+     "type": "number",
+     "description": "Estrellas 1-5, solo si la fuente lo dice explicitamente."
+    },
+    "airbags": {
+     "type": "number"
+    },
+    "safetyFeatures": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "techFeatures": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "comfortFeatures": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "tagline": {
+     "type": "string"
+    },
+    "description": {
+     "type": "string"
+    },
+    "metaTitle": {
+     "type": "string"
+    },
+    "metaDescription": {
+     "type": "string"
+    },
+    "keywords": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    }
+   }
+  },
+  "versiones": {
+   "type": "array",
+   "description": "Una entrada por version declarada en el encargo que NO sea la base. Incluye SOLO los campos que difieren de base, salvo las versiones que el encargo marca con otra electrificacion: esas llevan TODAS sus specs propias. Nunca el precio de lista: ese lo pone el humano. Si la fuente publica para esa version un precio con bonos y/o financiamiento (el mas bajo), va en precio_financiamiento_leido con su cita.",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "nombre"
+    ],
+    "properties": {
+     "nombre": {
+      "type": "string",
+      "description": "Exactamente el nombre declarado en el encargo."
+     },
+     "motorDescription": {
+      "type": "string"
+     },
+     "transmission": {
+      "type": "string"
+     },
+     "batteryCapacity": {
+      "type": "number"
+     },
+     "batteryType": {
+      "type": "string",
+      "enum": [
+       "LFP",
+       "NMC",
+       "NCA",
+       "NMCA",
+       "other"
+      ]
+     },
+     "range": {
+      "type": "number"
+     },
+     "electricRangeKm": {
+      "type": "number"
+     },
+     "fuelConsumption": {
+      "type": "number"
+     },
+     "rendimientoElectrico": {
+      "type": "number"
+     },
+     "power": {
+      "type": "number"
+     },
+     "torque": {
+      "type": "number"
+     },
+     "acceleration": {
+      "type": "number"
+     },
+     "topSpeed": {
+      "type": "number"
+     },
+     "traction": {
+      "type": "string",
+      "enum": [
+       "FWD",
+       "RWD",
+       "AWD"
+      ]
+     },
+     "seats": {
+      "type": "number"
+     },
+     "seatRows": {
+      "type": "number"
+     },
+     "trunkCapacity": {
+      "type": "number"
+     },
+     "frunkCapacity": {
+      "type": "number"
+     },
+     "connectorType": {
+      "type": "string",
+      "enum": [
+       "CCS2",
+       "Type2",
+       "CHAdeMO",
+       "GBT",
+       "NACS",
+       "Type1"
+      ]
+     },
+     "maxDCChargingPower": {
+      "type": "number"
+     },
+     "maxACChargingPower": {
+      "type": "number"
+     },
+     "chargeTimeDC": {
+      "type": "string"
+     },
+     "chargeTimeAC": {
+      "type": "string"
+     },
+     "precio_financiamiento_leido": {
+      "type": "number",
+      "description": "Precio MAS BAJO de ESTA version (con bonos y/o financiamiento), en CLP, solo si la fuente lo publica. Con su cita en evidencia_precio_financiamiento."
+     },
+     "evidencia_precio_financiamiento": {
+      "type": "string",
+      "description": "Cita textual de precio_financiamiento_leido."
+     }
+    }
+   }
+  },
+  "portada_url": {
+   "type": "string",
+   "description": "URL absoluta de la mejor foto exterior del auto que aparezca en la fuente."
+  },
+  "discrepancias": {
+   "type": "array",
+   "items": {
+    "type": "string"
+   },
+   "description": "Donde la fuente contradice lo que declaro el humano (anio, tipo, electrificacion, nombres o precios de version). Reportar, nunca corregir."
+  },
+  "notas": {
+   "type": "string",
+   "description": "Lo que un humano necesita saber para revisar: ciclo de autonomia usado, campos que la fuente no trae, ambiguedades."
+  },
+  "galeria": {
+   "type": "array",
+   "maxItems": 8,
+   "description": "Hasta 8 fotos MAS del auto que aparezcan en la fuente, ordenadas de mejor a peor. No repitas la portada. Si no hay fotos limpias, deja la lista vacia: una galeria con banners o logos es peor que ninguna.",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "url"
+    ],
+    "properties": {
+     "url": {
+      "type": "string",
+      "description": "URL absoluta de la imagen, del mismo dominio de la fuente."
+     },
+     "descripcion": {
+      "type": "string",
+      "description": "Que muestra, en pocas palabras. Ej: 'Interior con pantalla de 12,3\"', 'Vista trasera'. Se usa como texto alternativo."
+     }
+    }
+   }
+  },
+  "campos_de_ficha": {
+   "type": "array",
+   "items": {
+    "type": "string"
+   },
+   "description": "Solo si el encargo trae ficha tecnica adjunta: los campos que sacaste de ella y no de la web (ej. \"torque\", \"versiones[GT].range\")."
+  },
+  "precio_desde_ficha": {
+   "type": "boolean",
+   "description": "true solo si el encargo no declara versiones, la web no publica ningun precio de lista y precio_lista_leido salio de la ficha tecnica adjunta."
+  }
+ }
+}

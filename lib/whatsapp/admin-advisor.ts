@@ -178,6 +178,7 @@ interface FlaggedCarLookup {
   priceCheckSuggestedPrice?: number;
   /** Precio lista anterior, si la revisión lo cambió sola. Lo que restaura "revertir". */
   priceCheckPreviousBasePrice?: number;
+  priceCheckPreviousDiscountPrice?: number | null;
 }
 
 /** Los campos de auditoría que hay que limpiar al resolver un aviso. */
@@ -197,10 +198,10 @@ async function findFlaggedCar(query: string): Promise<FlaggedCarLookup | null> {
     `*[_type == "car" && !(_id in path("drafts.**")) && (
         priceCheckFlag in ["price_high", "discontinued", "fuente_muerta", "version_nueva", "anio_nuevo"]
         || count(catalogFindings) > 0
-        || defined(priceCheckPreviousBasePrice)
+        || defined(priceCheckPreviousBasePrice) || defined(priceCheckPreviousDiscountPrice)
       )] {
       _id, name, "brand": brand->name, priceCheckFlag,
-      priceCheckSuggestedPrice, priceCheckPreviousBasePrice
+      priceCheckSuggestedPrice, priceCheckPreviousBasePrice, priceCheckPreviousDiscountPrice
     }`
   );
   const q = query.toLowerCase().trim();
@@ -209,19 +210,11 @@ async function findFlaggedCar(query: string): Promise<FlaggedCarLookup | null> {
 }
 
 async function applySuggestedPrice(query: string): Promise<string> {
+  // Apagado (oct-2026): ya no hay precio negociado. `discountPrice` es el precio con bonos y/o
+  // financiamiento que publica la marca, y lo mantiene el re-check mensual.
   const car = await findFlaggedCar(query);
-  if (!car) return `No encontré ningún auto con avisos pendientes que calce con "${query}".`;
-  if (car.priceCheckFlag !== "price_high" || !car.priceCheckSuggestedPrice) {
-    return `${car.brand} ${car.name} no tiene un precio sugerido pendiente.`;
-  }
-  await sanity
-    .patch(car._id)
-    .set({ discountPrice: car.priceCheckSuggestedPrice, priceCheckFlag: "none" })
-    // Sin limpiar catalogFindings, el auto vuelve a salir en el digest del lunes
-    // siguiente aunque Francisco ya lo resolvió.
-    .unset(FLAG_FIELDS)
-    .commit();
-  return `Listo — ${car.brand} ${car.name} ahora en $${car.priceCheckSuggestedPrice.toLocaleString("es-CL")}.`;
+  const nombre = car ? `${car.brand} ${car.name}` : `"${query}"`;
+  return `"aplicar" ya no existe: los precios de ${nombre} salen de la marca (lista y con bonos y/o financiamiento) y los actualiza el re-check mensual. Para corregir uno a mano, hazlo en Studio.`;
 }
 
 async function restoreCar(query: string): Promise<string> {
@@ -248,16 +241,26 @@ async function dismissPriceFlag(query: string): Promise<string> {
 async function revertAutoPrice(query: string): Promise<string> {
   const car = await findFlaggedCar(query);
   if (!car) return `No encontré ningún auto con avisos pendientes que calce con "${query}".`;
-  if (!car.priceCheckPreviousBasePrice) {
+  if (!car.priceCheckPreviousBasePrice && !car.priceCheckPreviousDiscountPrice) {
     return `${car.brand} ${car.name} no tiene un precio anterior guardado — la revisión no le cambió el precio sola.`;
   }
-  const previous = car.priceCheckPreviousBasePrice;
+  // La revisión guarda el valor anterior de cada precio que cambió sola: se restauran los dos.
+  const set: Record<string, unknown> = { priceCheckFlag: "none" };
+  const partes: string[] = [];
+  if (car.priceCheckPreviousBasePrice) {
+    set.basePrice = car.priceCheckPreviousBasePrice;
+    partes.push(`$${car.priceCheckPreviousBasePrice.toLocaleString("es-CL")} de precio lista`);
+  }
+  if (car.priceCheckPreviousDiscountPrice) {
+    set.discountPrice = car.priceCheckPreviousDiscountPrice;
+    partes.push(`$${car.priceCheckPreviousDiscountPrice.toLocaleString("es-CL")} con bonos y/o financiamiento`);
+  }
   await sanity
     .patch(car._id)
-    .set({ basePrice: previous, priceCheckFlag: "none" })
-    .unset([...FLAG_FIELDS, "priceCheckPreviousBasePrice"])
+    .set(set)
+    .unset([...FLAG_FIELDS, "priceCheckPreviousBasePrice", "priceCheckPreviousDiscountPrice"])
     .commit();
-  return `Listo — ${car.brand} ${car.name} vuelve a $${previous.toLocaleString("es-CL")} de precio lista.`;
+  return `Listo — ${car.brand} ${car.name} vuelve a ${partes.join(" y ")}.`;
 }
 
 // ─── Revisión conversacional de specs/fotos (M3.2) ─────────────────────────────

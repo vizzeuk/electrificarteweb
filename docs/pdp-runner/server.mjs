@@ -2,7 +2,8 @@
 // Misma forma de ciclo de vida que la web ya maneja (abrir → consultar → leer la entrega), pero
 // cada "sesion" es un `opencode run` en esta VPS con el modelo que diga PDP_MODELO.
 //
-//   POST /v1/sesiones        {encargo, host, fichas?: [{id, ruta}]} → {id, status: "running"}
+//   POST /v1/sesiones        {encargo, host, fichas?: [{id, ruta}], agente?, modelo?, variante?} → {id, status: "running"}
+//                            agente: "pdp" (crear una ficha, default) | "revision" (re-check de precios)
 //                            (`ficha_id` suelto = la del modelo, formato anterior)
 //   GET  /v1/sesiones/:id    → {id, status: running|idle|terminated, contrato, ultimoMensaje, errores, segundos}
 //   POST /v1/fichas          (PDF crudo) → {id: "file_oc_…"}   ·   DELETE /v1/fichas/:id
@@ -29,6 +30,8 @@ const SILENCIO_S = Number(process.env.PDP_SILENCIO_S ?? 240);
 const MODELO = process.env.PDP_MODELO ?? "github-copilot/claude-sonnet-5";
 // Esfuerzo de razonamiento: el Managed Agent corria con effort "high" (claude/agents/extractor-pdp.json).
 const VARIANTE = process.env.PDP_VARIANTE ?? "high";
+// Agentes de opencode.json. La revision de precios es extraccion acotada: sin esfuerzo extra.
+const AGENTES = { pdp: { variante: VARIANTE }, revision: { variante: process.env.PDP_VARIANTE_REVISION ?? "" } };
 const OPENCODE = process.env.OPENCODE_BIN ?? "opencode";
 // Donde la web le dice al agente que esta la ficha (lib/pdp-creacion/ficha.ts → FICHA_RUTA).
 const FICHAS = join(DIR, "fichas");
@@ -94,7 +97,9 @@ function arrancar(id) {
   const v = vivas.get(id);
   v.inicio = Date.now();
   const adjuntos = (meta.adjuntos ?? []).flatMap((p) => ["-f", p]);
-  const proc = spawn(OPENCODE, ["run", "--agent", "pdp", "-m", meta.modelo, "--format", "json", readFileSync(join(d, "encargo.txt"), "utf8"), ...adjuntos, ...(VARIANTE ? ["--variant", VARIANTE] : [])], {
+  const agente = AGENTES[meta.agente] ? meta.agente : "pdp";
+  const variante = meta.variante ?? AGENTES[agente].variante;
+  const proc = spawn(OPENCODE, ["run", "--agent", agente, "-m", meta.modelo, "--format", "json", readFileSync(join(d, "encargo.txt"), "utf8"), ...adjuntos, ...(variante ? ["--variant", variante] : [])], {
     cwd: DIR,
     // Solo lo que las herramientas necesitan: el secreto del runner no entra al proceso del agente.
     env: { ...entornoAgente, PDP_HOST: meta.host, PDP_OUT: join(d, "contrato.json"), PDP_FICHAS: (meta.fichas ?? []).join("\n") },
@@ -205,7 +210,9 @@ createServer(async (req, res) => {
         }
       }
       writeFileSync(join(d, "encargo.txt"), encargo);
-      writeFileSync(join(d, "meta.json"), JSON.stringify({ host, modelo: String(b.modelo || MODELO), titulo: String(b.titulo ?? "").slice(0, 200), fichas: leibles, adjuntos, creada: new Date().toISOString() }));
+      const agente = AGENTES[b.agente] ? b.agente : "pdp";
+      const variante = typeof b.variante === "string" && /^[a-z]{0,12}$/.test(b.variante) ? b.variante : undefined;
+      writeFileSync(join(d, "meta.json"), JSON.stringify({ host, agente, ...(variante !== undefined ? { variante } : {}), modelo: String(b.modelo || MODELO), titulo: String(b.titulo ?? "").slice(0, 200), fichas: leibles, adjuntos, creada: new Date().toISOString() }));
       vivas.set(id, { proc: null });
       cola.push(id);
       siguiente();

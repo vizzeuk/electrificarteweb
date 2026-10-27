@@ -1,10 +1,10 @@
 {
   "id": "ecRecheckFlujoC1",
-  "name": "Electrificarte — Re-check semanal de PDPs (Flujo C)",
+  "name": "Electrificarte — Re-check mensual de PDPs (Flujo C)",
   "nodes": [
     {
       "parameters": {
-        "content": "## Flujo C — Re-check semanal de precios de PDP\n\n4 corridas al día × 7 días = **28 lotes por semana**. Lote = techo(publicados / 28) → hoy 7 autos.\nCada auto lleva un `checkSlot` 0–27 asignado al crearse, así que se revisa siempre el mismo día y hora.\nLa corrida toma primero los de su lote y, si no llenan, completa con la cola por antigüedad —\nasí una corrida caída no hace que esos autos se salten la semana.\n\n**Precios**: si el precio oficial cambió y una segunda lectura lo confirma, se actualiza solo en Sanity\n(solo `basePrice`, nunca el precio con descuento, nunca versiones ni año). Apagable con\n`RECHECK_AUTOAPPLY=false` en Vercel. El digest lo reporta y `revertir <modelo>` lo deshace.\n\n### Antes de activar\n1. **Credenciales**: ya vienen enchufadas — `Electrificarte Admin` (Header Auth) y `Sheets Cadre`\n   (Google Sheets OAuth2). Verificá que la primera tenga el header con nombre `x-admin-secret`\n   y como valor el mismo `ADMIN_API_SECRET` que está en Vercel.\n2. **Nodo Config**: pega `siteBase` (sin barra final) y `sheetId`.\n3. **El Sheet** necesita las hojas `AUTOS`, `CORRIDAS` y `FALTAN FUENTES` (mayúsculas: el nodo las busca por nombre exacto).\n4. **Bloqueante**: hoy solo 1 de 176 autos publicados tiene `sourceUrls`. Hasta que la Fase 0\n   los complete, este cron corre en vacío y avisa 175 autos sin fuente. Probá primero a mano\n   con el botón de test y `lote = 1`.\n\n### Por qué el lote se itera acá y no en la web\nEl lote completo tarda 40–90 s y el límite duro de una función en Vercel Hobby es 60 s (ignora el\n`maxDuration` del código). Un auto por llamada son 10–20 s, con reintento propio, y una fuente\nlenta no arrastra a los otros 6.\n\n### Lo que este flujo NO hace\nNo crea versiones, no borra versiones y no sube el año de modelo. Eso es acto humano desde\nWhatsApp o Studio: mientras 9 familias del catálogo compartan una sola página oficial, la\ndetección de versiones no es confiable como para escribir sola.\n\nDetalle completo: `docs/FLUJO-PDP-N8N.md` §2",
+        "content": "## Flujo C — Re-check MENSUAL de precios de PDP\n\nUna corrida al día (09:00) los días 1 a 28 = **28 lotes por mes**. Lote = techo(publicados / 28) → hoy 7 autos.\nCada auto lleva un `checkSlot` 0–27 asignado al crearse, así que se revisa siempre el mismo día del mes.\nLa corrida toma primero los de su lote y, si no llenan, completa con la cola por antigüedad —\nasí una corrida caída no hace que esos autos se salten el mes.\n\n**Quién lee**: el agente `revision` del pdp-runner de la VPS (Copilot; modelo en `PDP_RECHECK_MODELO`\nen Vercel). Tarda de 20 s a unos minutos por auto: la web abre la revisión y este flujo vuelve a\nconsultar cada 20 s hasta que termina.\n\n**Precios**: los dos del modelo — lista (el más alto) y con bonos y/o financiamiento (el más bajo).\nSi cambiaron y la cifra aparece escrita en una lectura fresca de la página, se actualizan solos en\nSanity (nunca versiones ni año). Apagable con `RECHECK_AUTOAPPLY=false` en Vercel.\n\n### Antes de activar\n1. **Credenciales**: ya vienen enchufadas — `Electrificarte Admin` (Header Auth) y `Sheets Cadre`\n   (Google Sheets OAuth2). Verificá que la primera tenga el header con nombre `x-admin-secret`\n   y como valor el mismo `ADMIN_API_SECRET` que está en Vercel.\n2. **Nodo Config**: pega `siteBase` (sin barra final) y `sheetId`.\n3. **El Sheet** necesita las hojas `AUTOS`, `CORRIDAS` y `FALTAN FUENTES` (mayúsculas: el nodo las busca por nombre exacto).\n4. **Bloqueante**: hoy solo 1 de 176 autos publicados tiene `sourceUrls`. Hasta que la Fase 0\n   los complete, este cron corre en vacío y avisa 175 autos sin fuente. Probá primero a mano\n   con el botón de test y `lote = 1`.\n\n### Por qué el lote se itera acá y no en la web\nEl lote completo tarda 40–90 s y el límite duro de una función en Vercel Hobby es 60 s (ignora el\n`maxDuration` del código). Un auto por llamada son 10–20 s, con reintento propio, y una fuente\nlenta no arrastra a los otros 6.\n\n### Lo que este flujo NO hace\nNo crea versiones, no borra versiones y no sube el año de modelo. Eso es acto humano desde\nWhatsApp o Studio: mientras 9 familias del catálogo compartan una sola página oficial, la\ndetección de versiones no es confiable como para escribir sola.\n\nDetalle completo: `docs/FLUJO-PDP-N8N.md` §2",
         "height": 760,
         "width": 520,
         "color": 5
@@ -24,20 +24,20 @@
           "interval": [
             {
               "field": "cronExpression",
-              "expression": "0 9,15,19,23 * * *"
+              "expression": "0 9 1-28 * *"
             }
           ]
         }
       },
       "id": "cron",
-      "name": "09:00 · 15:00 · 19:00 · 23:00",
+      "name": "09:00 · días 1 a 28",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
       "position": [
         -80,
         300
       ],
-      "notes": "TZ del contenedor: America/Santiago (GENERIC_TIMEZONE). 4 corridas al día = 28 lotes por semana."
+      "notes": "TZ del contenedor: America/Santiago (GENERIC_TIMEZONE). Una corrida al día, días 1 a 28 = 28 lotes por mes."
     },
     {
       "parameters": {
@@ -314,18 +314,18 @@
     },
     {
       "parameters": {
-        "batchSize": 3,
+        "batchSize": 1,
         "options": {}
       },
       "id": "loop",
-      "name": "Loop (3 en paralelo)",
+      "name": "Loop (de a uno)",
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
       "position": [
         860,
         460
       ],
-      "notes": "Concurrencia 3 para no pegarle al rate limit de Anthropic. Salida 'done' (arriba) = todos los autos ya revisados."
+      "notes": "De a un auto: cada uno espera su revisión en el runner antes de pasar al siguiente. Salida 'done' (arriba) = todos los autos ya revisados."
     },
     {
       "parameters": {
@@ -357,7 +357,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1340,
+        1100,
         560
       ],
       "credentials": {
@@ -366,7 +366,7 @@
           "name": "Electrificarte Admin"
         }
       },
-      "notes": "Lee la fuente (1 llamada a Claude), hace el diff aritmético y escribe los campos de auditoría. 10–20 s.",
+      "notes": "Abre la revisión en el runner (responde `corriendo` + sessionId). Sin runner, lee con la API de Anthropic y responde el resultado de una.",
       "retryOnFail": true,
       "maxTries": 2,
       "waitBetweenTries": 5000,
@@ -374,7 +374,112 @@
     },
     {
       "parameters": {
-        "jsCode": "// El endpoint devuelve 502 cuando falla NUESTRA API (rate limit, 5xx), no cuando\n// falla la fuente. Con onError=continueRegularOutput eso llega acá como un item\n// con `error`, y hay que darle la misma forma que un resultado normal para que el\n// log y el digest no tengan que distinguir dos formatos.\nconst j = $input.first().json ?? {};\nif (j.resultado) return [{ json: j }];\nreturn [{ json: {\n  carId: j.carId ?? null,\n  nombre: j.nombre ?? 'desconocido',\n  resultado: 'error',\n  hallazgos: [],\n  error: j.error ?? j.message ?? 'fallo sin detalle',\n} }];"
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "corre-c1",
+              "leftValue": "={{ $json.resultado === 'corriendo' && ($json.intento ?? 0) < 40 }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "corre",
+      "name": "¿Sigue corriendo?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1340,
+        560
+      ],
+      "notes": "40 consultas × 20 s ≈ 13 min, sobre el techo de 10 min del runner: lo normal es que termine antes y salga por 'false'."
+    },
+    {
+      "parameters": {
+        "amount": 20,
+        "unit": "seconds"
+      },
+      "id": "espera-rev",
+      "name": "Esperar 20 s",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1580,
+        720
+      ],
+      "webhookId": "pdp-recheck-espera",
+      "notes": "Consultar es gratis: solo lee el estado de la corrida en el runner."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config').first().json.siteBase }}/api/admin/recheck/car",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "keypair",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "carId",
+              "value": "={{ $json.carId }}"
+            },
+            {
+              "name": "runId",
+              "value": "={{ $('Tomar el lote').first().json.runId }}"
+            },
+            {
+              "name": "sessionId",
+              "value": "={{ $json.sessionId }}"
+            },
+            {
+              "name": "intento",
+              "value": "={{ ($json.intento ?? 0) + 1 }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "car-poll",
+      "name": "Consultar la revisión",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1820,
+        720
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "V9iMtS3nXUravFD5",
+          "name": "Electrificarte Admin"
+        }
+      },
+      "notes": "Mismo endpoint con el sessionId: `corriendo` mientras el agente lee; al terminar hace el diff y escribe en Sanity.",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// El endpoint devuelve 502 cuando falla NUESTRA API (rate limit, 5xx), no cuando\n// falla la fuente. Con onError=continueRegularOutput eso llega acá como un item\n// con `error`, y hay que darle la misma forma que un resultado normal para que el\n// log y el digest no tengan que distinguir dos formatos.\nconst j = $input.first().json ?? {};\nif (j.resultado === 'corriendo') return [{ json: { carId: j.carId ?? null, nombre: j.nombre ?? 'desconocido', resultado: 'error', hallazgos: [], error: 'La revisión no terminó en ~13 min' } }];\nif (j.resultado) return [{ json: j }];\nreturn [{ json: {\n  carId: j.carId ?? null,\n  nombre: j.nombre ?? 'desconocido',\n  resultado: 'error',\n  hallazgos: [],\n  error: j.error ?? j.message ?? 'fallo sin detalle',\n} }];"
       },
       "id": "norm",
       "name": "Normalizar resultado",
@@ -388,7 +493,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Todos los autos ya revisados llegan juntos por la salida 'done' del loop.\nconst items = $input.all().map((i) => i.json);\nconst urgentes = items.filter((r) => r.urgente);\nconst aplicados = items.filter((r) => r.aplicado);\nconst clp = (n) => '$' + Number(n).toLocaleString('es-CL');\nreturn [{ json: {\n  runId: $('Tomar el lote').first().json.runId,\n  resultados: items,\n  aplicadosTotal: aplicados.length,\n  urgentesTotal: urgentes.length,\n  urgentesTexto: urgentes\n    .map((r) => r.aplicado\n      ? '• ' + r.nombre + ' — precio lista ' + clp(r.aplicado.from) + ' → ' + clp(r.aplicado.to) + ' (ya en el sitio)'\n      : '• ' + r.nombre + ' — ' + (r.nota ?? r.flag))\n    .join('\\n'),\n} }];"
+        "jsCode": "// Todos los autos ya revisados llegan juntos por la salida 'done' del loop.\nconst items = $input.all().map((i) => i.json);\nconst urgentes = items.filter((r) => r.urgente);\nconst aplicados = items.filter((r) => r.aplicado);\nconst clp = (n) => '$' + Number(n).toLocaleString('es-CL');\nreturn [{ json: {\n  runId: $('Tomar el lote').first().json.runId,\n  resultados: items,\n  aplicadosTotal: aplicados.length,\n  urgentesTotal: urgentes.length,\n  urgentesTexto: urgentes\n    .map((r) => r.aplicado\n      ? '• ' + r.nombre + ' — ' + r.aplicado.map((a) => (a.field === 'basePrice' ? 'precio lista ' : 'precio con bonos/financiamiento ') + (a.from ? clp(a.from) : '—') + ' → ' + clp(a.to)).join(', ') + ' (ya en el sitio)'\n      : '• ' + r.nombre + ' — ' + (r.nota ?? r.flag))\n    .join('\\n'),\n} }];"
       },
       "id": "armar",
       "name": "Armar el cierre",
@@ -676,7 +781,7 @@
     }
   ],
   "connections": {
-    "09:00 · 15:00 · 19:00 · 23:00": {
+    "09:00 · días 1 a 28": {
       "main": [
         [
           {
@@ -746,14 +851,14 @@
       "main": [
         [
           {
-            "node": "Loop (3 en paralelo)",
+            "node": "Loop (de a uno)",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Loop (3 en paralelo)": {
+    "Loop (de a uno)": {
       "main": [
         [
           {
@@ -775,7 +880,47 @@
       "main": [
         [
           {
+            "node": "¿Sigue corriendo?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Sigue corriendo?": {
+      "main": [
+        [
+          {
+            "node": "Esperar 20 s",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
             "node": "Normalizar resultado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Esperar 20 s": {
+      "main": [
+        [
+          {
+            "node": "Consultar la revisión",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consultar la revisión": {
+      "main": [
+        [
+          {
+            "node": "¿Sigue corriendo?",
             "type": "main",
             "index": 0
           }
@@ -786,7 +931,7 @@
       "main": [
         [
           {
-            "node": "Loop (3 en paralelo)",
+            "node": "Loop (de a uno)",
             "type": "main",
             "index": 0
           }
