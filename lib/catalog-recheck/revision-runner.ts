@@ -26,11 +26,29 @@ function hostDe(url: string): string | null {
 }
 
 /** Lo que recibe el agente: el auto, sus URLs y las versiones que tenemos publicadas. */
-export function encargoRevision(car: { brand: string; name: string; sourceUrl: string; extraUrls?: string[]; versions?: { name: string }[] }): string {
+const ELECTRIFICACION: Record<string, string> = {
+  EV: "100% eléctrico (BEV)",
+  PHEV: "híbrido enchufable (PHEV)",
+  HEV: "híbrido no enchufable (HEV)",
+  MHEV: "híbrido suave (MHEV)",
+  EREV: "eléctrico de autonomía extendida (EREV/REEV)",
+};
+
+export function encargoRevision(car: {
+  brand: string;
+  name: string;
+  sourceUrl: string;
+  extraUrls?: string[];
+  versions?: { name: string }[];
+  /** Tag de Sanity (EV, PHEV, HEV, MHEV, EREV): la página puede mezclar motorizaciones. */
+  electrificacion?: string | null;
+}): string {
   const urls = [car.sourceUrl, ...(car.extraUrls ?? [])];
+  const elec = car.electrificacion ? ELECTRIFICACION[car.electrificacion] ?? car.electrificacion : null;
   return [
     `Marca: ${car.brand}`,
     `Modelo: ${car.name}`,
+    ...(elec ? [`Electrificación: ${elec}. Reporta SOLO versiones de este modelo con esta electrificación; ignora las de combustión, otra electrificación u otro modelo de la misma página.`] : []),
     `País: Chile`,
     "",
     "Lee estas páginas oficiales y reporta lo que dicen de este modelo:",
