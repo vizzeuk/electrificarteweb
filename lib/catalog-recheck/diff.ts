@@ -143,7 +143,7 @@ export function proposeAutoApply(
 export function decide(car: CarSnapshot, reportOriginal: SourceReport): CheckDecision {
   // Todo el diff trabaja con IVA incluido; `enPagina` guarda la cifra escrita para confirmarla.
   const masIva = reportOriginal.precios_mas_iva === true;
-  const report: SourceReport = masIva
+  const report: SourceReport = { ...(masIva
     ? {
         ...reportOriginal,
         precio_base: conIva(reportOriginal.precio_base, true),
@@ -154,8 +154,16 @@ export function decide(car: CarSnapshot, reportOriginal: SourceReport): CheckDec
           precio_financiamiento: conIva(v.precio_financiamiento, true),
         })),
       }
-    : reportOriginal;
+    : reportOriginal) };
   const enPagina = (n: number) => (masIva ? Math.round(n / (1 + IVA)) : n);
+  // Regla de los dos precios: si la página publica UNO solo, ese es el de lista. Un modelo que lo
+  // reporta como "financiamiento" sin precio de lista (visto: Kia Sorento) se corrige acá.
+  if (!report.precio_base && report.precio_financiamiento) {
+    report.precio_base = report.precio_financiamiento;
+    report.evidencia = report.evidencia_financiamiento ?? report.evidencia;
+    report.precio_financiamiento = null;
+    report.evidencia_financiamiento = null;
+  }
   const previous = new Set((car.catalogFindings ?? []).map(fingerprint));
   const finish = (d: Omit<CheckDecision, "hasNewFindings" | "autoApply"> & { autoApply?: AutoApply[] }): CheckDecision => ({
     ...d,

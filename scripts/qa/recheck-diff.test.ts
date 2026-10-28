@@ -565,5 +565,10 @@ test("IVA: una página '+ IVA' (Poer P500) se compara con IVA incluido y se conf
   assert.equal(a?.enPagina, 49_990_000, "y se confirma la cifra que está escrita en la página");
 });
 
+test("un solo precio reportado como financiamiento (Kia Sorento) se trata como lista", () => {
+  const d = decide(car({ basePrice: 43_990_000, versions: [] }), ok({ precio_base: null, evidencia: null, precio_financiamiento: 42_990_000, evidencia_financiamiento: "A partir de $42.990.000 IVA Inc.", versiones: [] }));
+  assert.deepEqual(d.autoApply.map((a) => [a.field, a.to]), [["basePrice", 42_990_000]]);
+});
+
 console.log(`\n${failed === 0 ? "✓" : "✗"} ${passed} pasaron, ${failed} fallaron\n`);
 process.exit(failed === 0 ? 0 : 1);
