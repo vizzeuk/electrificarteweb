@@ -40,6 +40,7 @@ const autoApplyEnabled = () => process.env.RECHECK_AUTOAPPLY !== "false";
 
 interface CarRow extends CarSnapshot {
   extraUrls?: string[];
+  electrificacion?: string | null;
 }
 
 const clp = (n: number) => `$${n.toLocaleString("es-CL")}`;
@@ -64,6 +65,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       "sourceUrl": sourceUrls[0], "extraUrls": sourceUrls[1...3],
       basePrice, discountPrice, modelYear, sourceFailStreak,
       "versions": versions[]{ name, price, discountPrice },
+      "electrificacion": electricType->tag,
       "catalogFindings": catalogFindings[]{ kind, detail, proposedPrice, versionName, evidence },
       "versionScope": sourceVersionScope,
       "versionExclude": sourceVersionExclude,
