@@ -164,14 +164,13 @@ test("dos precios: si la fuente ya no publica el segundo precio, se avisa pero n
   assert.equal(d.autoApply.length, 0);
 });
 
-test("dos precios: el de financiamiento de una versión se compara con el suyo", () => {
+test("dos precios: el de financiamiento de una versión no genera avisos (solo los del modelo)", () => {
   const d = decide(
     car({ versions: [{ name: "GLX", price: 25_000_000, discountPrice: 24_000_000 }, { name: "GLS AWD", price: 28_000_000 }] }),
     ok({ versiones: [{ nombre: "GLX", precio: 25_000_000, precio_financiamiento: 22_500_000 }, { nombre: "GLS AWD", precio: 28_000_000 }] }),
   );
-  const f = d.findings.find((x) => x.kind === "precio_financiamiento" && x.versionName === "GLX");
-  assert.equal(f?.proposedPrice, 22_500_000);
-  assert.equal(d.autoApply.length, 0, "los precios de versión nunca se aplican solos");
+  assert.equal(d.findings.filter((x) => x.kind === "precio_financiamiento" && x.versionName).length, 0);
+  assert.equal(d.autoApply.length, 0);
 });
 
 // ─── Versiones ────────────────────────────────────────────────────────────────
