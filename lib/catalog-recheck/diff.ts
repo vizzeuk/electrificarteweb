@@ -312,17 +312,8 @@ export function decide(car: CarSnapshot, reportOriginal: SourceReport): CheckDec
 
     // Comparar el precio de una versión que YA tenemos es seguro incluso con la
     // fuente compartida: el nombre calza con el nuestro, no hay ambigüedad.
-    const fin = plausible(v.precio_financiamiento);
-    const mineFin = mine.discountPrice ?? null;
-    if (fin && (!price || fin < price) && (!mineFin || !isNoise(mineFin, fin))) {
-      findings.push({
-        kind: "precio_financiamiento",
-        detail: `"${mine.name}": ${mineFin ? `tenemos ${clp(mineFin)}` : "no tenemos precio"} con bonos y/o financiamiento · la fuente publica ${clp(fin)}.`,
-        proposedPrice: fin,
-        versionName: mine.name,
-      });
-      raise("version_nueva");
-    }
+    // Precio con bonos/financiamiento por versión: fuera de alcance por ahora (oct-2026). Solo se
+    // mantienen los dos precios del modelo; compararlos por versión llenaba Studio de avisos.
     const minePrice = mine.price ?? null;
     if (price && minePrice && !isNoise(minePrice, price)) {
       findings.push({
