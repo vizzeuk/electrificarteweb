@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
 import { HeroBgVideo } from "@/components/layout/HeroBgVideo";
+import { HeroSearch } from "@/components/layout/HeroSearch";
 import { OFERTA_STANDBY } from "@/lib/products";
 
 export interface HeroData {
@@ -37,9 +38,16 @@ export interface HeroFacts {
   technologies: string[];
 }
 
+/** Accesos rápidos bajo el buscador (tipos de vehículo y de electrificado, desde Sanity). */
+export interface HeroQuickLink {
+  label: string;
+  href: string;
+}
+
 interface HeroProps {
   data?: HeroData;
   facts?: HeroFacts;
+  quickLinks?: HeroQuickLink[];
 }
 
 function joinList(items: string[]): string {
@@ -49,23 +57,26 @@ function joinList(items: string[]): string {
 
 /**
  * Hero del home, sistema de diseño v1: video de fondo con un solo velo (el único
- * degradado permitido), titular en Cabinet, bajada, dos caminos y una fila de cifras
- * reales con hairlines. Sin badge, sin glow y sin palabra destacada en color.
+ * degradado permitido), titular en Cabinet, bajada, el buscador del catálogo al centro,
+ * accesos por tipo, la Asesoría como segundo camino y una fila de cifras reales con hairlines.
  */
-export function Hero({ data, facts }: HeroProps) {
+export function Hero({ data, facts, quickLinks = [] }: HeroProps) {
   // Giro sep-2026 (ver docs/PIVOT-WAITLIST-PLAN.md): el hero ya NO vende la Oferta
-  // ($19.990, en standby). La única acción es la **Asesoría $4.990**; la waitlist vive
-  // en las fichas de auto y en lo ligado a un modelo, no acá. El título y el subtítulo
-  // de Sanity (que describen el flujo pagado: "Ahorra millones...") se ignoran mientras
-  // dure el standby; al apagar OFERTA_STANDBY vuelven los de Sanity.
-  // La bajada resume todo el sitio: catálogo, comparador, calculadora y asesoría.
+  // ($19.990, en standby). Nov-2026: lo primero es el catálogo (buscador al centro) y la
+  // **Asesoría $4.990** queda como segundo camino, para quien no sabe cuál elegir. La
+  // waitlist vive en las fichas de auto y en lo ligado a un modelo, no acá. El título y el
+  // subtítulo de Sanity (que describen el flujo pagado: "Ahorra millones...") se ignoran
+  // mientras dure el standby; al apagar OFERTA_STANDBY vuelven los de Sanity.
   const sanityTitle = [data?.title, data?.titleHighlight].filter(Boolean).join(" ");
-  const title = OFERTA_STANDBY || !sanityTitle ? "Elige bien tu próximo auto electrificado." : sanityTitle;
+  const title = OFERTA_STANDBY || !sanityTitle ? "Encuentra tu próximo auto electrificado." : sanityTitle;
+  const catalogLead = facts?.models
+    ? `${facts.models} modelos eléctricos e híbridos a la venta en Chile, con precios y fichas reales.`
+    : "Autos eléctricos e híbridos a la venta en Chile, con precios y fichas reales.";
   const subtitle = OFERTA_STANDBY || !data?.subtitle
-    ? "Explora el catálogo de autos electrificados en Chile, compara modelos y calcula cuánto ahorras frente a la bencina. Si no sabes cuál elegir, te asesoramos por WhatsApp."
+    ? `${catalogLead} Búscalo, compáralo y calcula cuánto ahorras.`
     : data.subtitle;
 
-  // Flujo principal — Asesoría ($4.990)
+  // Segundo camino — Asesoría ($4.990)
   const advCtaHref = data?.advisoryCtaHref ?? "/asesoria";
   const advPrice   = data?.advisoryPrice   ?? "$4.990";
 
@@ -96,15 +107,25 @@ export function Hero({ data, facts }: HeroProps) {
         <h1 className="t-display hero__title">{title}</h1>
         <p className="hero__lead">{subtitle}</p>
 
-        <div className="hero__actions">
-          <Link href={advCtaHref} className="btn btn--primary btn--lg">
-            Quiero asesoría por {advPrice}
+        <HeroSearch />
+
+        {quickLinks.length > 0 && (
+          <nav className="hero__quick" aria-label="Explorar el catálogo">
+            <span className="hero__quick-label">O explora por</span>
+            {quickLinks.map((l) => (
+              <Link key={l.href} href={l.href} className="btn btn--secondary btn--sm">
+                {l.label}
+              </Link>
+            ))}
+          </nav>
+        )}
+
+        <div className="hero__adv">
+          <span>¿No sabes cuál elegir?</span>
+          <Link href={advCtaHref} className="btn btn--secondary">
+            Asesoría por WhatsApp por {advPrice}
             <Icon name="arrow_forward" size="none" className="arrow" />
           </Link>
-          <a className="hero__how" href="#como-funciona">
-            Cómo funciona
-            <Icon name="expand_more" size="none" />
-          </a>
         </div>
 
         {cells.length > 0 && (

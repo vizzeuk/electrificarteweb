@@ -22,8 +22,8 @@ ofrece al usuario** — se retomará cuando Francisco lo reactive. **No borrar n
    junta una **base grande de gente interesada** en recibir ofertas de autos. Cuando esa base
    sea grande, Francisco se la vende/ofrece a los vendedores — ese es el nuevo refuerzo del
    negocio. Todo CTA que antes mandaba a `/solicitar` ahora **abre un popup de waitlist**.
-3. **La Asesoría $4.990 pasa a ser el producto principal.** Full foco: es el CTA primario del
-   hero y lo que los chatbots deben empujar.
+3. **La Asesoría $4.990 pasa a ser el producto principal.** Full foco: es lo que los chatbots
+   deben empujar. En el hero (nov-2026) va como segundo camino, bajo el buscador del catálogo.
 
 ### Por qué
 Francisco necesita **primero** una masa crítica de demanda comprobada (la waitlist) antes de
@@ -324,7 +324,8 @@ Más n8n (VPS de Matías) y Supabase. Un cambio en el modelo de leads toca a los
 
 🔴 **Del giro actual** (detalle y estado en `docs/PIVOT-WAITLIST-PLAN.md`):
 - Infra de waitlist (popup + `/api/waitlist` + `N8N_WAITLIST_URL` + tabla `waitlist`)
-- Retargetear los ~40 CTAs de oferta al popup; hero asesoría-first
+- Retargetear los ~40 CTAs de oferta al popup (el hero ya no es asesoría-first: desde nov-2026
+  abre con el buscador del catálogo)
 - Limpiar copy/$19.990 del sitio, chatbots, structured data y Sanity
 - **Manual de Francisco/Vicente:** desactivar los nodos del $19.990 en n8n, crear el workflow
   de waitlist, tabla en Supabase, `N8N_WAITLIST_URL` en Vercel, dashboard en standby
