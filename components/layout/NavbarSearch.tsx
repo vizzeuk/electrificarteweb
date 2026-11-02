@@ -1,43 +1,20 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { m, AnimatePresence } from "framer-motion";
 import { Icon } from "@/components/ui/Icon";
 import { formatCLP } from "@/lib/utils";
 import { sanityImg } from "@/lib/sanityImage";
-
-interface SearchCar {
-  name: string;
-  slug: string;
-  brand: string | null;
-  brandLogo: string | null;
-  basePrice: number | null;
-  discountPrice: number | null;
-  type: string | null;
-  versions: (string | null)[] | null;
-}
-
-const norm = (s: string) =>
-  s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+import { useSearchIndex } from "@/hooks/useSearchIndex";
 
 export function NavbarSearch() {
-  const [open, setOpen]       = useState(false);
-  const [query, setQuery]     = useState("");
-  const [index, setIndex]     = useState<SearchCar[] | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [open, setOpen]   = useState(false);
+  const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
   // El índice se descarga UNA sola vez, recién al abrir el buscador.
-  useEffect(() => {
-    if (!open || index || loading) return;
-    setLoading(true);
-    fetch("/api/search-index")
-      .then((r) => r.json())
-      .then((data: SearchCar[]) => setIndex(data))
-      .catch(() => setIndex([]))
-      .finally(() => setLoading(false));
-  }, [open, index, loading]);
+  const { loading, results } = useSearchIndex(open, query);
 
   useEffect(() => {
     if (open) inputRef.current?.focus();
@@ -49,16 +26,6 @@ export function NavbarSearch() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
-
-  const results = useMemo(() => {
-    if (!index || query.trim().length < 1) return [];
-    const q = norm(query.trim());
-    return index
-      .filter((c) =>
-        norm(`${c.brand ?? ""} ${c.name} ${(c.versions ?? []).filter(Boolean).join(" ")}`).includes(q),
-      )
-      .slice(0, 8);
-  }, [index, query]);
 
   const close = () => { setOpen(false); setQuery(""); };
 

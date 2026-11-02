@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { client } from "@/lib/sanity/client";
 
 /**
- * Índice liviano para el buscador del navbar: solo los campos mínimos
+ * Índice liviano para los buscadores (navbar y hero del home): solo los campos mínimos
  * para mostrar y enlazar cada auto. Se revalida cada 5 min y el cliente
  * lo pide una sola vez (al abrir el buscador por primera vez).
  */
@@ -14,6 +14,7 @@ export async function GET() {
       name,
       "slug": slug.current,
       "brand": brand->name,
+      "brandSlug": brand->slug.current,
       "brandLogo": brand->logo.asset->url,
       basePrice,
       discountPrice,

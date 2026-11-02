@@ -49,20 +49,46 @@
 .mnav__cta { display: grid; gap: var(--space-3); margin-top: var(--space-6); }
 
 /* --------------------------------------------------------------- HERO ---- */
-.hero { position: relative; isolation: isolate; min-height: min(100svh, 960px); display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden; }
-.hero__media { position: absolute; inset: 0; z-index: -2; background: var(--color-tinta); }
+/* Sin overflow:hidden en .hero: la lista del buscador puede bajar más allá del hero (z-index 1 la
+   deja sobre la sección siguiente). El recorte del video lo hace .hero__media. */
+.hero { position: relative; z-index: 1; isolation: isolate; min-height: min(100svh, 960px); display: flex; flex-direction: column; justify-content: center; }
+.hero__media { position: absolute; inset: 0; z-index: -2; overflow: hidden; background: var(--color-tinta); }
 .hero__media img, .hero__media video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .hero__veil { position: absolute; inset: 0; z-index: -1; background: var(--veil-media); }
-.hero__in { padding-top: 136px; }
-.hero__title { max-width: 16ch; }
-.hero__lead { margin-top: var(--space-6); max-width: 34rem; font-size: var(--text-lead); line-height: 1.5; color: var(--ink-2); }
-.hero__actions { margin-top: var(--space-10); display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+.hero__in { padding-top: 120px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+.hero__title { max-width: 18ch; }
+.hero__lead { margin-top: var(--space-6); max-width: 38rem; font-size: var(--text-lead); line-height: 1.5; color: var(--ink-2); }
 .hero .btn--secondary { border-color: var(--line-2-on-media); }
 .hero .btn--secondary:hover { border-color: var(--color-niebla); }
-.hero__how { margin-left: var(--space-2); display: inline-flex; align-items: center; gap: 6px; color: var(--ink-2); font-weight: 500; font-size: 0.9375rem; }
-.hero__how:hover { color: var(--ink); }
-.hero__how .material-symbols-outlined { font-size: 16px; }
-.facts { margin-top: clamp(56px, 9vh, 104px); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: var(--border-hairline) solid var(--line-on-media); }
+.hero__quick { margin-top: var(--space-5); display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: var(--space-2); }
+.hero__quick-label { margin-right: var(--space-1); font-size: var(--text-small); color: var(--ink-2); }
+.hero__adv { margin-top: var(--space-8); display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: var(--space-3) var(--space-4); font-size: 0.9375rem; color: var(--ink-2); }
+
+/* Buscador del hero: superficie Papel sobre el video, con los tokens del tema claro. */
+.hsearch {
+  --canvas: var(--color-papel); --canvas-2: var(--color-niebla); --ink: var(--color-tinta); --ink-2: var(--color-grafito); --ink-3: var(--color-piedra);
+  --line: var(--color-linea); --line-2: var(--color-linea-fuerte); --accent: var(--color-laguna); --accent-hover: var(--color-laguna-hover);
+  --on-accent: var(--color-papel); --link: var(--color-laguna); --focus: var(--color-laguna); color-scheme: light;
+  position: relative; width: 100%; max-width: 44rem; margin-top: var(--space-10); text-align: left; color: var(--ink);
+  scroll-margin-top: calc(72px + var(--space-3)); /* bajo el navbar fijo, al enfocar en móvil */
+}
+.hsearch__bar { display: flex; align-items: center; gap: var(--space-3); height: 64px; padding: 0 8px 0 20px; background: var(--canvas); border: var(--border-hairline) solid var(--canvas); border-radius: var(--radius-control); }
+.hsearch__bar:focus-within { outline: var(--border-focus) solid var(--color-glaciar); outline-offset: 2px; }
+.hsearch__bar > .material-symbols-outlined { font-size: 22px; color: var(--ink-3); }
+.hsearch__bar input { flex: 1; min-width: 0; height: 100%; background: transparent; border: 0; outline: 0; font-size: 1.0625rem; color: var(--ink); }
+.hsearch__bar input::placeholder { color: var(--ink-3); }
+.hsearch__list { position: absolute; left: 0; right: 0; top: calc(100% + 6px); max-height: min(60vh, 420px); overflow-y: auto; background: var(--canvas); border: var(--border-hairline) solid var(--line); border-radius: var(--radius-control); box-shadow: var(--shadow-overlay); }
+.hsearch__note { padding: var(--space-5); font-size: var(--text-small); color: var(--ink-2); }
+.hsearch__row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); padding: 12px 20px; border-bottom: var(--border-hairline) solid var(--line); }
+.hsearch__row:last-child { border-bottom: 0; }
+.hsearch__row[aria-selected="true"] { background: var(--canvas-2); }
+.hsearch__car { display: flex; min-width: 0; align-items: center; gap: var(--space-2); }
+.hsearch__brand { flex-shrink: 0; font-size: var(--text-label); font-weight: 600; color: var(--ink-3); }
+.hsearch__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.9375rem; font-weight: 600; }
+.hsearch__car .chip { flex-shrink: 0; }
+.hsearch__price { flex-shrink: 0; font-size: 0.9375rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+.facts { align-self: stretch; text-align: left; margin-top: clamp(48px, 7vh, 88px); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: var(--border-hairline) solid var(--line-on-media); }
 .fact { padding: var(--space-6) var(--space-6) var(--space-8) 0; }
 .fact + .fact { padding-left: var(--space-6); border-left: var(--border-hairline) solid var(--line-on-media); }
 .fact__num { font-weight: 600; font-size: var(--text-stat); line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: var(--ink); }
@@ -73,10 +99,16 @@
 .fact__arrow { margin-left: var(--space-1); font-size: 1.15em; line-height: 1; vertical-align: -0.2em; transition: transform var(--duration-base) var(--ease); }
 .fact--link:hover .fact__arrow { transform: translateX(3px); }
 @media (max-width: 767px) {
-  .hero__in { padding-top: 112px; }
-  .hero__actions { flex-direction: column; align-items: stretch; margin-top: var(--space-8); }
-  .hero__actions .btn { width: 100%; }
-  .hero__how { margin: var(--space-2) 0 0; justify-content: center; }
+  .hero__in { padding-top: 104px; }
+  .hsearch { margin-top: var(--space-8); }
+  .hsearch__bar { height: 56px; padding: 0 6px 0 14px; }
+  .hsearch__bar .btn { padding: 0 var(--space-4); }
+  .hsearch__row { padding: 12px 14px; }
+  /* Accesos en una fila que se desliza, de borde a borde dentro del gutter. */
+  .hero__quick { align-self: stretch; flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; scrollbar-width: none; margin-inline: calc(var(--gutter) * -1); padding-inline: var(--gutter); }
+  .hero__quick-label { display: none; }
+  .hero__quick .btn { flex-shrink: 0; }
+  .hero__adv { flex-direction: column; gap: var(--space-2); }
   .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: var(--space-12); }
   .fact { padding: var(--space-5) var(--space-4) var(--space-5) 0; }
   .fact + .fact { padding-left: 0; border-left: 0; }
