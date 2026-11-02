@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
 import { OfferCta } from "@/components/waitlist/OfferCta";
@@ -97,32 +98,34 @@ function Steps({ steps }: { steps: HowItWorksStep[] }) {
 }
 
 const FALLBACK_16x9 = "/hero-video/explicativo-16x9.mp4";
-const FALLBACK_9x16 = "/hero-video/explicativo-9x16.mp4";
 const POSTER = "/hero-video/explicativo-poster.jpg";
-const SEEN_KEY = "ea_how_video_seen";
+// Una vez por visita: sessionStorage dura lo que la pestaña. Una pestaña nueva lo vuelve a mostrar.
+const SEEN_KEY = "ea_how_video_session";
+const AUTO_OPEN_MS = 1000;
 
-export function HowItWorks({ title = "Cómo funciona Electrificarte", steps, videoDesktopUrl, videoMobileUrl }: HowItWorksProps) {
-  const VIDEO_16x9 = videoDesktopUrl ?? FALLBACK_16x9;
-  const VIDEO_9x16 = videoMobileUrl ?? FALLBACK_9x16;
+export function HowItWorks({ title = "Cómo funciona Electrificarte", steps, videoDesktopUrl }: HowItWorksProps) {
+  // Un solo video 16:9 para todas las pantallas: no hay versión vertical vigente (en celular se ve
+  // con franjas negras arriba y abajo).
+  const VIDEO = videoDesktopUrl ?? FALLBACK_16x9;
   const [modalOpen, setModalOpen] = useState(false);
-  // Si el popup se abre solo (primera visita), el navegador no deja reproducir con sonido sin un
-  // clic: arranca silenciado. El video trae subtítulos, así que se entiende igual.
+  // Si el popup se abre solo, el navegador no deja reproducir con sonido sin un clic: arranca
+  // silenciado. El video trae subtítulos, así que se entiende igual.
   const [autoOpened, setAutoOpened] = useState(false);
-  const [mobileVideoOpen, setMobileVideoOpen] = useState(false);
 
   const waitlistSteps = steps && steps.length > 0 ? steps : OFERTA_STEPS;
 
-  // Auto-open desktop modal for first-time visitors after 5 seconds
+  // Se abre solo al entrar al home, ~1 s después de cargar (deja pintar el hero primero).
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (localStorage.getItem(SEEN_KEY)) return;
-    // Only auto-open on desktop — mobile uses inline video to avoid iOS fixed-position bugs
-    if (window.innerWidth < 640) return;
+    try {
+      if (sessionStorage.getItem(SEEN_KEY)) return;
+    } catch {
+      return; // sin sessionStorage (modo privado estricto) no se abre solo: no habría cómo no repetirlo
+    }
     const timer = setTimeout(() => {
       setAutoOpened(true);
       setModalOpen(true);
-      localStorage.setItem(SEEN_KEY, "1");
-    }, 5000);
+      try { sessionStorage.setItem(SEEN_KEY, "1"); } catch {}
+    }, AUTO_OPEN_MS);
     return () => clearTimeout(timer);
   }, []);
 
@@ -136,17 +139,12 @@ export function HowItWorks({ title = "Cómo funciona Electrificarte", steps, vid
 
   function closeModal() {
     setModalOpen(false);
-    if (typeof window !== "undefined") {
-      localStorage.setItem(SEEN_KEY, "1");
-    }
   }
 
   function openModal() {
     setAutoOpened(false);
     setModalOpen(true);
-    if (typeof window !== "undefined") {
-      localStorage.setItem(SEEN_KEY, "1");
-    }
+    try { sessionStorage.setItem(SEEN_KEY, "1"); } catch {}
   }
 
   return (
@@ -204,52 +202,18 @@ export function HowItWorks({ title = "Cómo funciona Electrificarte", steps, vid
               </OfferCta>
               {" "}y te avisamos cuando abramos la negociación con vendedores oficiales.
             </p>
-            {/* Móvil: video inline (sin modal: evita los bugs de position fixed de iOS) */}
-            <button
-              type="button"
-              onClick={() => setMobileVideoOpen((o) => !o)}
-              aria-expanded={mobileVideoOpen}
-              className="btn btn--secondary sm:hidden"
-            >
-              {mobileVideoOpen ? (
-                <Icon name="close" size="none" />
-              ) : (
-                <Icon name="play_arrow" size="none" filled />
-              )}
-              {mobileVideoOpen ? "Cerrar video" : "Ver video explicativo"}
-            </button>
-            {/* Desktop: modal */}
-            <button
-              type="button"
-              onClick={openModal}
-              className="btn btn--secondary hidden sm:inline-flex"
-            >
+            <button type="button" onClick={openModal} className="btn btn--secondary">
               <Icon name="play_arrow" size="none" filled />
               Ver video explicativo
             </button>
           </div>
-
-          {/* Mobile inline video — no modal, no fixed positioning issues on iOS */}
-          {mobileVideoOpen && (
-            <div className="mt-6 overflow-hidden rounded-card bg-tinta sm:hidden">
-              <video
-                key="mobile-video"
-                src={VIDEO_9x16}
-                poster={POSTER}
-                className="block w-full"
-                autoPlay
-                controls
-                playsInline
-              />
-            </div>
-          )}
         </div>
       </section>
 
-      {/* ── Desktop video modal ───────────────────────────────── */}
-      {modalOpen && (
+      {/* Popup del video, en <body> para que el position:fixed no dependa de ningún contenedor. */}
+      {modalOpen && createPortal(
         <div
-          className="modal is-open z-[200] hidden sm:grid"
+          className="modal is-open z-[200]"
           role="dialog"
           aria-modal="true"
           aria-labelledby="video-modal-title"
@@ -271,7 +235,7 @@ export function HowItWorks({ title = "Cómo funciona Electrificarte", steps, vid
               </button>
             </div>
             <div className="video-modal__media">
-              <video src={VIDEO_16x9} poster={POSTER} autoPlay muted={autoOpened} controls playsInline />
+              <video src={VIDEO} poster={POSTER} autoPlay muted={autoOpened} controls playsInline />
             </div>
             <div className="video-modal__foot">
               <p>¿Aún no sabes qué auto elegir?</p>
@@ -287,7 +251,8 @@ export function HowItWorks({ title = "Cómo funciona Electrificarte", steps, vid
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   );
