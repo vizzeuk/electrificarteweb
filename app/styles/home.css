@@ -389,6 +389,13 @@
 .video-modal__foot { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); padding: var(--space-4) var(--space-6); border-top: var(--border-hairline) solid var(--line); }
 .video-modal__foot p { color: var(--ink-2); }
 .video-modal__actions { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+@media (max-width: 640px) {
+  .video-modal__head { padding: var(--space-4); }
+  .video-modal__title { font-size: 1.25rem; }
+  .video-modal__foot { flex-direction: column; align-items: stretch; padding: var(--space-4); }
+  .video-modal__actions { flex-direction: column-reverse; }
+  .video-modal__actions .btn { width: 100%; }
+}
 @media (max-width: 480px) { .modal__card { padding: var(--space-6); } .modal .row2, .review-form .row2 { grid-template-columns: minmax(0, 1fr); } }
 .nav .btn--quiet { color: var(--ink); }
 }
