@@ -23,7 +23,7 @@ ofrece al usuario** — se retomará cuando Francisco lo reactive. **No borrar n
    sea grande, Francisco se la vende/ofrece a los vendedores — ese es el nuevo refuerzo del
    negocio. Todo CTA que antes mandaba a `/solicitar` ahora **abre un popup de waitlist**.
 3. **La Asesoría $4.990 pasa a ser el producto principal.** Full foco: es lo que los chatbots
-   deben empujar. En el hero (nov-2026) va como segundo camino, bajo el buscador del catálogo.
+   deben empujar. En el hero (nov-2026) va al pie, junto al comparador y la calculadora; lo primero es el buscador del catálogo.
 
 ### Por qué
 Francisco necesita **primero** una masa crítica de demanda comprobada (la waitlist) antes de

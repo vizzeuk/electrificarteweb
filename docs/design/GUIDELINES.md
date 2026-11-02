@@ -116,7 +116,7 @@ Tailwind algo que ya existe con nombre.
   `.price`/`.price--lg`/`.price-was`/`.price-save`, `.section` (+ `--subtle|--rule|--tight`),
   `.wrap`, `.section-head`, `.link`, `.link-arrow`, `.logo`.
 - **`app/styles/home.css`** — home y chrome global: `.nav`/`.menu`/`.mnav`, `.hero` (+ `__veil`,
-  `__quick`, `__adv`), `.hsearch` (buscador del hero), `.paths`, `.services`, `.types`, `.collections`, `.brands`, `.facts`,
+  `__browse`, `__tools`/`__tool`), `.hsearch` (buscador del hero), `.paths`, `.services`, `.types`, `.collections`, `.brands`,
   `.stats`, `.steps`, `.trust`, `.reviews`/`.review`/`.stars`/`.rating`, `.posts`, `.faq`/`.qa`,
   `.newsletter`, `.footer`, `.modal`, `.sticky-bar`, `.marquee`, `.avatar`.
 - **`app/styles/pages.css`** — páginas internas: `.page`/`.page-head`, `.crumbs`, `.toolbar`,

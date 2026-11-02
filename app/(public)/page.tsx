@@ -6,13 +6,11 @@ import {
   allBrandsStripQuery,
   allHotDealsQuery,
   electricTypesForHomeQuery,
-  allVehicleTypesQuery,
   newCarsForHomeQuery,
   catalogModelCountQuery,
   carImageBySlugQuery,
 } from "@/lib/queries/car";
 import { collectionsForHomeQuery } from "@/lib/queries/collections";
-import { normalizeElectricLabel } from "@/lib/utils";
 import { LATEST_LAUNCHES_HOME_MAX, mergeLatestLaunches } from "@/lib/latest-launches";
 
 // Above-the-fold + SEO-critical: render server-side.
@@ -38,7 +36,7 @@ import { ParaVendedores }   from "@/components/layout/ParaVendedores";
 export const revalidate = 60;
 
 export default async function HomePage() {
-  const [page, blogPosts, brands, collections, hotDeals, allReviews, vehicleTypes, newCars, siteSettings, modelCount, bodyTypes] =
+  const [page, blogPosts, brands, collections, hotDeals, allReviews, vehicleTypes, newCars, siteSettings, modelCount] =
     await Promise.all([
       client.fetch(homePageQuery, {}, { next: { tags: ["homePage"] } }).catch(() => null),
       client.fetch(latestBlogPostsQuery, { count: 3 }, { next: { tags: ["blogPost"] } }).catch(() => []),
@@ -52,8 +50,6 @@ export default async function HomePage() {
       client.fetch(newCarsForHomeQuery, { limit: LATEST_LAUNCHES_HOME_MAX }, { next: { tags: ["car"] } }).catch(() => []),
       client.fetch(hotDealUrgencyLabelQuery, {}, { next: { tags: ["siteSettings"] } }).catch(() => null),
       client.fetch<number>(catalogModelCountQuery, {}, { next: { tags: ["car"] } }).catch(() => 0),
-      // Tipos de vehículo (SUV, Sedán...) para los accesos del hero; la misma consulta del navbar.
-      client.fetch(allVehicleTypesQuery, {}, { next: { tags: ["vehicleType"] } }).catch(() => []),
     ]);
 
   const hotDealUrgencyLabel: string | null = siteSettings?.hotDealUrgencyLabel ?? null;
@@ -79,47 +75,12 @@ export default async function HomePage() {
       ? page.testimonialsTitle
       : TESTIMONIALS_TITLE;
 
-  // Cifras del hero: se calculan del catálogo, nunca se escriben a mano.
-  const TECH_ORDER = ["EV", "PHEV", "HEV", "MHEV", "REEV"];
-  const electricTypes: { tag?: string | null; carCount?: number | null }[] = vehicleTypes ?? [];
-  const technologies = Array.from(
-    new Set(
-      electricTypes
-        .map((t) => {
-          const tag = String(t?.tag ?? "").toUpperCase();
-          return tag === "EREV" ? "REEV" : tag;
-        })
-        .filter(Boolean),
-    ),
-  ).sort((a, b) => {
-    const ia = TECH_ORDER.indexOf(a), ib = TECH_ORDER.indexOf(b);
-    return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
-  });
+  // Cifra del hero (la bajada): se calcula del catálogo, nunca se escribe a mano.
   const heroFacts = {
     // Cantidad de fichas publicadas. No la suma de los conteos por tipo: un auto con versiones de
     // dos electrificaciones aparece en ambos y se contaría doble.
     models: Number(modelCount) || 0,
-    brands: (brands ?? []).length,
-    technologies,
   };
-
-  // Accesos rápidos bajo el buscador del hero: los dos primeros tipos de vehículo del navbar
-  // (SUV y Sedán hoy) y los dos electrificados más buscados (EV y PHEV), más todas las marcas.
-  // Salen de Sanity: si un tipo cambia de slug o nombre, el acceso lo sigue.
-  const heroQuickLinks = [
-    ...((bodyTypes ?? []) as { slug?: string; label?: string; name?: string }[])
-      .filter((t) => t.slug && (t.label || t.name))
-      .slice(0, 2)
-      .map((t) => ({ label: String(t.label || t.name), href: `/tipo/${t.slug}` })),
-    ...["EV", "PHEV"].flatMap((tag) => {
-      const t = ((vehicleTypes ?? []) as { slug?: string; tag?: string; label?: string }[]).find(
-        (e) => String(e.tag ?? "").toUpperCase() === tag && e.slug,
-      );
-      const label = t && normalizeElectricLabel(t.tag, t.label);
-      return t && label ? [{ label, href: `/electrico/${t.slug}` }] : [];
-    }),
-    { label: "Todas las marcas", href: "/marcas" },
-  ];
 
   // Sanity slug can come as string ("abc") or object ({current:"abc"}) — normalise
   const toSlug = (s: any): string =>
@@ -182,7 +143,6 @@ export default async function HomePage() {
 
       <Hero
         facts={heroFacts}
-        quickLinks={heroQuickLinks}
         data={page ? {
           badge:           page.heroBadge,
           title:           page.heroTitle,
