@@ -58,11 +58,12 @@
 .hero__in { padding-top: 120px; display: flex; flex-direction: column; align-items: center; text-align: center; }
 .hero__title { max-width: 18ch; }
 .hero__lead { margin-top: var(--space-6); max-width: 38rem; font-size: var(--text-lead); line-height: 1.5; color: var(--ink-2); }
-.hero .btn--secondary { border-color: var(--line-2-on-media); }
-.hero .btn--secondary:hover { border-color: var(--color-niebla); }
-.hero__quick { margin-top: var(--space-5); display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: var(--space-2); }
-.hero__quick-label { margin-right: var(--space-1); font-size: var(--text-small); color: var(--ink-2); }
-.hero__adv { margin-top: var(--space-8); display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: var(--space-3) var(--space-4); font-size: 0.9375rem; color: var(--ink-2); }
+.hero__browse { margin-top: var(--space-5); display: inline-flex; align-items: center; gap: 6px; color: var(--ink-2); font-weight: 500; font-size: 0.9375rem; }
+.hero__browse-text { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; text-decoration-color: var(--line-2-on-media); }
+.hero__browse:hover { color: var(--ink); }
+.hero__browse:hover .hero__browse-text { text-decoration-color: currentColor; }
+.hero__browse .material-symbols-outlined { font-size: 16px; transition: transform var(--duration-base) var(--ease); }
+.hero__browse:hover .material-symbols-outlined { transform: translateX(3px); }
 
 /* Buscador del hero: superficie Papel sobre el video, con los tokens del tema claro. */
 .hsearch {
@@ -88,32 +89,30 @@
 .hsearch__car .chip { flex-shrink: 0; }
 .hsearch__price { flex-shrink: 0; font-size: 0.9375rem; font-weight: 600; font-variant-numeric: tabular-nums; }
 
-.facts { align-self: stretch; text-align: left; margin-top: clamp(48px, 7vh, 88px); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: var(--border-hairline) solid var(--line-on-media); }
-.fact { padding: var(--space-6) var(--space-6) var(--space-8) 0; }
-.fact + .fact { padding-left: var(--space-6); border-left: var(--border-hairline) solid var(--line-on-media); }
-.fact__num { font-weight: 600; font-size: var(--text-stat); line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: var(--ink); }
-.fact__label { margin-top: var(--space-2); font-size: var(--text-small); line-height: 1.45; color: var(--ink-2); max-width: 24ch; }
-.fact--link { display: block; }
-.fact--link .fact__num { transition: color var(--duration-base) var(--ease); }
-.fact--link:hover .fact__num { color: var(--link); }
-.fact__arrow { margin-left: var(--space-1); font-size: 1.15em; line-height: 1; vertical-align: -0.2em; transition: transform var(--duration-base) var(--ease); }
-.fact--link:hover .fact__arrow { transform: translateX(3px); }
+/* Tres caminos al pie del hero (comparar, calcular, asesoría), separados por hairlines. */
+.hero__tools { align-self: stretch; margin-top: clamp(48px, 7vh, 88px); display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: var(--border-hairline) solid var(--line-on-media); text-align: left; }
+.hero__tool { display: grid; grid-template-columns: auto 1fr auto; align-items: start; column-gap: var(--space-4); padding: var(--space-6) var(--space-6) var(--space-8) 0; }
+.hero__tool + .hero__tool { padding-left: var(--space-6); border-left: var(--border-hairline) solid var(--line-on-media); }
+.hero__tool-icon { font-size: 28px; line-height: 1; color: var(--accent); }
+.hero__tool-title { display: block; color: var(--ink); transition: color var(--duration-base) var(--ease); }
+.hero__tool-text { display: block; margin-top: var(--space-2); max-width: 30ch; font-size: var(--text-small); line-height: 1.45; color: var(--ink-2); }
+.hero__tool-arrow { align-self: center; font-size: 20px; color: var(--ink-2); transition: transform var(--duration-base) var(--ease), color var(--duration-base) var(--ease); }
+.hero__tool:hover .hero__tool-title { color: var(--link); }
+.hero__tool:hover .hero__tool-arrow { color: var(--ink); transform: translateX(3px); }
 @media (max-width: 767px) {
   .hero__in { padding-top: 104px; }
   .hsearch { margin-top: var(--space-8); }
   .hsearch__bar { height: 56px; padding: 0 6px 0 14px; }
   .hsearch__bar .btn { padding: 0 var(--space-4); }
   .hsearch__row { padding: 12px 14px; }
-  /* Accesos en una fila que se desliza, de borde a borde dentro del gutter. */
-  .hero__quick { align-self: stretch; flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; scrollbar-width: none; margin-inline: calc(var(--gutter) * -1); padding-inline: var(--gutter); }
-  .hero__quick-label { display: none; }
-  .hero__quick .btn { flex-shrink: 0; }
-  .hero__adv { flex-direction: column; gap: var(--space-2); }
-  .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: var(--space-12); }
-  .fact { padding: var(--space-5) var(--space-4) var(--space-5) 0; }
-  .fact + .fact { padding-left: 0; border-left: 0; }
-  .fact:nth-child(2n) { padding-left: var(--space-4); border-left: var(--border-hairline) solid var(--line-on-media); }
-  .fact:nth-child(n+3) { border-top: var(--border-hairline) solid var(--line-on-media); }
+  /* En móvil: una fila por camino, más compactas. */
+  .hero__tools { grid-template-columns: 1fr; margin-top: var(--space-10); }
+  .hero__tool, .hero__tool + .hero__tool { padding: var(--space-4) 0; border-left: 0; }
+  .hero__tool + .hero__tool { border-top: var(--border-hairline) solid var(--line-on-media); }
+  .hero__tool-icon { font-size: 24px; }
+  /* Bajo 20 px el título pasa a Switzer (lo mismo que .t-h4). */
+  .hero__tool-title { font-family: var(--font-sans); font-weight: 600; font-size: var(--text-h4); line-height: var(--lh-snug); letter-spacing: -0.005em; }
+  .hero__tool-text { margin-top: var(--space-1); }
 }
 
 /* ------------------------------------------------------ MARCAS (franja) ---- */

@@ -33,34 +33,20 @@ export interface HeroData {
 /** Cifras del hero. Se calculan desde el catálogo (page.tsx), nunca se escriben a mano. */
 export interface HeroFacts {
   models: number;
-  brands: number;
-  /** Siglas de los tipos eléctricos del catálogo, en el orden del sitio (EV, PHEV...). */
-  technologies: string[];
-}
-
-/** Accesos rápidos bajo el buscador (tipos de vehículo y de electrificado, desde Sanity). */
-export interface HeroQuickLink {
-  label: string;
-  href: string;
 }
 
 interface HeroProps {
   data?: HeroData;
   facts?: HeroFacts;
-  quickLinks?: HeroQuickLink[];
-}
-
-function joinList(items: string[]): string {
-  if (items.length <= 1) return items.join("");
-  return `${items.slice(0, -1).join(", ")} y ${items[items.length - 1]}`;
 }
 
 /**
  * Hero del home, sistema de diseño v1: video de fondo con un solo velo (el único
- * degradado permitido), titular en Cabinet, bajada, el buscador del catálogo al centro,
- * accesos por tipo, la Asesoría como segundo camino y una fila de cifras reales con hairlines.
+ * degradado permitido), titular en Cabinet, bajada, el buscador del catálogo al centro con
+ * un enlace a las colecciones, y abajo tres caminos con hairlines: comparar, calcular el
+ * ahorro y la Asesoría.
  */
-export function Hero({ data, facts, quickLinks = [] }: HeroProps) {
+export function Hero({ data, facts }: HeroProps) {
   // Giro sep-2026 (ver docs/PIVOT-WAITLIST-PLAN.md): el hero ya NO vende la Oferta
   // ($19.990, en standby). Nov-2026: lo primero es el catálogo (buscador al centro) y la
   // **Asesoría $4.990** queda como segundo camino, para quien no sabe cuál elegir. La
@@ -76,24 +62,14 @@ export function Hero({ data, facts, quickLinks = [] }: HeroProps) {
     ? `${catalogLead} Búscalo, compáralo y calcula cuánto ahorras.`
     : data.subtitle;
 
-  // Segundo camino — Asesoría ($4.990)
+  // Tres caminos al pie del hero. La Asesoría ($4.990) es el de quien no sabe cuál elegir.
   const advCtaHref = data?.advisoryCtaHref ?? "/asesoria";
   const advPrice   = data?.advisoryPrice   ?? "$4.990";
-
-  // Cifras reales del catálogo + una celda que invita a la calculadora de ahorro
-  // (sin cifra: el ahorro depende del auto y de los kilómetros de cada persona).
-  const cells: { num: string; label: string; href?: string }[] = facts
-    ? [
-        { num: String(facts.models), label: "modelos electrificados en el catálogo" },
-        {
-          num: "Tu ahorro",
-          label: "frente a la bencina, en la calculadora",
-          href: "/calculadora",
-        },
-        { num: String(facts.technologies.length), label: `tecnologías: ${joinList(facts.technologies)}` },
-        { num: "10 días", label: "de asesoría por WhatsApp" },
-      ].filter((c) => c.num !== "0")
-    : [];
+  const tools = [
+    { icon: "compare_arrows", title: "Compara modelos", text: "Pon dos o más autos lado a lado y mira en qué se diferencian.", href: "/comparador" },
+    { icon: "savings", title: "Calcula tu ahorro", text: "Cuánto ahorras frente a la bencina con tus kilómetros.", href: "/calculadora" },
+    { icon: "forum", title: "¿No sabes cuál elegir?", text: `Asesoría por WhatsApp por ${advPrice}, durante 10 días.`, href: advCtaHref },
+  ];
 
   return (
     <section className="hero theme-dark" aria-label="Bienvenida">
@@ -109,45 +85,24 @@ export function Hero({ data, facts, quickLinks = [] }: HeroProps) {
 
         <HeroSearch />
 
-        {quickLinks.length > 0 && (
-          <nav className="hero__quick" aria-label="Explorar el catálogo">
-            <span className="hero__quick-label">O explora por</span>
-            {quickLinks.map((l) => (
-              <Link key={l.href} href={l.href} className="btn btn--secondary btn--sm">
-                {l.label}
-              </Link>
-            ))}
-          </nav>
-        )}
+        {/* Enlace de texto (sin botones) a las colecciones del home. */}
+        <a href="#colecciones" className="hero__browse">
+          <span className="hero__browse-text">O explora nuestro catálogo</span>
+          <Icon name="arrow_forward" size="none" className="arrow" />
+        </a>
 
-        <div className="hero__adv">
-          <span>¿No sabes cuál elegir?</span>
-          <Link href={advCtaHref} className="btn btn--secondary">
-            Asesoría por WhatsApp por {advPrice}
-            <Icon name="arrow_forward" size="none" className="arrow" />
-          </Link>
-        </div>
-
-        {cells.length > 0 && (
-          <div className="facts">
-            {cells.map((c) =>
-              c.href ? (
-                <Link className="fact fact--link" href={c.href} key={c.label}>
-                  <p className="fact__num">{c.num}</p>
-                  <p className="fact__label">
-                    {c.label}
-                    <Icon name="arrow_forward" size="none" className="arrow fact__arrow" />
-                  </p>
-                </Link>
-              ) : (
-                <div className="fact" key={c.label}>
-                  <p className="fact__num">{c.num}</p>
-                  <p className="fact__label">{c.label}</p>
-                </div>
-              ),
-            )}
-          </div>
-        )}
+        <nav className="hero__tools" aria-label="Herramientas">
+          {tools.map((t) => (
+            <Link key={t.href} href={t.href} className="hero__tool">
+              <Icon name={t.icon} size="none" className="hero__tool-icon" />
+              <span>
+                <span className="hero__tool-title t-h3">{t.title}</span>
+                <span className="hero__tool-text">{t.text}</span>
+              </span>
+              <Icon name="arrow_forward" size="none" className="arrow hero__tool-arrow" />
+            </Link>
+          ))}
+        </nav>
       </div>
     </section>
   );
